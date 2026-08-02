@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <link
+      rel="stylesheet"
+      href="./node_modules/@fontsource-variable/inter-tight/index.css"
+    />
+
+    <!-- Futura PT Condensed. The kit is domain-locked — add any new host at
+         fonts.adobe.com or it silently falls back. -->
+    <link rel="stylesheet" href="https://use.typekit.net/wyl5nhy.css" />
+
+    <link rel="stylesheet" href="./node_modules/lenis/dist/lenis.css" />
+
+    <!-- Generated stencils. Must load before custom.css so --glyph is defined. -->
+    <link rel="stylesheet" href="./letters.css" />
+    <link rel="stylesheet" href="./custom.css" />
+  </head>
+  <body>
+    <section class="tape-slider-parent">
+      <div class="wrapper">
+        <!-- Two stacked colour fields; the incoming one sweeps over the base,
+             then commits down to it so the pair is ready to swap again. -->
+        <div class="bg-overlay" aria-hidden="true">
+          <div class="bg-layer bg-layer--base"></div>
+          <div class="bg-layer bg-layer--next"></div>
+        </div>
+        <h6 class="subhead">MEET THE ONE WHO STICKS</h6>
+
+        <!-- The subhead again in the incoming colours, inside a duplicate of the
+             colour sheet with overflow hidden — so it is uncovered along exactly
+             the curve the sheet draws. .sweep-inner cancels the outer travel so
+             the copy holds still while the box slides past. -->
+        <div class="sweep-paint" aria-hidden="true">
+          <div class="sweep-inner">
+            <h6 class="subhead subhead--next">MEET THE ONE WHO STICKS</h6>
+          </div>
+        </div>
+
+        <div class="roll-parent">
+          <div class="rail-track">
+            <!-- Each button carries its tape's copy; the colours live on the
+                 matching rule in custom.css. data-tags is pipe-separated. -->
+            <button
+              type="button"
+              data-index="mask-1"
+              aria-label="Masking tape"
+              data-card="./assets/masking-center.png"
+              data-showcase="./assets/mask-image-1.jpg|./assets/mask-image-2.jpg"
+              data-tags="LABELING|PAINT WORK|BUNDLING"
+              data-copy="Always ready for school projects, quick labels, and weekend crafts. Easygoing. Comes off clean. No drama."
+            >
+              <span class="roll-ring" aria-hidden="true"></span>
+              <img src="./assets/rolling/roll-mask.png" alt="" />
+            </button>
+            <button
+              type="button"
+              data-index="mask-2"
+              aria-label="Cloth tape"
+              data-card="./assets/cloth-center.png"
+              data-showcase="./assets/cloth-image-1.jpg|./assets/cloth-image-2.jpg"
+              data-tags="HEAVY DUTY|CARTON SEALING|GAFFER WORK"
+              data-copy="Built for the jobs that fight back. Tough weave, firm grip, tears clean by hand."
+            >
+              <span class="roll-ring" aria-hidden="true"></span>
+              <img src="./assets/rolling/roll-cloth.png" alt="" />
+            </button>
+            <button
+              type="button"
+              data-index="mask-3"
+              aria-label="Double-sided tissue tape"
+              data-card="./assets/double-center.png"
+              data-showcase="./assets/double-image-1.jpg|./assets/double-image-2.jpg"
+              data-tags="INVISIBLE HOLDING|SMOOTH MOUNTING|QUICK PATCHING"
+              data-copy="The kind of tape that commits. Strong hold on both sides, easy to use, hard to let go."
+            >
+              <span class="roll-ring" aria-hidden="true"></span>
+              <img src="./assets/rolling/roll-double.png" alt="" />
+            </button>
+            <button
+              type="button"
+              data-index="mask-4"
+              aria-label="Stationery tape"
+              data-card="./assets/stationery-center.png"
+              data-showcase="./assets/stationery-image-1.jpg|./assets/stationery-image-2.jpg"
+              data-tags="SMALL REPAIRS|STICK &amp; GO|DESK DRAWER ESSENTIAL"
+              data-copy="From broken corners to last-minute projects. Easy to tear. Easy to use. Weirdly reliable."
+            >
+              <span class="roll-ring" aria-hidden="true"></span>
+              <img src="./assets/rolling/roll-stationery.png" alt="" />
+            </button>
+          </div>
+        </div>
+
+        <div class="tape-slide">
+          <div id="creative" class="wrapper">
+            <div class="left">
+              <div class="tags">
+                <div class="tag">
+                  <h6 class="h6">LABELING</h6>
+                  <h6 class="h6">PAINT WORK</h6>
+                  <h6 class="h6">BUDLING</h6>
+                </div>
+
+                <div class="subtext">
+                  <h5 class="h5">
+                    Always ready for school projects, quick labels, and weekend
+                    crafts. Easygoing. Comes off clean. No drama.
+                  </h5>
+                </div>
+              </div>
+            </div>
+
+            <div class="middle">
+
+              <img class="showcase" src="./assets/mask-image-1.jpg" alt="">
+              <img class="showcase" src="./assets/mask-image-2.jpg" alt="">
+
+
+
+              <div class="top-title">
+                <img id="T" src="./assets/middle-T.png" alt="" />
+                <img id="H" src="./assets/middle-H.png" alt="" />
+                <img id="E" src="./assets/middle-E.png" alt="" />
+              </div>
+
+              <div class="key-visual">
+                <img src="./assets/masking-center.png" alt="">
+              </div>
+
+              <!-- Wrapped so each letter has a box to be clipped by: the wrapper
+                   holds its place on the arc, the image inside does the dip. -->
+              <div class="bottom-title">
+                <span class="glyph"><img src="./assets/creative/creative-c.png" alt="" /></span>
+                <span class="glyph"><img src="./assets/creative/creative-r.png" alt="" /></span>
+                <span class="glyph"><img src="./assets/creative/creative-e.png" alt="" /></span>
+                <span class="glyph"><img src="./assets/creative/creative-a.png" alt="" /></span>
+                <span class="glyph"><img src="./assets/creative/creative-t.png" alt="" /></span>
+                <span class="glyph"><img src="./assets/creative/creative-i.png" alt="" /></span>
+                <span class="glyph"><img src="./assets/creative/creative-v.png" alt="" /></span>
+                <span class="glyph"><img src="./assets/creative/creative-e.png" alt="" /></span>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script src="./node_modules/gsap/dist/gsap.min.js"></script>
+    <script src="./node_modules/lenis/dist/lenis.min.js"></script>
+    <script src="./slider.js"></script>
+  </body>
+</html>

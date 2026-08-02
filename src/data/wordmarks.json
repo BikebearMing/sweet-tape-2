@@ -1,0 +1,18 @@
+{
+  "_comment": "Letterform artwork for the two word marks. Read by the React components AND by scripts/gen-letters.mjs, which turns the same list into the mask stencils and intrinsic sizes in src/styles/letters.css. Keep it the single source: DOM order here is what the nth-child rules in letters.css are numbered against. Run `npm run letters` after changing it.",
+  "the": [
+    { "letter": "T", "src": "/assets/middle-T.png" },
+    { "letter": "H", "src": "/assets/middle-H.png" },
+    { "letter": "E", "src": "/assets/middle-E.png" }
+  ],
+  "creative": [
+    { "letter": "C", "src": "/assets/creative/creative-c.png" },
+    { "letter": "R", "src": "/assets/creative/creative-r.png" },
+    { "letter": "E", "src": "/assets/creative/creative-e.png" },
+    { "letter": "A", "src": "/assets/creative/creative-a.png" },
+    { "letter": "T", "src": "/assets/creative/creative-t.png" },
+    { "letter": "I", "src": "/assets/creative/creative-i.png" },
+    { "letter": "V", "src": "/assets/creative/creative-v.png" },
+    { "letter": "E", "src": "/assets/creative/creative-e.png" }
+  ]
+}

@@ -159,6 +159,11 @@
      chips are: GSAP owns these elements' transform during the swap and a
      transform declared here would simply be overwritten. Tune the angles. */
   & img.showcase {
+    /* Hidden for now — the 3D roll carries the stage alone. Everything below
+       (and the pair's flip in the engine) is left intact: delete this one
+       line to bring the photographs back. */
+    display: none;
+
     position: absolute;
     z-index: 10;
     border-radius: 3.472vw;
@@ -202,7 +207,7 @@
 
   & .key-visual {
     position: absolute;
-    left: 50%;
+    left: 52%;
     width: 24.804vw;
     height: 24.804vw;
     top: 53%;
@@ -216,24 +221,35 @@
     /* Positive: lags the page slightly, so it sits behind the pair above. */
     --parallax: 0.08;
 
-    /* 3D context for the card's turn. Left on the wrapper rather than the image
-       so the vanishing point stays at the centre of the frame while the card
-       rotates about an axis that is off-centre — which is what gives the turn
-       its slight asymmetry instead of a flat spin. */
-    perspective: 900px;
+    & img {
+      visibility: hidden;
+    }
   }
 
-  /* The hang tag. It turns over on the axis of its own punch hole: the slot
-     centre measures 48.25% / 17.3% of the artwork on all four cards, so one
-     origin serves the whole set. rotationY uses the x for the turn, rotation
-     uses both for the pendulum settle afterwards. */
+  /* The hang tag's slot. The server renders the flat face as an <img>; once
+     the 3D viewer is live its transparent canvas overlays the img and the
+     engine hides it. If the three.js chunk never arrives, the img stays on
+     as the working key visual. */
   & .key-visual img {
     width: 100%;
     height: 100%;
     object-fit: contain;
-    transform-origin: 48.25% 17.3%;
-    backface-visibility: hidden;
-    will-change: transform;
+  }
+
+  /* Bleeds past the slot on purpose. The face-on roll is framed to exactly
+     the slot's size (see CAMERA_Z in tape3d.ts, which assumes this -15%), but
+     mid-flip the swinging edge sweeps wider than the face — the bleed is the
+     headroom that keeps it from clipping at the canvas edge. Change one
+     without the other and the roll is the wrong size. */
+  & .key-visual canvas {
+    position: absolute;
+    inset: -15%;
+    width: 130%;
+    height: 130%;
+    /* The reset caps canvas at max-width 100%, which would clamp the box to
+       the slot's width and eat exactly the horizontal bleed the swing needs. */
+    max-width: none;
+    display: block;
   }
 
   & .bottom-title {

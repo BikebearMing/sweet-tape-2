@@ -1,0 +1,116 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>GLB tape test</title>
+<style>
+  body { margin: 0; background: #fff; font: 12px/1.4 monospace; }
+  #grid { display: flex; flex-wrap: wrap; }
+  .tile { width: 400px; margin: 2px; }
+  .tile .label { padding: 2px 6px; background: #111; color: #fff; }
+  canvas { display: block; }
+  #err { color: #c00; white-space: pre-wrap; font-size: 14px; padding: 8px; }
+</style>
+<div id="err"></div>
+<div id="grid"></div>
+<script type="importmap">
+  {
+    "imports": {
+      "three": "/node_modules/three/build/three.module.js",
+      "three/addons/": "/node_modules/three/examples/jsm/"
+    }
+  }
+</script>
+<script type="module">
+  import * as THREE from "three";
+  import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+  import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+
+  const err = document.getElementById("err");
+  window.onerror = (m, s, l) => (err.textContent += `${m} @ ${s}:${l}\n`);
+
+  const params = new URLSearchParams(location.search);
+  const mode = params.get("mode") || "orient";
+  const ORIENT = parseFloat(params.get("orient") || "0"); // deg, applied on X
+
+  const SIZE = 400;
+  const D2R = Math.PI / 180;
+
+  const loader = new GLTFLoader();
+  const load = (url) =>
+    new Promise((res, rej) => loader.load(url, (g) => res(g.scene), undefined, rej));
+
+  const [header, red] = await Promise.all([
+    load("/public/assets/Header-Tape.glb"),
+    load("/public/assets/Tape-Red%20(1).glb"),
+  ]).catch((e) => {
+    err.textContent += "LOAD FAIL: " + e;
+    throw e;
+  });
+
+  const MODELS = { header, red };
+
+  // One shared environment so PBR materials don't render black.
+  const pmremRenderer = new THREE.WebGLRenderer();
+  const pmrem = new THREE.PMREMGenerator(pmremRenderer);
+  const envTex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+  function tile(label, modelKey, orientX, spinY) {
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf2ede4);
+    scene.environment = envTex;
+
+    const clone = MODELS[modelKey].clone(true);
+    const box = new THREE.Box3().setFromObject(clone);
+    const center = box.getCenter(new THREE.Vector3());
+    clone.position.sub(center);
+
+    const inner = new THREE.Group(); // orientation fix: face toward camera
+    inner.add(clone);
+    inner.rotation.x = orientX * D2R;
+
+    const wrapper = new THREE.Group(); // the flip axis
+    wrapper.add(inner);
+    wrapper.rotation.y = spinY * D2R;
+    scene.add(wrapper);
+
+    const dir = new THREE.DirectionalLight(0xffffff, 1.2);
+    dir.position.set(2, 3, 4);
+    scene.add(dir, new THREE.AmbientLight(0xffffff, 0.3));
+
+    const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
+    camera.position.set(0, 0, 2.4);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(SIZE, SIZE);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+
+    const div = document.createElement("div");
+    div.className = "tile";
+    div.innerHTML = `<div class="label">${label}</div>`;
+    div.appendChild(renderer.domElement);
+    document.getElementById("grid").appendChild(div);
+
+    renderer.render(scene, camera);
+  }
+
+  if (mode === "orient") {
+    for (const key of ["header", "red"]) {
+      for (const ox of [0, 90, -90, 180]) {
+        tile(`${key}  orientX=${ox}  spin=0`, key, ox, 0);
+      }
+    }
+  } else {
+    // flip mode: the handoff choreography, using ?orient= from round one
+    tile("header spin 0 (front)", "header", ORIENT, 0);
+    tile("header spin 45", "header", ORIENT, 45);
+    tile("header spin 90 (side, handoff out)", "header", ORIENT, 90);
+    tile("red spin -90 (side, handoff in)", "red", ORIENT, -90);
+    tile("red spin -45", "red", ORIENT, -45);
+    tile("red spin 0 (front, landed)", "red", ORIENT, 0);
+    tile("header spin 180 (true back)", "header", ORIENT, 180);
+    tile("red spin 180 (true back)", "red", ORIENT, 180);
+  }
+
+  document.title = "DONE";
+</script>

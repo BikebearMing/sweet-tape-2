@@ -35,6 +35,8 @@ export type Tape = {
   roll: string;
   /** Hang tag at the centre of the stage. */
   card: string;
+  /** 3D roll shown in place of the card once three.js is live. GLB path. */
+  model: string;
   /** The two tilted photographs. Exactly two — the layout places both by hand. */
   showcase: [string, string];
   /** Chips in the left column. */
@@ -50,6 +52,7 @@ export const tapes: Tape[] = [
     label: "Masking tape",
     roll: "/assets/rolling/roll-mask.png",
     card: "/assets/masking-center.png",
+    model: "/assets/tapes/opp.glb",
     showcase: ["/assets/mask-image-1.jpg", "/assets/mask-image-2.jpg"],
     tags: ["LABELING", "PAINT WORK", "BUNDLING"],
     copy: "Always ready for school projects, quick labels, and weekend crafts. Easygoing. Comes off clean. No drama.",
@@ -67,6 +70,7 @@ export const tapes: Tape[] = [
     label: "Cloth tape",
     roll: "/assets/rolling/roll-cloth.png",
     card: "/assets/cloth-center.png",
+    model: "/assets/tapes/stationery.glb",
     showcase: ["/assets/cloth-image-1.jpg", "/assets/cloth-image-2.jpg"],
     tags: ["HEAVY DUTY", "CARTON SEALING", "GAFFER WORK"],
     copy: "Built for the jobs that fight back. Tough weave, firm grip, tears clean by hand.",
@@ -84,6 +88,7 @@ export const tapes: Tape[] = [
     label: "Double-sided tissue tape",
     roll: "/assets/rolling/roll-double.png",
     card: "/assets/double-center.png",
+    model: "/assets/tapes/opp.glb",
     showcase: ["/assets/double-image-1.jpg", "/assets/double-image-2.jpg"],
     tags: ["INVISIBLE HOLDING", "SMOOTH MOUNTING", "QUICK PATCHING"],
     copy: "The kind of tape that commits. Strong hold on both sides, easy to use, hard to let go.",
@@ -101,6 +106,7 @@ export const tapes: Tape[] = [
     label: "Stationery tape",
     roll: "/assets/rolling/roll-stationery.png",
     card: "/assets/stationery-center.png",
+    model: "/assets/tapes/stationery.glb",
     showcase: ["/assets/stationery-image-1.jpg", "/assets/stationery-image-2.jpg"],
     tags: ["SMALL REPAIRS", "STICK & GO", "DESK DRAWER ESSENTIAL"],
     copy: "From broken corners to last-minute projects. Easy to tear. Easy to use. Weirdly reliable.",

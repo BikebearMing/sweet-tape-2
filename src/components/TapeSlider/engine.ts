@@ -7,7 +7,7 @@
  *   0.00 |------ ring closes ------|
  *   0.00 |- THE drops -|
  *   0.06   |--- CREATIVE drops ---|
- *   0.10  |------- card turns -------|
+ *   0.10  |------- card flips -------|
  *   0.12      |----------- orbit travels ----------|
  *   0.12      |- chips out -|······· held off screen ·······|- chips in -|
  *   0.75                        |------ ring opens ------|
@@ -26,6 +26,7 @@
  * listeners or orphaned timelines.
  */
 import gsap from "gsap";
+import type { TapeViewer } from "./tape3d";
 
 export function initTapeSlider(root: HTMLElement): () => void {
   const q = <T extends Element>(sel: string) => root.querySelector<T>(sel);
@@ -98,17 +99,15 @@ export function initTapeSlider(root: HTMLElement): () => void {
   // Beat between the sheet clearing a word and that word rising.
   const WORD_AFTER_SHEET = 0.06;
 
-  const CARD_AT = 0.1; // turns almost on the click, ahead of the colour
-  const CARD_TURN = 0.9;
-  const CARD_DEPTH = 70; // px it withdraws at the edge-on moment
-  const CARD_TILT = 15; // deg it swings off the peg
-  const CARD_SETTLE = 1.5; // swing outlasts the turn's half by this much
+  const CARD_AT = 0.1; // flips almost on the click, ahead of the colour
+  const FLIP_TURN = 0.9;
+  const FLIP_SWEEP = 90; // deg to edge-on; the model handoff happens there
 
-  /* The showcase pair turns over like the key visual does. They need no cover
-     from the colour sheet for the same reason it doesn't — at 90deg there is
-     nothing of them left to see. SHOW_LAG is what keeps the two from reading as
-     one object: the second is still on its way out as the first comes back. */
-  const SHOW_AT = 0.18; // first image, just behind the key visual's turn
+  /* The showcase pair turns over edge-on. They need no cover from the colour
+     sheet — at 90deg there is nothing of them left to see. SHOW_LAG is what
+     keeps the two from reading as one object: the second is still on its way
+     out as the first comes back. */
+  const SHOW_AT = 0.18; // first image, just behind the key visual's swap
   const SHOW_LAG = 0.26; // second image starts this much later
   const SHOW_TURN = 0.78;
   const SHOW_DEPTH = 55; // px each withdraws at the edge-on moment
@@ -134,6 +133,12 @@ export function initTapeSlider(root: HTMLElement): () => void {
   let leftTl: gsap.core.Timeline | null = null;
   let cardTl: gsap.core.Timeline | null = null;
   let showTl: gsap.core.Timeline | null = null;
+
+  /* The 3D stage arrives asynchronously (its chunk, then two GLBs), so the
+     engine runs with or without it: null until ready, and every card path
+     falls back to the flat <img> while it is. */
+  let viewer: TapeViewer | null = null;
+  let viewerGone = false; // torn down before the async load resolved
 
   function measure() {
     radius = track!.getBoundingClientRect().width / 2;
@@ -381,56 +386,66 @@ export function initTapeSlider(root: HTMLElement): () => void {
 
   const cardOf = (btn: HTMLElement) => btn.dataset.card || "";
 
-  // Fastest where it is thinnest — power2.in into the edge, power2.out away
-  // from it — so the least time is spent edge-on.
+  const modelOf = (btn: HTMLElement) => btn.dataset.model || "";
+
+  /* The 3D flip. Out to edge-on on one clean axis — where the roll's real
+     side is showing — then the incoming model takes over and continues the
+     same direction home. The handoff is invisible as geometry because the
+     exports share dimensions; only the side's colour changes, at the turn's
+     fastest point. Strict pathway: one axis, the same direction every time,
+     nothing layered on top.
+
+     Until the viewer is live (three.js still downloading, or it failed) the
+     flat <img> still owns the slot, so the fallback swaps its src at the
+     moment the flip would have been edge-on. */
   function addCard(tl: gsap.core.Timeline, index: number, at: number) {
-    const src = card && cardOf(rolls[index]);
-    if (!card || !src) return null;
-
     const sub = gsap.timeline();
-    const half = CARD_TURN / 2;
+    const half = FLIP_TURN / 2;
+    const model = modelOf(rolls[index]);
 
-    sub.to(card, { rotationY: 90, z: -CARD_DEPTH, duration: half, ease: "power2.in" }, 0);
-    sub.to(card, { rotation: -CARD_TILT, duration: half, ease: "power2.in" }, 0);
+    if (viewer && model && viewer.ready(model)) {
+      const v = viewer;
 
-    sub.call(
-      () => {
-        card.src = src;
-        // Jump to the opposite edge-on angle rather than carrying on to 180,
-        // where the card faces away and its artwork would read mirrored. Same
-        // zero-width silhouette, so the jump is invisible.
-        gsap.set(card, { rotationY: -90 });
-      },
-      undefined,
-      half
-    );
+      const out = { deg: 0 };
+      sub.to(
+        out,
+        {
+          deg: FLIP_SWEEP,
+          duration: half,
+          ease: "power2.in", // fastest where the side is thinnest to read
+          onUpdate: () => v.spin(out.deg),
+        },
+        0
+      );
 
-    sub.to(
-      card,
-      {
-        rotationY: 0,
-        z: 0,
-        duration: half,
-        ease: "power2.out",
-        // Start values must be read after the callback above, or this tweens
-        // from 90 back to 0 and undoes the turn.
-        immediateRender: false,
-      },
-      half
-    );
+      // show() keeps the incoming group's leftover rotation, so the spin to
+      // its start angle rides in the same call — both land before the next
+      // rendered frame.
+      const back = { deg: -FLIP_SWEEP };
+      sub.call(
+        () => {
+          v.show(model);
+          v.spin(back.deg);
+        },
+        undefined,
+        half
+      );
 
-    // The swing outlasts the turn, so the card is still settling after it has
-    // squared up. That trailing motion is what reads as hanging on a peg.
-    sub.to(
-      card,
-      {
-        rotation: 0,
-        duration: half * CARD_SETTLE,
-        ease: "back.out(2.2)",
-        immediateRender: false,
-      },
-      half
-    );
+      sub.to(
+        back,
+        {
+          deg: 0,
+          duration: half,
+          ease: "power2.out",
+          onUpdate: () => v.spin(back.deg),
+        },
+        half
+      );
+    } else {
+      const src = card && cardOf(rolls[index]);
+      if (!card || !src) return null;
+      sub.call(() => void (card.src = src), undefined, half);
+    }
 
     tl.add(sub, at);
     return sub;
@@ -632,9 +647,12 @@ export function initTapeSlider(root: HTMLElement): () => void {
         el.style.setProperty("--word-colour", wc);
         gsap.set(el, { y: 0 });
       });
-      if (card && cardOf(rolls[index])) {
+      const rm = modelOf(rolls[index]);
+      if (viewer && rm && viewer.ready(rm)) {
+        viewer.show(rm);
+        viewer.spin(0);
+      } else if (card && cardOf(rolls[index])) {
         card.src = cardOf(rolls[index]);
-        gsap.set(card, { rotationY: 0, rotation: 0, z: 0 });
       }
       setShowcase(index);
       gsap.set(showcase, { rotationY: 0, z: 0 });
@@ -770,6 +788,39 @@ export function initTapeSlider(root: HTMLElement): () => void {
     });
   if (card && cardOf(rolls[activeIndex])) card.src = cardOf(rolls[activeIndex]);
 
+  /* The 3D stage. Dynamic import so three.js and the loaders ship as their
+     own chunk, fetched after the section is interactive; the GLBs follow
+     inside createTapeViewer. Until all of it lands, the flat <img> above is
+     the key visual, and every selection falls back to swapping its src — so
+     a slow network or a failed chunk degrades to exactly the old behaviour.
+     The img is hidden rather than removed when the viewer takes over, in
+     case the WebGL context is ever lost. */
+  const keyVisual = q<HTMLElement>(".key-visual");
+  const modelUrls = Array.from(new Set(rolls.map(modelOf).filter(Boolean)));
+  if (keyVisual && modelUrls.length) {
+    /* Hidden from mount, not from viewer-ready. The img is the no-JS
+       fallback; once scripts are running the roll is coming, and letting the
+       flat card paint first just flashes artwork the roll is about to
+       replace. The cost is an empty slot while the chunk and models load. */
+    if (card) card.style.visibility = "hidden";
+    import("./tape3d")
+      .then(({ createTapeViewer }) => createTapeViewer(keyVisual, modelUrls))
+      .then((v) => {
+        if (viewerGone) return v.dispose();
+        viewer = v;
+        // Catch up to wherever the selection is by now, not where it was
+        // when the load started.
+        v.show(modelOf(rolls[activeIndex]));
+        v.spin(0);
+      })
+      .catch(() => {
+        // No three after all — put the flat fallback back on stage. An
+        // explicit `visible`, not "": the stylesheet now hides this img from
+        // first paint, and only an inline value out-specifies it.
+        if (card) card.style.visibility = "visible";
+      });
+  }
+
   // Perspective on the elements themselves, not a shared parent — the key
   // visual already has its own and the two want independent vanishing points.
   gsap.set(showcase, { transformPerspective: SHOW_PERSPECTIVE });
@@ -797,6 +848,12 @@ export function initTapeSlider(root: HTMLElement): () => void {
     gsap.killTweensOf([...rings, ...letters, ...glyphs, ...showcase, ...chips, spin]);
     if (card) gsap.killTweensOf(card);
     if (copyBox) gsap.killTweensOf(copyBox);
+    // The dispose runs here OR in the loader's then-branch, never both:
+    // viewerGone tells a load that resolves after teardown to discard itself.
+    viewerGone = true;
+    viewer?.dispose();
+    viewer = null;
+    if (card) card.style.visibility = "";
     preloaded.length = 0;
   };
 }

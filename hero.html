@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sweet Tape — hero</title>
+    <!-- The site's two families. Futura PT Condensed comes from the same
+         Adobe kit the Next app uses; it is domain-locked, so open this page
+         via http://localhost:8123/hero.html — from file:// it silently falls
+         back to Arial Narrow. Inter Tight comes from Google Fonts here
+         (the site serves the same family locally via Fontsource). -->
+    <link rel="preconnect" href="https://use.typekit.net" crossorigin>
+    <link rel="stylesheet" href="https://use.typekit.net/wyl5nhy.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="hero.css">
+</head>
+<body>
+    <div class="hero-section">
+        <div class="wrapper">
+            <div class="top">
+                <div class="title">
+                    <p class="h4">WE'RE <span>HERE TO</span></p>
+                    <div class="warped-text">
+                        <h1 class="h1">STICK</h1>
+                        <h1 class="h1">BY YOU</h1>
+                    </div>
+                   
+                </div>
+            </div>
+
+            <div class="hero-tape"></div>
+
+            <div class="bottom-part">
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Relative paths on purpose: they resolve against hero.html's own URL,
+         so the page works whatever folder the server treats as its root
+         (python http.server here, VSCode Live Server from the workspace, …).
+         Only file:// won't work — ES modules need to be served. -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./node_modules/three/build/three.module.js",
+          "three/addons/": "./node_modules/three/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module">
+      import * as THREE from "three";
+      import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+      /* Resting pose + camera. rotY is where the roll sits before the scroll
+         sequence takes over. Live-tweak: tape.set({ rotY: 45, camZ: 2.2 }) */
+      const CONFIG = { rotX: 0, rotY: 35, rotZ: 0, camZ: 1.95 };
+
+      /* The scroll choreography, in px of scroll travel. Nothing pins: the
+         roll turns side-on in place over YAW_DIST once its centre crosses
+         the viewport's, then the strip pays out downward — growing GROWTH px
+         per scrolled px until it catches the viewport bottom, tracking it
+         (plus OVERRUN) from then on, and stopping at the section's end so
+         the whole thing scrolls away like ordinary content. The spin is
+         derived from the paid-out length, so the roll always turns exactly
+         as fast as it dispenses. All live-tweakable via tape.SCROLL. */
+      const SCROLL = {
+        LEAD: 200, // px before the roll's centre crosses the viewport's
+        YAW_DIST: 300,
+        GROWTH: 4,
+        END_GAP: 160, // the tape's end rides this far above the viewport
+        SOFTEN: 250, // px over which phase corners are rounded off
+      };
+
+      /* The dispensed strip. RADIUS matches the model (0.5 in its units) so
+         paid-out length equals spin angle x radius — the two never slip.
+         COLOR approximates the wound edge; eyedrop and tune. */
+      const STRIP = {
+        RADIUS: 0.5,
+        ROLL_W: 0.472, // the model's axial length, from its bounds
+        WIDTH: 0.85, // multiplier on the visually-matched width; 1 = flush,
+        // held under it so the strip reads as tape, not as wider than its roll
+        COLOR: 0xc08a49, // pre-load fallback only — the roll's own wound-side
+        // colour is copied over it once the model arrives
+      };
+
+      // Shared gloss for the wound side and the strip: one value, so the key
+      // light draws the same sheen on both and they read as one material.
+      // It is the BASE the roughness streaks multiply, so it sits higher
+      // than the old flat value: effective gloss ranges ~0.2-0.45.
+      const FILM_GLOSS = 0.45;
+
+      const mount = document.querySelector(".hero-tape");
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
+
+      // Same flat-art pipeline as the site's slider: no tone mapping, ambient
+      // near pi so the label leaves the renderer at the artwork's own colour.
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.toneMapping = THREE.NoToneMapping;
+      renderer.setClearColor(0x000000, 0);
+      mount.appendChild(renderer.domElement);
+
+      /* Key light high and to the LEFT, slightly in front — the sheen. The
+         ambient stays near pi so the artwork's colours hold; the key only
+         adds the highlight that reads as plastic film. Live-tweak:
+         tape.LIGHT.X = -4; tape.render() */
+      const LIGHT = { X: -2.5, Y: 3, Z: 2.5, POWER: 1.2 };
+      const dir = new THREE.DirectionalLight(0xffffff, LIGHT.POWER);
+      dir.position.set(LIGHT.X, LIGHT.Y, LIGHT.Z);
+      scene.add(dir, new THREE.AmbientLight(0xffffff, Math.PI * 0.78));
+
+      const group = new THREE.Group();
+      scene.add(group);
+
+      /* The strip hangs from the roll's BACK tangent (z = -RADIUS) and pays
+         out downward as the roll spins, so the roll occludes their overlap
+         and the tape reads as coming from behind it. Top-anchored via the
+         geometry translate so scale.y is the paid-out length; it lives in
+         the scene, not the spinning group, because dispensed tape does not
+         rotate. */
+      /* Subtle streak maps — the anti-flat trick. A colour map alone still
+         shades evenly under a directional light; it is the roughnessMap that
+         varies the GLOSS across the surface, so the key light lands as
+         streaks of sheen instead of one even wash. The same streaks go on
+         the wound side and the strip, run in each surface's tape-length
+         direction, so they read as one continuous film. */
+      function streakTex(base, amp, horizontal, srgb) {
+        const S = 1024;
+        const c = document.createElement("canvas");
+        c.width = S;
+        c.height = S;
+        const g = c.getContext("2d");
+        const shade = (v) => {
+          const n = Math.max(0, Math.min(255, Math.round(v * 255)));
+          return `rgb(${n},${n},${n})`;
+        };
+        g.fillStyle = shade(base);
+        g.fillRect(0, 0, S, S);
+        for (let i = 0; i < 240; i++) {
+          g.fillStyle = shade(base + (Math.random() - 0.5) * amp);
+          const pos = Math.random() * S;
+          const w = 2 + Math.random() * 12;
+          if (horizontal) g.fillRect(0, pos, S, w);
+          else g.fillRect(pos, 0, w, S);
+        }
+        const tex = new THREE.CanvasTexture(c);
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        if (srgb) tex.colorSpace = THREE.SRGBColorSpace; // colour maps only
+        tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        return tex;
+      }
+
+      /* COLOR is only the pre-load fallback; the roll's own side colour
+         replaces it the moment the model arrives. The near-white tint map
+         keeps that colour authority — it only adds the faint streaks. */
+      const stripGeo = new THREE.PlaneGeometry(1, 1);
+      stripGeo.translate(0, -0.5, 0);
+      const stripMat = new THREE.MeshStandardMaterial({
+        color: STRIP.COLOR,
+        map: streakTex(1, 0.07, false, true),
+        roughnessMap: streakTex(0.72, 0.5, false, false),
+        roughness: FILM_GLOSS,
+        side: THREE.DoubleSide,
+      });
+      const strip = new THREE.Mesh(stripGeo, stripMat);
+      strip.position.z = -STRIP.RADIUS;
+      strip.visible = false;
+      scene.add(strip);
+
+      new GLTFLoader().load("./public/assets/tapes/header-brown.glb", (gltf) => {
+        const model = gltf.scene;
+        /* Full anisotropy on every map. Without it, the wound side's weave
+           collapses to its flat grey mip average wherever the surface grazes
+           the view — a grey sheet creeping along the roll's rim on real
+           GPUs (software renderers mip less aggressively, which is why
+           headless checks don't show it). */
+        const maxAniso = renderer.capabilities.getMaxAnisotropy();
+        model.traverse((o) => {
+          if (!o.isMesh) return;
+          if (o.material.map) {
+            o.material.map.anisotropy = maxAniso;
+            o.material.map.needsUpdate = true;
+          }
+          // "Material" is the wound side in this export. The dispensed strip
+          // IS this tape, so it takes the side's exact colour and the shared
+          // gloss — under the same key light the two render identically.
+          // Blender's cylinder unwrap runs U around the circumference, so
+          // the side's streaks are drawn horizontal in UV space to land
+          // along the winding direction on screen.
+          if (o.material.name === "Material") {
+            o.material.map = streakTex(1, 0.07, true, true);
+            o.material.roughnessMap = streakTex(0.72, 0.5, true, false);
+            o.material.roughness = FILM_GLOSS;
+            o.material.needsUpdate = true; // new maps => shader recompile
+            stripMat.color.copy(o.material.color);
+            stripMat.roughness = FILM_GLOSS;
+          }
+        });
+        const box = new THREE.Box3().setFromObject(model);
+        model.position.sub(box.getCenter(new THREE.Vector3()));
+        const inner = new THREE.Group();
+        inner.rotation.x = -Math.PI / 2; // face artwork toward the camera
+        inner.add(model);
+        group.add(inner);
+        measure();
+        update();
+      });
+
+      /* -- scroll choreography ------------------------------------------- */
+
+      // offsetTop, not getBoundingClientRect: the pin drives a transform on
+      // the mount, and rects move with transforms while offsets do not.
+      function docTop(el) {
+        let y = 0;
+        for (; el; el = el.offsetParent) y += el.offsetTop;
+        return y;
+      }
+
+      const hero = document.querySelector(".hero-section");
+      let seqStart = 0;
+      let stripTopDoc = 0;
+      let heroBottomDoc = 0;
+      function measure() {
+        // The roll lives in the mount's top square (side = mount width); the
+        // sequence begins when the roll's centre crosses the viewport's.
+        const rollCentre = docTop(mount) + mount.clientWidth / 2;
+        seqStart = rollCentre - innerHeight / 2 - SCROLL.LEAD;
+        stripTopDoc = rollCentre;
+        heroBottomDoc = docTop(hero) + hero.offsetHeight;
+      }
+
+      const clamp01 = (v) => Math.min(1, Math.max(0, v));
+      const smooth = (t) => t * t * (3 - 2 * t); // smoothstep: eases both ends
+      // Polynomial smooth minimum: min(a, b) with the corner rounded off over
+      // k px, so a curve meeting its ceiling does it without a kink.
+      function smin(a, b, k) {
+        const h = clamp01(0.5 + (0.5 * (b - a)) / k);
+        return b * (1 - h) + a * h - k * h * (1 - h);
+      }
+      const d = Math.PI / 180;
+
+      function update() {
+        const past = Math.max(scrollY - seqStart, 0);
+
+        // Smoothstepped, so the yaw glides in and — crucially — glides OUT:
+        // it ends at zero velocity exactly where the spin starts from zero,
+        // making the rotate -> roll handoff seamless.
+        const p1 = clamp01(past / SCROLL.YAW_DIST);
+        const yaw = CONFIG.rotY + (90 - CONFIG.rotY) * smooth(p1);
+
+        /* The strip, in document px first: grows once the yaw is done, held
+           under the chase line (its end riding END_GAP above the viewport
+           bottom) and under the section's end (where it finishes and scrolls
+           off with everything else).
+
+           past2^2/(past2+SOFTEN) starts quadratically — zero velocity at the
+           handoff — and settles to a straight GROWTH slope; each ceiling is
+           then met through smin, so no corner anywhere kinks the motion. */
+        const past2 = Math.max(past - SCROLL.YAW_DIST, 0);
+        const grown = (SCROLL.GROWTH * past2 * past2) / (past2 + SCROLL.SOFTEN);
+        const chase = scrollY + innerHeight - stripTopDoc - SCROLL.END_GAP;
+        const lenPx = Math.max(
+          smin(
+            smin(grown, chase, SCROLL.SOFTEN),
+            heroBottomDoc - stripTopDoc,
+            SCROLL.SOFTEN
+          ),
+          0
+        );
+
+        // Convert px to world units at the STRIP's depth — it sits RADIUS
+        // beyond the roll's centre, so it projects slightly smaller.
+        const pxPerWorld =
+          mount.clientWidth /
+          (2 * (CONFIG.camZ + STRIP.RADIUS) * Math.tan((camera.fov / 2) * d));
+        const len = lenPx / pxPerWorld;
+
+        // Spin follows the paid-out length exactly (angle = length / radius),
+        // so the roll can never turn without dispensing or vice versa.
+        const spin = len / STRIP.RADIUS;
+
+        // Euler XYZ = Rx . Ry: with yaw at 90 the axle lies along X, so the
+        // x term spins the roll about its own axle. Negative spin sends the
+        // BACK surface downward — the tangent the strip now pays out from.
+        group.rotation.set(CONFIG.rotX * d - spin, yaw * d, CONFIG.rotZ * d);
+
+        strip.visible = len > 0.001;
+        strip.scale.y = Math.max(len, 0.0001);
+        // Flush with the roll's on-screen silhouette, whose width is set by
+        // its NEAR rim (camZ - R) while the strip hangs at the far side
+        // (camZ + R); WIDTH is a multiplier on that match.
+        strip.scale.x =
+          STRIP.ROLL_W *
+          ((CONFIG.camZ + STRIP.RADIUS) / (CONFIG.camZ - STRIP.RADIUS)) *
+          STRIP.WIDTH;
+        // Constant streak density however long the strip gets.
+        const rep = Math.max(len * 1.5, 0.001);
+        stripMat.map.repeat.set(1, rep);
+        stripMat.roughnessMap.repeat.set(1, rep);
+
+        dir.position.set(LIGHT.X, LIGHT.Y, LIGHT.Z);
+        dir.intensity = LIGHT.POWER;
+        camera.position.z = CONFIG.camZ;
+        render();
+      }
+
+      function size() {
+        const w = mount.clientWidth; // the roll's square framing box
+        const h = mount.clientHeight; // square + strip room to section end
+        // The canvas runs the full section; keep the buffer under common GPU
+        // texture limits on retina screens.
+        renderer.setPixelRatio(Math.min(devicePixelRatio, 2, 4096 / h));
+        renderer.setSize(w, h, false);
+        // Frame the roll exactly as a square canvas would, then extend the
+        // view downward for the strip — same projection, more paper.
+        camera.aspect = 1;
+        camera.setViewOffset(w, w, 0, 0, w, h);
+        camera.updateProjectionMatrix();
+        measure();
+        update();
+      }
+
+      function render() {
+        renderer.render(scene, camera);
+      }
+
+      window.addEventListener("resize", size);
+      window.addEventListener("scroll", update, { passive: true });
+      size();
+
+      // Console handle for tuning; set() re-renders for you.
+      window.tape = {
+        CONFIG,
+        SCROLL,
+        STRIP,
+        LIGHT,
+        group,
+        camera,
+        render,
+        get seqStart() {
+          return seqStart;
+        },
+        set(patch) {
+          Object.assign(CONFIG, patch);
+          update();
+        },
+      };
+    </script>
+</body>
+</html>

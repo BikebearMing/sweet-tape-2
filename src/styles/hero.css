@@ -1,0 +1,247 @@
+/* ==========================================================================
+   Hero
+   ==========================================================================
+   Ported from the standalone hero.html prototype. Everything is scoped under
+   .hero-section — the class names inside it (.top, .title, .h1) are generic
+   enough that unscoped rules would eventually collide with the slider's.
+
+   The section's whole geometry is in vw, including its height, so the roll's
+   framing and the strip's drawing room scale together and the scroll
+   choreography does not have to know about breakpoints. */
+
+.hero-section {
+  position: relative;
+  width: 100%;
+  height: 170.139vw;
+  background: #0d470c;
+}
+
+.hero-section .hero-wrapper {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.hero-section .top {
+  position: relative;
+  width: 100%;
+  height: 52.083vw;
+  background: #b6fe00;
+  /* Elliptical, not circular: the two radii are set independently so the
+     curve's depth (24vw) holds while its width tracks the viewport. */
+  border-radius: 0 0 100% 100% / 0 0 24vw 24vw;
+}
+
+/* Paper grain — the same overlay the slider stage carries (tape-slider.css), at
+   the same weight, so the two sections read as one printed surface rather than
+   as a textured one following a clean one.
+   --------------------------------------------------------------------------
+   Two of them because there are two colour fields and the light one is a shaped
+   box: .top's ellipse is a border-radius, so its grain has to inherit that
+   radius to stop at the curve. Both start at the section's own y = 0 — .top is
+   flush with it — and both tile on the same pitch, so the grain runs across the
+   curve unbroken. One sheet of paper, cut by the colours rather than by itself.
+
+   Width-fitted and tiled down, where the slider stretches its copy to the box.
+   The slider's stage is one viewport, so stretching it there is close to the
+   image's own aspect; the hero is 170vw tall and the same stretch would smear
+   the grain three times its height, turning paper into vertical streaking. At
+   100% width the tile is 56vw tall — within a hair of what the slider ends up
+   with on a 16:9 screen, which is what keeps the two scales matched. The image's
+   top and bottom edges sit within 1% of each other in tone, and it lands at
+   about 6% strength once its own alpha and the opacity below are through with
+   it, so the joins between tiles have nothing to show.
+
+   pointer-events: none because a full-bleed decorative layer must never be what
+   a click lands on. */
+.hero-section::before,
+.hero-section .top::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/paper-overlay.png");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.hero-section .top::before {
+  border-radius: inherit;
+}
+
+.hero-section .title {
+  /* Positioned only to lift the type over .top's grain — a positioned
+     pseudo-element otherwise paints over ordinary inline content whatever the
+     source order says. The slider keeps its copy above the grain the same way. */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  align-items: center;
+  padding-top: 5.056vw;
+}
+
+/* The kicker. One line split by a gap wide enough for the roll to sit between
+   the halves, so it is an inline-flex row rather than two elements. */
+.hero-section .h4 {
+  font-family: var(--font-heading);
+  color: #013900;
+  font-size: 2.347vw;
+  font-weight: 800;
+  line-height: 0.71;
+  letter-spacing: -0.094vw;
+  display: inline-flex;
+  gap: 16.389vw;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-section .h1 {
+  font-size: 20.361vw;
+  line-height: 0.73;
+  letter-spacing: 0;
+  font-weight: 800;
+  color: #013900;
+  text-align: center;
+}
+
+/* Split letters — the rows.
+   --------------------------------------------------------------------------
+   The headline's two lines and the kicker's two halves are both rows of letter
+   boxes; see letters() in Hero/index.tsx.
+
+   Flex rather than plain inline text, because .clip below carries
+   overflow: hidden — and an inline-block whose overflow is not visible takes
+   its baseline from its BOTTOM MARGIN EDGE rather than from the text inside it.
+   Left inline, every letter would hang entirely above the baseline and the line
+   box would grow by the font's whole descent, pushing STICK and BY YOU apart
+   for no visible reason. Flex items have no baseline to get wrong.
+
+   text-align is inert once the rows are flex; justify-content is what centres
+   them now. */
+.hero-section .h1 .line,
+.hero-section .h4 .half {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* The headline's arc.
+   --------------------------------------------------------------------------
+   Same trick as CREATIVE in the slider (tape-slider.css), and the same way up:
+   each letter keeps the x its row gives it and is only dropped and tilted, so
+   the setting above is untouched. The usual curved-text approach — rotating
+   each letter about a far-off origin — would drag them sideways as well,
+   opening gaps that were never in the type.
+
+   --u runs -1 at the first letter of a line to +1 at the last, so the two lines
+   curve over their own widths rather than sharing one curve. The drop follows
+   1-u², a parabola deepest in the middle; the tilt runs linearly with u, so
+   each letter leans with the slope it is standing on. To arc the other way,
+   negate BOTH values.
+
+   Shallow on purpose — the two lines sit close enough that a deep curve would
+   have STICK's middle letters dipping into BY YOU's. The transform does not
+   affect layout, so nothing reflows out of the way if it does.  */
+.hero-section .warped-text {
+      --arc-drop: 1.2vw;
+    --arc-tilt: 7deg;
+}
+
+.hero-section .h1 .line .clip {
+  --u: calc(2 * var(--i) / (var(--letters) - 1) - 1);
+  transform-origin: 50% 100%; /* pivot on the baseline, not the letter centre */
+  transform: translateY(calc(var(--arc-drop) * (1 - var(--u) * var(--u))))
+    rotate(calc(var(--arc-tilt) * var(--u) * -1));
+}
+
+/* Split letters — the boxes.
+   --------------------------------------------------------------------------
+   .clip holds the letter's place in the row (and, in the headline, its place on
+   the arc above) and masks; .char is the only thing that moves. Two elements
+   because the arc and the entrance both want the transform property and one
+   element cannot carry both — the same division of labour as CREATIVE's
+   letters in tape-slider.css, where the wrapper holds the arc and the image
+   inside holds the dip. */
+.hero-section .clip {
+  display: block;
+  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  overflow: hidden;
+  /* Headroom, then handed straight back.
+     ------------------------------------
+     line-height here is well under 1 (0.73 on the headline, 0.71 on the
+     kicker), so a letter's content box is shorter than the capital standing in
+     it and the mask would shave the tops off. Sideways is the kicker's
+     negative tracking, which pulls each box in narrower than the glyph it
+     holds. The padding gives the mask room on three sides; the matching
+     negative margins take that room back out of the layout, so the rows are
+     the size they always were.
+
+     Nothing at the bottom — the mask's lower edge is what the letters slide out
+     through, and it wants to sit tight on the baseline. */
+  padding: 0.2em 0.12em 0;
+  margin: -0.2em -0.12em 0;
+}
+
+.hero-section .char {
+  display: block;
+  /* Where a letter waits before the reveal, and — since the reveal is JS — what
+     it falls back to. Hero/reveal.ts sets data-reveal on the section to lift
+     this and take the letters over; the <noscript> in index.tsx lifts it for
+     good if that is never going to happen. REVEAL.HIDDEN there is the same
+     figure and the two have to agree.
+
+     130 rather than 100 because capitals overshoot their own box, so a letter
+     moved exactly its own height still leaves a hairline of tops at the mask's
+     edge. The excess is all behind the mask, so it is set well clear rather
+     than measured against the font. */
+  transform: translateY(130%);
+}
+
+.hero-section[data-reveal="live"] .char {
+  transform: none;
+}
+
+/* Twenty-odd letters flying in from nowhere is what this setting is asking
+   about. Here rather than only in reveal.ts so it also covers the window
+   before hydration, when the stylesheet is holding them down on its own. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-section .char {
+    transform: none;
+  }
+}
+
+/* The 3D roll. top / width are the placement knobs; the canvas fills the box.
+   Rotation and camera distance are tuned in Hero/heroTape.ts (or live in dev
+   via `hero.CONFIG` / `hero.tune()` in the console). */
+.hero-section .hero-tape {
+  position: absolute;
+  top: 27vw;
+  left: 50%;
+  translate: -50%;
+  width: 34vw;
+  /* Everything from the roll's square down to the canvas floor is drawing room
+     for the dispensed strip. The roll itself stays framed in the top 34vw
+     square (the view offset in heroTape handles that), so treat 34vw as the
+     roll-size knob.
+
+     The floor hangs BELOW the section on purpose — the tape is meant to finish
+     a little way into the section underneath rather than stopping dead on the
+     boundary, and nothing can be drawn outside this box. This is the hard limit
+     on SCROLL.OVERRUN in Hero/engine.ts, which is what actually decides how far
+     the end travels; deepen both together. */
+  bottom: -12vw;
+  z-index: 2;
+  /* Most of this box is transparent drawing room for the strip — don't let an
+     invisible rectangle over half the section eat clicks. */
+  pointer-events: none;
+}
+
+.hero-section .hero-tape canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* .bottom-part is a placeholder with no styling yet — whatever sits below the
+   roll is still to be designed. */

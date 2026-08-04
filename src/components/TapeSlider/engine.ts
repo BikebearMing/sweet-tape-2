@@ -16,6 +16,11 @@
  *   1.24                                |- CREATIVE rises -|
  *                                                          ~2.1s total
  *
+ * The section arrives the same way. On first scroll to it only the return
+ * halves above run — from parked out positions, with no sheet, because the
+ * stage is already in its colour, and without the key visual, which is left
+ * face-on throughout. See ENTER below.
+ *
  * Deliberately framework-free. React renders the markup once and hands the
  * subtree over; everything below is plain DOM and GSAP. Trying to express this
  * as state would mean re-rendering mid-tween, which is the one thing it cannot
@@ -121,12 +126,49 @@ export function initTapeSlider(root: HTMLElement): () => void {
   const LEFT_IN = 0.5;
   const LEFT_SHIFT = 18;
 
+  /* The entrance.
+   *
+   * The section is the second thing on the page, so by the time it is reached
+   * it has been sitting fully assembled for a screen and a half. Instead it
+   * arrives the way a selection arrives: everything that moves during a swap is
+   * parked in the out position it would be in mid-swap, and comes back when the
+   * section is scrolled to — same durations, same eases, same order, minus an
+   * exit nobody was there to watch.
+   *
+   * Two exceptions. The stage's colour is seeded at first paint and stays, so
+   * there is no sheet here: a sheet sweeping a colour over the same colour is a
+   * second of nothing, and the section reads as coloured from the start with
+   * the furniture arriving into it. And the roll itself sits the entrance out —
+   * it is the thing the section is about, so it is already there, face-on, and
+   * everything else arrives around it. Its turn belongs to a selection.
+   *
+   * Once per load. A section that reassembles every time it comes back would
+   * also be overriding whatever tape the visitor picked before scrolling away.
+   */
+  const ENTER = {
+    /* When it fires. The section is exactly 100vh, so the negative bottom
+       margin reads directly as how much of it is on screen at the moment the
+       entrance starts — 45% here, a little under half.
+
+       Worth a thought before changing: the parked pieces are invisible, not
+       absent, so every percent of extra wait is a percent of the section
+       arriving as empty space. Late enough to have arrived, early enough that
+       the first thing seen is the entrance and not the gap. */
+    MARGIN: "0px 0px -45% 0px",
+    RING_AT: 0.4, // the active ring opens as the rail's own fade lands
+    SHOW_AT: 0.22,
+    TOP_AT: 0.1, // THE
+    BOTTOM_AT: 0.26, // CREATIVE, trailing it as it does on a selection
+    LEFT_AT: 0.2,
+  };
+
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const spin = { rot: ACTIVE_ANGLE }; // tweened; index 0 starts in the active slot
   let activeIndex = 0;
   let radius = 0;
 
   let timeline: gsap.core.Timeline | null = null;
+  let enter: gsap.core.Timeline | null = null;
   let wipe: gsap.core.Tween | null = null;
   let word: gsap.core.Timeline | null = null;
   let bottom: gsap.core.Timeline | null = null;
@@ -298,6 +340,14 @@ export function initTapeSlider(root: HTMLElement): () => void {
     return tl.recent() as gsap.core.Tween;
   }
 
+  /* How far a letter has to travel to be clear of its own box — a shade past,
+     so no hairline is left at the edge. offsetHeight, not the bounding rect:
+     CREATIVE's letters sit in wrappers tilted up to 8deg, whose bounding box is
+     taller than the letter. Shared with the entrance, which parks the letters
+     at exactly the point the dip drops them to. */
+  const dipTo = (el: HTMLElement) =>
+    (el.offsetHeight || el.getBoundingClientRect().height || 1) + 2;
+
   /* Each letter drops out of the bottom of its own box, recolours out of sight,
      and rises back. `apply` is the only difference between the two words:
      THE moves its own mask, CREATIVE moves the image inside .glyph's overflow
@@ -320,9 +370,6 @@ export function initTapeSlider(root: HTMLElement): () => void {
     const backAt = Math.max(lastDown + WORD_HOLD, (returnAt || 0) - at);
 
     els.forEach((el, i) => {
-      // offsetHeight, not the bounding rect: CREATIVE's letters sit in wrappers
-      // tilted up to 8deg, whose bounding box is taller than the letter.
-      const h = el.offsetHeight || el.getBoundingClientRect().height || 1;
       // Start from wherever the letter actually is, not from home. On a fast
       // second click the previous dip is killed mid-flight, and assuming 0 here
       // would snap the letter home for one frame before dropping it again.
@@ -333,7 +380,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
       sub.to(
         st,
         {
-          y: h + 2, // a shade past, so no hairline is left at the box edge
+          y: dipTo(el),
           duration: WORD_DOWN,
           ease: WORD_EASE_DOWN,
           onUpdate: move,
@@ -553,10 +600,13 @@ export function initTapeSlider(root: HTMLElement): () => void {
     if (copyBox) copyBox.textContent = btn.dataset.copy || "";
   }
 
+  /* One shared exit distance, measured off the column's right edge so even the
+     widest chip clears. Shared with the entrance, which parks the chips there. */
+  const chipOutX = () => -(left!.getBoundingClientRect().right + 40);
+
   /* Chips leave to the left one after another, swap while all off screen, then
-     return in the same order. One shared exit distance measured off the column's
-     right edge, so even the widest chip clears. returnAt is the earliest the
-     chips may come back, on the parent timeline's clock. */
+     return in the same order. returnAt is the earliest the chips may come back,
+     on the parent timeline's clock. */
   function addLeft(
     tl: gsap.core.Timeline,
     index: number,
@@ -566,7 +616,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
     if (!left || !chips.length) return null;
 
     const sub = gsap.timeline();
-    const outX = -(left.getBoundingClientRect().right + 40);
+    const outX = chipOutX();
     const lastOut = (chips.length - 1) * CHIP_STAGGER + CHIP_OUT;
     // Floored, so the gate can only delay the return, never pull it into the exit.
     const backAt = Math.max(lastOut + CHIP_HOLD, (returnAt || 0) - at);
@@ -589,6 +639,123 @@ export function initTapeSlider(root: HTMLElement): () => void {
 
     tl.add(sub, at);
     return sub;
+  }
+
+  /* ------------------------------------------------------------------------
+     The entrance. Each of these is the second half of a move addDip / addLeft /
+     addShowcase already make — the way home, with nothing preceding it, because
+     there was nothing on stage to take off.
+
+     addCard has no counterpart here on purpose: the key visual is not part of
+     the entrance and is never parked, so it is face-on from the moment it
+     loads.
+     --------------------------------------------------------------------- */
+
+  /* Out positions. Every one is exactly where the selection choreography leaves
+     the piece mid-swap, which is what lets the entrance be the return half
+     verbatim rather than a second animation that happens to look similar.
+
+     Set here rather than in the stylesheet because the chips do not exist until
+     buildChips has run. The cost is that a section already on screen when the
+     engine mounts would paint once in place before being parked — which the
+     170vw hero above it makes academic. */
+  function park() {
+    letters.forEach((el) => maskDip(el, dipTo(el)));
+    glyphs.forEach((el) => shiftDip(el, dipTo(el)));
+
+    if (left && chips.length) {
+      const x = chipOutX();
+      chips.forEach((c) => gsap.set(c, { x }));
+      if (copyBox) gsap.set(copyBox, { opacity: 0, y: LEFT_SHIFT });
+    }
+
+    // Edge-on and withdrawn, the same pose addShowcase swaps the artwork at.
+    gsap.set(showcase, { rotationY: -90, z: -SHOW_DEPTH });
+
+    // The key visual is deliberately absent — see the block comment above.
+  }
+
+  function addRise(
+    tl: gsap.core.Timeline,
+    els: HTMLElement[],
+    at: number,
+    stagger: number,
+    apply: (el: HTMLElement, y: number) => void,
+    read: (el: HTMLElement) => number
+  ) {
+    const sub = gsap.timeline();
+
+    els.forEach((el, i) => {
+      const st = { y: read(el) };
+      sub.to(
+        st,
+        {
+          y: 0,
+          duration: WORD_UP,
+          ease: WORD_EASE_UP, // no overshoot, or the tops clip at the peak
+          onUpdate: () => apply(el, st.y),
+        },
+        i * stagger
+      );
+    });
+
+    tl.add(sub, at);
+    return sub;
+  }
+
+  function addReturn(tl: gsap.core.Timeline, at: number) {
+    if (!left || !chips.length) return null;
+
+    const sub = gsap.timeline();
+    chips.forEach((c, i) => {
+      sub.to(c, { x: 0, duration: CHIP_IN, ease: "power3.out" }, i * CHIP_STAGGER);
+    });
+    if (copyBox) {
+      sub.to(copyBox, { opacity: 1, y: 0, duration: LEFT_IN, ease: "power3.out" }, 0);
+    }
+
+    tl.add(sub, at);
+    return sub;
+  }
+
+  function addShowcaseIn(tl: gsap.core.Timeline, at: number) {
+    if (!showcase.length) return null;
+
+    const sub = gsap.timeline();
+    showcase.forEach((el, i) => {
+      sub.to(
+        el,
+        { rotationY: 0, z: 0, duration: SHOW_TURN / 2, ease: "power2.out" },
+        i * SHOW_LAG // still what keeps the two from reading as one object
+      );
+    });
+
+    tl.add(sub, at);
+    return sub;
+  }
+
+  function playEntrance() {
+    // The rail's own 0.4s fade, in tape-slider.css. ENTER.RING_AT is set to
+    // land the opening ring on the end of it.
+    track!.classList.add("is-ready");
+
+    enter = gsap.timeline();
+    enter.to(
+      rings[activeIndex],
+      { scale: 1, opacity: 1, duration: RING_IN, ease: EASE_OPEN },
+      ENTER.RING_AT
+    );
+
+    if (letters.length)
+      addRise(enter, letters, ENTER.TOP_AT, WORD_STAGGER, maskDip, maskAt);
+    if (glyphs.length)
+      addRise(enter, glyphs, ENTER.BOTTOM_AT, BOTTOM_STAGGER, shiftDip, shiftAt);
+
+    /* Parked in the same handles the click path uses, so an impatient visitor
+       who selects a tape mid-entrance is covered by goTo's existing interrupt
+       handling rather than by a second copy of it. */
+    showTl = addShowcaseIn(enter, ENTER.SHOW_AT);
+    leftTl = addReturn(enter, ENTER.LEFT_AT);
   }
 
   function markState() {
@@ -631,6 +798,14 @@ export function initTapeSlider(root: HTMLElement): () => void {
     // Killing leaves spin.rot where it stopped, which is what delta was measured
     // against — so an interrupted selection re-aims instead of snapping.
     if (timeline) timeline.kill();
+    /* A selection made while the section is still arriving. The showcase was
+       completed just above — it shares its handle with the entrance — and what
+       is left is the words and the chips, which are exactly the two the comment
+       above leaves in place on purpose. */
+    if (enter) {
+      enter.kill();
+      enter = null;
+    }
     markState();
 
     if (reduced) {
@@ -811,13 +986,16 @@ export function initTapeSlider(root: HTMLElement): () => void {
         // Catch up to wherever the selection is by now, not where it was
         // when the load started.
         v.show(modelOf(rolls[activeIndex]));
+        // Face-on the moment it lands, whenever that is. The roll takes no part
+        // in the entrance, so there is nothing here to wait for or catch up to.
         v.spin(0);
       })
       .catch(() => {
         // No three after all — put the flat fallback back on stage. An
         // explicit `visible`, not "": the stylesheet now hides this img from
         // first paint, and only an inline value out-specifies it.
-        if (card) card.style.visibility = "visible";
+        if (!card) return;
+        card.style.visibility = "visible";
       });
   }
 
@@ -831,10 +1009,30 @@ export function initTapeSlider(root: HTMLElement): () => void {
   paintChip(subhead, rolls[activeIndex]);
   buildChips();
   fillLeft(activeIndex);
-  track.classList.add("is-ready");
-  // On load the rolls are already placed, so the opening ring waits only for the
-  // track's fade-in.
-  revealRing(rings[activeIndex], 0.4);
+  /* Hold everything back until the section is reached — see ENTER above.
+     Reduced motion gets what the section always did: the rail fades in on load
+     and the ring opens behind it, with nothing parked and nothing to wait for. */
+  let io: IntersectionObserver | null = null;
+  if (reduced) {
+    track.classList.add("is-ready");
+    // The rolls are already placed, so the opening ring waits only for the
+    // track's fade-in.
+    revealRing(rings[activeIndex], 0.4);
+  } else {
+    park();
+    io = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        // Disconnected on the way in, not on the way out: once is once, and a
+        // visitor scrolling back keeps the tape they chose.
+        io?.disconnect();
+        io = null;
+        playEntrance();
+      },
+      { rootMargin: ENTER.MARGIN }
+    );
+    io.observe(root);
+  }
 
   /* Teardown. Everything with a lifetime longer than one frame is released
      here: the ticker callback would otherwise keep running against detached
@@ -843,8 +1041,9 @@ export function initTapeSlider(root: HTMLElement): () => void {
   return () => {
     ac.abort();
     clearTimeout(resizeTimer);
+    io?.disconnect();
     gsap.ticker.remove(applyParallax);
-    [timeline, wipe, word, bottom, leftTl, cardTl, showTl].forEach((t) => t?.kill());
+    [timeline, enter, wipe, word, bottom, leftTl, cardTl, showTl].forEach((t) => t?.kill());
     gsap.killTweensOf([...rings, ...letters, ...glyphs, ...showcase, ...chips, spin]);
     if (card) gsap.killTweensOf(card);
     if (copyBox) gsap.killTweensOf(copyBox);

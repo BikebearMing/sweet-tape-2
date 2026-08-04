@@ -19,7 +19,13 @@ export default function SmoothScroll() {
     // asking about, so leave the native behaviour alone.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const lenis = new Lenis({ duration: 1.1 });
+    /* duration is how long Lenis takes to run out the distance a wheel notch
+       asks for — the glide. Higher is looser and heavier; past about 2.2 the
+       page starts feeling detached from the wheel rather than smoothed.
+       wheelMultiplier is the other half of the feel: it sets how much distance
+       a notch asks for in the first place, so drop it below 1 to make the page
+       travel less per notch rather than take longer over the same travel. */
+    const lenis = new Lenis({ duration: 1.8 });
     const raf = (t: number) => lenis.raf(t * 1000); // ticker counts seconds, Lenis wants ms
 
     gsap.ticker.add(raf);

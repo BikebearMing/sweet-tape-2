@@ -1,0 +1,720 @@
+/* The hero's dispensing roll.
+ *
+ * Same arrangement as the slider's key visual (tape3d.ts): everything
+ * three-specific lives here, the engine imports it dynamically after mount so
+ * three ships as its own chunk, and until that resolves — or if it never does —
+ * the section is type and colour, which are already on screen.
+ *
+ * The split with engine.ts is scroll vs scene. The engine knows where the page
+ * is and hands over two numbers: how far the roll has turned side-on, and how
+ * much tape has been paid out in document px. Everything past that — the px to
+ * world conversion, the spin the length implies, the material — is in here.
+ *
+ * Named imports rather than `import * as THREE`: the namespace object keeps the
+ * whole library reachable, so the chunk carries every loader and helper whether
+ * or not it is used.
+ */
+import {
+  AmbientLight,
+  Box3,
+  BufferGeometry,
+  CanvasTexture,
+  Color,
+  DirectionalLight,
+  DoubleSide,
+  Float32BufferAttribute,
+  Group,
+  Mesh,
+  MeshStandardMaterial,
+  NoToneMapping,
+  PerspectiveCamera,
+  PlaneGeometry,
+  RepeatWrapping,
+  Scene,
+  SRGBColorSpace,
+  Texture,
+  Vector3,
+  WebGLRenderer,
+} from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+const FOV = 35;
+const DEG = Math.PI / 180;
+const DPR_CAP = 2;
+/* The canvas runs the full section, which is far taller than it is wide. Cap
+   the drawing buffer's height so a retina screen cannot push it past the
+   texture limit real GPUs enforce. */
+const MAX_BUFFER = 4096;
+
+/* Resting pose and camera. rotY is not here: the yaw is the scroll's to drive,
+   so its rest and end angles live with the choreography in engine.ts.
+   Live-tweak in dev: hero.CONFIG.camZ = 2.2; hero.tune() */
+export const CONFIG = { rotX: 0, rotZ: 0, camZ: 1.95 };
+
+/* The dispensed strip. RADIUS matches the model (0.5 in its units) so paid-out
+   length equals spin angle x radius — the two never slip. */
+export const STRIP = {
+  RADIUS: 0.5,
+  ROLL_W: 0.472, // the model's axial length, from its bounds
+  WIDTH: 0.838, // multiplier on the visually-matched width; 1 = flush,
+  // held under it so the strip reads as tape, not as wider than its roll.
+  // On-screen width is ROLL_W * WIDTH * mountW / (2 * (camZ - RADIUS) * tan(FOV/2)),
+  // so at the 1440 design width one unit of WIDTH is ~253px: 0.004 ~= 1px.
+  COLOR: 0xc08a49, // pre-load fallback only — the roll's own wound-side
+  // colour is copied over it once the model arrives
+  /* How many times the film's own pattern repeats per world unit of tape.
+   *
+   * This is what stops the strip reading as an extrusion. The maps are tiled
+   * along the tape by this against the paid-out length rather than left at 1:
+   * at 1 a single copy of the pattern is smeared over however much tape is out,
+   * so the strip is the same cross-section stretched further and further and
+   * the growth shows nothing new. Tiled, the pattern holds its real size and is
+   * anchored at the free end, so tape gains new pattern AT THE ROLL — material
+   * coming out, rather than a shape getting longer.
+   *
+   * Low on purpose. It sets the tile's length (1/GRAIN world units, ~700px at
+   * the design width), and the tile is what eventually comes round again: at
+   * 1.5 the same stretch of film repeats a dozen times over a full tape, which
+   * the eye reads as wallpaper. At 0.45 it is about three, which reads as
+   * material. Live-tweak in dev: hero.STRIP.GRAIN = 0.8; hero.tune() */
+  GRAIN: 0.45,
+};
+
+/* The free end — a tear.
+ *
+ * A flat edge reads as a rectangle; a torn one reads as tape, and it is the
+ * clearest such signal on the strip, because the roll turns side-on and the end
+ * is seen square on.
+ *
+ * SEGMENTS is high on purpose. A tear is irregular at every scale at once, and
+ * the giveaway that it is not one is being able to count the facets — at 180 a
+ * segment is about a pixel wide at the design size, so the line reads as a
+ * silhouette rather than as geometry.
+ *
+ * DEPTH is in world units and the profile never exceeds it, so the tape's
+ * furthest point stays exactly where the engine asked for it: the tear eats
+ * INTO the length rather than adding to it, and the chase line still lands on
+ * END_GAP.
+ *
+ * Live-tweak in dev: hero.END.ROUGH = 0.8; hero.tune()  (tune re-tears it) */
+export const END = {
+  DEPTH: 0.05, // ~16px at the 1440 design width, against a ~213px width
+  SEGMENTS: 180, // resolution across the width
+  ROUGH: 0.62, // 0 is a soft wandering edge, 1 is a hard rip
+};
+
+/* Key light high and to the LEFT, slightly in front — the sheen.
+ *
+ * POWER and AMBIENT are two ends of one balance, and it is the balance rather
+ * than either number that decides whether the tape looks lit or looks printed.
+ * Ambient light arrives from every direction at once, so it carries no shading
+ * and no highlight: it is flat by definition. Raise it and every surface trends
+ * toward its own flat albedo — which is exactly the "flat and full" read. The
+ * two are set here so the key carries about 40% of the light on a
+ * camera-facing surface, against roughly 20% before.
+ *
+ * AMBIENT is in units of pi, where 1 means an unlit surface leaves the renderer
+ * at its texture's own colour. Live-tweak in dev: hero.LIGHT.POWER = 3;
+ * hero.tune() */
+export const LIGHT = { X: -2.5, Y: 3, Z: 2.5, POWER: 2.2, AMBIENT: 0.6 };
+
+/* The film's finish — shared by the roll's face, its wound side and the
+   dispensed strip, so the key light draws one continuous material across all
+   three rather than three surfaces that happen to be adjacent.
+
+   Live-tweak in dev: hero.FILM.SAT = 1.5; hero.tune() */
+export const FILM = {
+  /* Base roughness, which the roughness streaks multiply — so it sits higher
+     than a flat value would, and the effective gloss ranges about 0.14-0.29.
+     Lower is a tighter, brighter, sharper highlight. */
+  GLOSS: 0.2,
+  /* A dielectric reflects about 4% head-on, which under a bright ambient is too
+     little to see — the surface has a highlight in the maths and none on
+     screen. Metalness raises that reflectance and tints it with the surface's
+     own colour, which is what makes the sheen read as coated film rather than
+     as a grey smear. Kept low: past ~0.35 the artwork starts going dark and
+     metallic, because metalness also takes light away from the diffuse. */
+  METAL: 0.3,
+  /** Saturation, applied to the artwork after its texture is sampled. */
+  SAT: 1.05,
+  /** Contrast about mid grey. Small numbers go a long way; 1.25 is a lot. */
+  PUNCH: 1.16,
+  /* A lift on the roll's FACE alone — the artwork, not the wound side or the
+     strip. It scales the texture on its way in, so it is exposure rather than
+     added light: nothing else in the scene moves, and the face's own shading
+     and highlight are untouched. Worth keeping small. Above roughly 1.15 the
+     brightest parts of the artwork start clipping, and clipped channels drift
+     toward white — which costs the saturation SAT is there to add. */
+  FACE: 1.2,
+  /* How far the strip's normals fan across its width, in radians.
+   *
+   * The strip is a flat plane facing the camera, and a flat plane under a
+   * directional light shades to ONE value over its whole area — the normal
+   * never changes, so nor does the shading, however long the tape gets. That is
+   * why the dispensed length has no sheen of its own to speak of.
+   *
+   * Fanning the normals across the width says the tape has a slight cross-curl,
+   * which real tape always does. The normal then sweeps through the light's
+   * half-vector exactly once across the width, and where it does there is a
+   * highlight — running the entire length, and growing with it, for no extra
+   * light and no extra geometry. The silhouette is untouched: the normals move,
+   * the vertices do not, so the carefully matched width still holds.
+   *
+   * The mesh's own scale.x (~0.67) amplifies the tilt by about 1.5x on its way
+   * through the normal matrix; the number below is the pre-amplification one. */
+  CURL: 0.5,
+};
+
+export type HeroTape = {
+  /** Yaw in degrees; tape paid out, in document px. */
+  pose(yawDeg: number, lenPx: number): void;
+  /** Re-read the mount's box and reframe. */
+  resize(): void;
+  /** Render, but only if pose() or resize() changed something. */
+  draw(): void;
+  /** Re-apply CONFIG and LIGHT and recut the end after a live tweak. Dev only. */
+  tune(): void;
+  dispose(): void;
+};
+
+/* Subtle streak maps — the anti-flat trick. A colour map alone still shades
+   evenly under a directional light; it is the roughnessMap that varies the
+   gloss across the surface, so the key light lands as streaks of sheen instead
+   of one even wash. The same streaks go on the wound side and the strip, run in
+   each surface's tape-length direction, so they read as one continuous film.
+
+   `broken` is the difference between the two surfaces. Streaks that span the
+   map edge to edge vary across the width and not at all along it — which is
+   what the wound side wants, since its length is a circumference and a mark
+   that stopped would be a mark that came round again. On the dispensed strip
+   the same map is the whole "extruded" problem: constant along the length means
+   every inch of tape is the same inch, so paying more out only stretches the
+   silhouette. Broken, most of the streaks become runs of their own length with
+   faded ends, and the tape has events along it — a glint that starts and stops
+   — for the growth to carry past the roll. */
+function streakTex(
+  base: number,
+  amp: number,
+  horizontal: boolean,
+  srgb: boolean,
+  aniso: number,
+  broken = false
+) {
+  const S = 1024;
+  const c = document.createElement("canvas");
+  c.width = S;
+  c.height = S;
+  const g = c.getContext("2d")!;
+  const shade = (v: number, a = 1) => {
+    const n = Math.max(0, Math.min(255, Math.round(v * 255)));
+    return `rgba(${n},${n},${n},${a})`;
+  };
+  g.fillStyle = shade(base);
+  g.fillRect(0, 0, S, S);
+
+  /* One streak. `across` is where it sits on the width axis, `from` where it
+     starts on the length axis and `len` how far it runs — S for the full span.
+     Two things keep it honest:
+
+     The ends fade rather than stop, over 40px or 40% of the run, whichever is
+     shorter. A hard end is a printed dash; a faded one is the light letting go
+     of the film.
+
+     Drawn twice, S apart, so a run overhanging the end comes back in at the
+     start and the map still tiles seamlessly along the tape — which it has to,
+     because GRAIN tiles it several times over a full length. The second pass is
+     clipped away when the run does not overhang, which costs nothing. */
+  const streak = (v: number, across: number, w: number, from: number, len: number) => {
+    const solid = shade(v);
+    const clear = shade(v, 0);
+    const fade = len < S ? Math.min(0.4, 40 / len) : 0;
+
+    for (const off of [0, -S]) {
+      const a = from + off;
+      const grad = horizontal
+        ? g.createLinearGradient(a, 0, a + len, 0)
+        : g.createLinearGradient(0, a, 0, a + len);
+      grad.addColorStop(0, fade ? clear : solid);
+      if (fade) {
+        grad.addColorStop(fade, solid);
+        grad.addColorStop(1 - fade, solid);
+      }
+      grad.addColorStop(1, fade ? clear : solid);
+
+      g.fillStyle = grad;
+      if (horizontal) g.fillRect(a, across, len, w);
+      else g.fillRect(across, a, w, len);
+
+      if (!fade) break; // a full-span run has nothing to wrap
+    }
+  };
+
+  // More of them when they are broken, because each now covers a fraction of
+  // the length it used to.
+  const count = broken ? 380 : 240;
+  for (let i = 0; i < count; i++) {
+    const v = base + (Math.random() - 0.5) * amp;
+    const across = Math.random() * S;
+    const w = 2 + Math.random() * 12;
+    /* A quarter stay continuous even on the strip. Film really does carry
+       extrusion lines that run its whole length, and losing them entirely
+       trades one wrong read for another — tape for weathered paper. */
+    if (!broken || Math.random() < 0.25) streak(v, across, w, 0, S);
+    else streak(v, across, w, Math.random() * S, S * (0.06 + Math.random() * 0.34));
+  }
+
+  const tex = new CanvasTexture(c);
+  tex.wrapS = tex.wrapT = RepeatWrapping;
+  if (srgb) tex.colorSpace = SRGBColorSpace; // colour maps only
+  tex.anisotropy = aniso;
+  return tex;
+}
+
+/* One band of value noise: n random values around the width, smoothstepped
+   between, wrapping at the ends so a sum of bands has no seam. */
+function band(n: number) {
+  const v = Array.from({ length: n }, () => Math.random());
+  return (t: number) => {
+    const x = t * n;
+    const i = Math.floor(x) % n;
+    const f = x - Math.floor(x);
+    const a = v[i];
+    const b = v[(i + 1) % n];
+    return a + (b - a) * f * f * (3 - 2 * f);
+  };
+}
+
+/* The tear line, as a 0..1 depth for any point across the width.
+ *
+ * Bands of noise summed at falling amplitude — the same trick as the streak
+ * maps, in one dimension. This is the part a regular serration cannot fake: a
+ * real tear wanders across the whole width, breaks into bites within that, and
+ * frays within those, and it is having all three at once that makes it read as
+ * torn rather than as a pattern. */
+function tearProfile() {
+  const bands = [
+    [2, 1], // which side of the tape the tear runs deep
+    [5, 0.62], // the long swings
+    [13, 0.34], // bites
+    [31, 0.19], // nicks
+    [73, 0.1], // fray
+  ] as const;
+  const waves = bands.map(([n, amp]) => ({ amp, at: band(n) }));
+  const total = waves.reduce((sum, w) => sum + w.amp, 0);
+
+  return (t: number) => {
+    const f = waves.reduce((sum, w) => sum + w.amp * w.at(t), 0) / total;
+    /* Folding the wave at its midline turns every crossing into a crease. That
+       is the difference between a line that rolls and a line that was ripped:
+       smooth noise alone gives soft scallops, however much of it you stack. */
+    const ridged = Math.abs(f * 2 - 1);
+    const mixed = Math.min(1, Math.max(0, f + (ridged - f) * END.ROUGH));
+    // Biased shallow, so the deep bites are occasional rather than the average.
+    return mixed ** (1 + END.ROUGH * 0.8);
+  };
+}
+
+/* The tear, as a strip of quads.
+ *
+ * Geometry rather than an alpha map: the silhouette is the whole point, and a
+ * cutout would have to be alpha-tested — which stair-steps on a diagonal, and
+ * every edge of a tear is a diagonal. Real edges get the renderer's MSAA free.
+ *
+ * Spans x -0.5..0.5 and y -DEPTH..0, so it takes the strip's own scale.x and
+ * hangs off the bottom edge unstretched. */
+function tearGeometry() {
+  const n = Math.max(8, Math.round(END.SEGMENTS));
+  const depthAt = tearProfile();
+
+  const cut: number[] = [];
+  for (let i = 0; i <= n; i++) cut.push(-END.DEPTH * depthAt(i / n));
+
+  const pos: number[] = [];
+  const nor: number[] = [];
+  const uvs: number[] = [];
+  const vert = (x: number, y: number) => {
+    pos.push(x, y, 0);
+    // The same cross-curl as the strip it ends, so the lengthwise sheen runs
+    // through the tear rather than stopping dead at the join.
+    const a = FILM.CURL * x * 2;
+    nor.push(Math.sin(a), 0, Math.cos(a));
+    /* u across the width, v pinned to 0 — the strip's own coordinate at the
+       join, since the body is anchored there. So the cap is the body's last row
+       carried on down: the lengthwise streaks run through the tear instead of
+       stopping at it, and they do so at any length.
+
+       Not v up the tear, which is what this was. The cap shares the strip's
+       textures, and those are now tiled along the tape — a v spanning 0..1
+       would pull the whole tile into the tear's 16px and pack tighter the
+       longer the tape got, which is the one place on the strip that must not
+       look like it is being squeezed. */
+    uvs.push(x + 0.5, 0);
+  };
+
+  for (let i = 0; i < n; i++) {
+    const x0 = -0.5 + i / n;
+    const x1 = -0.5 + (i + 1) / n;
+    // Wound counter-clockwise seen from +z, matching the normals above.
+    vert(x0, 0);
+    vert(x0, cut[i]);
+    vert(x1, cut[i + 1]);
+    vert(x0, 0);
+    vert(x1, cut[i + 1]);
+    vert(x1, 0);
+  }
+
+  const geo = new BufferGeometry();
+  geo.setAttribute("position", new Float32BufferAttribute(pos, 3));
+  geo.setAttribute("normal", new Float32BufferAttribute(nor, 3));
+  geo.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
+  return geo;
+}
+
+/* Fan a flat sheet's normals across its width — see FILM.CURL. Only the normals
+   change, so the mesh keeps its exact silhouette; the two columns of a
+   single-segment plane are enough, because the fragment stage interpolates
+   between them and renormalises, which is the sweep we are after. */
+function curlNormals(geo: BufferGeometry) {
+  const pos = geo.attributes.position;
+  const nor = geo.attributes.normal;
+  for (let i = 0; i < pos.count; i++) {
+    const a = FILM.CURL * pos.getX(i) * 2; // x spans -0.5..0.5
+    nor.setXYZ(i, Math.sin(a), 0, Math.cos(a));
+  }
+  nor.needsUpdate = true;
+}
+
+/* Saturation and contrast, as a patch on the standard shader.
+ *
+ * The artwork's colour lives in the model's texture, and a material's `color`
+ * can only scale it — scaling white light makes a texture brighter, never more
+ * saturated. Pulling the sampled colour away from its own luminance is the
+ * operation that actually saturates, and it has to happen where the texture is
+ * read, which means in the shader.
+ *
+ * Fed from uniforms rather than baked into the source so a dev tweak takes
+ * effect on the next frame instead of forcing a shader recompile. */
+const filmLook = {
+  uSat: { value: FILM.SAT },
+  uPunch: { value: FILM.PUNCH },
+};
+
+function applyFilmLook(mat: MeshStandardMaterial) {
+  mat.roughness = FILM.GLOSS;
+  mat.metalness = FILM.METAL;
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.uSat = filmLook.uSat;
+    shader.uniforms.uPunch = filmLook.uPunch;
+    shader.fragmentShader =
+      "uniform float uSat;\nuniform float uPunch;\n" +
+      shader.fragmentShader.replace(
+        "#include <map_fragment>",
+        `#include <map_fragment>
+        {
+          // Rec. 709 luma, and a pivot of 0.21 — mid grey, in the linear space
+          // the map has already been decoded into. Before any lighting, so the
+          // highlight is drawn against the punchier colour rather than over it.
+          float l = dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );
+          diffuseColor.rgb = mix( vec3( l ), diffuseColor.rgb, uSat );
+          diffuseColor.rgb = clamp( mix( vec3( 0.21 ), diffuseColor.rgb, uPunch ), 0.0, 1.0 );
+        }`
+      );
+  };
+  mat.needsUpdate = true; // patched source => recompile
+}
+
+export function createHeroTape(
+  mount: HTMLElement,
+  url: string
+): Promise<HeroTape> {
+  const scene = new Scene();
+  const camera = new PerspectiveCamera(FOV, 1, 0.01, 100);
+
+  /* Same flat-art pipeline as the slider: no tone mapping and no environment
+     map, both of which exist to make photoreal scenes filmic and both of which
+     drag saturated flat artwork toward pastel. What shapes the surface instead
+     is the key/ambient balance in LIGHT and the finish in FILM. */
+  const renderer = new WebGLRenderer({ antialias: true, alpha: true });
+  renderer.toneMapping = NoToneMapping;
+  renderer.setClearColor(0x000000, 0);
+
+  const canvas = renderer.domElement;
+  // Arrives invisible and fades up on the first real frame, so the model
+  // landing reads as the roll easing in rather than a pop.
+  canvas.style.opacity = "0";
+  canvas.style.transition = "opacity 0.35s ease";
+  mount.appendChild(canvas);
+
+  const aniso = renderer.capabilities.getMaxAnisotropy();
+
+  const dir = new DirectionalLight(0xffffff, LIGHT.POWER);
+  const amb = new AmbientLight(0xffffff, Math.PI * LIGHT.AMBIENT);
+  scene.add(dir, amb);
+
+  /* Every surface that is meant to read as the same film. Held so a live tweak
+     can re-apply the finish to all of them at once — the roll's two materials
+     join the list when the model lands. */
+  const filmMats: MeshStandardMaterial[] = [];
+
+  /* The roll's face materials, each with the colour it arrived from the export
+     with. FILM.FACE is applied against that original rather than against the
+     current value, so tuning it repeatedly sets the lift instead of compounding
+     it. */
+  const faces: { mat: MeshStandardMaterial; base: Color }[] = [];
+
+  const group = new Group();
+
+  /* The axle, as its own group.
+   *
+   * The model exports face-up, so the -90 on X turns the artwork toward the
+   * camera and leaves the axle along this group's LOCAL y — which makes a y
+   * rotation here a spin about the axle at any yaw whatsoever.
+   *
+   * That is the point of it. Spinning the outer group about world x, as this
+   * used to, is only a spin about the axle once the roll has finished turning
+   * side-on; at any angle short of that it tumbles the roll instead. Which
+   * meant the tape could not start feeding until the turn was completely over,
+   * and the two moves could only ever be played end to end. */
+  const spinner = new Group();
+  spinner.rotation.x = -Math.PI / 2;
+  group.add(spinner);
+  scene.add(group);
+
+  /* The strip hangs from the roll's BACK tangent (z = -RADIUS) and pays out
+     downward as the roll spins, so the roll occludes their overlap and the tape
+     reads as coming from behind it. Top-anchored via the geometry translate so
+     scale.y is the paid-out length; it lives in the scene, not the spinning
+     group, because dispensed tape does not rotate.
+
+     COLOR is only the pre-load fallback; the roll's own side colour replaces it
+     the moment the model arrives. The near-white tint map keeps that colour
+     authority — it only adds the faint streaks. */
+  const stripGeo = new PlaneGeometry(1, 1);
+  stripGeo.translate(0, -0.5, 0);
+  const stripMat = new MeshStandardMaterial({
+    color: STRIP.COLOR,
+    map: streakTex(1, 0.07, false, true, aniso, true),
+    roughnessMap: streakTex(0.72, 0.5, false, false, aniso, true),
+    side: DoubleSide,
+  });
+  applyFilmLook(stripMat);
+  filmMats.push(stripMat);
+  const stripMap = stripMat.map as Texture;
+  const stripRough = stripMat.roughnessMap as Texture;
+  const strip = new Mesh(stripGeo, stripMat);
+  strip.position.z = -STRIP.RADIUS;
+  strip.visible = false;
+  scene.add(strip);
+
+  /* The cut end, sharing the strip's material so the two are one piece of tape
+     under the key light — there is no second surface to keep in step. Its
+     geometry is cut by tune(), which runs before the first frame. */
+  const endCap = new Mesh(new BufferGeometry(), stripMat);
+  endCap.position.z = -STRIP.RADIUS;
+  endCap.visible = false;
+  scene.add(endCap);
+
+  /* Render only when something changed. The scene is static between scroll
+     positions, and the page already runs Lenis and GSAP tickers — a fixed 60fps
+     render of a still frame would be pure heat. */
+  let dirty = true;
+  let shown = false;
+  let pxPerWorld = 1;
+  let lastYaw = NaN;
+  let lastLen = NaN;
+
+  function resize() {
+    const w = mount.clientWidth || 1; // the roll's square framing box
+    const h = mount.clientHeight || 1; // square + strip room to the section end
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, DPR_CAP, MAX_BUFFER / h));
+    // updateStyle false: the stylesheet owns the canvas box; three only sizes
+    // the drawing buffer.
+    renderer.setSize(w, h, false);
+    /* Frame the roll exactly as a square canvas would, then extend the view
+       downward for the strip — same projection, more paper. */
+    camera.aspect = 1;
+    camera.setViewOffset(w, w, 0, 0, w, h);
+    camera.updateProjectionMatrix();
+
+    // px per world unit at the STRIP's depth — it sits RADIUS beyond the roll's
+    // centre, so it projects slightly smaller than the roll does.
+    pxPerWorld = w / (2 * (CONFIG.camZ + STRIP.RADIUS) * Math.tan((FOV / 2) * DEG));
+
+    /* Flush with the roll's on-screen silhouette, whose width is set by its
+       NEAR rim (camZ - R) while the strip hangs at the far side (camZ + R);
+       WIDTH is a multiplier on that match. Depends only on the camera, so it is
+       set here rather than per frame. */
+    strip.scale.x =
+      STRIP.ROLL_W *
+      ((CONFIG.camZ + STRIP.RADIUS) / (CONFIG.camZ - STRIP.RADIUS)) *
+      STRIP.WIDTH;
+    endCap.scale.x = strip.scale.x; // the cut is as wide as what it cuts
+
+    lastLen = NaN; // px -> world moved; the next pose must recompute
+    dirty = true;
+  }
+
+  function tune() {
+    dir.position.set(LIGHT.X, LIGHT.Y, LIGHT.Z);
+    dir.intensity = LIGHT.POWER;
+    amb.intensity = Math.PI * LIGHT.AMBIENT;
+    camera.position.z = CONFIG.camZ;
+
+    // Uniforms, so these two land on the next frame with no recompile.
+    filmLook.uSat.value = FILM.SAT;
+    filmLook.uPunch.value = FILM.PUNCH;
+    filmMats.forEach((m) => {
+      m.roughness = FILM.GLOSS;
+      m.metalness = FILM.METAL;
+    });
+    faces.forEach((f) => f.mat.color.copy(f.base).multiplyScalar(FILM.FACE));
+
+    // Baked into vertices rather than uniforms, so both are rebuilt: the tear
+    // profile, and the cross-curl the lengthwise sheen rides on.
+    curlNormals(stripGeo);
+    endCap.geometry.dispose();
+    endCap.geometry = tearGeometry();
+    resize(); // pxPerWorld and the strip's width both follow camZ
+  }
+
+  function pose(yawDeg: number, lenPx: number) {
+    if (yawDeg === lastYaw && lenPx === lastLen) return;
+    lastYaw = yawDeg;
+    lastLen = lenPx;
+
+    const len = lenPx / pxPerWorld;
+    // Spin follows the paid-out length exactly (angle = length / radius), so
+    // the roll can never turn without dispensing or vice versa.
+    const spin = len / STRIP.RADIUS;
+
+    // The turn and the unspooling are now independent: the group only ever
+    // yaws, the spinner only ever spins about the axle. Positive spin sends the
+    // BACK surface downward — the tangent the strip pays out from.
+    group.rotation.set(CONFIG.rotX * DEG, yawDeg * DEG, CONFIG.rotZ * DEG);
+    spinner.rotation.y = spin;
+
+    /* The cut occupies the last DEPTH of the tape, so the body stops short by
+       that much and the two together measure exactly len. Below DEPTH the cut
+       scales down instead of being clipped, so the very first tape out of the
+       roll grows a tooth edge rather than popping one on at 13px. */
+    const capT = Math.min(len / END.DEPTH, 1);
+    const body = Math.max(len - END.DEPTH * capT, 0);
+
+    endCap.visible = len > 0.001;
+    endCap.scale.y = Math.max(capT, 0.0001);
+    endCap.position.y = -body;
+
+    strip.visible = body > 0.001;
+    strip.scale.y = Math.max(body, 0.0001);
+
+    /* The film's pattern, held at its real size however long the tape gets —
+       see STRIP.GRAIN. Against `body` rather than `len` so it is exact: the
+       mesh's uv 0..1 covers exactly `body` world units, so tiling by body*GRAIN
+       puts precisely GRAIN tiles in every world unit of it.
+
+       v = 0 is the strip's bottom edge, which is the free end, so that is where
+       the pattern is pinned. Every point of tape keeps the pattern it was paid
+       out with and the new pattern appears at the roll — the tape moves through
+       its own texture rather than dragging it along. Pin it at the top instead
+       and the whole pattern would slide down the strip as it grew, which reads
+       as the tape slipping. */
+    const rep = Math.max(body * STRIP.GRAIN, 0.001);
+    stripMap.repeat.set(1, rep);
+    stripRough.repeat.set(1, rep);
+    dirty = true;
+  }
+
+  function draw() {
+    if (!dirty) return;
+    dirty = false;
+    renderer.render(scene, camera);
+    if (shown) return;
+    shown = true;
+    canvas.style.opacity = "1";
+  }
+
+  function teardown() {
+    // The strip and its cut end share one material; without this its textures
+    // would be disposed twice.
+    const done = new Set<MeshStandardMaterial>();
+    scene.traverse((obj) => {
+      if (!(obj instanceof Mesh)) return;
+      obj.geometry.dispose();
+      const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+      mats.forEach((m: MeshStandardMaterial) => {
+        if (done.has(m)) return;
+        done.add(m);
+        m.map?.dispose();
+        m.roughnessMap?.dispose();
+        m.dispose();
+      });
+    });
+    renderer.dispose();
+    canvas.remove();
+  }
+
+  tune();
+
+  return new Promise<HeroTape>((resolve, reject) => {
+    new GLTFLoader().load(
+      url,
+      (gltf) => {
+        const model = gltf.scene;
+        /* Full anisotropy on every map. Without it the wound side's weave
+           collapses to its flat grey mip average wherever the surface grazes
+           the view — a grey sheet creeping along the roll's rim on real GPUs
+           (software renderers mip less aggressively, which is why headless
+           checks do not show it). */
+        model.traverse((o) => {
+          if (!(o as Mesh).isMesh) return;
+          const mat = (o as Mesh).material as MeshStandardMaterial;
+          if (mat.map) {
+            mat.map.anisotropy = aniso;
+            mat.map.needsUpdate = true;
+          }
+          /* Both of the roll's materials get the film's finish — the face's
+             artwork is the surface the whole section is about, and it arrives
+             from the export flat and matte. */
+          applyFilmLook(mat);
+          filmMats.push(mat);
+          /* "Material" is the wound side in this export. The dispensed strip IS
+             this tape, so it takes the side's exact colour and the shared gloss
+             — under the same key light the two render identically. Blender's
+             cylinder unwrap runs U around the circumference, so the side's
+             streaks are drawn horizontal in UV space to land along the winding
+             direction on screen. */
+          if (mat.name !== "Material") {
+            // Anything that is not the wound side is artwork: the face. Guarded
+            // because one material may be shared by several meshes, and the
+            // lift is a multiply — seeing it twice would square it.
+            if (!faces.some((f) => f.mat === mat)) {
+              faces.push({ mat, base: mat.color.clone() });
+              mat.color.multiplyScalar(FILM.FACE);
+            }
+            return;
+          }
+          mat.map = streakTex(1, 0.07, true, true, aniso);
+          mat.roughnessMap = streakTex(0.72, 0.5, true, false, aniso);
+          mat.needsUpdate = true; // new maps => shader recompile
+          stripMat.color.copy(mat.color);
+        });
+
+        // Centre on the geometry, not the export's origin — the roll has to
+        // spin about the middle of itself.
+        const centre = new Box3().setFromObject(model).getCenter(new Vector3());
+        model.position.sub(centre);
+
+        spinner.add(model); // the -90 that faces the artwork at us is already on it
+
+        dirty = true;
+        resolve({ pose, resize, draw, tune, dispose: teardown });
+      },
+      undefined,
+      (e) => {
+        // A failed load must not leak the context it was going to draw into.
+        teardown();
+        reject(e);
+      }
+    );
+  });
+}

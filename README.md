@@ -21,6 +21,12 @@ src/
     (payload)/         the admin and REST/GraphQL routes, generated boilerplate
   components/
     SmoothScroll.tsx   Lenis, driven off GSAP's ticker
+    Hero/
+      index.tsx        the section's markup, server-rendered
+      Stage.tsx        the one client component: a ref, and the effect that
+                       starts the engine
+      engine.ts        the scroll choreography — pure maths on window.scrollY
+      heroTape.ts      the roll and the strip it dispenses; its own chunk
     TapeSlider/
       index.tsx        the section's markup, server-rendered
       Stage.tsx        the one client component: a ref, and the effect that
@@ -35,10 +41,14 @@ src/
     reset.css
     tokens.css         fonts, orbit sizing, fallback palette
     letters.css        GENERATED — see below
+    hero.css           the hero section
     tape-slider.css    everything else
   collections/         Payload schema. Not live.
 public/assets/         artwork, referenced by path
 legacy/                the original static build, kept for reference
+hero.html / hero.css   the standalone hero prototype the section was ported
+                       from. Superseded — delete once nothing is being tuned
+                       in it, or it will drift.
 ```
 
 ### Two route groups, two roots
@@ -56,7 +66,27 @@ survive. React renders the markup; the engine owns it from mount.
 
 `initTapeSlider` returns a teardown, so StrictMode's double mount rebinds
 instead of doubling every listener. `reactStrictMode` is on in `next.config.mjs`
-to keep that honest.
+to keep that honest. `initHero` is built the same way.
+
+### Three.js is never in the first load
+
+Both sections import their three module with a dynamic `import()`, so three and
+the GLTF loader land in their own chunk after the page is interactive. The
+slider degrades to the flat `<img>` while it waits; the hero degrades to type
+and colour. Neither blocks first paint.
+
+The hero's roll is the exception that needed help: it is the first thing on the
+page and its GLB is 1.3 MB, which would otherwise not be requested until the
+chunk had downloaded and the loader had been constructed. `Hero/index.tsx`
+calls React's `preload()` so the fetch starts with the document instead.
+
+### Rendering is on demand
+
+Neither three scene runs a fixed 60fps loop. The hero renders only when the
+scroll position actually moved the roll, and stops entirely when an
+`IntersectionObserver` says the section has left the viewport. The scroll maths
+runs on GSAP's ticker — the same one driving Lenis — because a `scroll`
+listener reads a position one frame stale and the roll visibly lags the page.
 
 ### Adding or editing a tape
 

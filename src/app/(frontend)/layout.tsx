@@ -7,6 +7,7 @@ import "lenis/dist/lenis.css";
 import "@/styles/reset.css";
 import "@/styles/tokens.css";
 import "@/styles/letters.css"; /* generated — npm run letters */
+import "@/styles/hero.css";
 import "@/styles/tape-slider.css";
 
 import SmoothScroll from "@/components/SmoothScroll";

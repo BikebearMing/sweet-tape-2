@@ -159,11 +159,6 @@
      chips are: GSAP owns these elements' transform during the swap and a
      transform declared here would simply be overwritten. Tune the angles. */
   & img.showcase {
-    /* Hidden for now — the 3D roll carries the stage alone. Everything below
-       (and the pair's flip in the engine) is left intact: delete this one
-       line to bring the photographs back. */
-    display: none;
-
     position: absolute;
     z-index: 10;
     border-radius: 3.472vw;
@@ -207,7 +202,7 @@
 
   & .key-visual {
     position: absolute;
-    left: 52%;
+    left: 48%;
     width: 24.804vw;
     height: 24.804vw;
     top: 53%;
@@ -266,6 +261,12 @@
   left: 48%;
   transform: translateX(-50%);
   gap: 0.3em;
+  /* The hero's tape overruns the section above and finishes a little way into
+     this one, at z-index 2 — right where the word mark sits, and centred on the
+     same axis. 3 puts the tail behind the letters rather than across them,
+     while staying under everything else here (4 and up). The colour layers are
+     below it either way, so the tape still reads against the stage. */
+  z-index: 3;
 }
 
 /* --------------------------------------------------------------------------
@@ -399,6 +400,7 @@
   width: 100%;
   height: 100vh;
   overflow: hidden;
+  z-index: 10;
 
   & .wrapper {
     position: relative;

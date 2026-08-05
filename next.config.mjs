@@ -8,9 +8,16 @@ const nextConfig = {
      this is ever turned off, that class of bug goes quiet rather than away. */
   reactStrictMode: true,
 
+  // Lets other devices on the LAN (phone previews) hit the dev server's
+  // internal assets without Next blocking them as cross-origin. Dev-only
+  // by definition; production ignores it.
+  allowedDevOrigins: ["192.168.100.127"],
+
   // Nothing else to configure for the front end — the artwork is served straight
   // from /public and none of it goes through next/image (see TapeSlider).
 };
+
+
 
 // withPayload wires the admin bundle and Payload's server-only deps into the
 // build. It is inert for the front end: pages that never import the config

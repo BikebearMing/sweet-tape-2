@@ -205,7 +205,7 @@
     left: 48%;
     width: 24.804vw;
     height: 24.804vw;
-    top: 53%;
+    top: 56%;
     /* The `translate` property, not `transform` — GSAP owns this element's
        transform for the parallax, and a translate declared there would be
        overwritten the first time it scrolls, dropping the centring. These are
@@ -250,14 +250,14 @@
   & .bottom-title {
     position: absolute;
     left: 48%;
-    bottom: 6vw;
+    bottom: 2vw;
     transform: translateX(-50%);
   }
 }
 
 .top-title {
   position: absolute;
-  top: 6.1vw;
+  top: 9.1vw;
   left: 48%;
   transform: translateX(-50%);
   gap: 0.3em;
@@ -349,10 +349,26 @@
 .subhead {
   position: absolute;
   left: 48%;
-  top: 3.2vw;
+  top: 5.5vw;
   transform: translateX(-50%) rotate(-2deg);
   font-size: 1.05vw;
   z-index: 6;
+}
+
+/* The content's clearance under the wave band's tape — the other half of the
+   section's extra height. The three shifted boxes are everything visible the
+   stage holds; .bg-overlay and .sweep-paint deliberately stay put, anchored
+   to the stage's own top (the colour and its wipe stencil must reach up
+   behind the band). The sweep's subhead copy still lands exactly on the real
+   one: both wear .subhead, so both carry this shift.
+
+   The `translate` property, not `transform` — same reason as the key visual:
+   these boxes' transforms belong to their own rules or to GSAP, and the two
+   properties compose. */
+.tape-slide,
+.subhead,
+.roll-parent {
+  translate: 0 8vw;
 }
 
 /* --------------------------------------------------------------------------
@@ -398,8 +414,18 @@
 .tape-slider-parent {
   position: relative;
   width: 100%;
-  height: 100vh;
-  overflow: hidden;
+  /* A viewport of stage plus room for the wave band's tape, which dips up to
+     ~16vw of tilted valley into this section's top (wave-band.css). The
+     extra height is matched by the content shift below, so everything the
+     stage holds starts clear of the tape; the colour fields (.bg-overlay,
+     inset: 0) stretch over the full box on their own — which is the point:
+     the stage's colour, and its wipes, run all the way up behind the band. */
+  height: calc(100vh + 12vw);
+  /* clip, not hidden: hidden leaves the box programmatically scrollable, and
+     focusing a roll that pokes past an edge (keyboard, or a test runner's
+     scrollIntoView) drags the whole stage sideways. clip paints identically
+     and forbids the scroll outright. */
+  overflow: clip;
   z-index: 10;
 
   & .wrapper {

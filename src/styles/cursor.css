@@ -1,0 +1,53 @@
+/* ==========================================================================
+   Custom cursor — the taped arrow
+   ==========================================================================
+   The element is built and driven by components/Cursor; this file is only
+   what it looks like. Everything positional beyond the hotspot offset below
+   belongs to GSAP — it owns `transform`, so nothing here may declare one.
+
+   The .has-cursor class is added by the module, never assumed: without JS, on
+   a touch device, or after teardown the class is absent and the native cursor
+   is exactly where it always was. */
+
+html.has-cursor,
+html.has-cursor * {
+  cursor: none;
+}
+
+/* An exception worth keeping: text you can select still says so. A caret over
+   a field is information the arrow does not carry. */
+html.has-cursor input,
+html.has-cursor textarea {
+  cursor: text;
+}
+
+.cursor-arrow {
+  position: fixed;
+  left: 0;
+  top: 0;
+  /* The artwork's own size. In px, not vw: this is a pointer, and a pointer
+     that grows with the viewport stops reading as one. */
+  width: 60px;
+  height: 65px;
+  background: url("/assets/cursor.svg") center / contain no-repeat;
+
+  /* The hotspot. The arrow's tip sits at (14, 15) inside the 60x65 artwork,
+     so the box is offset by exactly that much and the tip — not the corner,
+     and not the centre — lands on the pointer's real position.
+
+     The `translate` property, not `transform` — GSAP owns the transform for
+     the tracking and would overwrite this the first time the mouse moved.
+     They are separate properties and compose, and because translate is
+     applied first, the hover scale still pivots on the tip below. */
+  translate: -14px -15px;
+  transform-origin: 14px 15px;
+
+  pointer-events: none; /* never be what a click lands on */
+  z-index: 9999; /* over the slider's stage (10) and the band's svg (11) */
+  will-change: transform;
+
+  /* The artwork is pale masking tape and the page runs pale in places (the
+     gift's ribbon, the cardboard, the note). A tight dark edge keeps the
+     arrow readable over all of them without tinting it. */
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.45));
+}

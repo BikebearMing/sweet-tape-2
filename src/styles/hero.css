@@ -14,6 +14,7 @@
   width: 100%;
   height: 170.139vw;
   background: #0d470c;
+  overflow-x: clip;
 }
 
 .hero-section .hero-wrapper {
@@ -21,6 +22,62 @@
   height: 100%;
   width: 100%;
 }
+
+.hero-section h2 {
+  color: #754402;
+  font-family: var(--font-heading);
+  font-size: 6.071vw;
+  font-weight: 800;
+  line-height: 0.79;
+  letter-spacing: -0.182vw;
+  z-index: 10;
+}
+
+
+#gift {
+    position: absolute;
+    bottom: -12vw;
+    right: -1vw;
+    z-index: 1;
+}
+
+#lemon {
+  position: absolute;
+  left: 0;
+  bottom: 24vw;
+  width:  45.46vw;
+
+object-fit: cover;
+}
+
+
+.cardboard-wrapper {
+  position: absolute;
+  top: 66.542vw;
+  right: 0;
+  width: 51.369vw;
+  height: 65.452vw;
+  z-index: 0;
+
+
+  & h2 {
+    position: absolute;
+    top: 7.778vw;
+    left: 11.028vw;
+    max-width: 34.442vw;
+    transform: rotate(-0.628deg);
+  }
+
+  & img {
+    object-fit: cover;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+
 
 .hero-section .top {
   position: relative;
@@ -203,6 +260,14 @@
   transform: none;
 }
 
+/* The cardboard copy's words — see words() in Hero/index.tsx. Inline flex
+   boxes of letter clips: the letters row up inside, the line wraps BETWEEN
+   the boxes exactly where the unsplit text would break, and the real spaces
+   between them keep the word spacing without boxes of their own. */
+.hero-section .h2 .word {
+  display: inline-flex;
+}
+
 /* Twenty-odd letters flying in from nowhere is what this setting is asking
    about. Here rather than only in reveal.ts so it also covers the window
    before hydration, when the stylesheet is holding them down on its own. */
@@ -221,6 +286,7 @@
   left: 50%;
   translate: -50%;
   width: 34vw;
+  z-index: 10;
   /* Everything from the roll's square down to the canvas floor is drawing room
      for the dispensed strip. The roll itself stays framed in the top 34vw
      square (the view offset in heroTape handles that), so treat 34vw as the
@@ -243,5 +309,31 @@
   height: 100%;
 }
 
-/* .bottom-part is a placeholder with no styling yet — whatever sits below the
-   roll is still to be designed. */
+/* The pinboard below the roll, arriving prop by prop. */
+
+/* The sticky note's slot. top / left / width are the placement knobs — but
+   note the slot is BIGGER than the note: the sheet rests at 72% of this box
+   (NOTE.SPAN in Hero/stickyNote.ts) and the rest is drawing room the wind
+   lifts its corners into. To place the note where the mock has it, aim its
+   CENTRE, not its edges.
+
+   The taped run across the note's top never moves (WIND.PIN_HALF), so a tape
+   graphic positioned over this slot stays registered with the sheet. */
+.hero-section .sticky-note {
+  position: absolute;
+  top: 56vw;
+  left: 4.5vw;
+  width: 30vw;
+  aspect-ratio: 1 / 0.94; /* matches the sheet, NOTE.W : NOTE.H */
+  /* The pin-up lean. On the slot rather than in the scene so a tape graphic
+     laid over this box inherits the same tilt for free. */
+  rotate: 3deg;
+  z-index: 2;
+  /* A third of this box is transparent bleed — don't let it eat clicks. */
+  pointer-events: none;
+}
+
+.hero-section .sticky-note canvas {
+  width: 100%;
+  height: 100%;
+}

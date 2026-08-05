@@ -77,7 +77,7 @@ export const STRIP = {
    * 1.5 the same stretch of film repeats a dozen times over a full tape, which
    * the eye reads as wallpaper. At 0.45 it is about three, which reads as
    * material. Live-tweak in dev: hero.STRIP.GRAIN = 0.8; hero.tune() */
-  GRAIN: 0.45,
+  GRAIN: 0.3,
 };
 
 /* The free end — a tear.
@@ -98,9 +98,9 @@ export const STRIP = {
  *
  * Live-tweak in dev: hero.END.ROUGH = 0.8; hero.tune()  (tune re-tears it) */
 export const END = {
-  DEPTH: 0.05, // ~16px at the 1440 design width, against a ~213px width
+  DEPTH: 0.09, // ~16px at the 1440 design width, against a ~213px width
   SEGMENTS: 180, // resolution across the width
-  ROUGH: 0.62, // 0 is a soft wandering edge, 1 is a hard rip
+  ROUGH: 0.82, // 0 is a soft wandering edge, 1 is a hard rip
 };
 
 /* Key light high and to the LEFT, slightly in front — the sheen.
@@ -116,7 +116,7 @@ export const END = {
  * AMBIENT is in units of pi, where 1 means an unlit surface leaves the renderer
  * at its texture's own colour. Live-tweak in dev: hero.LIGHT.POWER = 3;
  * hero.tune() */
-export const LIGHT = { X: -2.5, Y: 3, Z: 2.5, POWER: 2.2, AMBIENT: 0.6 };
+export const LIGHT = { X: -1.5, Y: 3, Z: 2.5, POWER: 3.5, AMBIENT: 0.66 };
 
 /* The film's finish — shared by the roll's face, its wound side and the
    dispensed strip, so the key light draws one continuous material across all
@@ -127,25 +127,25 @@ export const FILM = {
   /* Base roughness, which the roughness streaks multiply — so it sits higher
      than a flat value would, and the effective gloss ranges about 0.14-0.29.
      Lower is a tighter, brighter, sharper highlight. */
-  GLOSS: 0.2,
+  GLOSS: 0.42,
   /* A dielectric reflects about 4% head-on, which under a bright ambient is too
      little to see — the surface has a highlight in the maths and none on
      screen. Metalness raises that reflectance and tints it with the surface's
      own colour, which is what makes the sheen read as coated film rather than
      as a grey smear. Kept low: past ~0.35 the artwork starts going dark and
      metallic, because metalness also takes light away from the diffuse. */
-  METAL: 0.3,
+  METAL: 0.35,
   /** Saturation, applied to the artwork after its texture is sampled. */
-  SAT: 1.05,
+  SAT: 0.85,
   /** Contrast about mid grey. Small numbers go a long way; 1.25 is a lot. */
-  PUNCH: 1.16,
+  PUNCH: 1.4,
   /* A lift on the roll's FACE alone — the artwork, not the wound side or the
      strip. It scales the texture on its way in, so it is exposure rather than
      added light: nothing else in the scene moves, and the face's own shading
      and highlight are untouched. Worth keeping small. Above roughly 1.15 the
      brightest parts of the artwork start clipping, and clipped channels drift
      toward white — which costs the saturation SAT is there to add. */
-  FACE: 1.2,
+  FACE: 1.08,
   /* How far the strip's normals fan across its width, in radians.
    *
    * The strip is a flat plane facing the camera, and a flat plane under a
@@ -162,12 +162,16 @@ export const FILM = {
    *
    * The mesh's own scale.x (~0.67) amplifies the tilt by about 1.5x on its way
    * through the normal matrix; the number below is the pre-amplification one. */
-  CURL: 0.5,
+  CURL: 0.6,
 };
 
 export type HeroTape = {
   /** Yaw in degrees; tape paid out, in document px. */
-  pose(yawDeg: number, lenPx: number): void;
+  /** cutPx severs the strip that far below the roll's centre: everything above
+      the cut is gone (the tail, rewinding home), everything below stays put.
+      settle 0..1 is the roll's wind-down — it eases the spin to the nearest
+      whole turn so the label lands upright, exactly as it started. */
+  pose(yawDeg: number, lenPx: number, cutPx?: number, settle?: number): void;
   /** Re-read the mount's box and reframe. */
   resize(): void;
   /** Render, but only if pose() or resize() changed something. */
@@ -321,8 +325,12 @@ function tearProfile() {
  * every edge of a tear is a diagonal. Real edges get the renderer's MSAA free.
  *
  * Spans x -0.5..0.5 and y -DEPTH..0, so it takes the strip's own scale.x and
- * hangs off the bottom edge unstretched. */
-function tearGeometry() {
+ * hangs off the bottom edge unstretched.
+ *
+ * vRow is which row of the strip's texture the cap carries — 0 for the free
+ * end's cap (the body's last row carried on down), 1 for the cut's cap at the
+ * top, which must continue the strip's FIRST row upward instead. */
+function tearGeometry(vRow = 0) {
   const n = Math.max(8, Math.round(END.SEGMENTS));
   const depthAt = tearProfile();
 
@@ -348,7 +356,7 @@ function tearGeometry() {
        would pull the whole tile into the tear's 16px and pack tighter the
        longer the tape got, which is the one place on the strip that must not
        look like it is being squeezed. */
-    uvs.push(x + 0.5, 0);
+    uvs.push(x + 0.5, vRow);
   };
 
   for (let i = 0; i < n; i++) {
@@ -439,10 +447,6 @@ export function createHeroTape(
   renderer.setClearColor(0x000000, 0);
 
   const canvas = renderer.domElement;
-  // Arrives invisible and fades up on the first real frame, so the model
-  // landing reads as the roll easing in rather than a pop.
-  canvas.style.opacity = "0";
-  canvas.style.transition = "opacity 0.35s ease";
   mount.appendChild(canvas);
 
   const aniso = renderer.capabilities.getMaxAnisotropy();
@@ -514,14 +518,24 @@ export function createHeroTape(
   endCap.visible = false;
   scene.add(endCap);
 
+  /* The CUT's edge — same tear, teeth up (the negative y scale in pose does
+     the mirroring; the cross-curl normals all have y = 0, so the flip leaves
+     them alone). Its own geometry rather than the endCap's, so the two edges
+     tear differently — one blade, two rips. Hidden until there is a cut. */
+  const topCap = new Mesh(new BufferGeometry(), stripMat);
+  topCap.position.z = -STRIP.RADIUS;
+  topCap.visible = false;
+  scene.add(topCap);
+
   /* Render only when something changed. The scene is static between scroll
      positions, and the page already runs Lenis and GSAP tickers — a fixed 60fps
      render of a still frame would be pure heat. */
   let dirty = true;
-  let shown = false;
   let pxPerWorld = 1;
   let lastYaw = NaN;
   let lastLen = NaN;
+  let lastCut = NaN;
+  let lastSettle = NaN;
 
   function resize() {
     const w = mount.clientWidth || 1; // the roll's square framing box
@@ -548,7 +562,8 @@ export function createHeroTape(
       STRIP.ROLL_W *
       ((CONFIG.camZ + STRIP.RADIUS) / (CONFIG.camZ - STRIP.RADIUS)) *
       STRIP.WIDTH;
-    endCap.scale.x = strip.scale.x; // the cut is as wide as what it cuts
+    endCap.scale.x = strip.scale.x; // the tears are as wide as what they end
+    topCap.scale.x = strip.scale.x;
 
     lastLen = NaN; // px -> world moved; the next pose must recompute
     dirty = true;
@@ -574,18 +589,35 @@ export function createHeroTape(
     curlNormals(stripGeo);
     endCap.geometry.dispose();
     endCap.geometry = tearGeometry();
+    topCap.geometry.dispose();
+    topCap.geometry = tearGeometry(1); // v = 1: continues the strip's top row
     resize(); // pxPerWorld and the strip's width both follow camZ
   }
 
-  function pose(yawDeg: number, lenPx: number) {
-    if (yawDeg === lastYaw && lenPx === lastLen) return;
+  function pose(yawDeg: number, lenPx: number, cutPx = 0, settle = 0) {
+    if (
+      yawDeg === lastYaw &&
+      lenPx === lastLen &&
+      cutPx === lastCut &&
+      settle === lastSettle
+    )
+      return;
     lastYaw = yawDeg;
     lastLen = lenPx;
+    lastCut = cutPx;
+    lastSettle = settle;
 
     const len = lenPx / pxPerWorld;
     // Spin follows the paid-out length exactly (angle = length / radius), so
-    // the roll can never turn without dispensing or vice versa.
-    const spin = len / STRIP.RADIUS;
+    // the roll can never turn without dispensing or vice versa. Once the cut
+    // has been made that pact is over: `settle` carries the spin to the
+    // NEAREST whole turn — rounded, not ceiled, so it may rewind a shade,
+    // which is what a cut tail springing back onto the roll would do — and
+    // the label lands exactly the way up it started.
+    const spinBase = len / STRIP.RADIUS;
+    const TURN = Math.PI * 2;
+    const spin =
+      spinBase + (Math.round(spinBase / TURN) * TURN - spinBase) * settle;
 
     // The turn and the unspooling are now independent: the group only ever
     // yaws, the spinner only ever spins about the axle. Positive spin sends the
@@ -599,28 +631,47 @@ export function createHeroTape(
        roll grows a tooth edge rather than popping one on at 13px. */
     const capT = Math.min(len / END.DEPTH, 1);
     const body = Math.max(len - END.DEPTH * capT, 0);
+    /* The severed tail. The mesh is top-anchored at the roll's centre, so the
+       cut slides the top edge down (position) while the bottom edge stays
+       where the length put it (scale picks up the difference). The tear cap
+       hangs off the ABSOLUTE end, which the cut never moves.
+
+       The cut line wears its own serration: topCap's teeth point UP (the
+       negative scale mirrors it) with their tips exactly on the cut line, so
+       the serration eats into the piece and the piece's topmost point stays
+       precisely where the cut was asked for. It ramps in over the first DEPTH
+       of cut — all of which happens hidden behind the roll. */
+    const cut = Math.min(cutPx / pxPerWorld, body);
+    const topDepth = Math.max(Math.min(cut, END.DEPTH, body - cut), 0);
+    const vis = Math.max(body - cut - topDepth, 0);
 
     endCap.visible = len > 0.001;
     endCap.scale.y = Math.max(capT, 0.0001);
     endCap.position.y = -body;
 
-    strip.visible = body > 0.001;
-    strip.scale.y = Math.max(body, 0.0001);
+    topCap.visible = topDepth > 0.0005;
+    topCap.scale.y = -Math.max(topDepth / END.DEPTH, 0.0001);
+    topCap.position.y = -(cut + topDepth);
+
+    strip.visible = vis > 0.001;
+    strip.scale.y = Math.max(vis, 0.0001);
+    strip.position.y = -(cut + topDepth);
 
     /* The film's pattern, held at its real size however long the tape gets —
-       see STRIP.GRAIN. Against `body` rather than `len` so it is exact: the
-       mesh's uv 0..1 covers exactly `body` world units, so tiling by body*GRAIN
-       puts precisely GRAIN tiles in every world unit of it.
-
-       v = 0 is the strip's bottom edge, which is the free end, so that is where
-       the pattern is pinned. Every point of tape keeps the pattern it was paid
-       out with and the new pattern appears at the roll — the tape moves through
-       its own texture rather than dragging it along. Pin it at the top instead
-       and the whole pattern would slide down the strip as it grew, which reads
-       as the tape slipping. */
-    const rep = Math.max(body * STRIP.GRAIN, 0.001);
+       see STRIP.GRAIN. The repeat covers the VISIBLE run (the mesh's uv 0..1
+       spans exactly `vis` world units), while the offset stays pinned against
+       the full paid-out body — which keeps the pattern fixed to the WALL, both
+       while the tape pays out (the torn end sweeps through fresh pattern — the
+       evidence of new material, where the eye is looking) and while the cut
+       trims the top (the remaining piece must not slide: it has been stuck
+       down this whole time). The tear cap's UVs sit on the strip's bottom row,
+       so it follows automatically. */
+    const rep = Math.max(vis * STRIP.GRAIN, 0.001);
     stripMap.repeat.set(1, rep);
     stripRough.repeat.set(1, rep);
+    const anchor = -Math.max(body * STRIP.GRAIN, 0.001);
+    stripMap.offset.y = anchor;
+    stripRough.offset.y = anchor;
     dirty = true;
   }
 
@@ -628,9 +679,6 @@ export function createHeroTape(
     if (!dirty) return;
     dirty = false;
     renderer.render(scene, camera);
-    if (shown) return;
-    shown = true;
-    canvas.style.opacity = "1";
   }
 
   function teardown() {

@@ -9,6 +9,8 @@ import { MODEL_URL } from "./engine";
    are named constants rather than strings buried in the markup. */
 const KICKER = ["WE'RE", "HERE TO"];
 const HEADLINE = ["STICK", "BY YOU"];
+const CARDBOARD_COPY =
+  "DIY FAIL, MOVING DAY CHAOS, SCHOOL PROJECT EMERGENCY,LAST-MINUTES FIXES. WE ALWAYS STICK BY YOU.";
 
 /* The rows below are flex, so a plain space between two letters is dropped —
    the gap between words has to be a character carrying a width of its own. */
@@ -36,6 +38,27 @@ function letters(text: string): ReactNode[] {
       <span className="char">{ch === " " ? NBSP : ch}</span>
     </span>
   ));
+}
+
+/* Running copy split to letters — the cardboard's h2, which wraps, where the
+ * headline's rows do not. Each word becomes an inline flex box of letter clips
+ * so the line breaks BETWEEN words exactly as the unsplit text would; the
+ * spaces between them are real text nodes, so they keep their width without a
+ * box of their own.
+ *
+ * Long tokens are further chunked after commas and hyphens ("EMERGENCY,LAST-"
+ * is one whitespace token but three chunks): adjacent chunks butt together
+ * seamlessly, but the line is allowed to wrap between them — which is where
+ * plain text would have broken too. */
+function words(text: string): ReactNode[] {
+  return text.split(/\s+/).flatMap((token, t) => [
+    t > 0 ? " " : null,
+    ...token.split(/(?<=[,-])/).map((chunk, c) => (
+      <span className="word" key={`${t}-${c}`}>
+        {letters(chunk)}
+      </span>
+    )),
+  ]);
 }
 
 /* The hero, server-rendered.
@@ -117,8 +140,48 @@ export default function Hero() {
         {/* The engine's mount. Empty by design — the canvas is appended here. */}
         <div className="hero-tape" aria-hidden="true" />
 
-        {/* Reserved; nothing designed for it yet. */}
-        <div className="bottom-part" />
+        {/* The dark-green pinboard below the roll. Its props arrive one at a
+            time; so far: the sticky note, a 3D sheet fluttering on the wall.
+            The mount is empty by design — Hero/note.ts appends the canvas. */}
+        {/* data-parallax is each prop's depth — how much of a scrolled px it
+            gives back (Hero/parallax.ts). Positive lags the page: deeper,
+            pressed into the board. Negative outruns it: lifted toward the
+            viewer. data-parallax-ease is its weight — how fast it chases that
+            offset, in 1/s: the gift is light and snaps with the scroll, the
+            lemon painting is heavy and settles a beat later, the cardboard
+            sits in between. The cardboard carries its copy with it, so the
+            wrapper wears the attributes rather than the img. */}
+        <div className="bottom-part">
+          <img
+            src="./assets/lemon painting 1.webp"
+            alt=""
+            id="lemon"
+            data-parallax="0.14"
+            data-parallax-ease="3.5"
+          />
+          <img
+            id="gift"
+            src="./assets/gift 1.webp"
+            alt=""
+            data-parallax="-0.12"
+            data-parallax-ease="9"
+          />
+          {/* No parallax here, deliberately: the finale tapes the strip across
+              this board, and the strip is fixed to the section — a drifting
+              board would slide under its own tape. */}
+          <div className="cardboard-wrapper">
+              {/* Same split-letter reveal as the headline, but driven by the
+                  scroll (Hero/reveal.ts, initCopyReveal) since this sits a
+                  viewport below the fold. aria-label carries the readable
+                  copy, same as the h1. */}
+              <h2 className="h2" aria-label={CARDBOARD_COPY}>
+                <span aria-hidden="true">{words(CARDBOARD_COPY)}</span>
+              </h2>
+              <img id="cardboard" src="./assets/cardboard.webp" alt="" />
+          </div>
+
+          <div className="sticky-note" aria-hidden="true" />
+        </div>
       </div>
     </Stage>
   );

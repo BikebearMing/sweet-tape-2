@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { initHero } from "./engine";
-import { initReveal } from "./reveal";
+import { initNote } from "./note";
+import { initParallax } from "./parallax";
+import { initCopyReveal, initReveal } from "./reveal";
 
 /* The only client component in the hero.
  *
@@ -28,10 +30,16 @@ export default function Stage({ children }: { children: ReactNode }) {
 
     const stopTape = initHero(root);
     const stopReveal = initReveal(root);
+    const stopCopy = initCopyReveal(root);
+    const stopNote = initNote(root);
+    const stopParallax = initParallax(root);
 
     return () => {
       stopTape();
       stopReveal();
+      stopCopy();
+      stopNote();
+      stopParallax();
     };
   }, []);
 

@@ -91,6 +91,11 @@
       // It is the BASE the roughness streaks multiply, so it sits higher
       // than the old flat value: effective gloss ranges ~0.2-0.45.
       const FILM_GLOSS = 0.45;
+      // The label face alone — much tighter than the film. The label's green
+      // is already near full brightness, so a broad highlight vanishes into
+      // it; only a tight lobe concentrates the fill hard enough to clip into
+      // a visible white glint. Raising this softens the glint away.
+      const FACE_GLOSS = 0.18;
 
       const mount = document.querySelector(".hero-tape");
       const scene = new THREE.Scene();
@@ -110,7 +115,18 @@
       const LIGHT = { X: -2.5, Y: 3, Z: 2.5, POWER: 1.2 };
       const dir = new THREE.DirectionalLight(0xffffff, LIGHT.POWER);
       dir.position.set(LIGHT.X, LIGHT.Y, LIGHT.Z);
-      scene.add(dir, new THREE.AmbientLight(0xffffff, Math.PI * 0.78));
+      /* Fill from the RIGHT — a POINT light, deliberately not directional.
+         Parallel rays hit the flat label at one identical angle per pixel,
+         so their "sheen" is a uniform lift the eye can't see; a bulb close
+         to the roll has diverging rays, which is what puts a localised
+         hotspot on a flat face and sweeps it across the label through the
+         yaw. POWER is high because point lights fall off with distance
+         squared (~2 units away => /4) — but only so high: past ~5 its
+         diffuse floods the label and drags the green toward yellow. */
+      const FILL = { X: 1.9, Y: 0.7, Z: 1.3, POWER: 4.5 };
+      const fill = new THREE.PointLight(0xffffff, FILL.POWER);
+      fill.position.set(FILL.X, FILL.Y, FILL.Z);
+      scene.add(dir, fill, new THREE.AmbientLight(0xffffff, Math.PI * 0.78));
 
       const group = new THREE.Group();
       scene.add(group);
@@ -197,6 +213,15 @@
             o.material.needsUpdate = true; // new maps => shader recompile
             stripMat.color.copy(o.material.color);
             stripMat.roughness = FILM_GLOSS;
+          }
+          /* The label face exports at roughness 0.91 / metalness 0.55 —
+             matte enough that no light ever reads as sheen on it. Bring it
+             to the film's gloss so the right fill sweeps across the label
+             at rest and through the yaw; metalness zeroed because it only
+             darkens flat artwork. */
+          if (o.material.name === "Face Brown") {
+            o.material.roughness = FACE_GLOSS;
+            o.material.metalness = 0;
           }
         });
         const box = new THREE.Box3().setFromObject(model);
@@ -303,6 +328,8 @@
 
         dir.position.set(LIGHT.X, LIGHT.Y, LIGHT.Z);
         dir.intensity = LIGHT.POWER;
+        fill.position.set(FILL.X, FILL.Y, FILL.Z);
+        fill.intensity = FILL.POWER;
         camera.position.z = CONFIG.camZ;
         render();
       }
@@ -337,6 +364,7 @@
         SCROLL,
         STRIP,
         LIGHT,
+        FILL,
         group,
         camera,
         render,

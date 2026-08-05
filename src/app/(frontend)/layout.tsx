@@ -8,8 +8,11 @@ import "@/styles/reset.css";
 import "@/styles/tokens.css";
 import "@/styles/letters.css"; /* generated — npm run letters */
 import "@/styles/hero.css";
+import "@/styles/wave-band.css";
 import "@/styles/tape-slider.css";
+import "@/styles/cursor.css";
 
+import Cursor from "@/components/Cursor";
 import SmoothScroll from "@/components/SmoothScroll";
 
 export const metadata: Metadata = {
@@ -33,6 +36,7 @@ export default function FrontendLayout({ children }: { children: ReactNode }) {
       </head>
       <body>
         <SmoothScroll />
+        <Cursor />
         {children}
       </body>
     </html>

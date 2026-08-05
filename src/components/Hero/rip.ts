@@ -37,7 +37,7 @@
  */
 
 /* Units: the viewBox is the section, 10 units to the vw. Width is the viewport;
-   height is .hero-section's own 170.139vw from hero.css. Both are vw, so the
+   height is .hero-section's own 170.139vw from global.css. Both are vw, so the
    ratio holds at every viewport — change the section's height and change HEIGHT
    with it. */
 export const WIDTH = 1000;

@@ -5,7 +5,7 @@
  * [data-split-text] helper; two things that were runtime work there are gone:
  *
  *   The DOM splitting. The copy is already one box per letter because the arc
- *   in hero.css places each one individually, so React emits the structure on
+ *   in global.css places each one individually, so React emits the structure on
  *   the server — no unsplit flash, no rewriting the heading on mount.
  *
  *   ScrollTrigger. The hero is the first thing on the page, so this plays on
@@ -20,7 +20,7 @@ import gsap from "gsap";
 /* The entrance. Straight from the original — a letter is quick on its own, and
    the stagger is what turns twenty-three of them into one move. */
 export const REVEAL = {
-  /* Where a letter waits, as a percentage of its own height. hero.css parks
+  /* Where a letter waits, as a percentage of its own height. global.css parks
      them at the same figure and the two have to agree — change both.
 
      Not 100. That would be exact only if the glyph filled its box, and
@@ -54,7 +54,7 @@ export function initReveal(root: HTMLElement): () => void {
 
   /* Hand the letters over from the stylesheet.
    *
-   * hero.css holds them under their masks until this attribute lands, and
+   * global.css holds them under their masks until this attribute lands, and
    * setting it first is what makes the tween's numbers mean what they say:
    * GSAP reads the computed transform as its starting point, and a percentage
    * translate coming from CSS is reported as resolved px — which GSAP would

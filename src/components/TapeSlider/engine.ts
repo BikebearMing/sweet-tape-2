@@ -735,7 +735,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
   }
 
   function playEntrance() {
-    // The rail's own 0.4s fade, in tape-slider.css. ENTER.RING_AT is set to
+    // The rail's own 0.4s fade, in global.css. ENTER.RING_AT is set to
     // land the opening ring on the end of it.
     track!.classList.add("is-ready");
 

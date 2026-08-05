@@ -1,0 +1,1866 @@
+/* ==========================================================================
+   Sweet Tape — the site's one stylesheet
+   ==========================================================================
+   Everything the (frontend) route group paints, in cascade order. The admin
+   has its own root layout and never sees any of this.
+
+     1. Letters      GENERATED — imported, see the note below
+     2. Reset
+     3. Tokens       fonts, orbit sizing, fallback palette
+     4. Hero
+     5. Wave band    the hand-off between the hero and the slider
+     6. Tape slider  word marks, columns, stage, rolls
+     7. Menu         the pull-down panel and its tab
+     8. Cursor       the taped arrow
+
+   Section order is load-bearing where two rules touch the same property; keep
+   new rules inside the section they belong to rather than appending to the
+   end.
+
+   letters.css stays a separate file because scripts/gen-letters.mjs rewrites
+   it wholesale from the artwork — see `npm run letters`. It is pulled in here
+   so the layout still imports exactly one stylesheet; the build inlines it.
+   Its rules only set --glyph / flex-grow / aspect-ratio, which nothing below
+   also sets, so leading the file rather than sitting between Tokens and Hero
+   (where the import used to be) changes nothing in the cascade. @import has
+   to come first in a stylesheet, hence the position. */
+@import "./letters.css";
+
+/* ==========================================================================
+   Reset
+   ========================================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%; /* stop iOS inflating text in landscape */
+}
+
+/* min-height rather than height, so a section taller than the viewport is
+   never clipped. Note this means a percentage height on a child resolves to
+   auto — use min-height: 100svh on the child if you want a full-viewport
+   section. */
+body {
+  font-family: var(--font-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 200vh; /* scroll room, so the parallax has something to react to */
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+}
+
+/* This block is body copy that happens to be marked up as a heading, so it
+   takes the body face. Delete this rule if the h5 becomes a real heading. */
+.subtext h5 {
+  font-family: var(--font-body);
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+/* Available to assistive tech, absent from the page. Not display:none, which
+   would remove it from the accessibility tree as well. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ==========================================================================
+   Tokens
+   ========================================================================== */
+:root {
+  /* The Adobe kit ships 400/500/700/800 roman only — anything else is
+     synthesised. Everything from Futura on is the fallback path.
+
+     The kit is domain-locked: add every host you serve from (localhost
+     included) at fonts.adobe.com or it silently falls back. */
+  --font-heading:
+    "futura-pt-condensed", "Futura PT Condensed", "Futura PT Cond", Futura,
+    "Arial Narrow", "Helvetica Neue", sans-serif;
+
+  /* Body: Inter Tight, self-hosted via @fontsource-variable. "Variable" suffix
+     is fontsource's family name for the variable build — it carries the full
+     100-900 weight axis. */
+  --font-body:
+    "Inter Tight Variable", "Inter Tight", Inter, system-ui, sans-serif;
+
+  --stage-bg: #fa8005;
+
+  /* Radius of the rolls' circular path; the engine reads it off .rail-track's
+     measured width, so this is the one place to change the orbit size. */
+  --orbit-r: calc(16.366vw / 2);
+  --orbit-d: calc(var(--orbit-r) * 2);
+
+  /* Every roll renders at this size — active and inactive alike, no scaling. */
+  --roll-size: 7vw;
+
+  /* A ratio, not a fixed px: fixed would stay put as the orbit shrinks and
+     start overlapping the neighbouring rolls. */
+  --ring-w: calc(var(--roll-size) * 0.12);
+
+  --path-line: rgba(255, 255, 255, 0.55);
+
+  /* Pre-hydration starting points only. The real values are per tape, and live
+     in src/data/tapes.ts — they reach the DOM as custom properties on each roll
+     button and are copied onto .left / the letters on selection. */
+  --tag-bg: #fcd805;
+  --tag-ink: #16110a;
+  --ink: #16110a;
+  --word-colour: #fcd805;
+}
+
+/* ==========================================================================
+   Hero
+   ==========================================================================
+   Ported from the standalone hero.html prototype. Everything is scoped under
+   .hero-section — the class names inside it (.top, .title, .h1) are generic
+   enough that unscoped rules would eventually collide with the slider's.
+
+   The section's whole geometry is in vw, including its height, so the roll's
+   framing and the strip's drawing room scale together and the scroll
+   choreography does not have to know about breakpoints. */
+
+.hero-section {
+  position: relative;
+  width: 100%;
+  height: 170.139vw;
+  background: #0d470c;
+  overflow-x: clip;
+}
+
+.hero-section .hero-wrapper {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+.hero-section h2 {
+  color: #754402;
+  font-family: var(--font-heading);
+  font-size: 6.071vw;
+  font-weight: 800;
+  line-height: 0.79;
+  letter-spacing: -0.182vw;
+  z-index: 10;
+}
+
+#gift {
+  position: absolute;
+  bottom: -12vw;
+  right: -1vw;
+  z-index: 1;
+  height: 68.5vw;
+}
+
+#lemon {
+  position: absolute;
+  left: 0;
+  bottom: 24vw;
+  width: 45.46vw;
+  object-fit: cover;
+}
+
+.cardboard-wrapper {
+  position: absolute;
+  top: 66.542vw;
+  right: 0;
+  width: 51.369vw;
+  height: 65.452vw;
+  z-index: 0;
+
+  & h2 {
+    position: absolute;
+    top: 7.778vw;
+    left: 11.028vw;
+    max-width: 34.442vw;
+    transform: rotate(-0.628deg);
+  }
+
+  & img {
+    object-fit: cover;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.hero-section .top {
+  position: relative;
+  width: 100%;
+  height: 52.083vw;
+  background: #b6fe00;
+  /* Elliptical, not circular: the two radii are set independently so the
+     curve's depth (24vw) holds while its width tracks the viewport. */
+  border-radius: 0 0 100% 100% / 0 0 24vw 24vw;
+}
+
+/* Paper grain — the same overlay the slider stage carries (Tape slider,
+   below), at the same weight, so the two sections read as one printed surface
+   rather than as a textured one following a clean one.
+   --------------------------------------------------------------------------
+   Two of them because there are two colour fields and the light one is a shaped
+   box: .top's ellipse is a border-radius, so its grain has to inherit that
+   radius to stop at the curve. Both start at the section's own y = 0 — .top is
+   flush with it — and both tile on the same pitch, so the grain runs across the
+   curve unbroken. One sheet of paper, cut by the colours rather than by itself.
+
+   Width-fitted and tiled down, where the slider stretches its copy to the box.
+   The slider's stage is one viewport, so stretching it there is close to the
+   image's own aspect; the hero is 170vw tall and the same stretch would smear
+   the grain three times its height, turning paper into vertical streaking. At
+   100% width the tile is 56vw tall — within a hair of what the slider ends up
+   with on a 16:9 screen, which is what keeps the two scales matched. The image's
+   top and bottom edges sit within 1% of each other in tone, and it lands at
+   about 6% strength once its own alpha and the opacity below are through with
+   it, so the joins between tiles have nothing to show.
+
+   pointer-events: none because a full-bleed decorative layer must never be what
+   a click lands on. */
+.hero-section::before,
+.hero-section .top::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/paper-overlay.png");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.hero-section .top::before {
+  border-radius: inherit;
+}
+
+/* The corner mark — two short lines in the lime field's top-left, perforated
+   down the left edge like the slider's chips but with no chip under them: the
+   lime IS the label's ground here, and a coloured box would make it a sticker
+   sitting on the field rather than something printed into it.
+
+   Sized with the same figures as those chips (Tape slider, below) so the two
+   read as one family of small type — this is the hero's version of .tag .h6,
+   minus the background and the padding that background needed. */
+.hero-section .corner-mark {
+  position: absolute;
+  top: 0.9vw;
+  left: 0.65vw;
+  padding-left: 0.85vw; /* clears the perforation */
+  font-family: var(--font-heading);
+  font-size: 1vw;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: 0.03em;
+  color: #013900;
+}
+
+/* Two set lines, not a wrap — see CORNER_MARK in Hero/index.tsx. */
+.hero-section .corner-mark span {
+  display: block;
+}
+
+/* The perforation. Drawn as one repeating radial-gradient rather than a stack
+   of elements, exactly as the slider's chips draw theirs: background-size sets
+   the cell height, so the dot COUNT follows from however tall the copy ends up
+   and the pitch stays put if a third line is ever added. currentColor picks up
+   the ink above, so there is one colour to change.
+
+   The cell is 0.2 x 0.35vw, the chips' own proportion. The dot's size comes off
+   the cell's diagonal — a taller cell grows the dot as well as the gap — so the
+   two figures are not independent and a change to one wants the other. */
+.hero-section .corner-mark::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.12vw;
+  bottom: 0.12vw;
+  width: 0.2vw;
+  background-image: radial-gradient(
+    circle at 50% 50%,
+    currentColor 42%,
+    transparent 45%
+  );
+  background-size: 100% 0.35vw;
+  background-repeat: repeat-y;
+  opacity: 0.9;
+}
+
+.hero-section .title {
+  /* Positioned only to lift the type over .top's grain — a positioned
+     pseudo-element otherwise paints over ordinary inline content whatever the
+     source order says. The slider keeps its copy above the grain the same way. */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  align-items: center;
+  padding-top: 5.056vw;
+}
+
+/* The kicker. One line split by a gap wide enough for the roll to sit between
+   the halves, so it is an inline-flex row rather than two elements. */
+.hero-section .h4 {
+  font-family: var(--font-heading);
+  color: #013900;
+  font-size: 2.347vw;
+  font-weight: 800;
+  line-height: 0.71;
+  letter-spacing: -0.094vw;
+  display: inline-flex;
+  gap: 16.389vw;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-section .h1 {
+  font-size: 20.361vw;
+  line-height: 0.73;
+  letter-spacing: 0;
+  font-weight: 800;
+  color: #013900;
+  text-align: center;
+}
+
+/* Split letters — the rows.
+   --------------------------------------------------------------------------
+   The headline's two lines and the kicker's two halves are both rows of letter
+   boxes; see letters() in Hero/index.tsx.
+
+   Flex rather than plain inline text, because .clip below carries
+   overflow: hidden — and an inline-block whose overflow is not visible takes
+   its baseline from its BOTTOM MARGIN EDGE rather than from the text inside it.
+   Left inline, every letter would hang entirely above the baseline and the line
+   box would grow by the font's whole descent, pushing STICK and BY YOU apart
+   for no visible reason. Flex items have no baseline to get wrong.
+
+   text-align is inert once the rows are flex; justify-content is what centres
+   them now. */
+.hero-section .h1 .line,
+.hero-section .h4 .half {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* The headline's arc.
+   --------------------------------------------------------------------------
+   Same trick as CREATIVE in the slider (Tape slider, below), and the same way
+   up: each letter keeps the x its row gives it and is only dropped and tilted,
+   so the setting above is untouched. The usual curved-text approach — rotating
+   each letter about a far-off origin — would drag them sideways as well,
+   opening gaps that were never in the type.
+
+   --u runs -1 at the first letter of a line to +1 at the last, so the two lines
+   curve over their own widths rather than sharing one curve. The drop follows
+   1-u², a parabola deepest in the middle; the tilt runs linearly with u, so
+   each letter leans with the slope it is standing on. To arc the other way,
+   negate BOTH values.
+
+   Shallow on purpose — the two lines sit close enough that a deep curve would
+   have STICK's middle letters dipping into BY YOU's. The transform does not
+   affect layout, so nothing reflows out of the way if it does.  */
+.hero-section .warped-text {
+  --arc-drop: 1.2vw;
+  --arc-tilt: 7deg;
+}
+
+.hero-section .h1 .line .clip {
+  --u: calc(2 * var(--i) / (var(--letters) - 1) - 1);
+  transform-origin: 50% 100%; /* pivot on the baseline, not the letter centre */
+  transform: translateY(calc(var(--arc-drop) * (1 - var(--u) * var(--u))))
+    rotate(calc(var(--arc-tilt) * var(--u) * -1));
+}
+
+/* Split letters — the boxes.
+   --------------------------------------------------------------------------
+   .clip holds the letter's place in the row (and, in the headline, its place on
+   the arc above) and masks; .char is the only thing that moves. Two elements
+   because the arc and the entrance both want the transform property and one
+   element cannot carry both — the same division of labour as CREATIVE's
+   letters in the Tape slider section, where the wrapper holds the arc and the
+   image inside holds the dip. */
+.hero-section .clip {
+  display: block;
+  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  overflow: hidden;
+  /* Headroom, then handed straight back.
+     ------------------------------------
+     line-height here is well under 1 (0.73 on the headline, 0.71 on the
+     kicker), so a letter's content box is shorter than the capital standing in
+     it and the mask would shave the tops off. Sideways is the kicker's
+     negative tracking, which pulls each box in narrower than the glyph it
+     holds. The padding gives the mask room on three sides; the matching
+     negative margins take that room back out of the layout, so the rows are
+     the size they always were.
+
+     Nothing at the bottom — the mask's lower edge is what the letters slide out
+     through, and it wants to sit tight on the baseline. */
+  padding: 0.2em 0.12em 0;
+  margin: -0.2em -0.12em 0;
+}
+
+.hero-section .char {
+  display: block;
+  /* Where a letter waits before the reveal, and — since the reveal is JS — what
+     it falls back to. Hero/reveal.ts sets data-reveal on the section to lift
+     this and take the letters over; the <noscript> in index.tsx lifts it for
+     good if that is never going to happen. REVEAL.HIDDEN there is the same
+     figure and the two have to agree.
+
+     130 rather than 100 because capitals overshoot their own box, so a letter
+     moved exactly its own height still leaves a hairline of tops at the mask's
+     edge. The excess is all behind the mask, so it is set well clear rather
+     than measured against the font. */
+  transform: translateY(130%);
+}
+
+.hero-section[data-reveal="live"] .char {
+  transform: none;
+}
+
+/* The cardboard copy's words — see words() in Hero/index.tsx. Inline flex
+   boxes of letter clips: the letters row up inside, the line wraps BETWEEN
+   the boxes exactly where the unsplit text would break, and the real spaces
+   between them keep the word spacing without boxes of their own. */
+.hero-section .h2 .word {
+  display: inline-flex;
+}
+
+/* Twenty-odd letters flying in from nowhere is what this setting is asking
+   about. Here rather than only in reveal.ts so it also covers the window
+   before hydration, when the stylesheet is holding them down on its own. */
+@media (prefers-reduced-motion: reduce) {
+  .hero-section .char {
+    transform: none;
+  }
+}
+
+/* The 3D roll. top / width are the placement knobs; the canvas fills the box.
+   Rotation and camera distance are tuned in Hero/heroTape.ts (or live in dev
+   via `hero.CONFIG` / `hero.tune()` in the console). */
+.hero-section .hero-tape {
+  position: absolute;
+  /* 30.4 = 44 - 27.2/2: the roll's CENTRE is held where the 34vw version put
+     it (27 + 17), so shrinking the roll leaves the strip's origin — and with
+     it the scroll choreography measured off it in engine.ts — untouched. */
+  top: 30.4vw;
+  left: 50%;
+  translate: -50%;
+  width: 27.2vw;
+  z-index: 10;
+  /* Everything from the roll's square down to the canvas floor is drawing room
+     for the dispensed strip. The roll itself stays framed in the top 27.2vw
+     square (the view offset in heroTape handles that), so treat 27.2vw as the
+     roll-size knob. The dispensed strip's width is derived from this box too
+     (see pxPerWorld in Hero/heroTape.ts), so it narrows with the roll and the
+     two stay in proportion; only its LENGTH is independent, since it is
+     measured in document px against the cardboard it finishes on.
+
+     The floor hangs BELOW the section on purpose — the tape is meant to finish
+     a little way into the section underneath rather than stopping dead on the
+     boundary, and nothing can be drawn outside this box. This is the hard limit
+     on SCROLL.OVERRUN in Hero/engine.ts, which is what actually decides how far
+     the end travels; deepen both together. */
+  bottom: -12vw;
+  z-index: 2;
+  /* Most of this box is transparent drawing room for the strip — don't let an
+     invisible rectangle over half the section eat clicks. */
+  pointer-events: none;
+}
+
+.hero-section .hero-tape canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* The pinboard below the roll, arriving prop by prop. */
+
+/* The sticky note's slot. top / left / width are the placement knobs — but
+   note the slot is BIGGER than the note: the sheet rests at 72% of this box
+   (NOTE.SPAN in Hero/stickyNote.ts) and the rest is drawing room the wind
+   lifts its corners into. To place the note where the mock has it, aim its
+   CENTRE, not its edges.
+
+   The taped run across the note's top never moves (WIND.PIN_HALF), so a tape
+   graphic positioned over this slot stays registered with the sheet. */
+.hero-section .sticky-note {
+  position: absolute;
+  top: 56vw;
+  left: 4.5vw;
+  width: 30vw;
+  aspect-ratio: 1 / 0.94; /* matches the sheet, NOTE.W : NOTE.H */
+  /* The pin-up lean. On the slot rather than in the scene so a tape graphic
+     laid over this box inherits the same tilt for free. */
+  rotate: 3deg;
+  z-index: 2;
+  /* A third of this box is transparent bleed — don't let it eat clicks. */
+  pointer-events: none;
+}
+
+.hero-section .sticky-note canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* ==========================================================================
+   Wave band — the hand-off between the hero and the slider
+   ==========================================================================
+   The section is one SVG (markup in components/WaveBand) and the svg is ONLY
+   the tape: no background, no under-fill. What shows above the tape is the
+   hero itself; what shows below is the slider's real stage, which rises to
+   the hero's exact bottom edge and runs its colour — and its wipes — up
+   behind the band. The straight hero/stage seam is hidden inside the tape's
+   stroke, and that is what sets the tape's thickness: at 3.5deg of lean the
+   stroke cannot go below ~184 units without the seam showing where the wave
+   runs steepest (x ~= 300 and 1300). Geometry lives in the SVG's own units:
+   the viewBox is 1600 wide across the section, so stroke-width and font-size
+   are in those units and scale with the viewport for free.
+
+   Three numbers move together, and the seam is why: the rotation here, the
+   stroke width, and the slider's content shift (a deeper dip needs more
+   clearance). The exact requirement, with A = 800 * tan(tilt):
+
+     stroke >= 2A + (260 - A)^2 / 520
+
+   which is 175 at 3deg, 201 at 4.5deg, 218 at 5.5deg, 247 at 7deg. Thinner
+   tape therefore means a shallower lean, and a steeper lean means fatter
+   tape — pick one and read the other off that line. */
+
+.wave-band {
+  position: relative;
+  width: 100%;
+  /* Height and margin cancel exactly: the section contributes nothing to the
+     document flow, so the slider's top lands on the hero's bottom — the
+     seam. The svg overhangs both neighbours from this zero-width seat:
+     16.875vw of it over the hero (the seam sits at the rotation centre,
+     viewBox y 330, which is 270 units = 16.875vw below the svg's top), the
+     rest over the slider. */
+  height: 16.875vw;
+  margin-top: -16.875vw;
+  /* The rotated svg bleeds past both side edges by design; clip x only.
+     `clip` rather than `hidden` on purpose, twice over: it does not create a
+     scroll container (hidden would add horizontal page scroll), and it
+     leaves the y axis alone — the tape must keep riding above the section
+     top to cross the gift. */
+  overflow-x: clip;
+}
+
+.wave-band svg {
+  position: absolute;
+  top: 0;
+  /* The viewBox carries 80 units (5vw) of x-bleed per side so the rotated
+     box's side edges fall outside the viewport — see the markup. */
+  left: -5vw;
+  display: block;
+  width: calc(100% + 10vw);
+  max-width: none; /* the reset's img/svg max-width:100% would re-clamp this */
+  /* Matches the viewBox (1760 units over 110vw is the same 16 units/vw). */
+  aspect-ratio: 1760 / 540;
+  /* The lean. On the svg, not the section, so the tape and its marquee tilt
+     as one piece. Bound to the stroke width per the corridor rule in the
+     header comment — at 190 of stroke the lean can reach ~3.8deg before the
+     seam peeks out where the wave runs steepest. */
+  transform: rotate(-3.5deg);
+  /* Above the slider (z-index 10), which the tape's lower half overlaps —
+     and with it above the gift (z-index 1), which tucks behind the tape's
+     upper half. */
+  z-index: 11;
+}
+
+/* The tape IS the text's path, stroked thick — see components/WaveBand. The
+   font's caps run ~110 units, so 190 leaves ~40 above and below them. The
+   width is load-bearing for the seam (header comment): thinner tape needs a
+   shallower lean, and this pair sits ~6 units inside that limit. */
+.wave-band .band-tape {
+  stroke: #b6fe00;
+  stroke-width: 190;
+  fill: none;
+}
+
+/* The hero's lime-on-green palette (.top / h2), not the slider's per-tape
+   colours — the band belongs to the page, and the rolls' palettes churn. */
+.wave-band .band-text {
+  font-family: var(--font-heading);
+  font-size: 155px; /* viewBox units, not screen px */
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  fill: #013900;
+}
+
+/* The same paper grain as the hero above and the stage below, painted INSIDE
+   the svg as a pattern stroke over the tape (markup in components/WaveBand)
+   — a section-wide overlay would grain both neighbours a second time, since
+   they now show through everywhere the tape is not. Same 0.2 weight and
+   width-fitted tile, so the band is not the one clean strip between two
+   printed surfaces. */
+.wave-band .band-tape-grain {
+  stroke: url(#wave-band-grain);
+  stroke-width: 190;
+  fill: none;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Tape slider — orbiting roll selector
+
+   The per-tape palette is NOT here. Each tape's colours live in
+   src/data/tapes.ts and are written onto its roll button as custom properties
+   (--ring / --bg / --word / --tag-bg / --tag-ink / --ink); the engine reads
+   them off the button with getComputedStyle at the moment it repaints. One
+   place to edit a tape, and the CMS can fill the same shape later.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Word marks
+   -------------------------------------------------------------------------- */
+.top-title,
+.bottom-title {
+  display: flex;
+  align-items: flex-end;
+}
+
+/* Each letter takes a share of the word's vw width via flex-grow, where the
+   grow value IS its intrinsic pixel width — so the proportions hold at every
+   screen size. A uniform height would be simpler but would flatten the
+   artwork's optical overshoot (round C is 221px against flat T's 217px).
+
+   flex-grow and aspect-ratio are generated into letters.css from the artwork
+   itself; see scripts/gen-letters.mjs.
+
+   The flex item is the image for THE, the .glyph wrapper for CREATIVE. */
+.top-title img,
+.bottom-title .glyph {
+  flex-basis: 0;
+  /* Flex items default to min-width:auto, which floors them at the image's
+     intrinsic width — they would refuse to shrink and overflow the word. */
+  min-width: 0;
+  height: auto;
+  max-width: none; /* the reset's max-width:100% would squash these */
+}
+
+/* CREATIVE's clipping box. The wrapper holds the letter's place on the arc, the
+   image inside holds only the dip — both want the transform property and one
+   element cannot carry both. overflow: hidden is the trick: the image slides a
+   full letter-height down and has nowhere to paint. */
+.bottom-title .glyph {
+  display: block;
+  overflow: hidden;
+}
+
+.bottom-title .glyph img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+}
+
+/* Recolouring.
+
+   The element paints --word-colour and the --glyph stencil punches the letter
+   out of it. The `content` line blanks the bitmap, without which the original
+   yellow still paints on top — the side effect is the loss of intrinsic size,
+   hence the generated aspect-ratio in letters.css.
+
+   THE is permanent. CREATIVE's is a stopgap: delete its rule below and its half
+   of letters.css and only the recolour goes — the dip is independent. */
+.top-title img {
+  background-color: var(--word-colour);
+
+  /* THE's dip moves the STENCIL, not the element: the box is the only place the
+     element can paint, so walking the mask out of the bottom clips the letter
+     away with no wrapper needed. */
+  -webkit-mask-position: 0 0;
+  mask-position: 0 0;
+  -webkit-mask-image: var(--glyph);
+  mask-image: var(--glyph);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E");
+}
+
+/* TEMPORARY — CREATIVE's recolour, safe to delete wholesale.
+
+   mask-position stays at 0 0 here, unlike THE. The mask is painted in the
+   image's own space so it travels with the image as it dips; clipping is
+   .glyph's job, not the mask's. */
+.bottom-title .glyph img {
+  background-color: var(--word-colour);
+  -webkit-mask-position: 0 0;
+  mask-position: 0 0;
+  -webkit-mask-image: var(--glyph);
+  mask-image: var(--glyph);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E");
+}
+
+.bottom-title {
+  width: 46.04vw; /* 663px at the 1440 design width */
+}
+
+.top-title {
+  width: 26.32vw; /* 379px at the 1440 design width */
+}
+
+/* Arc for CREATIVE. Each letter keeps the x flex gives it and is only nudged
+   down and tilted, so the kerning is untouched — rotating about a far-off
+   origin (the usual curved-text trick) would drag the letters sideways.
+
+   --u runs -1 at the first letter to +1 at the last. The drop follows 1-u², a
+   parabola deepest in the middle; the tilt runs linearly with u so each letter
+   leans with the slope it sits on. To arc the other way, negate BOTH values. */
+.bottom-title {
+  --letters: 8;
+  --arc-depth: 1.3vw; /* how far the middle sits below the two ends */
+  --arc-tilt: 8deg; /* lean on the outermost letters */
+}
+
+/* On the wrapper, not the image. The image's transform belongs to the dip, and
+   whichever of the two was written second would win. */
+.bottom-title .glyph {
+  --u: calc(2 * var(--i) / (var(--letters) - 1) - 1);
+  transform-origin: 50% 100%; /* pivot on the baseline, not the letter centre */
+  transform: translate(
+      var(--dx, 0px),
+      calc(var(--arc-depth) * (1 - var(--u) * var(--u)) + var(--dy, 0px))
+    )
+    rotate(calc(var(--arc-tilt) * var(--u) * -1 + var(--dr, 0deg)));
+}
+
+/* Per-letter tuning — taste, not measurement, which is why it is hand-written
+   here while flex-grow / aspect-ratio are generated.
+
+   --i is the place on the curve, keep it sequential. --dx / --dy / --dr are
+   additive nudges on top of the computed arc, correcting only what the maths
+   cannot know — round letters (C, E, V) read as floating high against a curve
+   that flat ones (T, I) sit on correctly.
+
+   --dr is a delta, not a final angle: the arc already gives the outermost
+   letters ±8deg. In vw so nudges scale with the word (1vw = 14.4px at 1440). */
+.bottom-title .glyph:nth-child(1) {
+  --i: 0;
+  --dx: 1.389vw;
+  --dy: 0vw;
+  --dr: -4deg;
+} /* C */
+.bottom-title .glyph:nth-child(2) {
+  --i: 1;
+  --dx: 0.2vw;
+  --dy: 0.2vw;
+  --dr: -2deg;
+} /* R */
+.bottom-title .glyph:nth-child(3) {
+  --i: 2;
+  --dx: 0vw;
+  --dy: 0.2vw;
+  --dr: 0deg;
+} /* E */
+.bottom-title .glyph:nth-child(4) {
+  --i: 3;
+  --dx: 0vw;
+  --dy: 0.2vw;
+  --dr: 0deg;
+} /* A */
+.bottom-title .glyph:nth-child(5) {
+  --i: 4;
+  --dx: 0vw;
+  --dy: 0.2vw;
+  --dr: 0deg;
+} /* T */
+.bottom-title .glyph:nth-child(6) {
+  --i: 5;
+  --dx: 0vw;
+  --dy: 0.2vw;
+  --dr: 0deg;
+} /* I */
+.bottom-title .glyph:nth-child(7) {
+  --i: 6;
+  --dx: 0vw;
+  --dy: 0.2vw;
+  --dr: 0deg;
+} /* V */
+.bottom-title .glyph:nth-child(8) {
+  --i: 7;
+  --dx: 1.181vw;
+  --dy: -0.486vw;
+  --dr: -6deg;
+} /* E */
+
+/* --------------------------------------------------------------------------
+   Centre column
+   -------------------------------------------------------------------------- */
+.middle {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+
+  /* Tilts are --rot, not a transform, for the same reason the left column's
+     chips are: GSAP owns these elements' transform during the swap and a
+     transform declared here would simply be overwritten. Tune the angles. */
+  & img.showcase {
+    position: absolute;
+    z-index: 10;
+    border-radius: 3.472vw;
+
+    /* Offset down and to the right, tight and fairly dark — a card sitting
+       just off the surface with a single light above-left, not a soft ambient
+       float. Two layers: a crisp contact edge, then the body of the shadow.
+       One blur alone reads as a smudge.
+
+       box-shadow, not filter: drop-shadow — it follows the corner radius for
+       free, and a filter would rasterise the card and flatten the 3D turn. It
+       also skews with the flip, which is what a real card does.
+
+       In vw so it scales with the layout; black at low alpha so it holds over
+       all four stage colours. */
+    box-shadow:
+      0.15vw 0.25vw 0.35vw rgba(0, 0, 0, 0.16),
+      0.55vw 0.9vw 1.15vw rgba(0, 0, 0, 0.3);
+
+    /* Negative --parallax runs ahead of the page, which reads as nearer —
+       correct here, since these sit in front of the key visual. The two differ
+       so they separate from each other as well as from it. */
+    &:first-child {
+      top: 14.5vw;
+      left: 19.878vw;
+      --rot: -6.487deg;
+      --parallax: -0.09;
+    }
+
+    &:nth-of-type(2) {
+      top: 18.3vw;
+      right: 24vw;
+      --rot: 10.359deg;
+      --parallax: -0.15;
+    }
+
+    /* The swap happens edge-on, so the reverse face is never meant to show.
+       Insurance against a frame landing a hair past 90deg. */
+    backface-visibility: hidden;
+  }
+
+  & .key-visual {
+    position: absolute;
+    left: 48%;
+    width: 24.804vw;
+    height: 24.804vw;
+    top: 56%;
+    /* The `translate` property, not `transform` — GSAP owns this element's
+       transform for the parallax, and a translate declared there would be
+       overwritten the first time it scrolls, dropping the centring. These are
+       separate properties and compose. */
+    translate: -50% -50%;
+    z-index: 4;
+
+    /* Positive: lags the page slightly, so it sits behind the pair above. */
+    --parallax: 0.08;
+
+    & img {
+      visibility: hidden;
+    }
+  }
+
+  /* The hang tag's slot. The server renders the flat face as an <img>; once
+     the 3D viewer is live its transparent canvas overlays the img and the
+     engine hides it. If the three.js chunk never arrives, the img stays on
+     as the working key visual. */
+  & .key-visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  /* Bleeds past the slot on purpose. The face-on roll is framed to exactly
+     the slot's size (see CAMERA_Z in tape3d.ts, which assumes this -15%), but
+     mid-flip the swinging edge sweeps wider than the face — the bleed is the
+     headroom that keeps it from clipping at the canvas edge. Change one
+     without the other and the roll is the wrong size. */
+  & .key-visual canvas {
+    position: absolute;
+    inset: -15%;
+    width: 130%;
+    height: 130%;
+    /* The reset caps canvas at max-width 100%, which would clamp the box to
+       the slot's width and eat exactly the horizontal bleed the swing needs. */
+    max-width: none;
+    display: block;
+  }
+
+  & .bottom-title {
+    position: absolute;
+    left: 48%;
+    bottom: 2vw;
+    transform: translateX(-50%);
+  }
+}
+
+.top-title {
+  position: absolute;
+  top: 9.1vw;
+  left: 48%;
+  transform: translateX(-50%);
+  gap: 0.3em;
+  /* The hero's tape overruns the section above and finishes a little way into
+     this one, at z-index 2 — right where the word mark sits, and centred on the
+     same axis. 3 puts the tail behind the letters rather than across them,
+     while staying under everything else here (4 and up). The colour layers are
+     below it either way, so the tape still reads against the stage. */
+  z-index: 3;
+}
+
+/* --------------------------------------------------------------------------
+   Left column — chips and intro copy. Sits over the stage rather than in the
+   flow, so it holds position regardless of how tall the centre column gets.
+   -------------------------------------------------------------------------- */
+.left {
+  position: absolute;
+  left: 0.764vw;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 19vw;
+  z-index: 5; /* above the colour layers, below the roll picker */
+}
+
+.tags {
+  display: flex;
+  flex-direction: column;
+  gap: 4.74vw; /* chips to paragraph */
+}
+
+/* align-items:flex-start is what keeps each chip the width of its own label —
+   a flex column would otherwise stretch them all to the column width. */
+.tag {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.764vw;
+}
+
+.tag .h6,
+.subhead {
+  position: relative;
+  padding: 0.5vw 0.9vw 0.5vw 1.75vw; /* extra left padding clears the perforation */
+  border-radius: 0.42vw;
+  background: var(--tag-bg);
+  color: var(--tag-ink);
+  font-size: 0.95vw;
+  font-weight: 700;
+  letter-spacing: 0.045em;
+  line-height: 1.15;
+  white-space: nowrap; /* a chip should never wrap onto two lines */
+}
+
+/* Uneven tilts so the chips read as stuck on by hand; a repeating pattern looks
+   mechanical. A custom property rather than a transform because GSAP owns the
+   chips' transform for the slide — tune the numbers, not the property. */
+.tag .h6:nth-child(1) {
+  --rot: -1.7deg;
+}
+.tag .h6:nth-child(2) {
+  --rot: 0.9deg;
+}
+.tag .h6:nth-child(3) {
+  --rot: -0.6deg;
+}
+.tag .h6:nth-child(4) {
+  --rot: 1.4deg;
+}
+
+/* Perforation marks down the left edge of each chip. Drawn as one repeating
+   radial-gradient rather than three elements: background-size sets the cell
+   height, so the count follows from the strip height and the dots stay evenly
+   spaced whatever the chip's font size. currentColor picks up --tag-ink. */
+.tag .h6::before,
+.subhead::before {
+  content: "";
+  position: absolute;
+  left: 0.62vw;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.2vw;
+  height: 1.05vw;
+  background-image: radial-gradient(
+    circle at 50% 50%,
+    currentColor 42%,
+    transparent 45%
+  );
+  background-size: 100% 33.333%;
+  background-repeat: repeat-y;
+  opacity: 0.9;
+}
+
+/* The same chip as the left column's — it inherits the look, perforation and
+   palette from the rules above and only adds placement. A plain transform here,
+   unlike the left column's --rot: this chip never moves, it is repainted in
+   place. */
+.subhead {
+  position: absolute;
+  left: 48%;
+  top: 5.5vw;
+  transform: translateX(-50%) rotate(-2deg);
+  font-size: 1.05vw;
+  z-index: 6;
+}
+
+/* The content's clearance under the wave band's tape — the other half of the
+   section's extra height. The three shifted boxes are everything visible the
+   stage holds; .bg-overlay and .sweep-paint deliberately stay put, anchored
+   to the stage's own top (the colour and its wipe stencil must reach up
+   behind the band). The sweep's subhead copy still lands exactly on the real
+   one: both wear .subhead, so both carry this shift.
+
+   The `translate` property, not `transform` — same reason as the key visual:
+   these boxes' transforms belong to their own rules or to GSAP, and the two
+   properties compose. */
+.tape-slide,
+.subhead,
+.roll-parent {
+  translate: 0 8vw;
+}
+
+/* --------------------------------------------------------------------------
+   Sweep repaint — a duplicate of .bg-layer--next's geometry, set from the same
+   code. overflow: hidden turns it from a colour field into a stencil, so the
+   subhead copy inside is uncovered along literally the sheet's own curve.
+
+   Kept out of .bg-overlay: that carries mix-blend-mode and z-index -1, which
+   would blend the copy and paint it behind the real subhead.
+   -------------------------------------------------------------------------- */
+.sweep-paint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform: translateY(-100%); /* parked above the stage until a sweep runs */
+  z-index: 7; /* over the real subhead, under the roll picker */
+}
+
+/* Cancels the outer box's travel so the copy holds still on screen while the
+   box slides down past it. Height is the stage's, not the sheet's, so the
+   subhead's top offset resolves against the same box it does outside. */
+.sweep-inner {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+}
+
+.subtext .h5 {
+  color: var(--ink);
+  font-size: 1.12vw;
+  font-weight: 600;
+  line-height: 1.32;
+  max-width: 13.403vw;
+}
+
+/* --------------------------------------------------------------------------
+   Stage
+   -------------------------------------------------------------------------- */
+.tape-slider-parent {
+  position: relative;
+  width: 100%;
+  /* A viewport of stage plus room for the wave band's tape, which dips up to
+     ~16vw of tilted valley into this section's top (Wave band, above). The
+     extra height is matched by the content shift below, so everything the
+     stage holds starts clear of the tape; the colour fields (.bg-overlay,
+     inset: 0) stretch over the full box on their own — which is the point:
+     the stage's colour, and its wipes, run all the way up behind the band. */
+  height: calc(100vh + 12vw);
+  /* clip, not hidden: hidden leaves the box programmatically scrollable, and
+     focusing a roll that pokes past an edge (keyboard, or a test runner's
+     scrollIntoView) drags the whole stage sideways. clip paints identically
+     and forbids the scroll outright. */
+  overflow: clip;
+  z-index: 10;
+
+  & .wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+
+    /* The blend applies to the pair of layers as a group, so the wipe between
+       two colours never flashes an unblended edge. */
+    & .bg-overlay {
+      mix-blend-mode: hard-light;
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    & .bg-layer {
+      position: absolute;
+      inset: 0;
+      background: var(--stage-bg);
+    }
+
+    /* The incoming colour, parked above and brought down over the old one. The
+       long-horizontal / short-vertical radius turns the leading edge into one
+       wide convex arc rather than two visible corner curves; it holds that shape
+       for the whole sweep. The engine sets the depth and drives the slide. */
+    & .bg-layer--next {
+      /* Release the bottom that .bg-layer's inset:0 pins, so the measured height
+         wins — the sheet must be taller than the stage to overshoot without
+         exposing a band of the old colour along the top. */
+      bottom: auto;
+      transform: translateY(-100%);
+      border-radius: 0 0 50% 50% / 0 0 0 0;
+      will-change: transform;
+    }
+  }
+
+  /* Paper grain. inset:0 rather than width/height so it pins to the section
+     even if padding is added later, and pointer-events:none so a full-bleed
+     decorative layer can never swallow a click on the rolls. */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("/assets/paper-overlay.png");
+    background-size: 100% 100%;
+    opacity: 0.2;
+    pointer-events: none;
+  }
+}
+
+/* Tall enough for the full orbit plus the roll (and its ring) that sits at the
+   12 and 6 o'clock extremes, so neither gets clipped. */
+.roll-parent {
+  position: absolute;
+  top: 50%;
+  left: 42vw;
+  transform: translateY(-50%);
+  width: 100%;
+  height: calc(var(--orbit-d) + var(--roll-size) + var(--ring-w) * 2 + 32px);
+  overflow: hidden;
+  z-index: 10;
+}
+
+/* The orbit path itself. Its left edge sits on the stage's horizontal centre,
+   which puts its *centre* one radius to the right — so the 9 o'clock point of
+   the circle lands dead centre of the stage. That point is the active slot. */
+.rail-track {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--orbit-d);
+  height: var(--orbit-d);
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.rail-track.is-ready {
+  opacity: 1;
+}
+
+/* Dashed guide circle. */
+.rail-track::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px dashed var(--path-line);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Rolls
+   -------------------------------------------------------------------------- */
+.rail-track button {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--roll-size);
+  height: var(--roll-size);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  /* GSAP owns transform: xPercent/yPercent centring, x/y orbit, and scale. */
+}
+
+.rail-track button img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+
+  /* The overshoot past 1 in the curve is the swing: the roll turns a little
+     past the angle and settles back onto it, in both directions. Same idea as
+     the key visual's pendulum, just quicker — this one has to resolve inside a
+     hover rather than inside the transition. */
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Hover: the roll rocks over and holds, the way a wheel does when nudged.
+
+   On the image, not the button — the button's transform belongs to place(),
+   which rewrites x and y every frame of the orbit. The image is untouched by
+   the engine, so plain CSS works and the hover stays correct with no
+   bookkeeping when the orbit moves a different roll under a stationary cursor.
+
+   The active roll is excluded: clicking it does nothing, so animating it would
+   advertise an interaction that is not there. */
+.rail-track button:not(.is-active):hover img,
+.rail-track button:not(.is-active):focus-visible img {
+  transform: rotate(8deg);
+}
+
+/* A disc parked behind the roll, --ring-w larger on every side, so only that
+   band shows. The artwork covers it up to the roll's edge, so growing it from 0
+   reads as the ring emerging from underneath. Starts collapsed so there is no
+   flash before GSAP takes over the scale. */
+.rail-track .roll-ring {
+  position: absolute;
+  inset: calc(var(--ring-w) * -1);
+  z-index: 0;
+  border-radius: 100%;
+  background: var(--ring, #fff1a2);
+  transform: scale(0);
+  transform-origin: 50% 50%;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.rail-track button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: calc(var(--ring-w) + 4px);
+  border-radius: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail-track,
+  .rail-track button img {
+    transition: none;
+  }
+
+  .rail-track button:not(.is-active):hover img,
+  .rail-track button:not(.is-active):focus-visible img {
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   Menu — the pull-down panel
+   ==========================================================================
+   Markup in components/Menu. Two pieces stacked in normal flow: the paper
+   panel, then the torn tab under it. The tab is never positioned — it simply
+   follows the panel, so collapsing the panel to zero height is the whole
+   closed state and the tab lands back in the top-right corner by itself.
+   That is the one number the pull animation will drive.
+
+   Geometry is in vw, like the rest of the site, so the panel holds its
+   proportions against the hero's type at every width. The knobs are the custom
+   properties on .site-menu: the panel's width, its two paddings, and the row
+   height. Everything else is derived or sits inside those.
+
+   Nothing here declares a transform on .menu-panel or .menu-tab — those are
+   reserved for the pull. */
+
+.site-menu {
+  /* The panel's width, and the measure everything inside is cut to. */
+  --menu-w: 26vw; /* 374px at the 1440 design width */
+
+  /* Asymmetric on purpose: the labels start close to the left edge, while the
+     right side has to leave the arrow room to breathe. */
+  --menu-pad-l: 1vw;
+  --menu-pad-r: 1.4vw;
+
+  --menu-row-h: 6.6vw;
+  --menu-thumb: 5.4vw; /* the hover preview, a square */
+  --menu-hover-scale: 0.76; /* what the label shrinks to, to let it in */
+
+  /* The preview is pinned on rather than set in: it leans, and it rides up over
+     the row's own rule instead of sitting politely under it. Keep the lift
+     under the panel's top padding (1.4vw) — the first row's preview has nothing
+     but that between it and the clipped edge. */
+  --menu-thumb-lift: 0.55vw;
+  --menu-thumb-rot: -5deg;
+  --menu-thumb-radius: 1.736vw; /* 25px at the 1440 design width */
+
+  /* The dashed rules, as a dash and the gap after it. The period is the two
+     added together, so shortening either puts more dashes on the line. */
+  --menu-dash: 0.17vw;
+  --menu-dash-gap: 0.13vw;
+  --menu-dash-h: 0.12vw;
+
+  /* The hover preview, in two beats: the slot opens and shoves the label aside,
+     and only once it has stopped does the image scale up into it. OPEN is how
+     long the shove takes, which is therefore also how long the image waits —
+     the two are one number so the beats cannot overlap. Closing runs the same
+     sequence backwards, image first. */
+  --menu-thumb-open: 0.35s;
+  --menu-thumb-pop: 0.4s;
+
+  /* The hero's dark green on paper white — the menu belongs to the page, not
+     to the slider's per-tape palette, same call the wave band makes. */
+  --menu-ink: #013900;
+  --menu-paper: #f4f3ef;
+  --menu-rule: rgba(1, 57, 0, 0.55); /* the dashed separators */
+  --menu-dot: #b6fe00; /* the disc behind each arrow — the hero's lime */
+
+  position: fixed;
+  top: 0;
+  /* Clear of the right edge, and of the scrollbar sitting on it. The panel's
+     top edge stays flush, so only the corners that stand away from an edge are
+     rounded below. */
+  right: 1.4vw;
+  width: var(--menu-w);
+  z-index: 100; /* over the slider's stage (10) and the band (11), under the cursor */
+  font-family: var(--font-heading);
+  color: var(--menu-ink);
+
+  /* The tab is narrower than the panel, so the strip of this box beside it is
+     empty — and empty or not, a fixed box in the corner must never be what a
+     click on the hero lands on. The two real surfaces take it back below. */
+  pointer-events: none;
+}
+
+.menu-panel,
+.menu-tab {
+  pointer-events: auto;
+}
+
+/* --------------------------------------------------------------------------
+   The panel
+   -------------------------------------------------------------------------- */
+.menu-panel {
+  position: relative;
+  background: var(--menu-paper);
+  /* Bottom-left only. The two at the top sit ON the viewport's edge, which the
+     panel has come down through — rounding them would read as a slipped box
+     rather than a deliberate one. The bottom-right is square because the tab
+     hangs flush off it: curve that corner and the curve cuts a notch out from
+     behind the tab's own square top edge, showing a wedge of whatever is
+     behind the menu. The tab continues the panel there; it is not an edge. */
+  border-radius: 0 0 0 0.9vw;
+  /* What the drop works against: with the sheet top-anchored inside, the
+     panel's height IS how much of the menu has been pulled out, and that one
+     number is the whole open/closed state. Menu/reveal.ts drives it. */
+  overflow: hidden;
+  /* No shadow. See .menu-tab below: it and the panel are one sheet, and a
+     shadow on the panel lands right across the join and separates them. */
+}
+
+/* The padding lives here, not on the panel above. A padded clipping box cannot
+   close: at height 0 it would still be a 1.9vw sliver of paper standing in the
+   corner. Held by the sheet, the padding travels down inside the panel and the
+   panel is free to be genuinely nothing. */
+.menu-sheet {
+  padding: 1.4vw var(--menu-pad-r) 0.5vw var(--menu-pad-l);
+}
+
+/* The same paper grain the hero, the band and the stage all carry, so the
+   panel reads as another piece of the same printed sheet. Lighter than their
+   0.2 — that weight is tuned for saturated colour and over near-white it stops
+   being grain and starts being grey. */
+.menu-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/paper-overlay.png");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+/* Positioned only to lift the links over the grain above — a positioned
+   pseudo-element otherwise paints over ordinary content whatever the source
+   order says. The hero's .title and the slider's copy do the same. */
+.menu-list {
+  position: relative;
+  z-index: 1;
+  list-style: none;
+  padding: 0;
+}
+
+/* Closed — but only until the drop takes the height over.
+   --------------------------------------------------------------------------
+   The server renders the panel at its full height, so without this the first
+   painted frame would be an open menu that hydration then snatches away. This
+   is what the page starts on; the moment Menu/reveal.ts builds its timeline it
+   writes an inline height, which outranks this rule and holds the state from
+   then on — including all the way through a close, which is why the retract
+   still animates after the attribute has already flipped.
+
+   It is also the whole closed state when there is no timeline at all: reduced
+   motion, or no JS to build one.
+
+   No `visibility` here, deliberately. Hiding the contents outright would be
+   correct for a menu that snaps shut, and fatal for one that retracts — the
+   letters have to still be on the paper to be seen falling back under their
+   masks. What the links must not be while closed is reachable, and that is
+   handled where it belongs: pointer-events below, and tabindex in the markup,
+   neither of which paints anything. */
+.site-menu[data-open="false"] .menu-panel {
+  height: 0;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   Rows
+   -------------------------------------------------------------------------- */
+
+/* The dashed separator, above every item including the first — the top rule is
+   what closes the gap between the panel's edge and the list. There is
+   deliberately none under the last row: the panel's own bottom edge is that
+   line.
+
+   A gradient rather than `border-top: dashed`, because the dash and gap lengths
+   are the browser's business in a border and are set here instead; the same
+   reason the slider's chips draw their perforation as a gradient.
+
+   An element rather than a ::before on the row, because the reveal has to be
+   able to reach it — a pseudo-element cannot be handed to GSAP. It owns nothing
+   but its own paint here; Menu/reveal.ts owns its clip-path. */
+.menu-rule {
+  display: block;
+  height: var(--menu-dash-h);
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--menu-rule) 0 var(--menu-dash),
+    transparent var(--menu-dash) calc(var(--menu-dash) + var(--menu-dash-gap))
+  );
+}
+
+.menu-link {
+  position: relative;
+  display: flex;
+  align-items: start;
+  height: var(--menu-row-h);
+  /* Keeps the longest label clear of the arrow disc, which is out of flow. */
+  padding-right: 2.6vw;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* The hover preview's slot — collapsed, not hidden, so it opens by pushing the
+   label right rather than by appearing over it. Width and margin are both
+   animated: with a flex `gap` the space beside a zero-width item would still be
+   there, holding the label off the edge for no reason.
+
+   No background of its own. The slot opens EMPTY — clearing the room is the
+   first beat and the image arriving is the second, so anything painted here
+   would show as a coloured card being shoved in ahead of the picture. */
+.menu-thumb {
+  flex: 0 0 auto;
+  width: 0;
+  height: var(--menu-thumb);
+  margin-right: 0;
+  border-radius: var(--menu-thumb-radius);
+  overflow: hidden;
+
+  /* Pinned on, not set in. It leans, and it rides up over the row's own rule
+     rather than starting beneath it — the dashes run behind its corner and out
+     the other side, which is what makes it read as laid on the page instead of
+     as another cell in a table.
+
+     `top` is a relative offset, so it lifts without taking the label with it,
+     and z-index puts it over the rule it is now crossing. */
+  position: relative;
+  top: calc(var(--menu-thumb-lift) * -1);
+  z-index: 1;
+  transform: rotate(var(--menu-thumb-rot));
+
+  /* Delayed HERE, on the resting state, which is the state the slot eases back
+     to. That is how the sequence reverses itself without a second set of rules:
+     leaving, the slot waits POP out before it starts closing, so the image has
+     shrunk away first. Arriving, the hover rule below cancels the delay and the
+     slot goes at once. */
+  transition:
+    width var(--menu-thumb-open) ease var(--menu-thumb-pop),
+    margin-right var(--menu-thumb-open) ease var(--menu-thumb-pop);
+}
+
+/* The image, second beat. It is a fixed square inside a slot that has already
+   finished opening, so it scales into standing room rather than being uncovered
+   by the slot's own edge.
+
+   max-width: none because the reset caps images at 100%, which here is the
+   slot's width — the animating one. Left alone the image would track the slot
+   open and squash, which is the thing this whole arrangement is avoiding.
+
+   Eased at both ends, and no overshoot. A scale starting at 0 is already the
+   most violent move on the page — it covers half its final size in the first
+   few frames — so the springy curve the arrow swings on made it crack rather
+   than arrive. A gentle START is what takes the pop out: the image grows out of
+   nothing instead of being fired out of it, and the settle at the far end is
+   what the extra 0.1s of --menu-thumb-pop is paying for. */
+.menu-thumb img {
+  width: var(--menu-thumb);
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  /* The same radius the slot clips to — carried on the image as well, not left
+     to the slot alone. A clip is a fixed shape at the slot's full size, so a
+     half-scaled image sits well inside it and never touches the curve: the
+     corners would be square for most of the scale-in and only round off on the
+     last frame. On the image the radius scales with it and the corners are
+     right the whole way. At rest the two coincide exactly. */
+  border-radius: var(--menu-thumb-radius);
+  transform: scale(0);
+  transition: transform var(--menu-thumb-pop) cubic-bezier(0.4, 0, 0.2, 1) 0s;
+}
+
+/* Arriving: the slot goes immediately, the image waits for it. */
+.menu-link:hover .menu-thumb,
+.menu-link:focus-visible .menu-thumb {
+  width: var(--menu-thumb);
+  margin-right: 0.85vw;
+  transition-delay: 0s;
+}
+
+.menu-link:hover .menu-thumb img,
+.menu-link:focus-visible .menu-thumb img {
+  transform: scale(1);
+  transition-delay: var(--menu-thumb-open);
+}
+
+/* The label gives up the room the preview takes. Scaled rather than set at a
+   smaller font-size, so the two happen on the same clock and the word appears
+   to be pushed and squeezed by the same thing — a font-size change would
+   reflow the letters instead of moving them.
+
+   --menu-hover-scale is set by the LONGEST label, not by taste: OUR FAMILY is
+   what has to still fit beside the preview, and the rest come down with it so
+   the four rows read as one behaviour. Re-check it when a label changes. */
+.menu-link:hover .menu-label,
+.menu-link:focus-visible .menu-label {
+  transform: scale(var(--menu-hover-scale));
+  transition-delay: 0s;
+}
+
+/* 60px / 60px / -1.8px at the 1440 design width, carried to vw the way the
+   rest of the site's type is — the hero's own figures are the same conversion.
+   Keep the three together: the arrow's placement below is measured off this
+   font-size, and the row height is what the line sits in.
+
+   Flex, and for the same reason the hero's rows are: the letters below carry
+   overflow: hidden, and an inline-block whose overflow is not visible takes its
+   baseline from its bottom margin edge rather than from the text inside it —
+   which would drop every letter a full descent and grow the row for no visible
+   reason. Flex items have no baseline to get wrong. */
+.menu-label {
+  display: flex;
+  align-items: flex-end;
+  font-size: 4.167vw;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.125vw;
+
+  /* The hover shrink, below. From the left edge, so the word stays butted
+     against the preview that is pushing it rather than drifting away from it,
+     and on the slot's clock and the slot's delay — the label is being shoved by
+     the slot, so it has to leave and come back at exactly the same moment. */
+  transform-origin: left center;
+  transition: transform var(--menu-thumb-open) ease var(--menu-thumb-pop);
+}
+
+/* Split letters. Same two boxes as the hero's — .clip holds the letter's place
+   in the word and masks it, .char is the only thing that moves — but the
+   padding is the menu's own: this type is set at line-height 1 where the hero's
+   runs under 0.8, so it needs far less headroom, and only the negative tracking
+   has to be paid for sideways. The matching negative margins hand the room back
+   to the layout, so the word is the width it always was.
+
+   Nothing at the bottom: the mask's lower edge is what the letters slide out
+   through, and it wants to sit tight on the baseline. */
+.site-menu .clip {
+  display: block;
+  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  overflow: hidden;
+  padding: 0.1em 0.06em 0;
+  margin: -0.1em -0.06em 0;
+}
+
+.site-menu .char {
+  display: block;
+  /* No parked transform here, unlike the hero's. The panel is shut until a
+     click — which needs JS — so the letters cannot be seen before the timeline
+     that hides them exists, and a CSS hold would only be something to undo. */
+}
+
+/* The lime disc, with the arrow set small inside it — the mark is the disc
+   now, and the arrow is what is printed on it.
+
+   Out of flow so it holds the same place down the column whatever the label
+   does. `top` rather than a flex alignment because it lines up with the TOP OF
+   THE CAPITALS, not with the label's box or its centre; the figure is derived
+   from .menu-label's font-size and line-height, so the two move together. */
+.menu-arrow {
+  position: absolute;
+  right: 0;
+  top: 1vw;
+  display: grid;
+  place-items: center;
+  width: 1.7vw;
+  height: 1.7vw;
+  border-radius: 50%;
+  background: var(--menu-dot);
+}
+
+/* The arrow swings from north-east round to due east on hover — the mark stops
+   pointing away and starts pointing AT the row it belongs to.
+
+   On the svg, not on .menu-arrow: the disc's transform belongs to the reveal,
+   which scales it from nothing, and whichever of the two was written second
+   would win. Same overshoot curve as the slider's rolls, so the arrow arrives
+   with a little swing rather than sliding into place. */
+/* Sized independently of the disc above — this is the ink on the badge, not the
+   badge, and shrinking it only widens the margin around it. */
+.menu-arrow svg {
+  width: 0.56vw;
+  height: 0.56vw;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.menu-link:hover .menu-arrow svg,
+.menu-link:focus-visible .menu-arrow svg {
+  transform: rotate(45deg);
+}
+
+/* --------------------------------------------------------------------------
+   The tab
+   -------------------------------------------------------------------------- */
+
+/* A bare box: it carries the width and the placement, and nothing else. The
+   paper and the torn edge are on the sheet inside.
+
+   No shadow, here or on the panel. The tab and the panel are one sheet of paper
+   with a bite taken out of the bottom, and a shadow on either of them draws a
+   line along the join and turns them into two things stacked. Kept as two
+   elements even so: a mask is applied AFTER a filter, so a drop-shadow and the
+   torn edge cannot sit on the same box — if a shadow is ever wanted it goes
+   here, and nothing has to be restructured for it. */
+.menu-tab {
+  display: block;
+  margin-left: auto; /* right-aligned under the panel, flush with its edge */
+  width: 9.3vw;
+  color: var(--menu-ink);
+}
+
+/* The sheet, torn along the bottom.
+   --------------------------------------------------------------------------
+   Two mask layers: a solid rectangle covering everything above the teeth, and
+   the torn edge itself along the bottom.
+
+   The edge is ONE svg spanning the full width, not a tooth tiled across it. A
+   tile cannot draw this shape: the profile is anchored to the tab's own sides —
+   a right-angled triangle at each end, standing on the vertical edge, with a
+   single full triangle between them — and a repeating cell has no way to know
+   where the ends are. Rounding settles it either way. A rounded point sitting
+   on a tile boundary has half its curve in each of two cells, and the two
+   halves have to meet exactly or the seam shows as a nick in the paper.
+
+   So the count is in the path, not in a variable: three points down, two
+   notches up, at x = 0 / 25 / 50 / 75 / 100 of the viewBox. Changing it means
+   redrawing the `d`, which is the honest cost of a shape this specific.
+
+   The corners are quadratics with the sharp vertex as the control point, cut
+   back 5 units along each leg — torn card, not pinking shears. The viewBox is
+   100 x 15 against a box of 9.3vw x 1.4vw, within a percent of the same
+   proportion, so preserveAspectRatio="none" stretches it almost exactly evenly
+   and the rounding stays circular rather than smearing sideways. Change the
+   tab's width or --tooth-h far and the viewBox wants re-proportioning with it. */
+.menu-tab-sheet {
+  --tooth-h: 1.4vw;
+  --tooth: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 15' preserveAspectRatio='none'%3E%3Cpath d='M0 0L0 11Q0 15 4.29 12.43L20.71 2.57Q25 0 29.29 2.57L45.71 12.43Q50 15 54.29 12.43L70.71 2.57Q75 0 79.29 2.57L95.71 12.43Q100 15 100 11L100 0Z' fill='%23000'/%3E%3C/svg%3E");
+
+  display: block;
+  height: calc(2.4vw + var(--tooth-h));
+  /* Centres the word in the flat body, ignoring the teeth below it. */
+  line-height: 2.4vw;
+  background: var(--menu-paper);
+  font-size: 1.05vw;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  /* The tracking is added to the right of the last letter too, which shifts the
+     word left of centre; half of it back squares the word up in the box. */
+  text-indent: 0.1em;
+  text-align: center;
+
+  -webkit-mask-image: linear-gradient(#000 0 0), var(--tooth);
+  mask-image: linear-gradient(#000 0 0), var(--tooth);
+  -webkit-mask-size:
+    100% calc(100% - var(--tooth-h)),
+    100% var(--tooth-h);
+  mask-size:
+    100% calc(100% - var(--tooth-h)),
+    100% var(--tooth-h);
+  /* The torn edge is parked at 93%, not at the bottom. Percentage positioning
+     is a proportion of the SLACK, not of the box — the strip is --tooth-h tall
+     in a box that is 2.4vw taller, so 93% leaves the last 7% of that slack
+     (0.168vw) below it uncovered. Nothing paints there, which blunts the three
+     points by that much: a torn edge with the very tips worn off it, rather
+     than three needles. The two layers overlap by the same amount higher up,
+     which is harmless — mask layers add.
+
+     100% would put the points back and --tooth-h alone would shorten the teeth
+     without taking the tips off. This is the third thing, and the only one that
+     rounds the ends. */
+  -webkit-mask-position:
+    0 0,
+    0 93%;
+  mask-position:
+    0 0,
+    0 93%;
+  -webkit-mask-repeat: no-repeat, no-repeat;
+  mask-repeat: no-repeat, no-repeat;
+}
+
+.menu-link:focus-visible,
+.menu-tab:focus-visible {
+  outline: 0.2vw solid var(--menu-ink);
+  outline-offset: 0.2vw;
+}
+
+#paperclip {
+  position: absolute;
+  top: 74vw;
+  left: 5vw;
+  z-index: 1;
+  width: 8.216vw;
+  height: 9.043vw;
+  filter: drop-shadow(1px 14px 20px black);
+}
+
+#tape-top {
+  position: absolute;
+  top: 60vw;
+  right: -5vw;
+  z-index: 10;
+  width: 42.126vw;
+  height: 8.74vw;
+  object-fit: cover;
+}
+
+/* The entrance is skipped outright when this is asked for — Menu/reveal.ts
+   builds no timeline at all, and every piece is left standing where the rules
+   above paint it. What is left here is the hover, which is a response to the
+   pointer rather than something that happens on its own: it still happens, it
+   just stops sliding. */
+@media (prefers-reduced-motion: reduce) {
+  .menu-thumb,
+  .menu-thumb img,
+  .menu-label,
+  .menu-arrow svg {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   Custom cursor — the taped arrow
+   ==========================================================================
+   The element is built and driven by components/Cursor; this section is only
+   what it looks like. Everything positional beyond the hotspot offset below
+   belongs to GSAP — it owns `transform`, so nothing here may declare one.
+
+   The .has-cursor class is added by the module, never assumed: without JS, on
+   a touch device, or after teardown the class is absent and the native cursor
+   is exactly where it always was. */
+
+html.has-cursor,
+html.has-cursor * {
+  cursor: none;
+}
+
+/* An exception worth keeping: text you can select still says so. A caret over
+   a field is information the arrow does not carry. */
+html.has-cursor input,
+html.has-cursor textarea {
+  cursor: text;
+}
+
+.cursor-arrow {
+  position: fixed;
+  left: 0;
+  top: 0;
+  /* The artwork's own size. In px, not vw: this is a pointer, and a pointer
+     that grows with the viewport stops reading as one. */
+  width: 60px;
+  height: 65px;
+  background: url("/assets/cursor.svg") center / contain no-repeat;
+
+  /* The hotspot. The arrow's tip sits at (14, 15) inside the 60x65 artwork,
+     so the box is offset by exactly that much and the tip — not the corner,
+     and not the centre — lands on the pointer's real position.
+
+     The `translate` property, not `transform` — GSAP owns the transform for
+     the tracking and would overwrite this the first time the mouse moved.
+     They are separate properties and compose, and because translate is
+     applied first, the hover scale still pivots on the tip below. */
+  translate: -14px -15px;
+  transform-origin: 14px 15px;
+
+  pointer-events: none; /* never be what a click lands on */
+  z-index: 9999; /* over the slider's stage (10) and the band's svg (11) */
+  will-change: transform;
+
+  /* The artwork is pale masking tape and the page runs pale in places (the
+     gift's ribbon, the cardboard, the note). A tight dark edge keeps the
+     arrow readable over all of them without tinting it. */
+  filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.45));
+}

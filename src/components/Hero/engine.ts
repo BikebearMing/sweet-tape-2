@@ -149,7 +149,7 @@ export function initHero(root: HTMLElement): () => void {
     stripTopDoc = rollCentre;
     // The canvas's own floor. offsetHeight already carries however far the CSS
     // hangs the box below the section, so this needs no knob of its own — it is
-    // wherever hero.css put it, and nothing can be drawn past it.
+    // wherever global.css put it, and nothing can be drawn past it.
     tapeFloorDoc = docTop(mount!) + mount!.offsetHeight;
     // The cardboard is what the strip finishes against; without one the floor
     // stands in and the finale simply never has a stop to reach.
@@ -308,6 +308,7 @@ export function initHero(root: HTMLElement): () => void {
               STRIP: mod.STRIP,
               END: mod.END,
               LIGHT: mod.LIGHT,
+              FACE_LIGHT: mod.FACE_LIGHT,
               FILM: mod.FILM,
               tune: t.tune,
             },

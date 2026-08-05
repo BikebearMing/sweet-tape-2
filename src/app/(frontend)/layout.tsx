@@ -4,15 +4,12 @@ import type { ReactNode } from "react";
 import "@fontsource-variable/inter-tight";
 import "lenis/dist/lenis.css";
 
-import "@/styles/reset.css";
-import "@/styles/tokens.css";
-import "@/styles/letters.css"; /* generated — npm run letters */
-import "@/styles/hero.css";
-import "@/styles/wave-band.css";
-import "@/styles/tape-slider.css";
-import "@/styles/cursor.css";
+/* The whole site, one stylesheet. It @imports letters.css, which is generated
+   — see `npm run letters`. */
+import "@/styles/global.css";
 
 import Cursor from "@/components/Cursor";
+import Menu from "@/components/Menu";
 import SmoothScroll from "@/components/SmoothScroll";
 
 export const metadata: Metadata = {
@@ -37,6 +34,10 @@ export default function FrontendLayout({ children }: { children: ReactNode }) {
       <body>
         <SmoothScroll />
         <Cursor />
+        {/* Fixed to the top-right corner and site-wide, so it lives in the
+            layout rather than on the page — it is not the hero's furniture
+            even though that is what sits behind it on load. */}
+        <Menu />
         {children}
       </body>
     </html>

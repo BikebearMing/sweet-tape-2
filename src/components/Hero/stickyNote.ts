@@ -44,7 +44,7 @@ export const NOTE_URL = "/assets/sticky-note.png";
 
 export const NOTE = {
   /* The sheet, in world units. Square-ish, a touch wide. Mirrored by the
-     slot's aspect-ratio in hero.css — change the two together. */
+     slot's aspect-ratio in global.css — change the two together. */
   W: 1,
   H: 0.94,
   /* Subdivisions per side. The wind can only bend where there are vertices;

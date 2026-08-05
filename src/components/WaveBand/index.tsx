@@ -11,8 +11,8 @@ import { UNIT, REPEATS } from "./marquee";
  * below it the slider's stage rises to the hero's exact bottom edge, so the
  * stage's colour — and its selection wipes — are the real thing seen under
  * the wave, not a copy. The straight seam where green meets stage hides
- * inside the tape's stroke; wave-band.css owns that geometry (tilt, stroke,
- * and the slider's matching content shift move together).
+ * inside the tape's stroke; global.css owns that geometry under Wave band
+ * (tilt, stroke, and the slider's matching content shift move together).
  *
  * The geometry's own numbers: the wave's centreline sits at y=330, swinging
  * ±65 (control points ±130 — a quadratic reaches halfway to its control
@@ -21,7 +21,7 @@ import { UNIT, REPEATS } from "./marquee";
  * to x=8000, far past the viewBox on both sides, so the marquee never runs
  * out of curve and glyphs enter the frame already bent.
  *
- * Text metrics live in wave-band.css (the band is styled, not attributed);
+ * Text metrics live in global.css (the band is styled, not attributed);
  * the copy itself is marquee.ts's UNIT, shared so the marquee measures
  * exactly the string that renders. dy sits the text on the path's centreline
  * — textPath aligns the BASELINE to the path, which alone would ride high.

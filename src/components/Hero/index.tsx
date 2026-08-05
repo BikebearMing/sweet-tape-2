@@ -2,6 +2,7 @@ import { preload } from "react-dom";
 import type { CSSProperties, ReactNode } from "react";
 
 import Stage from "./Stage";
+import { letters } from "@/components/letters";
 import { MODEL_URL } from "./engine";
 
 /* Section-level copy. Two lines rather than one string: the headline is set as
@@ -9,36 +10,11 @@ import { MODEL_URL } from "./engine";
    are named constants rather than strings buried in the markup. */
 const KICKER = ["WE'RE", "HERE TO"];
 const HEADLINE = ["STICK", "BY YOU"];
+/* The corner mark. Two lines for the same reason the headline is: the break is
+   set, not wrapped — it is short copy in a corner and it has one shape. */
+const CORNER_MARK = ["STICK WITH YOU THROUGH", "THREE GENERATIONS"];
 const CARDBOARD_COPY =
   "DIY FAIL, MOVING DAY CHAOS, SCHOOL PROJECT EMERGENCY,LAST-MINUTES FIXES. WE ALWAYS STICK BY YOU.";
-
-/* The rows below are flex, so a plain space between two letters is dropped —
-   the gap between words has to be a character carrying a width of its own. */
-const NBSP = "\u00A0";
-
-/* One row of copy, split to its letters.
- *
- * Two boxes each: .clip holds the letter's place in the row and masks it, .char
- * is the only thing that moves. Both the arc and the reveal want the transform
- * property and one element cannot carry both — hero.css has the long version.
- *
- * --i is where the letter stands along its row, which is what the arc reads
- * (together with --letters on the row itself) to work out its point on the
- * curve. Written from the string rather than as :nth-child rules — the markup
- * is generated here anyway, and the copy can change length without the
- * stylesheet knowing.
- *
- * Server-rendered, so the split costs nothing on mount and there is never a
- * frame of unsplit text — unlike the runtime splitters this pattern usually
- * comes with.
- */
-function letters(text: string): ReactNode[] {
-  return [...text].map((ch, i) => (
-    <span className="clip" key={i} style={{ "--i": i } as CSSProperties}>
-      <span className="char">{ch === " " ? NBSP : ch}</span>
-    </span>
-  ));
-}
 
 /* Running copy split to letters — the cardboard's h2, which wraps, where the
  * headline's rows do not. Each word becomes an inline flex box of letter clips
@@ -84,7 +60,7 @@ export default function Hero() {
 
   return (
     <Stage>
-      {/* The letters are parked under their masks by hero.css and released by
+      {/* The letters are parked under their masks by global.css and released by
           Hero/reveal.ts. With no JS to release them the type — the one thing
           this section is guaranteed to be able to paint — would never arrive,
           so the stylesheet's hold is lifted here instead. Costs nothing when
@@ -95,6 +71,21 @@ export default function Hero() {
 
       <div className="hero-wrapper">
         <div className="top">
+          {/* The corner mark, out of flow in the lime field's top-left. After
+              .top's grain in source, which is what keeps it over the texture —
+              positioned siblings paint in tree order and the grain is a
+              positioned ::before. .title holds itself above the same layer the
+              same way, with position: relative.
+
+              Not split to letters and not in the reveal: it is a mark in a
+              corner rather than part of the headline's arrival, and it is
+              already legible before the type has finished landing. */}
+          <p className="corner-mark">
+            {CORNER_MARK.map((line) => (
+              <span key={line}>{line}</span>
+            ))}
+          </p>
+
           <div className="title">
             {/* The kicker is one line with a gap wide enough for the roll to
                 sit in the middle of it, so each half needs to be its own box:
@@ -118,7 +109,7 @@ export default function Hero() {
                 "STICK" and "BY YOU" in the outline as separate headings.
 
                 --letters is how long the row is; with --i on each letter it is
-                everything the arc in hero.css needs. aria-label for the same
+                everything the arc in global.css needs. aria-label for the same
                 reason as the kicker's hidden copy — on a heading the label is
                 honoured, so nothing hidden is needed here. */}
             <div className="warped-text">
@@ -152,6 +143,8 @@ export default function Hero() {
             sits in between. The cardboard carries its copy with it, so the
             wrapper wears the attributes rather than the img. */}
         <div className="bottom-part">
+
+          
           <img
             src="./assets/lemon painting 1.webp"
             alt=""
@@ -159,6 +152,7 @@ export default function Hero() {
             data-parallax="0.14"
             data-parallax-ease="3.5"
           />
+          
           <img
             id="gift"
             src="./assets/gift 1.webp"
@@ -166,22 +160,29 @@ export default function Hero() {
             data-parallax="-0.12"
             data-parallax-ease="9"
           />
+
+          
           {/* No parallax here, deliberately: the finale tapes the strip across
               this board, and the strip is fixed to the section — a drifting
               board would slide under its own tape. */}
           <div className="cardboard-wrapper">
-              {/* Same split-letter reveal as the headline, but driven by the
+            {/* Same split-letter reveal as the headline, but driven by the
                   scroll (Hero/reveal.ts, initCopyReveal) since this sits a
                   viewport below the fold. aria-label carries the readable
                   copy, same as the h1. */}
-              <h2 className="h2" aria-label={CARDBOARD_COPY}>
-                <span aria-hidden="true">{words(CARDBOARD_COPY)}</span>
-              </h2>
-              <img id="cardboard" src="./assets/cardboard.webp" alt="" />
+            <h2 className="h2" aria-label={CARDBOARD_COPY}>
+              <span aria-hidden="true">{words(CARDBOARD_COPY)}</span>
+            </h2>
+            <img id="cardboard" src="./assets/cardboard.webp" alt="" />
+            
           </div>
 
           <div className="sticky-note" aria-hidden="true" />
+          <img id="paperclip" src="./assets/paper-clip-1.png" alt="" />
+          <img src="./assets/tape top.png" alt="" id="tape-top" />
         </div>
+
+        
       </div>
     </Stage>
   );

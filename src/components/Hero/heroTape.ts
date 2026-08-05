@@ -25,6 +25,7 @@ import {
   Float32BufferAttribute,
   Group,
   Mesh,
+  MeshPhysicalMaterial,
   MeshStandardMaterial,
   NoToneMapping,
   PerspectiveCamera,
@@ -116,7 +117,47 @@ export const END = {
  * AMBIENT is in units of pi, where 1 means an unlit surface leaves the renderer
  * at its texture's own colour. Live-tweak in dev: hero.LIGHT.POWER = 3;
  * hero.tune() */
-export const LIGHT = { X: -1.5, Y: 3, Z: 2.5, POWER: 3.5, AMBIENT: 0.66 };
+export const LIGHT = { X: -1.5, Y: 5, Z: 2.5, POWER: 3.5, AMBIENT: 0.66 };
+
+/* The face's own key — the kicker.
+ *
+ * The roll's FACE cannot be lit by the light above, and no amount of GLOSS or
+ * METAL can change that. The face is a flat disc whose normal runs from
+ * (sin35, 0, cos35) at rest to (1, 0, 0) side-on, so it points into the RIGHT
+ * half of the scene for the entire sequence, and the direction it mirrors
+ * toward the camera is about (0.94, 0, 0.34) — right and level. The key sits
+ * left and high, some 98 degrees away from that. The face's specular therefore
+ * lands three orders of magnitude below the lobe's peak at GLOSS 0.42 and
+ * nearly four at 0.3 — tightening the lobe only misses harder. Worse, by
+ * the time the roll is side-on the key's N.L has gone NEGATIVE and the face is
+ * lit by ambient alone — which carries no highlight by definition (see
+ * AMBIENT above), and is why the artwork could only ever be tuned brighter,
+ * duller or more saturated, never glossier.
+ *
+ * So this one is aimed at the face's mirror direction instead, lifted about 35
+ * degrees above it. Two things follow from that placement:
+ *
+ * The highlight is a real arc rather than a wash, because it peaks where the
+ * domed normals (FILM.DOME) tilt into the half-vector — a ring at roughly 3/4
+ * of the disc's radius, up and to the right.
+ *
+ * And it SLIDES. The mirror direction sweeps away as the roll turns side-on,
+ * so the sheen travels across the label and off it. A highlight that moves
+ * when the surface turns is the whole read: a fixed one is printed on.
+ *
+ * Elevation is the other half of the placement, because three filters lights
+ * by camera layers only — there is no per-object scoping, so this one falls on
+ * the strip and the wound side too. Their normals lie in the xz plane, so
+ * carrying the light's energy in Y keeps most of it off them while the face's
+ * dome still catches it. What does reach the strip is a second, softer sheen
+ * band on its right — the side the key leaves dark. Drop POWER to 0 to see
+ * what it is contributing.
+ *
+ * POWER is set against FILM.COAT_GLOSS rather than on its own: the coat's peak
+ * scales as 1/roughness^4, so the two have to come down together or the
+ * highlight clips to white long before it looks bright. Live-tweak in dev:
+ * hero.FACE_LIGHT.POWER = 2; hero.tune() */
+export const FACE_LIGHT = { X: 2.7, Y: 2.0, Z: 1.0, POWER: 0.3 };
 
 /* The film's finish — shared by the roll's face, its wound side and the
    dispensed strip, so the key light draws one continuous material across all
@@ -127,25 +168,82 @@ export const FILM = {
   /* Base roughness, which the roughness streaks multiply — so it sits higher
      than a flat value would, and the effective gloss ranges about 0.14-0.29.
      Lower is a tighter, brighter, sharper highlight. */
-  GLOSS: 0.42,
+  GLOSS: 0.3,
   /* A dielectric reflects about 4% head-on, which under a bright ambient is too
      little to see — the surface has a highlight in the maths and none on
      screen. Metalness raises that reflectance and tints it with the surface's
      own colour, which is what makes the sheen read as coated film rather than
      as a grey smear. Kept low: past ~0.35 the artwork starts going dark and
      metallic, because metalness also takes light away from the diffuse. */
-  METAL: 0.35,
+  METAL: 0.25,
   /** Saturation, applied to the artwork after its texture is sampled. */
-  SAT: 0.85,
+  SAT: 0.88,
   /** Contrast about mid grey. Small numbers go a long way; 1.25 is a lot. */
   PUNCH: 1.4,
-  /* A lift on the roll's FACE alone — the artwork, not the wound side or the
-     strip. It scales the texture on its way in, so it is exposure rather than
-     added light: nothing else in the scene moves, and the face's own shading
-     and highlight are untouched. Worth keeping small. Above roughly 1.15 the
-     brightest parts of the artwork start clipping, and clipped channels drift
-     toward white — which costs the saturation SAT is there to add. */
-  FACE: 1.08,
+  /* Exposure on the roll's FACE alone — the artwork, not the wound side or the
+     strip. It scales the texture on its way in, so nothing else in the scene
+     moves, and the face's own shading is untouched.
+
+     It sits well under 1 now, and that is deliberate rather than a darkening.
+     A dielectric's specular does not scale with albedo — the clear coat below
+     reflects the same white whatever the artwork underneath is doing — so
+     albedo down plus light up RAISES the highlight's contrast against the
+     surface it sits on, which is the difference between a glossy label and a
+     bright one. The two move together: drop this and raise FACE_LIGHT.POWER
+     for more sheen, do the reverse for a flatter, fuller face. Above roughly
+     1.15 the artwork's brightest parts clip, and clipped channels drift toward
+     white — which costs the saturation SAT is there to add. */
+  FACE: 0.6,
+  /* The face's own finish. The artwork is under a coat of clear film, and none
+     of these four touch the wound side or the strip.
+
+     FACE_METAL is near zero on purpose — it replaces METAL's job here. Raising
+     metalness is the wrong way to buy reflectance on a dielectric: it TINTS
+     the highlight with the artwork's own colour and takes the same light away
+     from the diffuse, so the face goes grey and dark exactly as it gets shiny.
+     That is the trade this scene kept running into.
+
+     COAT is the right tool instead — a second specular lobe layered over the
+     diffuse, white and unaffected by SAT, PUNCH or the albedo, which is
+     literally what a coat of clear plastic over a printed label is. COAT_GLOSS
+     is its roughness, and it wants to be a little tighter than the base
+     FACE_GLOSS so the two read as a reflection sitting on a broader sheen
+     rather than as one smear.
+
+     But only a little, and this is the knob to be careful with, because a GGX
+     lobe's peak goes as 1/roughness^4: at 0.28 the density peaks near 52, at
+     0.1 near 3200. The second one is not a harder glint, it is a blown one —
+     roughly 60x display white, which clips to a flat white blob and takes the
+     artwork under it with it. Anything under about 0.2 here needs FACE_LIGHT's
+     POWER pulled down to match, and past that the highlight stops being a
+     sheen and starts being a hole.
+
+     Live-tweak in dev: hero.FILM.COAT_GLOSS = 0.22; hero.tune() */
+  FACE_GLOSS: 0.14,
+  FACE_METAL: 0.1,
+  COAT: 0.3,
+  COAT_GLOSS: 0.18,
+  /* The face's fake dome, in radians at the rim — the flat-disc problem, and
+     the exact counterpart of CURL below.
+   *
+   * Getting a light onto the face is only half of it. A flat disc has ONE
+   * normal over its whole area, so every term of the shading is constant
+   * across it and the specular resolves to a single value — a uniform wash the
+   * eye reads as exposure, not as gloss. Sheen is a GRADIENT: a bright region
+   * with a falloff. Without one, a correctly lit flat face still just looks
+   * brighter, which is the second half of why the knobs never worked.
+   *
+   * So the face's normals are fanned radially outward, as if the label were
+   * very slightly domed — which a wound roll's face genuinely is. The normal
+   * then sweeps through the half-vector on a ring, and that ring is the
+   * highlight arc. Normals only: not one vertex moves, so the roll's
+   * silhouette and the artwork's registration are exactly as exported.
+   *
+   * DOME_BIAS shapes where the ring sits. At 1 the tilt grows linearly with
+   * radius; above it the middle of the disc stays flatter and the curve piles
+   * up near the rim, which pushes the arc outward and tightens it. */
+  DOME: 1.3,
+  DOME_BIAS: 0.5,
   /* How far the strip's normals fan across its width, in radians.
    *
    * The strip is a flat plane facing the camera, and a flat plane under a
@@ -392,6 +490,93 @@ function curlNormals(geo: BufferGeometry) {
   nor.needsUpdate = true;
 }
 
+/* The face's dome, held with the normals it arrived from the export with — see
+   FILM.DOME. The curve is re-applied against those rather than against the
+   current values, so tuning it sets the dome instead of compounding it (the
+   same reasoning as FILM.FACE). */
+type Dome = { geo: BufferGeometry; flat: Float32Array };
+
+/* Fan a disc's normals radially outward from its own centre.
+ *
+ * The axis is taken from each vertex's OWN exported normal rather than from one
+ * averaged over the mesh, which costs nothing and means the export can put the
+ * artwork on whichever axis it likes — and that a mesh carrying both the front
+ * and the back disc gets each one domed outward from its own face instead of
+ * the two cancelling. The radial direction is then the vertex's offset from the
+ * centre with its axial part removed, so it lies in the disc's own plane
+ * whatever that plane is. */
+function applyDome({ geo, flat }: Dome) {
+  const pos = geo.attributes.position;
+  const nor = geo.attributes.normal;
+  geo.computeBoundingSphere();
+  const c = geo.boundingSphere!.center;
+
+  const p = new Vector3();
+  const n = new Vector3();
+  const r = new Vector3();
+  const radial = (i: number) => {
+    p.fromBufferAttribute(pos, i).sub(c);
+    n.set(flat[i * 3], flat[i * 3 + 1], flat[i * 3 + 2]);
+    return r.copy(p).addScaledVector(n, -p.dot(n)); // p flattened into the face
+  };
+
+  // The rim, so the tilt can be expressed as a fraction of the disc's radius
+  // and DOME means the same thing whatever units the export is in.
+  let rim = 0;
+  for (let i = 0; i < pos.count; i++) rim = Math.max(rim, radial(i).length());
+  if (rim < 1e-6) return; // not a disc — nothing to dome
+
+  for (let i = 0; i < pos.count; i++) {
+    const rad = radial(i).length();
+    if (rad > 1e-6) {
+      const a = FILM.DOME * (rad / rim) ** FILM.DOME_BIAS;
+      r.divideScalar(rad); // unit, and in the disc's plane
+      n.multiplyScalar(Math.cos(a)).addScaledVector(r, Math.sin(a)).normalize();
+    }
+    nor.setXYZ(i, n.x, n.y, n.z);
+  }
+  nor.needsUpdate = true;
+}
+
+/* The artwork, moved onto a material that can carry a clear coat — see
+   FILM.COAT. three's GLTF loader builds MeshStandardMaterial, and copy() does
+   not run safely in this direction (physical reads fields standard has none of
+   and would take undefined for), so the export's maps and colour are carried
+   across by hand. Only what this export actually uses. */
+function toPhysical(src: MeshStandardMaterial) {
+  const mat = new MeshPhysicalMaterial({
+    name: src.name,
+    color: src.color.clone(),
+    map: src.map,
+    normalMap: src.normalMap,
+    aoMap: src.aoMap,
+    roughnessMap: src.roughnessMap,
+    metalnessMap: src.metalnessMap,
+    emissive: src.emissive.clone(),
+    emissiveMap: src.emissiveMap,
+    side: src.side,
+    transparent: src.transparent,
+    opacity: src.opacity,
+    alphaTest: src.alphaTest,
+    /* Not carried over, and it must not be: flat shading discards the vertex
+       normals in favour of the triangle's own, which would throw the dome away
+       — the whole trick is that the normals disagree with the geometry. */
+    flatShading: false,
+  });
+  mat.normalScale.copy(src.normalScale);
+  return mat;
+}
+
+/* The face's finish, kept apart from applyFilmLook's so the artwork can be
+   glossier and far less metallic than the wound side and the strip. Runs after
+   it, since that one sets roughness and metalness from the shared knobs. */
+function applyFaceLook(mat: MeshPhysicalMaterial) {
+  mat.roughness = FILM.FACE_GLOSS;
+  mat.metalness = FILM.FACE_METAL;
+  mat.clearcoat = FILM.COAT;
+  mat.clearcoatRoughness = FILM.COAT_GLOSS;
+}
+
 /* Saturation and contrast, as a patch on the standard shader.
  *
  * The artwork's colour lives in the model's texture, and a material's `color`
@@ -441,7 +626,11 @@ export function createHeroTape(
   /* Same flat-art pipeline as the slider: no tone mapping and no environment
      map, both of which exist to make photoreal scenes filmic and both of which
      drag saturated flat artwork toward pastel. What shapes the surface instead
-     is the key/ambient balance in LIGHT and the finish in FILM. */
+     is the balance across LIGHT and FACE_LIGHT and the finish in FILM.
+
+     No env map is also why light placement has to be exact here: with nothing
+     to reflect, a surface's only specular is what a light happens to put on it,
+     and a surface no light is aimed at has none at all. */
   const renderer = new WebGLRenderer({ antialias: true, alpha: true });
   renderer.toneMapping = NoToneMapping;
   renderer.setClearColor(0x000000, 0);
@@ -453,18 +642,26 @@ export function createHeroTape(
 
   const dir = new DirectionalLight(0xffffff, LIGHT.POWER);
   const amb = new AmbientLight(0xffffff, Math.PI * LIGHT.AMBIENT);
-  scene.add(dir, amb);
+  // The face's own key — the one the artwork can actually see. See FACE_LIGHT.
+  const kick = new DirectionalLight(0xffffff, FACE_LIGHT.POWER);
+  scene.add(dir, amb, kick);
 
   /* Every surface that is meant to read as the same film. Held so a live tweak
-     can re-apply the finish to all of them at once — the roll's two materials
-     join the list when the model lands. */
+     can re-apply the finish to all of them at once — the roll's wound side
+     joins the list when the model lands. The FACE is deliberately NOT in here:
+     its finish is its own (applyFaceLook), and this list would overwrite it. */
   const filmMats: MeshStandardMaterial[] = [];
 
   /* The roll's face materials, each with the colour it arrived from the export
      with. FILM.FACE is applied against that original rather than against the
-     current value, so tuning it repeatedly sets the lift instead of compounding
-     it. */
-  const faces: { mat: MeshStandardMaterial; base: Color }[] = [];
+     current value, so tuning it repeatedly sets the exposure instead of
+     compounding it. */
+  const faces: { mat: MeshPhysicalMaterial; base: Color }[] = [];
+
+  /* And their geometry, with the normals it arrived with — same reasoning, for
+     the dome. Keyed by geometry rather than by mesh: one geometry is domed
+     once, however many meshes happen to share it. */
+  const domes: Dome[] = [];
 
   const group = new Group();
 
@@ -573,6 +770,8 @@ export function createHeroTape(
     dir.position.set(LIGHT.X, LIGHT.Y, LIGHT.Z);
     dir.intensity = LIGHT.POWER;
     amb.intensity = Math.PI * LIGHT.AMBIENT;
+    kick.position.set(FACE_LIGHT.X, FACE_LIGHT.Y, FACE_LIGHT.Z);
+    kick.intensity = FACE_LIGHT.POWER;
     camera.position.z = CONFIG.camZ;
 
     // Uniforms, so these two land on the next frame with no recompile.
@@ -582,11 +781,20 @@ export function createHeroTape(
       m.roughness = FILM.GLOSS;
       m.metalness = FILM.METAL;
     });
-    faces.forEach((f) => f.mat.color.copy(f.base).multiplyScalar(FILM.FACE));
+    faces.forEach((f) => {
+      f.mat.color.copy(f.base).multiplyScalar(FILM.FACE);
+      applyFaceLook(f.mat);
+      /* Unlike the film knobs above, COAT crossing zero adds or drops
+         USE_CLEARCOAT and so needs new source. One recompile per tweak, and
+         tune() is a dev-console call — at load `faces` is still empty. */
+      f.mat.needsUpdate = true;
+    });
 
-    // Baked into vertices rather than uniforms, so both are rebuilt: the tear
-    // profile, and the cross-curl the lengthwise sheen rides on.
+    // Baked into vertices rather than uniforms, so these are rebuilt: the tear
+    // profile, the cross-curl the strip's sheen rides on, and the dome the
+    // face's does.
     curlNormals(stripGeo);
+    domes.forEach(applyDome);
     endCap.geometry.dispose();
     endCap.geometry = tearGeometry();
     topCap.geometry.dispose();
@@ -713,38 +921,62 @@ export function createHeroTape(
            the view — a grey sheet creeping along the roll's rim on real GPUs
            (software renderers mip less aggressively, which is why headless
            checks do not show it). */
+        // One physical material per exported face material, so a material
+        // shared by several meshes stays one material after the swap.
+        const swapped = new Map<MeshStandardMaterial, MeshPhysicalMaterial>();
+
         model.traverse((o) => {
-          if (!(o as Mesh).isMesh) return;
-          const mat = (o as Mesh).material as MeshStandardMaterial;
+          const mesh = o as Mesh;
+          if (!mesh.isMesh) return;
+          const mat = mesh.material as MeshStandardMaterial;
           if (mat.map) {
             mat.map.anisotropy = aniso;
             mat.map.needsUpdate = true;
           }
-          /* Both of the roll's materials get the film's finish — the face's
-             artwork is the surface the whole section is about, and it arrives
-             from the export flat and matte. */
-          applyFilmLook(mat);
-          filmMats.push(mat);
+
           /* "Material" is the wound side in this export. The dispensed strip IS
              this tape, so it takes the side's exact colour and the shared gloss
              — under the same key light the two render identically. Blender's
              cylinder unwrap runs U around the circumference, so the side's
              streaks are drawn horizontal in UV space to land along the winding
              direction on screen. */
-          if (mat.name !== "Material") {
-            // Anything that is not the wound side is artwork: the face. Guarded
-            // because one material may be shared by several meshes, and the
-            // lift is a multiply — seeing it twice would square it.
-            if (!faces.some((f) => f.mat === mat)) {
-              faces.push({ mat, base: mat.color.clone() });
-              mat.color.multiplyScalar(FILM.FACE);
-            }
+          if (mat.name === "Material") {
+            applyFilmLook(mat);
+            filmMats.push(mat);
+            mat.map = streakTex(1, 0.07, true, true, aniso);
+            mat.roughnessMap = streakTex(0.72, 0.5, true, false, aniso);
+            mat.needsUpdate = true; // new maps => shader recompile
+            stripMat.color.copy(mat.color);
             return;
           }
-          mat.map = streakTex(1, 0.07, true, true, aniso);
-          mat.roughnessMap = streakTex(0.72, 0.5, true, false, aniso);
-          mat.needsUpdate = true; // new maps => shader recompile
-          stripMat.color.copy(mat.color);
+
+          /* Anything that is not the wound side is artwork: the face — the
+             surface the whole section is about, and the one that arrives from
+             the export flat and matte. It leaves here on a physical material
+             wearing a clear coat, over normals domed into a highlight, lit by
+             a key of its own. See FACE_LIGHT for why all three are needed. */
+          let phys = swapped.get(mat);
+          if (!phys) {
+            phys = toPhysical(mat);
+            swapped.set(mat, phys);
+            applyFilmLook(phys); // the artwork is what SAT and PUNCH are for
+            applyFaceLook(phys); // after it: this overrides the shared finish
+            faces.push({ mat: phys, base: phys.color.clone() });
+            phys.color.multiplyScalar(FILM.FACE);
+          }
+          mesh.material = phys;
+
+          if (!domes.some((d) => d.geo === mesh.geometry)) {
+            const nor = mesh.geometry.attributes.normal;
+            if (nor) {
+              const dome = {
+                geo: mesh.geometry,
+                flat: (nor.array as Float32Array).slice(),
+              };
+              domes.push(dome);
+              applyDome(dome);
+            }
+          }
         });
 
         // Centre on the geometry, not the export's origin — the roll has to

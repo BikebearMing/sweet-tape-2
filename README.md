@@ -38,18 +38,23 @@ src/
     tapes.ts           the four tapes — copy, artwork and palette
     wordmarks.json     letter artwork for the two word marks
   styles/
-    reset.css
-    tokens.css         fonts, orbit sizing, fallback palette
-    letters.css        GENERATED — see below
-    hero.css           the hero section
-    tape-slider.css    everything else
+    global.css         the whole site, in seven sections: letters (imported),
+                       reset, tokens, hero, wave band, tape slider, cursor
+    letters.css        GENERATED — see below. @imported by global.css
   collections/         Payload schema. Not live.
 public/assets/         artwork, referenced by path
 legacy/                the original static build, kept for reference
 hero.html / hero.css   the standalone hero prototype the section was ported
                        from. Superseded — delete once nothing is being tuned
-                       in it, or it will drift.
+                       in it, or it will drift. Unrelated to src/styles.
 ```
+
+### One stylesheet
+
+`(frontend)/layout.tsx` imports `global.css` and nothing else. Its section
+order is the cascade order, and it is load-bearing where two rules touch the
+same property — put a new rule in the section it belongs to rather than at the
+end of the file.
 
 ### Two route groups, two roots
 
@@ -105,7 +110,11 @@ npm run letters
 Reads `src/data/wordmarks.json`, measures each PNG, and writes the mask stencil
 plus `flex-grow` / `aspect-ratio` for every letter. Run it after changing the
 artwork. The hand-tuned arc nudges (`--i` / `--dx` / `--dy` / `--dr`) stay in
-`tape-slider.css` — those are taste, the generated values are measurement.
+`global.css` — those are taste, the generated values are measurement.
+
+It is the one file `global.css` does not absorb, exactly because it is
+rewritten wholesale by the script; `global.css` `@import`s it instead, so the
+layout still pulls in a single stylesheet.
 
 The old static build inlined all this artwork as base64 (39 KB) because CSS
 masks are same-origin and `file://` fails that check. Served over HTTP the

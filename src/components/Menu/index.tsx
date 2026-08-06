@@ -1,8 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type gsap from "gsap";
+
 import { letters } from "@/components/letters";
-import { buildMenuOpen, type MenuTimelines } from "./reveal";
+import {
+  buildMenuOpen,
+  initTabEntrance,
+  MENU_DROP,
+  type MenuTimelines,
+} from "./reveal";
 
 /* The nav itself. Labels are set in caps here rather than by text-transform so
    the copy reads in the markup exactly as it paints — the same call the hero
@@ -59,6 +66,9 @@ export default function Menu() {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLElement>(null);
   const tlRef = useRef<MenuTimelines | null>(null);
+  /* The close is a tween ON the drop's playhead rather than the drop itself,
+     so it is a separate handle and has to be killable from both effects. */
+  const closeRef = useRef<gsap.core.Tween | null>(null);
 
   /* Built once and kept. StrictMode's double mount tears the first pair down —
      without which the second build's fromTo would read a half-dropped panel as
@@ -91,30 +101,67 @@ export default function Menu() {
     return () => {
       ac.abort();
       tlRef.current = null;
+      closeRef.current?.kill();
+      closeRef.current = null;
       built.drop.kill();
       built.contents.kill();
     };
+  }, []);
+
+  /* The tab's own arrival, once, after the preloader — its own effect because
+     it shares nothing with the pair above: it is on a different clock, it
+     touches a different element, and it must still run on a menu that has no
+     timelines at all (an empty panel returns null from buildMenuOpen). */
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    return initTabEntrance(root);
   }, []);
 
   /* Open runs both: the panel drops and the contents follow it down. play() on
      a half-closed menu picks the reveal up where it was left rather than
      starting it again, which is what makes a fast double-click behave.
 
-     Close reverses ONLY the drop. The contents are frozen, not unwound — what
+     Close touches ONLY the drop. The contents are frozen, not unwound — what
      has been revealed stays revealed, and the panel closing over it is the
-     exit. Putting them back to nothing is the drop's own onReverseComplete, by
-     which point the panel is shut and there is nothing to see. */
+     exit. Putting them back to nothing waits for the close to land, by which
+     point the panel is shut and there is nothing to see.
+
+     tweenTo rather than reverse: it scrubs the drop's playhead to 0 under its
+     own duration and ease instead of replaying the drop's at the drop's rate.
+     MENU_DROP.CLOSE_EASE has the reasoning — briefly, the curve that makes the
+     drop crack open makes it slam shut when run backwards. */
   useEffect(() => {
     const built = tlRef.current;
     if (!built) return;
 
+    /* Whichever direction this is, an in-flight close is now stale — including
+       when the answer is another close, since the panel has moved since that
+       tween measured its start. */
+    closeRef.current?.kill();
+    closeRef.current = null;
+
     if (open) {
       built.drop.play();
       built.contents.play();
-    } else {
-      built.contents.pause();
-      built.drop.reverse();
+      return;
     }
+
+    built.contents.pause();
+
+    /* Already shut — the first run of this effect, on mount. There is nothing
+       to scrub, and tweening to where the playhead already sits would spend the
+       close's whole duration doing nothing before rewinding the contents. */
+    if (built.drop.time() === 0) {
+      built.contents.pause(0);
+      return;
+    }
+
+    closeRef.current = built.drop.tweenTo(0, {
+      duration: MENU_DROP.CLOSE_DURATION,
+      ease: MENU_DROP.CLOSE_EASE,
+      onComplete: () => built.contents.pause(0),
+    });
   }, [open]);
 
   return (

@@ -17,6 +17,8 @@
  */
 import gsap from "gsap";
 
+import { whenRevealed } from "@/components/Preloader/gate";
+
 /* The entrance. Straight from the original — a letter is quick on its own, and
    the stagger is what turns twenty-three of them into one move. */
 export const REVEAL = {
@@ -30,8 +32,39 @@ export const REVEAL = {
   HIDDEN: 130,
   DURATION: 0.6,
   STAGGER: 0.025, // between letters, in shuffled order
-  DELAY: 0.3, // after mount, so the reveal is not racing hydration
+  /* After the page is uncovered, not after mount — the preloader holds this
+     back so the headline is not spent behind a sheet of paper (see gate.ts).
+     With no preloader on the page it is after mount again, and means what it
+     always did: enough of a beat that the reveal is not racing hydration. */
+  DELAY: 0.3,
   EASE: "power3.out",
+};
+
+/* The corner mark, which arrives after the headline rather than with it. Its
+   own beat, at its own pace: it is small print in a corner, and joining the
+   title's one pool would either bury it in the middle of that move or stretch
+   the move out to carry it. */
+export const CORNER = {
+  /* After the page is uncovered. Behind the headline (REVEAL.DELAY, 0.3) by
+     enough to read as a second thing happening rather than as part of the
+     first. */
+  DELAY: 0.55,
+
+  /* The perforation, punched down the edge before the copy beside it — the
+     dots are the mark's left border and the words are set against them, so
+     this is the line being ruled before the writing. */
+  PERF_DURATION: 0.5,
+  PERF_EASE: "power2.out",
+
+  /* Where the copy starts, from the mark's own beginning. Overlapping the dots
+     rather than following them: they are one gesture, not two. */
+  TEXT_AT: 0.12,
+
+  /* Tighter than REVEAL.STAGGER, because there are nearly forty letters here
+     against the title's twenty-three and at the title's pace the last of them
+     would still be arriving a second later. The rise itself — duration, ease,
+     hidden figure — is the title's exactly. */
+  STAGGER: 0.012,
 };
 
 /* Fisher–Yates. The shuffle is the effect: reveal the same letters left to
@@ -85,16 +118,111 @@ export function initReveal(root: HTMLElement): () => void {
       yPercent: 0,
       duration: REVEAL.DURATION,
       stagger: REVEAL.STAGGER,
-      delay: REVEAL.DELAY,
       ease: REVEAL.EASE,
+      /* Built parked, played once the page is uncovered — the headline is the
+         first thing on the site and it must not be spent behind the preloader's
+         sheet. Paused costs the letters nothing: a fromTo renders its `from`
+         immediately either way, which is what keeps them under their masks with
+         nothing painted in between (see the attribute above). */
+      paused: true,
     }
   );
 
+  /* The delay is here rather than on the tween, and it is the same beat it
+     always was — only measured from the reveal rather than from mount. A
+     delayedCall is unambiguous about that where a paused tween's own `delay`
+     is not.
+
+     whenRevealed fires on the spot when nothing is holding the page: no
+     preloader in the layout, reduced motion, or a second hero further into the
+     site. This section does not know which, and does not need to. */
+  let start: gsap.core.Tween | null = null;
+  const unsubscribe = whenRevealed(() => {
+    start = gsap.delayedCall(REVEAL.DELAY, () => tween.play());
+  });
+
   return () => {
+    unsubscribe();
+    start?.kill();
     tween.kill();
     // Back to the stylesheet — which, with the attribute still set, is home
     // rather than hidden. A teardown mid-flight leaves the copy readable.
     gsap.set(chars, { clearProps: "transform" });
+  };
+}
+
+/* The corner mark's arrival — the perforation ruled down the edge, then the two
+ * lines written against it.
+ *
+ * Built paused and played off the same gate as the title (see CORNER.DELAY), so
+ * the whole top-left corner of the hero is one cascade rather than three things
+ * that each start when their own code happens to run.
+ *
+ * The letters are parked by the fromTo's own immediate render, in the same task
+ * initReveal set data-reveal — Stage.tsx calls the two together, and nothing is
+ * painted in between. The dots are parked by the stylesheet instead, since they
+ * carry a clip-path rather than a transform and an inline value simply wins.
+ */
+export function initCornerMark(root: HTMLElement): () => void {
+  const el = root.querySelector<HTMLElement>(".corner-mark");
+  if (!el) return () => {};
+
+  const perf = el.querySelector<HTMLElement>(".corner-perf");
+  const chars = Array.from(el.querySelectorAll<HTMLElement>(".char"));
+  if (!perf && !chars.length) return () => {};
+
+  /* Nothing to undo: the stylesheet only parks the dots where motion is
+     welcome, and the attribute initReveal has already set has the letters
+     standing. Asked for less motion, the mark is simply there. */
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return () => {};
+  }
+
+  const tl = gsap.timeline({ paused: true });
+
+  if (perf) {
+    tl.fromTo(
+      perf,
+      { clipPath: "inset(0% 0% 100% 0%)" },
+      {
+        clipPath: "inset(0% 0% 0% 0%)",
+        duration: CORNER.PERF_DURATION,
+        ease: CORNER.PERF_EASE,
+      },
+      0,
+    );
+  }
+
+  /* Shuffled across both lines, not within each: it is two lines of one mark,
+     and shuffling them separately would have the first finished before the
+     second had started — a wipe down the block, which is the thing the shuffle
+     exists to avoid. */
+  if (chars.length) {
+    tl.fromTo(
+      shuffle(chars),
+      { yPercent: REVEAL.HIDDEN },
+      {
+        yPercent: 0,
+        duration: REVEAL.DURATION,
+        stagger: CORNER.STAGGER,
+        ease: REVEAL.EASE,
+      },
+      CORNER.TEXT_AT,
+    );
+  }
+
+  let start: gsap.core.Tween | null = null;
+  const unsubscribe = whenRevealed(() => {
+    start = gsap.delayedCall(CORNER.DELAY, () => tl.play());
+  });
+
+  return () => {
+    unsubscribe();
+    start?.kill();
+    tl.kill();
+    // A teardown mid-arrival leaves the mark readable and the dots drawn.
+    gsap.set(chars, { clearProps: "transform" });
+    if (perf) gsap.set(perf, { clipPath: "inset(0% 0% 0% 0%)" });
   };
 }
 

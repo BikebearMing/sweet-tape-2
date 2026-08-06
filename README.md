@@ -21,6 +21,11 @@ src/
     (payload)/         the admin and REST/GraphQL routes, generated boilerplate
   components/
     SmoothScroll.tsx   Lenis, driven off GSAP's ticker
+    Preloader/
+      index.tsx        the cover, server-rendered so it is in the first paint
+      reveal.ts        the hold and the sweep off the page; PRELOADER is the
+                       knobs, including how long the cover is up
+      gate.ts          html[data-loading] — what the hero's title waits on
     Hero/
       index.tsx        the section's markup, server-rendered
       Stage.tsx        the one client component: a ref, and the effect that
@@ -38,8 +43,9 @@ src/
     tapes.ts           the four tapes — copy, artwork and palette
     wordmarks.json     letter artwork for the two word marks
   styles/
-    global.css         the whole site, in seven sections: letters (imported),
-                       reset, tokens, hero, wave band, tape slider, cursor
+    global.css         the whole site, in nine sections: letters (imported),
+                       reset, tokens, preloader, hero, wave band, tape slider,
+                       menu, cursor
     letters.css        GENERATED — see below. @imported by global.css
   collections/         Payload schema. Not live.
 public/assets/         artwork, referenced by path
@@ -61,6 +67,28 @@ end of the file.
 `(frontend)` and `(payload)` each render their own `<html>`. There is
 deliberately no `app/layout.tsx` above them — the admin ships its own reset and
 fonts, and sharing a shell would leak the site's CSS into it.
+
+### The preloader holds the page, not the load
+
+The cover is on a clock, not on the network: it runs its four beats — the mark
+drops in, the line writes itself, the line drops back, the stack leaves — and
+goes, whatever has arrived. `PRELOADER` in `Preloader/reveal.ts` is every one of
+those beats. What it does gate is the hero's title reveal, which would otherwise
+be spent behind it.
+
+It leaves as five sheets rather than one: lime, then one per tape in that tape's
+stage colour, a tenth of a second apart, so the arc crosses the screen as a run
+of coloured bands. The colours come from `src/data/tapes.ts`; only their order
+is set in `Preloader/index.tsx`, and it is set by hand because what the data
+cannot know is how the four look side by side.
+
+That hand-off is one attribute — `html[data-loading]`, written into the server
+HTML by the layout and taken off partway through the sweep. The stylesheet locks
+the scroll off it before any JS has run; `Preloader/gate.ts` is the whole of the
+signalling, and anything that should wait for the page to be visible subscribes
+there rather than being wired to the preloader. A page with no cover on it (or a
+reader who has asked for reduced motion) reads an open gate and starts at once,
+so nothing has to know whether the preloader exists.
 
 ### Why the animation is not React
 

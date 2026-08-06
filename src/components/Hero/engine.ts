@@ -297,6 +297,13 @@ export function initHero(root: HTMLElement): () => void {
         t.resize();
         frame(); // catch up to where the page is now, not where it started
 
+        /* There is something in the box now, and that is news: the roll's
+           entrance (Hero/entrance.ts) cannot play over an empty rectangle, so
+           it waits on this. An attribute rather than a callback because the two
+           are started independently from Stage.tsx and neither owns the other —
+           the same reason the preloader's hand-off is an attribute. */
+        mount.dataset.tape = "live";
+
         if (process.env.NODE_ENV !== "production") {
           // Console handle for tuning. Compiled out of production builds —
           // NODE_ENV is a build-time constant, so the whole block is dropped.
@@ -333,5 +340,6 @@ export function initHero(root: HTMLElement): () => void {
     tapeGone = true;
     tape?.dispose();
     tape = null;
+    delete mount.dataset.tape; // the box is empty again — see the note above
   };
 }

@@ -177,7 +177,7 @@ export const FILM = {
      metallic, because metalness also takes light away from the diffuse. */
   METAL: 0.25,
   /** Saturation, applied to the artwork after its texture is sampled. */
-  SAT: 0.88,
+  SAT: 0.79,
   /** Contrast about mid grey. Small numbers go a long way; 1.25 is a lot. */
   PUNCH: 1.4,
   /* Exposure on the roll's FACE alone — the artwork, not the wound side or the

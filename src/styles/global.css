@@ -7,11 +7,12 @@
      1. Letters      GENERATED — imported, see the note below
      2. Reset
      3. Tokens       fonts, orbit sizing, fallback palette
-     4. Hero
-     5. Wave band    the hand-off between the hero and the slider
-     6. Tape slider  word marks, columns, stage, rolls
-     7. Menu         the pull-down panel and its tab
-     8. Cursor       the taped arrow
+     4. Preloader    the sheet over the page, and the scroll lock under it
+     5. Hero
+     6. Wave band    the hand-off between the hero and the slider
+     7. Tape slider  word marks, columns, stage, rolls
+     8. Menu         the pull-down panel and its tab
+     9. Cursor       the taped arrow
 
    Section order is load-bearing where two rules touch the same property; keep
    new rules inside the section they belong to rather than appending to the
@@ -41,6 +42,16 @@
 
 html {
   -webkit-text-size-adjust: 100%; /* stop iOS inflating text in landscape */
+
+  /* The gutter is reserved whether or not the page is scrollable at this
+     moment, and it is the preloader that needs it: that lock is an
+     `overflow: hidden` on this element (Preloader, below), which without this
+     would take the scrollbar away for the length of the hold and hand back a
+     viewport ~15px wider the instant it lifted. Every length on this site is in
+     vw, so that is not a scrollbar appearing — it is the whole page changing
+     size under the reader on the exact frame the cover clears. The page is 200vh
+     at rest, so the gutter is occupied anyway and this changes nothing else. */
+  scrollbar-gutter: stable;
 }
 
 /* min-height rather than height, so a section taller than the viewport is
@@ -159,6 +170,189 @@ h6 {
   --tag-ink: #16110a;
   --ink: #16110a;
   --word-colour: #fcd805;
+}
+
+/* ==========================================================================
+   Preloader
+   ==========================================================================
+   A lime sheet over the viewport — the mark, and STICK BY YOU under it — with
+   four more sheets stacked behind it, one per tape and in that tape's stage
+   colour. They leave in order, a beat apart, so the cover comes off as a run of
+   coloured bands rather than as a single wipe. Markup in components/Preloader
+   (the stack's order and colours are set there, from src/data/tapes.ts); the
+   whole sequence is a GSAP timeline in Preloader/reveal.ts and nothing here
+   declares a transform.
+
+   Lime, and the stack is what makes lime possible. The mark's lemon is dark
+   green (#104a00, within a shade of the hero's own #0d470c), so on a green
+   ground it would disappear and leave its words floating — lime is the field it
+   was drawn for. But the hero's top field is that same lime, so a lime sheet
+   leaving on its own would be lime sliding off lime with nothing to show for
+   it. The tapes' colours behind it are what the arc is seen against, and the
+   last of them — the deep blue — is what finally lifts off the hero. */
+
+/* The scroll lock. Keyed on the attribute the layout writes into the server
+   HTML, so the page is held from the first byte rather than from whenever
+   hydration lands; the sweep takes the attribute off partway through and this
+   goes with it (Preloader/gate.ts). On html rather than body, which is what
+   makes it the VIEWPORT that stops scrolling. See scrollbar-gutter in the
+   reset for the other half of this. */
+html[data-loading] {
+  overflow: hidden;
+}
+
+/* The tab, held above the top edge until the cover has gone — it is the one
+   piece of the site that sits ON the viewport's edge rather than in the page,
+   so it cannot be revealed by the sweep passing over it. It comes down after
+   instead (MENU_TAB in Menu/reveal.ts), which is also the only way it reads as
+   arriving rather than as having been there all along.
+
+   Parked from the same attribute that locks the scroll, so the two lift on the
+   same frame: whenRevealed fires in the task that removes it, and the tween's
+   `from` lands before anything is painted — the transform is `none` by then,
+   so GSAP owns the whole value rather than adding to a resolved percentage.
+
+   Inside the media query because a reader who asked for less motion gets no
+   entrance and must not get a missing tab instead. The <noscript> in
+   components/Preloader covers the case where nothing can run at all. */
+@media (prefers-reduced-motion: no-preference) {
+  html[data-loading] .menu-tab {
+    transform: translateY(-115%);
+  }
+}
+
+/* The box itself paints nothing — every colour is on a sheet inside it, and
+   they all leave. What it holds is the geometry they share and the one z-index
+   that puts the cover over the site. */
+.site-preloader {
+  /* How far a sheet's trailing edge bulges below the fold. It is also the extra
+     height each one carries, so the two cannot drift: at rest the arc's lowest
+     point sits exactly this far under the viewport and its ends land exactly on
+     the bottom edge, which is what stops a sliver of page showing in the
+     corners before anything has moved. */
+  --pre-arc: 9vw;
+
+  /* The mark's painted width. The artwork is 390 x 266 and its own aspect is
+     kept, so this is the only figure to set. */
+  --pre-mark: 15vw;
+
+  /* The line under it. Cut to sit within the mark's own width — twelve
+     condensed capitals run about six times the type size, so much past 2.9vw
+     and the line is wider than the thing it belongs to. */
+  --pre-line: 2.8vw;
+  --pre-gap: 1.4vw; /* mark to line */
+
+  position: fixed;
+  inset: 0;
+
+  /* Over the menu (100) and the wave band (11), under the cursor (9999) — the
+     arrow stays the pointer while the cover is up. */
+  z-index: 500;
+}
+
+/* Every sheet, the lime one and the four behind it. They are identical boxes in
+   identical places; the only thing that separates them is colour, the z-index
+   the markup sets, and the tenth of a second between their exits. */
+.site-preloader .preloader-sheet,
+.site-preloader .preloader-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: calc(100% + var(--pre-arc));
+
+  /* One wide arc across the full width rather than two corner curves — the
+     horizontal radii are half the width each, so the two meet in the middle
+     and the edge is a single convex sweep, deepest at the centre. The slider's
+     colour wipe is cut the same way and the same way up; see .bg-layer--next.
+     Every sheet carries the same one, so the bands stay parallel all the way
+     off the screen. */
+  border-radius: 0 0 50% 50% / 0 0 var(--pre-arc) var(--pre-arc);
+}
+
+.site-preloader .preloader-sheet {
+  background: #b6fe00;
+
+  /* Centred in the VIEWPORT, not in the box: the padding hands back the arc's
+     extra height at the bottom, so the mark and its line sit where the middle
+     of the screen is rather than --pre-arc/2 below it. */
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: var(--pre-gap);
+  padding-bottom: var(--pre-arc);
+}
+
+.site-preloader .preloader-mark {
+  width: var(--pre-mark);
+  height: auto;
+}
+
+/* The hero's dark green on lime, which is the pairing the hero sets on exactly
+   this ground. Flex for the same reason every row of split letters on this site
+   is: .clip carries overflow: hidden, and an inline-block whose overflow is not
+   visible takes its baseline from its bottom margin edge rather than from the
+   text inside it, which would drop the whole line by the font's descent. */
+.site-preloader .preloader-line {
+  display: flex;
+  align-items: flex-end;
+  font-family: var(--font-heading);
+  font-size: var(--pre-line);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: #013900;
+}
+
+/* Split letters. The same two boxes as the hero's and the menu's — .clip holds
+   the letter's place in the line and masks it, .char is the only thing that
+   moves — with the menu's padding rather than the hero's, since this type is
+   set at line-height 1 where the hero's runs under 0.8 and needs far less
+   headroom. The negative margins hand that room straight back, so the line is
+   the width it always was.
+
+   Nothing at the bottom: the mask's lower edge is what the letters slide out
+   through, and back down under at the end, and it wants to sit tight on the
+   baseline. */
+.site-preloader .clip {
+  display: block;
+  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  overflow: hidden;
+  padding: 0.1em 0.06em 0;
+  margin: -0.1em -0.06em 0;
+}
+
+/* Parked, and handed over exactly as the hero's are: the stylesheet holds the
+   letters under their masks until Preloader/reveal.ts sets data-reveal, which
+   lifts this and lets GSAP own the whole transform. A percentage translate
+   coming from CSS is reported as resolved px, and GSAP would ADD its yPercent
+   to it and leave every letter a full height low.
+
+   130 rather than 100 for the reason the hero gives: capitals overshoot their
+   own box, so a letter moved exactly its own height still leaves a hairline of
+   tops showing. REVEAL.HIDDEN is the same figure and the two have to agree. */
+.site-preloader .char {
+  display: block;
+  transform: translateY(130%);
+}
+
+.site-preloader[data-reveal="live"] .char {
+  transform: none;
+}
+
+/* A full screen of colour sliding off the page is exactly what this setting is
+   asking about, and there is nothing here to soften — the cover's whole job is
+   the move. So it is called off before it paints, and the page opens on the
+   page. The scroll lock goes with it: nothing is left to unlock it, since
+   Preloader/reveal.ts releases the gate on mount and never builds a timeline. */
+@media (prefers-reduced-motion: reduce) {
+  .site-preloader {
+    display: none;
+  }
+
+  html[data-loading] {
+    overflow: visible;
+  }
 }
 
 /* ==========================================================================
@@ -306,9 +500,20 @@ h6 {
   color: #013900;
 }
 
-/* Two set lines, not a wrap — see CORNER_MARK in Hero/index.tsx. */
-.hero-section .corner-mark span {
-  display: block;
+/* Two set lines, not a wrap — see CORNER_MARK in Hero/index.tsx. Each is a row
+   of letter boxes now that the mark has an entrance of its own, so flex rather
+   than block, for the reason every row of split letters on this site is flex:
+   .clip carries overflow: hidden, and an inline-block whose overflow is not
+   visible takes its baseline from its bottom margin edge rather than from the
+   text inside it, which would drop each line by the font's whole descent.
+
+   The tracking above survives the change. letter-spacing does not apply
+   BETWEEN flex items, but it inherits into each .char and is added after that
+   character — so the space is still there, it is just carried by the letter
+   rather than by the gap. */
+.hero-section .corner-mark .line {
+  display: flex;
+  align-items: flex-end;
 }
 
 /* The perforation. Drawn as one repeating radial-gradient rather than a stack
@@ -319,9 +524,13 @@ h6 {
 
    The cell is 0.2 x 0.35vw, the chips' own proportion. The dot's size comes off
    the cell's diagonal — a taller cell grows the dot as well as the gap — so the
-   two figures are not independent and a change to one wants the other. */
-.hero-section .corner-mark::before {
-  content: "";
+   two figures are not independent and a change to one wants the other.
+
+   A real element rather than the ::before it used to be, for the reason the
+   menu's rules are real elements: the entrance has to be able to reach it, and
+   a pseudo-element cannot be handed to GSAP. It still owns nothing but its own
+   paint; Hero/reveal.ts owns its clip-path. */
+.hero-section .corner-perf {
   position: absolute;
   left: 0;
   top: 0.12vw;
@@ -335,6 +544,22 @@ h6 {
   background-size: 100% 0.35vw;
   background-repeat: repeat-y;
   opacity: 0.9;
+}
+
+/* Parked, and only where the entrance is going to run. Hero/reveal.ts punches
+   the dots down the edge (initCornerMark) and owns this property from mount;
+   inside the media query so a reader who asked for less motion is never handed
+   a mark that depends on a tween to appear. The <noscript> in Hero/index.tsx
+   covers the other case, where the tween cannot happen at all.
+
+   clip-path and not a scale, the same call the menu's rules make: the dots are
+   a repeating background, so a scaled column would start as a dozen of them
+   crushed into a sliver and spread out. Clipping leaves them at their own size
+   and uncovers them. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-section .corner-perf {
+    clip-path: inset(0 0 100% 0);
+  }
 }
 
 .hero-section .title {
@@ -491,6 +716,10 @@ h6 {
    Rotation and camera distance are tuned in Hero/heroTape.ts (or live in dev
    via `hero.CONFIG` / `hero.tune()` in the console). */
 .hero-section .hero-tape {
+  /* The roll's square framing box, and the box's own width. Named because the
+     entrance below needs it a second time and the two must not drift. */
+  --roll-box: 27.2vw;
+
   position: absolute;
   /* 30.4 = 44 - 27.2/2: the roll's CENTRE is held where the 34vw version put
      it (27 + 17), so shrinking the roll leaves the strip's origin — and with
@@ -498,7 +727,19 @@ h6 {
   top: 30.4vw;
   left: 50%;
   translate: -50%;
-  width: 27.2vw;
+  width: var(--roll-box);
+
+  /* The roll's own centre, which is NOT this box's: the box runs from the top
+     of the section's middle right down past the cardboard (see below), so its
+     default 50% origin sits three quarters of a viewport under the roll and
+     scaling about it would fling the roll around. The roll is framed in the
+     top --roll-box square, so its centre is half of that down.
+
+     `transform` is free on this element — the centring above is the separate
+     `translate` property, and the engine never touches either. Hero/entrance.ts
+     owns it: the roll grows and rises into place about this point. */
+  transform-origin: 50% calc(var(--roll-box) / 2);
+
   z-index: 10;
   /* Everything from the roll's square down to the canvas floor is drawing room
      for the dispensed strip. The roll itself stays framed in the top 27.2vw
@@ -900,7 +1141,7 @@ h6 {
     left: 48%;
     width: 24.804vw;
     height: 24.804vw;
-    top: 56%;
+    top: 28vw;
     /* The `translate` property, not `transform` — GSAP owns this element's
        transform for the parallax, and a translate declared there would be
        overwritten the first time it scrolls, dropping the centring. These are
@@ -1700,6 +1941,40 @@ h6 {
   margin-left: auto; /* right-aligned under the panel, flush with its edge */
   width: 9.3vw;
   color: var(--menu-ink);
+  /* Only so the arrival's paper below can hang off it. */
+  position: relative;
+}
+
+/* The arrival's paper.
+   --------------------------------------------------------------------------
+   The tab's resting place IS the viewport's top edge, which leaves the entrance
+   (MENU_TAB in Menu/reveal.ts) nowhere to come from and nowhere to overshoot
+   into: on the way down the tab is a rectangle detached from the edge with the
+   page showing above it, and at the end back.out goes a little past its resting
+   place — past, here, meaning below the edge — and opens the same gap again.
+
+   So the paper runs on upward. It is entirely off the top of the screen at
+   rest, and during the arrival it is exactly what fills the space between the
+   tab and the edge: the tab stops falling onto the page and starts being pulled
+   out from behind it, which is what a pull tab does and what the panel below it
+   already does.
+
+   150% because it has to cover the whole travel, not just the settle:
+   MENU_TAB.HIDDEN is 115% of the tab's height and the overshoot adds about 12%
+   on top. Keep it clear of that sum.
+
+   Only while it is arriving. Left on permanently it would lie across the
+   panel's bottom edge whenever the menu is open — the same paper, so invisible
+   in colour, but it would cover that band of the panel's grain. The class is
+   put on and taken off by the tween that needs it. */
+.menu-tab.is-arriving::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 150%;
+  background: var(--menu-paper);
 }
 
 /* The sheet, torn along the bottom.

@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { initHero } from "./engine";
+import { initRollEntrance } from "./entrance";
 import { initNote } from "./note";
 import { initParallax } from "./parallax";
-import { initCopyReveal, initReveal } from "./reveal";
+import { initCopyReveal, initCornerMark, initReveal } from "./reveal";
 
 /* The only client component in the hero.
  *
@@ -29,15 +30,22 @@ export default function Stage({ children }: { children: ReactNode }) {
     if (!root) return;
 
     const stopTape = initHero(root);
+    /* initReveal first, and the two after it in the same task: it is what sets
+       data-reveal, and both park their own letters against a computed
+       transform of `none`. A paint in between would show them standing. */
     const stopReveal = initReveal(root);
+    const stopCorner = initCornerMark(root);
     const stopCopy = initCopyReveal(root);
+    const stopRoll = initRollEntrance(root);
     const stopNote = initNote(root);
     const stopParallax = initParallax(root);
 
     return () => {
       stopTape();
       stopReveal();
+      stopCorner();
       stopCopy();
+      stopRoll();
       stopNote();
       stopParallax();
     };

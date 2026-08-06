@@ -66,7 +66,7 @@ export default function Hero() {
           so the stylesheet's hold is lifted here instead. Costs nothing when
           scripting is on: the contents are not even parsed. */}
       <noscript>
-        <style>{`.hero-section .char { transform: none }`}</style>
+        <style>{`.hero-section .char { transform: none } .hero-section .corner-perf { clip-path: none }`}</style>
       </noscript>
 
       <div className="hero-wrapper">
@@ -77,12 +77,25 @@ export default function Hero() {
               positioned ::before. .title holds itself above the same layer the
               same way, with position: relative.
 
-              Not split to letters and not in the reveal: it is a mark in a
-              corner rather than part of the headline's arrival, and it is
-              already legible before the type has finished landing. */}
+              Split to letters and given an arrival of its own — the
+              perforation is punched down the edge and the two lines write
+              themselves after it, a beat behind the headline (initCornerMark
+              in Hero/reveal.ts). The dots are a real element rather than the
+              ::before they were, because a pseudo-element cannot be handed to
+              GSAP; the menu's rules are real elements for the same reason.
+
+              aria-label is not honoured on a paragraph, so the readable copy
+              is a real (hidden) text node and the split version is taken out
+              of the tree — a row of block-level letter boxes is otherwise
+              liable to be announced a fragment at a time. Same call the
+              kicker makes. */}
           <p className="corner-mark">
+            <span className="sr-only">{CORNER_MARK.join(" ")}</span>
+            <span className="corner-perf" aria-hidden="true" />
             {CORNER_MARK.map((line) => (
-              <span key={line}>{line}</span>
+              <span className="line" key={line} aria-hidden="true">
+                {letters(line)}
+              </span>
             ))}
           </p>
 

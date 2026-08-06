@@ -10,13 +10,15 @@
  *   The contents — row by row, each row rule-then-word-then-mark, starting
  *   behind the drop so the paper is visibly empty before anything lands on it.
  *
- * Only the drop ever runs backwards. Closing retracts the panel and FREEZES the
- * contents where they stand: a word that has been read should not un-write
- * itself on the way out, and the box it is in is closing over it anyway. The
- * contents are rewound to nothing only once the panel has finished shutting and
- * there is nothing on screen to see it happen — the drop's onReverseComplete,
- * below. Reopening therefore continues a half-finished reveal rather than
- * restarting it.
+ * Only the drop ever goes back, and it does not simply reverse — the close
+ * scrubs its playhead on a slower ease of its own, driven from the component.
+ * See MENU_DROP.CLOSE_EASE for why the same curve run backwards will not do.
+ *
+ * Closing FREEZES the contents where they stand: a word that has been read
+ * should not un-write itself on the way out, and the box it is in is closing
+ * over it anyway. They are rewound to nothing only once the panel has finished
+ * shutting and there is nothing on screen to see it happen. Reopening therefore
+ * continues a half-finished reveal rather than restarting it.
  *
  * That is also why nothing is hidden with `visibility` on close: the letters
  * have to still be paintable while the panel closes over them. See the Menu
@@ -24,6 +26,7 @@
  */
 import gsap from "gsap";
 
+import { whenRevealed } from "@/components/Preloader/gate";
 import { REVEAL } from "../Hero/reveal";
 
 export const MENU_DROP = {
@@ -41,7 +44,102 @@ export const MENU_DROP = {
      diminishing bounces rather than one. It is a bigger personality than this
      menu is asking for, but it is a one-word change. */
   EASE: "back.out(1.9)",
+
+  /* Closing is NOT the open played backwards at the same rate, and it cannot be.
+     back.out leaves at nearly five times its own average speed — that is what
+     makes the drop crack — so running the same curve in reverse arrives at shut
+     with all of that velocity still on it, and the panel slams rather than
+     closes.
+
+     So the close scrubs the drop's playhead with an ease of its own instead. It
+     is the playhead these two describe, not the height: the panel still follows
+     the same curve of positions, but the rate it is read at is now something
+     that eases in AND out, which cancels the steep arrival. The scrub also runs
+     back through the overshoot on its way, so the panel gathers itself downward
+     a little before it goes up.
+
+     Slower than the drop on purpose. Opening is a gesture someone made; closing
+     is the thing letting go. */
+  CLOSE_DURATION: 0.85,
+  CLOSE_EASE: "power2.inOut",
 };
+
+/* The tab coming down, once — not the panel's drop, which is what happens every
+ * time it is pulled. This is the tab arriving on the page at all.
+ *
+ * It is the one piece of the site that sits ON the viewport's top edge rather
+ * than in the page, so the preloader's sweep passes over it and leaves it
+ * exactly as it found it — the only thing that reads as an arrival is for it to
+ * come down out of the edge afterwards. Which is also, conveniently, what a
+ * pull tab does.
+ */
+export const MENU_TAB = {
+  /* After the page is uncovered. Last of the four arrivals — the roll at 0.15,
+     the headline at 0.3, the corner mark at 0.55 (CORNER.DELAY in
+     Hero/reveal.ts), then this. It is the invitation, and it lands once the
+     page it belongs to is there to be looked at. */
+  DELAY: 0.7,
+
+  /* Where it waits: its own height and a bit, clear above the top edge. The
+     stylesheet parks it at the same figure and the two have to agree — see the
+     Preloader section of global.css, where the park hangs off the same
+     attribute the gate clears. */
+  HIDDEN: -115,
+
+  /* The drop's own ease, deliberately: the tab arrives with exactly the crack
+     it will have every time it is pulled from then on, so the entrance teaches
+     the gesture. Slower than the drop, because there is nothing being pulled
+     here — it is falling into place, not being yanked. */
+  DURATION: 0.75,
+  EASE: "back.out(1.9)",
+};
+
+/* Returns a teardown. Parked by the stylesheet until the gate clears, and
+   handed over in the task that clears it: whenRevealed fires synchronously
+   there, and a fromTo renders its `from` immediately even with a delay on it,
+   so the computed transform is `none` by the time GSAP reads it and there is no
+   frame in which the tab is anywhere unintended. */
+export function initTabEntrance(root: HTMLElement): () => void {
+  const tab = root.querySelector<HTMLElement>(".menu-tab");
+  if (!tab) return () => {};
+
+  /* Nothing to undo — the park is inside a no-preference media query, so with
+     this asked for the tab was never lifted in the first place. */
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return () => {};
+  }
+
+  /* The paper that fills the space between the tab and the top edge while it is
+     on its way out — without it the tab is a rectangle falling onto the page
+     rather than one being pulled from behind it, and the ease's overshoot
+     leaves a gap above it at the end. See .menu-tab.is-arriving in global.css.
+     On for the arrival only, which is why it is a class and not a rule. */
+  tab.classList.add("is-arriving");
+
+  let tween: gsap.core.Tween | null = null;
+  const unsubscribe = whenRevealed(() => {
+    tween = gsap.fromTo(
+      tab,
+      { yPercent: MENU_TAB.HIDDEN },
+      {
+        yPercent: 0,
+        duration: MENU_TAB.DURATION,
+        delay: MENU_TAB.DELAY,
+        ease: MENU_TAB.EASE,
+        onComplete: () => tab.classList.remove("is-arriving"),
+      },
+    );
+  });
+
+  return () => {
+    unsubscribe();
+    tween?.kill();
+    // A teardown mid-drop must never leave the only way into the menu off the
+    // top of the screen — or trailing a strip of paper above it.
+    tab.classList.remove("is-arriving");
+    gsap.set(tab, { clearProps: "transform" });
+  };
+}
 
 export const MENU_REVEAL = {
   /* How long the paper is empty before the first row starts. This is most of
@@ -83,7 +181,7 @@ function shuffle<T>(items: T[]): T[] {
 }
 
 export type MenuTimelines = {
-  /* Played to open, reversed to close. */
+  /* Played to open; its playhead is scrubbed back to 0 to close. */
   drop: gsap.core.Timeline;
   /* Only ever played forward, paused, or rewound to 0. */
   contents: gsap.core.Timeline;
@@ -111,17 +209,8 @@ export function buildMenuOpen(root: HTMLElement): MenuTimelines | null {
 
      The `from` renders the moment this is built, which is what parks the panel
      shut: from then on there is an inline height on it and the stylesheet's
-     closed rule is only a fallback.
-
-     The rewind hangs off the end of the close. By the time it runs the panel is
-     already at zero height, so the letters dropping back under their masks and
-     the rules closing up happen inside a box with nothing in it — which is the
-     point. Reopening then starts from a clean nothing rather than from a menu
-     mid-dismantle. */
-  const drop = gsap.timeline({
-    paused: true,
-    onReverseComplete: () => contents.pause(0),
-  });
+     closed rule is only a fallback. */
+  const drop = gsap.timeline({ paused: true });
 
   drop.fromTo(
     panel,

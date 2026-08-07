@@ -11,8 +11,10 @@
      5. Hero
      6. Wave band    the hand-off between the hero and the slider
      7. Tape slider  word marks, columns, stage, rolls
-     8. Menu         the pull-down panel and its tab
-     9. Cursor       the taped arrow
+     8. Footer       the nav row, the sign-off headline, the rolls' bed
+     9. Menu         the pull-down panel and its tab
+    10. Cursor       the taped arrow
+    11. Peel         a stuck-down thing lifting a corner, wherever one is used
 
    Section order is load-bearing where two rules touch the same property; keep
    new rules inside the section they belong to rather than appending to the
@@ -1544,6 +1546,430 @@ html[data-loading] {
 }
 
 /* ==========================================================================
+   Footer
+   ==========================================================================
+   Markup in components/Footer. The hero's dark green and the hero's lime, the
+   two swapped over: the page opens on lime type standing on a lime field and
+   closes on the same words in lime on the green. It is the same sign-off, seen
+   from the other side.
+
+   Two bands, and only one of them is measured. The nav row is in flow and is
+   whatever its own type makes it. Under it, .footer-bottom is a box of one
+   declared height — the bed the rolls and the social discs are laid into, and
+   they are laid in absolutely, so nothing inside it can report that height
+   back. --footer-bottom-h is therefore a design figure, not a consequence, and
+   it is the number to change if the arrangement of rolls changes.
+
+   Geometry is in vw like the rest of the site, so the row, the headline and the
+   bed hold their proportions against each other at every width. */
+
+.site-footer {
+  /* The rolls' bed. Set to fit them; see the section note above. */
+  --footer-bottom-h: 47.165vw;
+
+  /* The top edge's dip — how far the section's corners stand above its own
+     middle. The green is bitten into rather than bulging out: the corners run
+     up over the slider and the edge sweeps down between them, so the section
+     above is seen through the bite.
+
+     One sweep across the full width rather than two corner curves, like every
+     other arc on this page — the hero's lime field, the preloader's sheets, the
+     slider's colour wipe. Those are all convex and this one is not, which is
+     the whole reason it is a mask below and not a border-radius: a radius can
+     round a corner off, it cannot take a bite out of an edge.
+
+     The band it is drawn in is added ABOVE the section and taken straight back
+     out with a negative margin, so the arc costs the document no height, and
+     everything inside still starts at the deepest point of the dip — which is
+     the line the layout below is measured from. */
+  --footer-arc: 9vw;
+
+  /* The bite, as the shape that SURVIVES it: the two lobes of paper either side
+     of the curve. It is one half-ellipse, rx half the width and ry the arc's
+     depth, written as two quadrant arcs through the explicit low point at
+     (50,15) — a single 180° arc between two points on the ellipse's own
+     horizontal diameter is the degenerate case, where the flags no longer say
+     which half is meant.
+
+     Which way the quadrants run is the whole shape. The tangent is VERTICAL
+     where the curve leaves each corner and HORIZONTAL where the two meet at the
+     bottom — that is what makes it a valley. Run them the other way and the
+     tangents swap ends: the curve leaves the corners flat and the two halves
+     arrive at the centre travelling straight down, meeting in a cusp. Which is
+     a spike, not an arc.
+
+     The viewBox is 100 x 15 against a box of 100% x --footer-arc and
+     preserveAspectRatio="none" stretches it to fit, so the radii land at half
+     the width and the full arc depth however wide the window is. The menu tab's
+     torn edge is built out of the same parts for the same reason. */
+  --footer-bite: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 15' preserveAspectRatio='none'%3E%3Cpath d='M0 0A50 15 0 0 0 50 15A50 15 0 0 0 100 0L100 15L0 15Z' fill='%23000'/%3E%3C/svg%3E");
+
+  /* The hero's pairing, reversed — #0d470c is the hero's own ground and #b6fe00
+     the lime it puts overhead. */
+  --footer-paper: #0d470c;
+  --footer-ink: #b6fe00;
+
+  /* Clear of the viewport's edges. The menu's own inset, so the nav row's ends
+     line up with the pull tab above them. */
+  --footer-gutter: 1vw;
+
+  position: relative;
+  /* Over the slider (10) and the wave band (11), which is what the arc rises
+     into — without this the section above would simply paint on top of it and
+     the curve would never be seen. Under the menu (100) and the cursor. */
+  z-index: 12;
+  width: 100%;
+
+  /* The band the curve is drawn in, and the two lines that pay for it. The
+     padding opens it, the negative margin lifts the whole section back up by
+     the same amount — so the deepest point of the dip lands exactly where the
+     section's top edge was before, the corners run up over the slider, and
+     nothing inside has moved a pixel. */
+  margin-top: calc(var(--footer-arc) * -1);
+  padding-top: var(--footer-arc);
+
+  /* Two mask layers, as on the menu tab: a solid rectangle covering everything
+     below the band, and the bite's own shape filling the band itself. Percentage
+     positioning is a proportion of the SLACK rather than of the box, so `0 100%`
+     puts the rectangle's top edge exactly on the band's bottom — the two meet
+     with no seam and no overlap. */
+  -webkit-mask-image: linear-gradient(#000 0 0), var(--footer-bite);
+  mask-image: linear-gradient(#000 0 0), var(--footer-bite);
+  -webkit-mask-size:
+    100% calc(100% - var(--footer-arc)),
+    100% var(--footer-arc);
+  mask-size:
+    100% calc(100% - var(--footer-arc)),
+    100% var(--footer-arc);
+  -webkit-mask-position:
+    0 100%,
+    0 0;
+  mask-position:
+    0 100%,
+    0 0;
+  -webkit-mask-repeat: no-repeat, no-repeat;
+  mask-repeat: no-repeat, no-repeat;
+
+  background: var(--footer-paper);
+  /* The rolls hang off both sides of the bed. Clip rather than hidden: hidden
+     on a horizontal axis makes the box a scroll container on the vertical one
+     too, which would give the page a second scroller to fight the smooth
+     scroll for the wheel. The hero clips the same way for the same reason. */
+  overflow-x: clip;
+  font-family: var(--font-heading);
+  color: var(--footer-ink);
+}
+
+/* The same paper grain the hero, the band and the stage all carry, at the
+   hero's own weight — this is a dark saturated field like the hero's lower
+   half, not the near-white the menu panel had to lighten it for. Width-fitted
+   and tiled down rather than stretched, for the reason the hero gives: the
+   section is tens of vw tall and stretching one tile over it turns paper into
+   vertical streaking.
+
+   pointer-events: none because a full-bleed decorative layer must never be what
+   a click lands on. */
+.site-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/paper-overlay.png");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  opacity: 0.2;
+  pointer-events: none;
+  /* Nothing here about the curve: a mask clips an element's descendants along
+     with its own background, so the section's bite has already taken this with
+     it. The hero's grain has to inherit its radius because a border-radius does
+     not do that for a positioned child. */
+}
+
+/* --------------------------------------------------------------------------
+   The nav row
+   -------------------------------------------------------------------------- */
+
+/* Positioned only to lift the links over the grain above — a positioned
+   pseudo-element otherwise paints over ordinary content whatever the source
+   order says. The hero's .title and the slider's copy do the same. */
+.footer-nav {
+  position: relative;
+  z-index: 1;
+}
+
+/* space-between, so the two ends sit ON the gutter and the row spans the page
+   rather than being a centred cluster with air either side. The four labels are
+   unequal widths, so the gaps between them come out unequal too — that is the
+   trade, and it is the right way round here: the edges are what the eye reads
+   against the viewport. */
+.footer-nav ul {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  list-style: none;
+  padding: 3.2vw var(--footer-gutter) 0;
+}
+
+/* Label over mark, so the dot is centred under the word whatever the word is
+   — a column, not a line with something trailing it. */
+.footer-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.62vw;
+  font-size: 2.8vw;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05vw;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* The label is a row of letter boxes now that the row has an entrance, so flex
+   rather than plain inline text — for the reason every row of split letters on
+   this site is flex: .clip carries overflow: hidden, and an inline-block whose
+   overflow is not visible takes its baseline from its bottom margin edge rather
+   than from the text inside it, which would drop each label by the font's whole
+   descent and open a gap above its dot.
+
+   The tracking above survives the change. letter-spacing does not apply BETWEEN
+   flex items, but it inherits into each .char and is added after that character
+   — so the space is still there, carried by the letter rather than by the gap.
+   The hero's corner mark makes the same trade. */
+.footer-link-label {
+  display: flex;
+  align-items: flex-end;
+}
+
+/* A full stop, set as a disc rather than typed as one: a period would sit on
+   the baseline inside the line box and its size would be the font's business.
+   This is a mark under the word and it is the menu's arrow disc a long way
+   away, so it is drawn at a size of its own. */
+.footer-link-dot {
+  width: 0.62vw;
+  height: 0.62vw;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* --------------------------------------------------------------------------
+   The bed — the headline, the legal line, and the room the rolls will need
+   -------------------------------------------------------------------------- */
+
+/* Positioned for two reasons at once: to hold its contents above the section's
+   grain, and to be what the rolls are absolutely placed against when they land.
+   The height is the whole point of the box — see the section note. */
+.footer-bottom {
+  position: relative;
+  z-index: 1;
+  height: var(--footer-bottom-h);
+}
+
+/* The sign-off, the hero's headline said again. Two thirds of the hero's size:
+   the hero's is the page arriving and fills the screen, this one has to leave
+   room for the rolls to be arranged around it, and the mark sits over its top
+   edge. line-height and weight are the hero's exactly, so the two read as the
+   same words rather than as two settings of them.
+
+   text-align is inert once the rows below are flex — justify-content is what
+   centres them — but it is what centres the letters before CSS has landed. */
+.footer-headline {
+  /* Where the block sits in the bed. The one knob for it, and the one most
+     likely to move: the mark lands over the headline's top edge and the rolls
+     are arranged around its sides, so what reads as "centred" here is settled
+     by things that are not in the box yet. */
+  padding-top: 7.7vw;
+  font-size: 14.4vw;
+  font-weight: 800;
+  line-height: 0.73;
+  letter-spacing: 0;
+  text-align: center;
+
+  /* The hero's arc, kept. --arc-tilt is an angle and carries over untouched;
+     --arc-drop is a length and does not, so it is the hero's 1.2vw scaled by
+     the ratio of the two type sizes (14.4 / 20.361) — 0.059em either way. Same
+     curvature at a smaller setting, rather than a shallower curve. */
+  --arc-drop: 0.85vw;
+  --arc-tilt: 7deg;
+}
+
+/* The curve itself, the hero's rule with the hero's reasoning.
+   --------------------------------------------------------------------------
+   Each letter keeps the x its row gives it and is only dropped and tilted, so
+   the setting above is untouched. The usual curved-text approach — rotating
+   each letter about a far-off origin — would drag them sideways as well,
+   opening gaps that were never in the type.
+
+   --u runs -1 at the first letter of a line to +1 at the last (--i comes off
+   letters(), --letters off the row in Footer/index.tsx), so the two lines curve
+   over their own widths rather than sharing one curve. The drop follows 1-u², a
+   parabola deepest in the middle; the tilt runs linearly with u, so each letter
+   leans with the slope it is standing on. To arc the other way, negate BOTH.
+
+   On .clip, not .char: the arc and the reveal both want the transform property
+   and one element cannot carry both. Same division of labour as the hero's. */
+.footer-headline .line .clip {
+  --u: calc(2 * var(--i) / (var(--letters) - 1) - 1);
+  transform-origin: 50% 100%; /* pivot on the baseline, not the letter centre */
+  transform: translateY(calc(var(--arc-drop) * (1 - var(--u) * var(--u))))
+    rotate(calc(var(--arc-tilt) * var(--u) * -1));
+}
+
+/* The rows. Flex rather than plain inline text, for the reason every row of
+   split letters on this site is: .clip below carries overflow: hidden, and an
+   inline-block whose overflow is not visible takes its baseline from its bottom
+   margin edge rather than from the text inside it — which would hang every
+   letter above the baseline and grow the line box by the font's whole descent,
+   pushing the two lines apart for no visible reason. Flex items have no
+   baseline to get wrong. */
+.footer-headline .line {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* Split letters — the hero's boxes and the hero's headroom, because this is the
+   hero's setting: line-height well under 1, so a letter's content box is
+   shorter than the capital standing in it and a mask flush to the box would
+   shave the tops off. The padding gives it room on three sides and the matching
+   negative margins hand that room straight back to the layout, so the rows are
+   the width and height they always were.
+
+   Nothing at the bottom — the mask's lower edge is what the letters slide out
+   through, and it wants to sit tight on the baseline. */
+.site-footer .clip {
+  display: block;
+  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  overflow: hidden;
+  padding: 0.2em 0.12em 0;
+  margin: -0.2em -0.12em 0;
+}
+
+/* Where a letter waits before the reveal, and — since the reveal is JS — what
+   it falls back to. Footer/reveal.ts sets data-reveal on the section to lift
+   this and take the letters over; the <noscript> in index.tsx lifts it for good
+   if that is never going to happen. REVEAL.HIDDEN in Hero/reveal.ts is the same
+   figure and the two have to agree.
+
+   130 rather than 100 because capitals overshoot their own box, so a letter
+   moved exactly its own height still leaves a hairline of tops at the mask's
+   edge. The excess is all behind the mask, so it is set well clear rather than
+   measured against the font. The hero and the preloader park theirs the same
+   way, at the same figure. */
+.site-footer .char {
+  display: block;
+  transform: translateY(130%);
+}
+
+.site-footer[data-reveal="live"] .char {
+  transform: none;
+}
+
+/* --------------------------------------------------------------------------
+   The loose objects — four rolls and three social discs
+   --------------------------------------------------------------------------
+   The roster is src/data/footerBalls.ts and the physics is Footer/balls.ts;
+   what is here is only where each one sits and what it looks like.
+
+   Everything positional is driven by two custom properties the markup sets per
+   ball, --ball-x / --ball-y, and both are UNITLESS numbers standing for vw. The
+   unit is applied here instead so a ball's home can be arithmetic —
+   centre minus half the diameter — which it cannot be if the incoming value
+   already carries one.
+
+   The transform is deliberately not set. It belongs to the simulation, which
+   writes the OFFSET from the position these rules give: with the physics gone,
+   asleep, or never downloaded, this IS the composition rather than a starting
+   guess at it. */
+.footer-balls {
+  position: absolute;
+  inset: 0;
+  /* Over the headline, under the legal line (2) — the balls lie on top of the
+     sign-off, and the small print stays legible under all of them. */
+  z-index: 1;
+}
+
+.footer-ball {
+  position: absolute;
+  left: calc((var(--ball-x) - var(--ball-d) / 2) * 1vw);
+  top: calc((var(--ball-y) - var(--ball-d) / 2) * 1vw);
+  width: calc(var(--ball-d) * 1vw);
+  height: calc(var(--ball-d) * 1vw);
+  border-radius: 50%;
+  background: var(--ball-colour);
+  color: var(--ball-ink);
+
+  display: grid;
+  place-items: center;
+  text-decoration: none;
+
+  /* A ball is grabbed and thrown, so a press on one must not start selecting
+     the label printed on it or dragging it as an image. balls.ts calls
+     preventDefault on its own pointerdown as well; this covers the press that
+     lands before the physics chunk has arrived. */
+  user-select: none;
+  -webkit-user-drag: none;
+
+  /* Seven elements getting a fresh matrix every frame. Promoted for the same
+     reason the rolls in the slider are, and permanently rather than for the
+     length of a tween: this loop runs the whole time the bed is on screen. */
+  will-change: transform;
+}
+
+/* What is printed on the ball, as opposed to the ball itself. A placeholder
+   until the artwork lands — the rolls become the images in /assets/rolling and
+   the discs become logo marks, and because the face is its own element that
+   swap is a change of children and nothing else. The simulation measures the
+   BALL (offsetWidth, offsetLeft) and never looks in here. */
+.footer-ball-face {
+  max-width: 74%;
+  font-size: calc(var(--ball-d) * 0.115vw);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* The link ring. Only the discs are anchors; the rolls are decoration and have
+   no focus state to show. */
+.footer-ball:focus-visible {
+  outline: 0.25vw solid var(--footer-ink);
+  outline-offset: 0.3vw;
+}
+
+/* The legal line, pinned to the foot of the bed rather than set under the
+   headline: the rolls come down between the two and this has to stay on the
+   floor whatever they do. Body face — it is the one piece of running text in a
+   section that is otherwise all display type.
+
+   z-index above the rolls, which will be laid in over everything else in this
+   box. It is small type on a dark field and a roll passing over it would take
+   it out entirely. */
+.footer-legal {
+  position: absolute;
+  left: 50%;
+  bottom: 1.6vw;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-family: var(--font-body);
+  font-size: 0.9vw;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--footer-ink);
+}
+
+/* Thirty letters flying in from nowhere is exactly what this setting is asking
+   about. Here rather than only in reveal.ts so it also covers the window before
+   hydration, when the stylesheet is holding them down on its own — the hero
+   makes the same pair of statements for the same reason. */
+@media (prefers-reduced-motion: reduce) {
+  .site-footer .char {
+    transform: none;
+  }
+}
+
+/* ==========================================================================
    Menu — the pull-down panel
    ==========================================================================
    Markup in components/Menu. Two pieces stacked in normal flow: the paper
@@ -1561,8 +1987,24 @@ html[data-loading] {
    reserved for the pull. */
 
 .site-menu {
-  /* The panel's width, and the measure everything inside is cut to. */
-  --menu-w: 26vw; /* 374px at the 1440 design width */
+  /* The panel's width, and the measure everything inside is cut to.
+
+     Set by the LONGEST label at FULL SIZE standing beside an open preview —
+     nothing in this menu shrinks to fit, so the box is what has to give. The
+     sum it has to clear, in the order the row is built:
+
+       OUR FAMILY   18.34vw   the label, measured at --menu-label's font-size
+       preview       5.40vw   --menu-thumb, open
+       its gap       0.85vw   the margin the slot opens with it
+       arrow room    2.60vw   .menu-link's padding-right
+       the paddings  2.40vw   --menu-pad-l + --menu-pad-r
+                    -------
+                    29.59vw
+
+     31vw leaves about 1.4vw of slack on top of that. Re-measure when a label
+     changes — a word wider than OUR FAMILY collides with the arrow disc rather
+     than wrapping, because the letters are split into unshrinkable boxes. */
+  --menu-w: 31vw; /* 446px at the 1440 design width */
 
   /* Asymmetric on purpose: the labels start close to the left edge, while the
      right side has to leave the arrow room to breathe. */
@@ -1571,7 +2013,6 @@ html[data-loading] {
 
   --menu-row-h: 6.6vw;
   --menu-thumb: 5.4vw; /* the hover preview, a square */
-  --menu-hover-scale: 0.76; /* what the label shrinks to, to let it in */
 
   /* The preview is pinned on rather than set in: it leans, and it rides up over
      the row's own rule instead of sitting politely under it. Keep the lift
@@ -1820,20 +2261,6 @@ html[data-loading] {
   transition-delay: var(--menu-thumb-open);
 }
 
-/* The label gives up the room the preview takes. Scaled rather than set at a
-   smaller font-size, so the two happen on the same clock and the word appears
-   to be pushed and squeezed by the same thing — a font-size change would
-   reflow the letters instead of moving them.
-
-   --menu-hover-scale is set by the LONGEST label, not by taste: OUR FAMILY is
-   what has to still fit beside the preview, and the rest come down with it so
-   the four rows read as one behaviour. Re-check it when a label changes. */
-.menu-link:hover .menu-label,
-.menu-link:focus-visible .menu-label {
-  transform: scale(var(--menu-hover-scale));
-  transition-delay: 0s;
-}
-
 /* 60px / 60px / -1.8px at the 1440 design width, carried to vw the way the
    rest of the site's type is — the hero's own figures are the same conversion.
    Keep the three together: the arrow's placement below is measured off this
@@ -1852,12 +2279,11 @@ html[data-loading] {
   line-height: 1;
   letter-spacing: -0.125vw;
 
-  /* The hover shrink, below. From the left edge, so the word stays butted
-     against the preview that is pushing it rather than drifting away from it,
-     and on the slot's clock and the slot's delay — the label is being shoved by
-     the slot, so it has to leave and come back at exactly the same moment. */
-  transform-origin: left center;
-  transition: transform var(--menu-thumb-open) ease var(--menu-thumb-pop);
+  /* The word is never scaled to make room for the preview — the panel is cut
+     wide enough for the longest label at full size instead (see --menu-w). So
+     there is no transform here and nothing to transition: the label is simply
+     shoved along by the slot opening beside it, on the slot's own clock, and
+     the type stays the size it is set at throughout. */
 }
 
 /* Split letters. Same two boxes as the hero's — .clip holds the letter's place
@@ -2062,6 +2488,21 @@ html[data-loading] {
   filter: drop-shadow(1px 14px 20px black);
 }
 
+#tape-on-note {
+    position: absolute;
+    top: 58.3vw;
+    left: 14vw;
+    z-index: 5;
+    width: 11vw;
+}
+
+#tape-on-lemon {
+    position: absolute;
+    top: 99vw;
+    left: 22vw;
+    width: 19vw;
+}
+
 #tape-top {
   position: absolute;
   top: 60vw;
@@ -2072,6 +2513,188 @@ html[data-loading] {
   object-fit: cover;
 }
 
+/* ==========================================================================
+   11. Peel — a stuck-down thing lifting a corner
+   ==========================================================================
+   The geometry of components/Peel. Everything below is a calc() off --peel, a
+   single 0..1 that Peel/peel.ts writes on the wrapper each frame — 0 is the
+   rest state and 1 is fully peeled — and it does not care whether the number
+   came from a loop or from the scroll. No :hover anywhere: neither driver has
+   anywhere to hover from.
+
+   The trick, in one line: a mirrored copy of the image, parked one height above
+   the box and slid DOWN by twice the fold's depth, lands exactly on the
+   reflection of the strip that was peeled — so a copy sliding is indis-
+   tinguishable from a strip hinging. See components/Peel/index.tsx.
+
+   Class rules only, so an existing id rule (#lemon, #tape-top) still owns the
+   layout box and nothing here has to out-specify it. */
+
+/* Registered, so it is a real number rather than a token stream: the calcs
+   below type-check, an unset element is 0 instead of invalid, and the value is
+   interpolable if anything ever wants to drive it from CSS. Inherited, because
+   the flap's lighting is two elements down from where it is written. */
+@property --peel {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+.peel {
+  position: relative;
+  display: block;
+
+  /* `rotate`, not `transform` — the wrapper is also what carries data-parallax
+     on the props that drift, and parallax.ts writes transform. They are
+     separate properties and compose. Same call .key-visual makes. */
+  rotate: var(--peel-dir, 0deg);
+
+  /* Room for the drop shadow to fall outside the picture, and enough slack that
+     the flat pose shows no seam along the top edge. Rarely worth touching. */
+  --peel-bleed: 0.6vw;
+
+  /* THE ARTWORK'S OWN BOX, and the one thing --peel-dir needs to be told. Give
+     it whatever the id rule above sizes this to; leave it alone at 0deg, where
+     nothing below it does any work.
+
+     Why it is needed: the clip is the FACE'S OWN BOX, unrotated, while the
+     artwork inside has been turned back upright. Turn the frame and the two
+     stop overlapping — on a long strip the box swings clean off the picture and
+     clips all of it away, which is not a subtle failure but does look exactly
+     like "the animation isn't running". */
+  --peel-w: 0px;
+  --peel-h: 0px;
+
+  /* How far the artwork reaches along the clip's y axis once the frame has been
+     turned: the box's own diagonal shadow on that axis. max(x, -x) is abs() —
+     the sign of the turn cannot matter, and abs() is younger than this needs to
+     be. At 0deg it collapses to --peel-h, which is the honest answer. */
+  --peel-span: calc(
+    var(--peel-w) * max(sin(var(--peel-dir)), -1 * sin(var(--peel-dir))) +
+      var(--peel-h) * max(cos(var(--peel-dir)), -1 * cos(var(--peel-dir)))
+  );
+
+  /* So the frame is bled by exactly what it swings off by, plus the shadow's
+     room. Derived rather than typed because a hand-computed one is a number
+     that silently stops being true the moment the artwork is re-cropped. */
+  --peel-pad: calc(
+    var(--peel-bleed) + max(0px, calc((var(--peel-span) - var(--peel-h)) / 2))
+  );
+
+  --peel-shut: calc(-1 * var(--peel-pad));
+  --peel-far: calc(100% + var(--peel-pad));
+
+  /* Where the artwork STARTS on that axis — the edge the fold peels away from.
+     50% is half the box; back off half the span and you are at the near end of
+     the picture however the frame is turned. This is what lets a fold position
+     be written as a plain fraction of the travel:
+
+       calc(var(--peel-edge) + 0.55 * var(--peel-span))   55% along
+
+     which is what the `from` / `to` props emit when given a number. */
+  --peel-edge: calc(50% - var(--peel-span) / 2);
+
+  /* The two ends of the fold's travel: where it sits at --peel: 0, and where it
+     has got to at 1.
+
+     NOTHING REQUIRES `to` TO BE THE FURTHER OF THE TWO. The fold travels from
+     one to the other, and putting the far value in `from` is the whole of how a
+     thing that comes UNSTUCK becomes a thing that STICKS DOWN — the geometry
+     below is direction-blind, so a peel run backwards is a peel run backwards
+     and there is no second code path for it.
+
+     --peel-shut is the flat pose: the fold parked off the picture with nothing
+     folded over. Naming it as an end means "and then it is stuck down" rather
+     than a number that happens to be far enough outside. */
+  --peel-from: var(--peel-shut);
+  --peel-to: 32%;
+
+  /* The fold line. This is the whole animation. */
+  --peel-cut: calc(
+    var(--peel-from) + var(--peel) * (var(--peel-to) - var(--peel-from))
+  );
+}
+
+/* The picture, cut off at the fold. clip-path applies AFTER filter, so the
+   shadow is the sticker's own and does not re-draw along the peeled edge —
+   which is correct: that edge is covered by the flap lying on it. */
+.peel-face {
+  display: block;
+  height: 100%;
+  clip-path: polygon(
+    var(--peel-shut) var(--peel-cut),
+    var(--peel-far) var(--peel-cut),
+    var(--peel-far) var(--peel-far),
+    var(--peel-shut) var(--peel-far)
+  );
+  filter: var(--peel-shadow, drop-shadow(0.12vw 0.2vw 0.35vw rgba(0, 0, 0, 0.28)));
+}
+
+/* The strip that came off: the same image, upside down, one height above the
+   box, showing only the band above the fold, slid down by twice the fold's
+   depth. At --peel: 0 that is top: -100% - 2pad and a band of zero height —
+   nothing on screen — so the shut state needs no rule of its own. */
+.peel-flap {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  /* The 1px closes the hairline the two halves would otherwise show between
+     them at fractional heights; it is a seam-hider, not geometry. */
+  top: calc(-100% + 2 * var(--peel-cut) - 1px);
+  transform: scaleY(-1);
+
+  clip-path: polygon(
+    var(--peel-shut) var(--peel-shut),
+    var(--peel-far) var(--peel-shut),
+    var(--peel-far) var(--peel-cut),
+    var(--peel-shut) var(--peel-cut)
+  );
+}
+
+/* Undoes --peel-dir for the artwork alone: the frame turns so the fold can
+   come off any edge, the picture inside stays the way up it was drawn. */
+.peel-turn {
+  display: block;
+  height: 100%;
+  rotate: calc(-1 * var(--peel-dir, 0deg));
+}
+
+.peel img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: var(--peel-fit, cover);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* The underside. #peel-back throws the artwork away and keeps the silhouette,
+   flooded flat — so a cut-out PNG's torn ends stay torn. Its input never
+   changes, so the grey layer is rasterised once and the loop only moves and
+   re-clips it; brightness is the one thing riding --peel, and it is a cheap
+   pass over an already-cached layer — the flap catching more light the further
+   it lifts, which is what the original got from a mouse-tracked specular
+   highlight that a pointerless loop has no way to aim. */
+.peel-flap img {
+  filter: url(#peel-back) brightness(calc(1 + var(--peel) * 0.22));
+}
+
+.peel-face,
+.peel-flap {
+  will-change: clip-path;
+}
+
+/* Parked flat. peel.ts never starts, so --peel stays 0 and this is only
+   belt-and-braces against a stale inline value surviving a teardown. */
+@media (prefers-reduced-motion: reduce) {
+  .peel {
+    --peel: 0;
+  }
+}
+
 /* The entrance is skipped outright when this is asked for — Menu/reveal.ts
    builds no timeline at all, and every piece is left standing where the rules
    above paint it. What is left here is the hover, which is a response to the
@@ -2080,7 +2703,6 @@ html[data-loading] {
 @media (prefers-reduced-motion: reduce) {
   .menu-thumb,
   .menu-thumb img,
-  .menu-label,
   .menu-arrow svg {
     transition: none;
   }

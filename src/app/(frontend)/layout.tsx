@@ -11,6 +11,7 @@ import "@/styles/global.css";
 
 import Cursor from "@/components/Cursor";
 import Menu from "@/components/Menu";
+import { PeelDefs } from "@/components/Peel";
 import Preloader from "@/components/Preloader";
 import SmoothScroll from "@/components/SmoothScroll";
 
@@ -67,6 +68,10 @@ export default function FrontendLayout({ children }: { children: ReactNode }) {
             layout rather than on the page — it is not the hero's furniture
             even though that is what sits behind it on load. */}
         <Menu />
+        {/* One <defs> for every peel on the site — the filter is referenced by
+            id, so a copy per instance would be duplicate ids for a filter they
+            all already share. Out of flow and paints nothing. */}
+        <PeelDefs />
         {children}
       </body>
     </html>

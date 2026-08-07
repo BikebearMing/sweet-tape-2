@@ -2,6 +2,7 @@ import { preload } from "react-dom";
 import type { CSSProperties, ReactNode } from "react";
 
 import Stage from "./Stage";
+import Peel from "@/components/Peel";
 import { letters } from "@/components/letters";
 import { MODEL_URL } from "./engine";
 
@@ -162,8 +163,8 @@ export default function Hero() {
             src="./assets/lemon painting 1.webp"
             alt=""
             id="lemon"
-            data-parallax="0.14"
-            data-parallax-ease="3.5"
+            // data-parallax="0.14"
+            // data-parallax-ease="3.5"
           />
           
           <img
@@ -190,6 +191,62 @@ export default function Hero() {
             
           </div>
 
+          {/* The tab of tape that holds the note up, and the scroll is what
+              STICKS IT DOWN — see components/Peel. It is found turned right
+              over, off the note, and lays itself onto the paper end-first as
+              the note comes up the screen. Scrubbed rather than looped, so it
+              lifts back off again on the way up.
+
+              Which is the peel run backwards, and it is written as exactly
+              that: the fold's far end is `from` and its flat end is `to`. The
+              geometry does not know or care which of the two is further along
+              — see the note by --peel-from in global.css.
+
+              --peel-dir turns the fold a quarter turn so the tab lands
+              END-FIRST rather than dropping along its whole top edge at once,
+              and `box` is what that turn has to be told: 11vw by 5.667vw, the
+              size the stylesheet's #tape-on-note rule gives it. Everything the
+              turn costs — how far the clip frame swings off the artwork, and
+              therefore how much it has to be bled back — is worked out from
+              those two numbers rather than typed.
+
+              Which is what leaves from/to readable: 0.55 is a little past half
+              way along the strip, and 0 is its near edge, nothing folded, stuck
+              flat to the note.
+
+              The wrapper is what #tape-on-note sizes and places; the two copies
+              of the artwork live inside it. */}
+          <Peel
+            src="./assets/tape-on-note.png"
+            id="tape-on-note"
+            drive="scroll"
+            direction="90deg"
+            box="11vw 5.667vw"
+            from={0.55}
+            to={0}
+          />
+
+          {/* The same move on the painting, and the same reading of it: found
+              turned back, stuck down by the scroll.
+
+              The strip is DRAWN at an angle — 16.952deg of lean baked into the
+              artwork, not put there by CSS — and that is why the direction is
+              that lean PLUS a quarter turn. The lean on its own would run the
+              fold ALONG the tape and crease it lengthwise into a stripe; it is
+              the extra 90deg that swings the fold across the strip so it comes
+              away end-first, off the right.
+
+              box is 19vw by 8.997vw — the width #tape-on-lemon sets and the
+              height its 283x134 artwork takes at that width. */}
+          <Peel
+            src="./assets/tape-on-lemon.png"
+            id="tape-on-lemon"
+            drive="scroll"
+            direction="106.952deg"
+            box="19vw 8.997vw"
+            from={0.55}
+            to={0}
+          />
           <div className="sticky-note" aria-hidden="true" />
           <img id="paperclip" src="./assets/paper-clip-1.png" alt="" />
           <img src="./assets/tape top.png" alt="" id="tape-top" />

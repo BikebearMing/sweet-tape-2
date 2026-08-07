@@ -6,6 +6,7 @@ import { initRollEntrance } from "./entrance";
 import { initNote } from "./note";
 import { initParallax } from "./parallax";
 import { initCopyReveal, initCornerMark, initReveal } from "./reveal";
+import { initPeel } from "@/components/Peel/peel";
 
 /* The only client component in the hero.
  *
@@ -39,8 +40,10 @@ export default function Stage({ children }: { children: ReactNode }) {
     const stopRoll = initRollEntrance(root);
     const stopNote = initNote(root);
     const stopParallax = initParallax(root);
+    const stopPeel = initPeel(root);
 
     return () => {
+      stopPeel();
       stopTape();
       stopReveal();
       stopCorner();

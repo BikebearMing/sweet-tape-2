@@ -1,8 +1,21 @@
+/* eslint-disable @next/next/no-img-element */
 import type { CSSProperties } from "react";
+import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa6";
 
 import Stage from "./Stage";
 import { letters } from "@/components/letters";
-import { footerBalls } from "@/data/footerBalls";
+import { footerBalls, type SocialIcon } from "@/data/footerBalls";
+
+/* The discs' marks. Icons rather than logo PNGs: three flat single-colour
+   glyphs that take their colour from the ball they are printed on, so the
+   badge is one custom property away from being any other pair of shades and
+   there is nothing to re-export when it changes. The names are the seam —
+   footerBalls.ts stays plain data and this is where they become components. */
+const SOCIAL_ICONS: Record<SocialIcon, typeof FaTiktok> = {
+  tiktok: FaTiktok,
+  facebook: FaFacebookF,
+  instagram: FaInstagram,
+};
 
 /* Section-level copy — the obvious CMS fields, so they are named constants
    rather than strings buried in the markup, the same call the hero and the
@@ -103,51 +116,73 @@ export default function Footer() {
         </h2>
 
         {/* The rolls and the social discs, each already standing at its design
-            position — global.css places every one of them from the two numbers
-            below, so this is the finished composition with no JS at all.
-            Footer/balls.ts hands them to Matter afterwards and writes an
+            position — global.css places every one of them from the three
+            numbers below, so this is the finished composition with no JS at
+            all. Footer/balls.ts hands them to Matter afterwards and writes an
             OFFSET from here, never an absolute position.
 
             The face is a separate element from the ball. The ball is the
             physical object — a circle of a certain size in a certain place —
-            and the face is whatever is printed on it, which is where the
-            artwork will go: swapping the span for an <img> changes nothing the
-            simulation can see. */}
+            and the face is whatever is printed on it, so a roll's picture and
+            a disc's mark are the same swap as far as the simulation is
+            concerned: it measures the box, never the contents. */}
         <div className="footer-balls">
           {footerBalls.map((ball) => {
-            const style = {
+            const box = {
               "--ball-d": ball.d,
               "--ball-x": ball.x,
               "--ball-y": ball.y,
-              "--ball-colour": ball.colour,
-              "--ball-ink": ball.ink,
             } as CSSProperties;
 
             /* A disc that leads somewhere is an anchor; a roll is decoration
                until it has somewhere to lead. Same box either way — the physics
                finds them by class and does not care which it grabbed. */
-            return ball.kind === "social" ? (
-              <a
-                className="footer-ball"
-                key={ball.id}
-                style={style}
-                href={ball.href}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={ball.label}
-              >
-                <span className="footer-ball-face" aria-hidden="true">
-                  {ball.label}
-                </span>
-              </a>
-            ) : (
+            if (ball.kind === "social") {
+              const Icon = SOCIAL_ICONS[ball.icon];
+              return (
+                <a
+                  className="footer-ball footer-ball--disc"
+                  key={ball.id}
+                  style={
+                    {
+                      ...box,
+                      "--ball-colour": ball.colour,
+                      "--ball-ink": ball.ink,
+                    } as CSSProperties
+                  }
+                  href={ball.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={ball.label}
+                >
+                  {/* aria-hidden and unfocusable: the anchor's own label is
+                      what carries the name, and an <svg> is announced as a
+                      graphic in some readers if it is left in the tree. */}
+                  <Icon
+                    className="footer-ball-mark"
+                    aria-hidden="true"
+                    focusable="false"
+                  />
+                </a>
+              );
+            }
+
+            /* The roll's artwork is a printed circle, so it IS the ball —
+               there is no coloured disc under it, and alt is empty because the
+               wrapper is already out of the a11y tree. */
+            return (
               <div
                 className="footer-ball"
                 key={ball.id}
-                style={style}
+                style={box}
                 aria-hidden="true"
               >
-                <span className="footer-ball-face">{ball.label}</span>
+                <img
+                  className="footer-ball-art"
+                  src={ball.art}
+                  alt=""
+                  draggable={false}
+                />
               </div>
             );
           })}

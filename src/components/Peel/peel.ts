@@ -181,13 +181,21 @@ type Scrub = {
   from: number;
   to: number;
   at: number; // where the write has got to, full precision
+  on: boolean; // in view, so worth writing to
 };
 
 function initScrub(els: HTMLElement[]): () => void {
   if (!els.length) return () => {};
 
   const ease = gsap.parseEase(SCRUB.EASE);
-  const items: Scrub[] = els.map((el) => ({ el, from: 0, to: 1, at: NaN }));
+  const items: Scrub[] = els.map((el) => ({
+    el,
+    from: 0,
+    to: 1,
+    at: NaN,
+    on: false,
+  }));
+  const byEl = new Map<Element, Scrub>(items.map((it) => [it.el, it]));
 
   function measure() {
     const vh = window.innerHeight;
@@ -202,12 +210,10 @@ function initScrub(els: HTMLElement[]): () => void {
     }
   }
 
-  let onScreen = false;
-
   function frame() {
-    if (!onScreen) return;
     const y = window.scrollY || window.pageYOffset || 0;
     for (const it of items) {
+      if (!it.on) continue;
       const raw = (y - it.from) / (it.to - it.from);
       const p = ease(raw < 0 ? 0 : raw > 1 ? 1 : raw);
       if (Math.abs(p - it.at) < STEP) continue;
@@ -216,12 +222,24 @@ function initScrub(els: HTMLElement[]): () => void {
     }
   }
 
-  /* One observer for the lot: a scrubbed peel is a pure function of scrollY, so
-     there is nothing to keep in step while it is off-screen — it will be
-     correct on the first frame it comes back. */
+  /* One observer for the lot, but the flag it sets is PER ELEMENT — the peels
+     on a page are nowhere near each other, and a callback only carries the
+     entries that changed. Read as `entries.some(...)`, one peel leaving the
+     viewport is indistinguishable from all of them leaving, so it would stop
+     the ticker for a peel still on screen mid-travel: on the way back up the
+     hero, the lemon's tape drops off the bottom edge while the note's tape is
+     still visible and still fully stuck down, and the note would then never
+     lift again.
+
+     A scrubbed peel is a pure function of scrollY, so an element that is
+     genuinely off-screen needs nothing kept in step — it is correct on the
+     first frame it comes back. */
   const io = new IntersectionObserver(
     (entries) => {
-      onScreen = entries.some((e) => e.isIntersecting);
+      for (const e of entries) {
+        const it = byEl.get(e.target);
+        if (it) it.on = e.isIntersecting;
+      }
     },
     { rootMargin: NEAR_VIEW }
   );

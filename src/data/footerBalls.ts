@@ -31,74 +31,87 @@
  * arithmetic after nudging anything: the instagram disc failed it by 0.3vw
  * here, which was invisible on screen and perfectly visible in the simulation.
  *
- * COLOUR is a placeholder. The rolls will become the artwork in
- * /assets/rolling and the discs will become logo marks; both are content
- * inside the ball, not the ball itself, so the swap touches the markup and
- * nothing else. The shades below are approximations of the mock's, near enough
- * to judge the composition against.
+ * WHAT IS PRINTED ON ONE is the only thing that separates the two kinds, and
+ * neither is a fill any more. A roll carries its own artwork from
+ * /assets/rolling — a circle of printed tape, so the picture IS the ball and
+ * there is nothing behind it to colour. A disc is a badge: a lime circle with
+ * a social mark cut into it in the hero's dark green, which is why it is the
+ * only kind still carrying a colour pair. Both are content INSIDE the ball
+ * rather than the ball itself, so the physics sees no difference at all.
  */
+
+/** Which mark a disc wears. Resolved to a component in Footer/index.tsx —
+    this file stays free of JSX so it can be read as data. */
+export type SocialIcon = "tiktok" | "facebook" | "instagram";
 
 export type FooterBall = {
   /** Stable key, and what the physics matches an element to in the DOM. */
   id: string;
-  /** The placeholder's face, and the readable name where the ball is a link. */
+  /** The readable name: a disc's link label, a roll's alt text. */
   label: string;
-  /** Rolls are decoration until they lead somewhere; discs are links now. */
-  kind: "roll" | "social";
-  href?: string;
   /** Diameter, vw. */
   d: number;
   /** Centre, vw from the bed's top-left. */
   x: number;
   y: number;
-  /** Placeholder fill and the type on it. */
-  colour: string;
-  ink: string;
-};
+} & (
+  | {
+      /** Decoration until it leads somewhere. Its artwork is the whole ball. */
+      kind: "roll";
+      art: string;
+    }
+  | {
+      kind: "social";
+      href: string;
+      icon: SocialIcon;
+      /** The badge's field and the mark cut into it. */
+      colour: string;
+      ink: string;
+    }
+);
 
-const INK_DARK = "#013900"; // the hero's dark green, on the light discs
-const INK_LIGHT = "#f4f3ef"; // the menu's paper, on the dark ones
+const DISC = "#b6fe00"; // the footer's own lime, which is its ink everywhere else
+const INK_DARK = "#013900"; // the hero's dark green, cut into the lime
 
 export const footerBalls: FooterBall[] = [
   {
     id: "stationery",
     label: "STATIONERY TAPE",
     kind: "roll",
+    art: "/assets/footer-stationery.svg",
     d: 21.5,
     x: 9.6,
     y: 18.7,
-    colour: "#e0653f",
-    ink: INK_LIGHT,
   },
+  /* The fourth product is cloth tape — the same four rolls the slider carries,
+     so the artwork is tapes.ts's `roll` and there is one set of pictures on the
+     site rather than two. */
   {
-    id: "opp",
-    label: "OPP TAPE",
+    id: "cloth",
+    label: "CLOTH TAPE",
     kind: "roll",
+    art: "/assets/footer-cloth.svg",
     d: 18.7,
     x: 22.6,
     y: 35.6,
-    colour: "#a8dc28",
-    ink: INK_DARK,
   },
   {
     id: "double",
     label: "DOUBLE-SIDED TISSUE TAPE",
     kind: "roll",
+    art: "/assets/footer-double.svg",
     d: 19,
     x: 65.5,
     y: 37.3,
-    colour: "#5ac8f5",
-    ink: INK_DARK,
   },
   {
     id: "masking",
     label: "MASKING TAPE",
     kind: "roll",
+    art: "/assets/footer-mask.svg",
     d: 18.7,
     x: 89.9,
     y: 37.5,
-    colour: "#fcb814",
-    ink: INK_DARK,
   },
 
   /* The discs. Smaller, and they sit in the gaps the rolls leave rather than in
@@ -106,35 +119,38 @@ export const footerBalls: FooterBall[] = [
      arrangements sharing a box. */
   {
     id: "tiktok",
-    label: "TIKTOK",
+    label: "TikTok",
     kind: "social",
     href: "https://www.tiktok.com/",
+    icon: "tiktok",
     d: 12.7,
     x: 80.6,
     y: 22,
-    colour: "#b6fe00",
+    colour: DISC,
     ink: INK_DARK,
   },
   {
     id: "facebook",
-    label: "FACEBOOK",
+    label: "Facebook",
     kind: "social",
     href: "https://www.facebook.com/",
+    icon: "facebook",
     d: 12.7,
     x: 93.6,
     y: 20.2,
-    colour: "#b6fe00",
+    colour: DISC,
     ink: INK_DARK,
   },
   {
     id: "instagram",
-    label: "INSTAGRAM",
+    label: "Instagram",
     kind: "social",
     href: "https://www.instagram.com/",
+    icon: "instagram",
     d: 12.7,
     x: 38.7,
     y: 38.6,
-    colour: "#b6fe00",
+    colour: DISC,
     ink: INK_DARK,
   },
 ];

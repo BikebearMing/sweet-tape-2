@@ -11,7 +11,7 @@
  * MATTER-JS, HEADLESS. The engine runs with no renderer at all — Matter owns
  * the maths and nothing else. Every ball is a real DOM element that the loop
  * writes one transform onto per frame. That is the whole reason for the
- * arrangement: the social discs are anchors and the rolls will be artwork, so
+ * arrangement: the social discs are anchors and the rolls are artwork, so
  * they have to stay in the document to be clickable, focusable, and readable.
  * A canvas would have made them pixels.
  *

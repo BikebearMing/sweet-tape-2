@@ -1895,8 +1895,6 @@ html[data-loading] {
   width: calc(var(--ball-d) * 1vw);
   height: calc(var(--ball-d) * 1vw);
   border-radius: 50%;
-  background: var(--ball-colour);
-  color: var(--ball-ink);
 
   display: grid;
   place-items: center;
@@ -1915,19 +1913,39 @@ html[data-loading] {
   will-change: transform;
 }
 
-/* What is printed on the ball, as opposed to the ball itself. A placeholder
-   until the artwork lands — the rolls become the images in /assets/rolling and
-   the discs become logo marks, and because the face is its own element that
-   swap is a change of children and nothing else. The simulation measures the
-   BALL (offsetWidth, offsetLeft) and never looks in here. */
-.footer-ball-face {
-  max-width: 74%;
-  font-size: calc(var(--ball-d) * 0.115vw);
-  font-weight: 800;
-  line-height: 1.05;
-  letter-spacing: 0.02em;
-  text-align: center;
-  text-wrap: balance;
+/* What is printed on the ball, as opposed to the ball itself. The simulation
+   measures the BALL (offsetWidth, offsetLeft) and never looks in here, so
+   nothing from this point down is load-bearing: it is all artwork.
+
+   Only the discs are a coloured circle. A roll's picture is a printed circle
+   already, so it IS the ball — a field behind it would only show as a rim
+   wherever the two silhouettes disagree. */
+.footer-ball--disc {
+  background: var(--ball-colour);
+  color: var(--ball-ink);
+}
+
+.footer-ball-art {
+  width: 100%;
+  height: 100%;
+  /* contain, not cover: the artwork is a circle on a square canvas, and cover
+     on a box that is ever a hair off square would shave its edge. */
+  object-fit: contain;
+  -webkit-user-drag: none;
+  /* Never what a press lands on. balls.ts hit-tests the physics bodies itself
+     and calls preventDefault on its own pointerdown, but a native image drag
+     starting under a roll that is about to be thrown is worth ruling out at
+     the element as well. */
+  pointer-events: none;
+}
+
+/* The social mark. react-icons draw at 1em square in currentColor, so the size
+   is a font-size off the ball's own diameter and the colour is --ball-ink —
+   the hero's dark green, cut into the lime. Both come from the ball, so a disc
+   in another pair of shades needs nothing here. */
+.footer-ball-mark {
+  font-size: calc(var(--ball-d) * 0.42vw);
+  pointer-events: none;
 }
 
 /* The link ring. Only the discs are anchors; the rolls are decoration and have

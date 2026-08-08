@@ -165,21 +165,147 @@ export const FACE_LIGHT = { X: 2.7, Y: 2.0, Z: 1.0, POWER: 0.3 };
 
    Live-tweak in dev: hero.FILM.SAT = 1.5; hero.tune() */
 export const FILM = {
-  /* Base roughness, which the roughness streaks multiply — so it sits higher
-     than a flat value would, and the effective gloss ranges about 0.14-0.29.
-     Lower is a tighter, brighter, sharper highlight. */
-  GLOSS: 0.3,
-  /* A dielectric reflects about 4% head-on, which under a bright ambient is too
-     little to see — the surface has a highlight in the maths and none on
-     screen. Metalness raises that reflectance and tints it with the surface's
-     own colour, which is what makes the sheen read as coated film rather than
-     as a grey smear. Kept low: past ~0.35 the artwork starts going dark and
-     metallic, because metalness also takes light away from the diffuse. */
-  METAL: 0.25,
-  /** Saturation, applied to the artwork after its texture is sampled. */
-  SAT: 0.79,
-  /** Contrast about mid grey. Small numbers go a long way; 1.25 is a lot. */
-  PUNCH: 1.4,
+  /* Base roughness, which the mottle map multiplies — so it sits higher than a
+     flat value would. Against MOTTLE at 0.5 the map runs 0.47-0.97, which puts
+     the effective roughness at about 0.21-0.44. Lower is a tighter, brighter,
+     sharper highlight; higher is broader, dimmer and more matte.
+
+     Raised from 0.3, where the film was reading as slick — a GGX lobe's peak
+     goes as 1/roughness^4, so the clear coat GLAZE added below was landing on
+     an already tight base and the two compounded into plastic. The coat's own
+     roughness went up with it, for the same reason and by the same feel: they
+     are one surface and want to move together.
+
+     Live-tweak in dev: hero.FILM.GLOSS = 0.6; hero.tune() */
+  GLOSS: 0.44,
+  /* How uneven the film is, and it is the one knob to reach for if the surface
+     is reading as PATTERNED rather than as material.
+   *
+   * MOTTLE is the full spread of the roughness map about its own middle, so it
+   * is what decides whether the gloss wanders visibly across the tape or
+   * barely at all. MOTTLE_TINT is the same thing on the colour map and is tiny
+   * by comparison — the map is near white so the roll's own colour keeps
+   * authority; it only stops the albedo being mathematically uniform.
+   *
+   * Both go to ZERO cleanly. At 0 the maps are flat and the film is a single
+   * even surface again, lit only by the lights and the curl — which is worth
+   * looking at before deciding what the mottle should be doing.
+   *
+   * Live-tweak in dev: hero.FILM.MOTTLE = 0.2; hero.tune() — tune() rebuilds
+   * both maps, unlike the streak maps this replaced, which needed a reload. */
+  MOTTLE: 0.5,
+  MOTTLE_TINT: 0.07,
+  /* The film's TOOTH — how deep its micro-relief reads. See toothTex.
+   *
+   * The knob to reach for when the surface wants to be ROUGHER rather than
+   * duller, and the two are not the same request. GLOSS spreads the highlight,
+   * which takes gloss away and adds nothing; this puts real slope on the
+   * surface, so the key breaks up across it and the tape reads as a material
+   * with a weave instead of a tint with a sheen.
+   *
+   * It rides on the material's normalScale rather than being baked into the
+   * map, so it is a uniform: this one lands on the next frame with no texture
+   * to re-cut and no recompile. 0 is dead flat.
+   *
+   * It also buys SHINE, which is the trap and is why it came down from 0.85.
+   * Relief does not only break the key up, it turns one broad highlight into a
+   * field of small bright ones — every bump has a facet pointing at the light —
+   * and past about half of this the tape stops reading as textured and starts
+   * reading as glittery. GLAZE came down with it for the same reason: a coat is
+   * a second specular over the top of all those facets.
+   *
+   * Live-tweak in dev: hero.FILM.TOOTH = 1.4; hero.tune() */
+  TOOTH: 0.15,
+  /* Exposure on the FILM — the wound side and the strip, never the label. The
+     exact counterpart of FACE below, and it exists for the same reason that
+     one does: the two surfaces are lit by one set of lights, so without a knob
+     apiece the only way to darken either is to darken both.
+   *
+     Under 1 because dropping METAL to near nothing handed the diffuse back all
+     the light metalness had been taking out of it — which is the correction it
+     was there to make, but it landed as a brighter roll rather than a fuller
+     one. This takes that back without touching the sheen sitting on top of it:
+     GLAZE's coat reflects the same white whatever the albedo underneath does,
+     so albedo down is highlight contrast UP.
+   *
+     Applied against each material's ORIGINAL colour rather than its current
+     one, so tuning it repeatedly sets the exposure instead of compounding it —
+     the same arrangement FACE has.
+   *
+     Live-tweak in dev: hero.FILM.TONE = 0.7; hero.tune() */
+  TONE: 0.82,
+  /* Near zero, and it used to be 0.25 — the same correction the face made, a
+     surface late.
+   *
+   * A dielectric reflects about 4% head-on, which under a bright ambient is too
+     little to see, and metalness is the obvious way to buy more of it. It is
+     also the wrong way, for the two reasons FACE_METAL sets out below: it TINTS
+     the reflection with the surface's own colour, so brown tape gets a brown
+     sheen rather than a white one, and it takes the same light back out of the
+     diffuse, so the colour darkens by exactly as much as the highlight
+     brightens. The wound side has been paying that on 0.25 while the face
+     stopped paying it at 0.1.
+   *
+     GLAZE below is what replaces it. Raise this again only to make the film
+     look like foil. */
+  METAL: 0.03,
+  /* The film's clear coat — the same second lobe the face wears (COAT), on the
+     wound side and the strip.
+   *
+   * This is what tape actually is: a coloured backing under a smooth
+   * transparent skin. A clearcoat is a white specular layer over the diffuse,
+   * unaffected by the albedo, by SAT and by PUNCH — so it brightens the sheen
+   * without touching the colour, which is precisely what METAL could not do.
+   *
+   * GLAZE_GLOSS is its roughness, and the warning on COAT_GLOSS applies here
+   * word for word: a GGX lobe's peak goes as 1/roughness^4, so tightening this
+   * is not a linear brightening and anything much under 0.15 will clip to a
+   * white blob. That fourth power is also why it moves WITH GLOSS rather than
+   * being set once: a sharp coat over a matte base is not a rougher surface,
+   * it is a wet one. It sits looser than the face's coat on purpose — the
+   * label is pressed flat and the film is not.
+   *
+   * If raising both leaves the film too dull rather than too rough, GLAZE is
+   * the compensation — more coat at the same roughness, rather than a tighter
+   * coat, which is the change that would take the roughness back out.
+   *
+   * Live-tweak in dev: hero.FILM.GLAZE = 0.7; hero.tune() */
+  GLAZE: 0.18,
+  GLAZE_GLOSS: 0.18,
+  /* The extrusion grain, 0..1 — the film's specular stretched along one axis.
+   *
+   * Tape is extruded, and an extruded surface is not equally rough in every
+   * direction: its microscopic grooves run the way the film was drawn, so the
+   * slope varies ACROSS the grooves and barely at all along them. The specular
+   * lobe spreads in the direction the slope varies, which is why a brushed or
+   * drawn surface throws a highlight running square across its own grain
+   * rather than a round one — the same reason a record's highlight is a radial
+   * streak across its circular grooves.
+   *
+   * Which is the one thing a roughnessMap cannot fake. The mottle map varies
+   * HOW GLOSSY the surface is from place to place; this varies what SHAPE the
+   * gloss is, and it keeps that shape correct as the roll turns side-on, which
+   * a map baked at one angle cannot. It is also not a line: it broadens the
+   * highlight across the tape rather than drawing anything on it.
+   *
+   * The direction is not a taste knob and is not here: it follows from each
+   * surface's own unwrap, and is worked out at TURN_STRIP / TURN_WOUND below.
+   *
+   * At 0 the whole feature is compiled out. Live-tweak in dev:
+   * hero.FILM.STRETCH = 0.8; hero.tune() */
+  STRETCH: 0.55,
+  /* Saturation and contrast, applied to a map the moment it is sampled.
+   *
+   * These two are the FILM — the wound side and the dispensed strip, which are
+   * one continuous surface and have to be graded as one. The roll's face has
+   * its own pair (FACE_SAT / FACE_PUNCH below) because it is a printed label
+   * rather than tape, and the two want different things: the film is a colour
+   * carrying a sheen, the artwork is ink.
+   *
+   * Contrast is about mid grey, and small numbers go a long way; 1.25 is a
+   * lot. */
+  SAT: 0.57,
+  PUNCH: 1.6,
   /* Exposure on the roll's FACE alone — the artwork, not the wound side or the
      strip. It scales the texture on its way in, so nothing else in the scene
      moves, and the face's own shading is untouched.
@@ -192,8 +318,26 @@ export const FILM = {
      bright one. The two move together: drop this and raise FACE_LIGHT.POWER
      for more sheen, do the reverse for a flatter, fuller face. Above roughly
      1.15 the artwork's brightest parts clip, and clipped channels drift toward
-     white — which costs the saturation SAT is there to add. */
+     white — which costs the saturation FACE_SAT is there to add. */
   FACE: 0.6,
+  /* The face's own saturation and contrast — the same two operations as SAT
+     and PUNCH above, on uniforms of their own, so the printed label can be
+     graded without dragging the wound side and the strip along with it.
+   *
+   * They start at the film's values, which is not laziness: it is what makes
+   * the split cost nothing to have. Leave them alone and the face is graded
+   * exactly as it was when there was one pair for everything; the moment the
+   * artwork wants to be richer or flatter than the tape it is wound on, this
+   * is where that is said.
+   *
+   * FACE_PUNCH is the one to be careful with, for the reason FILM.FACE gives:
+   * contrast pushes the brightest ink toward clipping, and a clipped channel
+   * drifts white — which takes the saturation straight back out. Raising this
+   * usually wants FACE pulled down a little to make room.
+   *
+   * Live-tweak in dev: hero.FILM.FACE_SAT = 1.1; hero.tune() */
+  FACE_SAT: 0.79,
+  FACE_PUNCH: 1.4,
   /* The face's own finish. The artwork is under a coat of clear film, and none
      of these four touch the wound side or the strip.
 
@@ -279,95 +423,179 @@ export type HeroTape = {
   dispose(): void;
 };
 
-/* Subtle streak maps — the anti-flat trick. A colour map alone still shades
-   evenly under a directional light; it is the roughnessMap that varies the
-   gloss across the surface, so the key light lands as streaks of sheen instead
-   of one even wash. The same streaks go on the wound side and the strip, run in
-   each surface's tape-length direction, so they read as one continuous film.
+/* The film's unevenness — the anti-flat trick, and NO LINES ANYWHERE.
+ *
+ * A colour map alone still shades evenly under a directional light; it is the
+ * roughnessMap that varies the gloss across the surface, so the key lands as
+ * patches of sheen rather than one even wash. The same map goes on the wound
+ * side and the strip, so the two read as one continuous film.
+ *
+ * This used to draw hundreds of soft-ended RUNS, which is what a drawn film
+ * really carries and which read on screen as ruled lines — the map's marks
+ * were legible AS MARKS, and doubly so once the film gained a clear coat, since
+ * a glossier surface reads its own roughness variation harder. Summed value
+ * noise instead: the same job with nothing in it that has a direction.
+ *
+ * ISOTROPIC ON PURPOSE, and it is what lets both surfaces share one call. The
+ * old map had to know which way it was being applied — the wound side's length
+ * is a circumference, so a mark that stopped was a mark that came round again,
+ * while the strip needs events ALONG its length or paying more out is just the
+ * same inch stretched further. Noise varies in both axes by construction, so
+ * neither surface has a direction to be told about and the strip gains new
+ * pattern at the roll for free.
+ *
+ * Four octaves, each a grid that WRAPS, so the sum tiles seamlessly — which it
+ * has to, because STRIP.GRAIN lays several copies down a full tape. */
+/* One octave: an n x n grid of random values, smoothstepped between and indexed
+   modulo n so the far edge samples the near one. The two-dimensional version of
+   band() below, and wrapping for the same reason — a sum of these has no seam,
+   which is what lets STRIP.GRAIN lay several copies down a full tape. */
+function octave(n: number) {
+  const v = Array.from({ length: n * n }, () => Math.random());
+  const ease = (t: number) => t * t * (3 - 2 * t);
+  return (x: number, y: number) => {
+    const gx = x * n;
+    const gy = y * n;
+    const ix = Math.floor(gx);
+    const iy = Math.floor(gy);
+    const fx = ease(gx - ix);
+    const fy = ease(gy - iy);
+    const x0 = ix % n;
+    const y0 = iy % n;
+    const x1 = (x0 + 1) % n;
+    const y1 = (y0 + 1) % n;
+    const top = v[y0 * n + x0] + (v[y0 * n + x1] - v[y0 * n + x0]) * fx;
+    const bot = v[y1 * n + x0] + (v[y1 * n + x1] - v[y1 * n + x0]) * fx;
+    return top + (bot - top) * fy;
+  };
+}
 
-   `broken` is the difference between the two surfaces. Streaks that span the
-   map edge to edge vary across the width and not at all along it — which is
-   what the wound side wants, since its length is a circumference and a mark
-   that stopped would be a mark that came round again. On the dispensed strip
-   the same map is the whole "extruded" problem: constant along the length means
-   every inch of tape is the same inch, so paying more out only stretches the
-   silhouette. Broken, most of the streaks become runs of their own length with
-   faded ends, and the tape has events along it — a glint that starts and stops
-   — for the growth to carry past the roll. */
-function streakTex(
-  base: number,
-  amp: number,
-  horizontal: boolean,
-  srgb: boolean,
-  aniso: number,
-  broken = false
-) {
-  const S = 1024;
+/* Sum a set of octaves into a 0..1 field with a mean near 0.5. */
+function fieldOf(bands: readonly (readonly [number, number])[]) {
+  const waves = bands.map(([n, amp]) => ({ amp, at: octave(n) }));
+  const total = waves.reduce((sum, w) => sum + w.amp, 0);
+  return (x: number, y: number) =>
+    waves.reduce((sum, w) => sum + w.amp * w.at(x, y), 0) / total;
+}
+
+function mottleTex(base: number, amp: number, srgb: boolean, aniso: number) {
+  /* Small, unlike the 1024 the runs needed. The finest octave here has a
+     41-cell grid, so a 256px map is already six pixels per cell — past that
+     the canvas is storing an interpolation it could have computed. */
+  const S = 256;
+
+  /* Falling amplitude over rising frequency — the broad unevenness of the
+     coating, then the grain within it. The coarsest is deliberately very
+     coarse: three cells across the map is one slow swell over the whole tile,
+     which is what keeps the tile from announcing itself. */
+  const at = fieldOf([
+    [3, 1],
+    [7, 0.5],
+    [17, 0.26],
+    [41, 0.13],
+  ]);
+
   const c = document.createElement("canvas");
   c.width = S;
   c.height = S;
   const g = c.getContext("2d")!;
-  const shade = (v: number, a = 1) => {
-    const n = Math.max(0, Math.min(255, Math.round(v * 255)));
-    return `rgba(${n},${n},${n},${a})`;
-  };
-  g.fillStyle = shade(base);
-  g.fillRect(0, 0, S, S);
+  const img = g.createImageData(S, S);
 
-  /* One streak. `across` is where it sits on the width axis, `from` where it
-     starts on the length axis and `len` how far it runs — S for the full span.
-     Two things keep it honest:
-
-     The ends fade rather than stop, over 40px or 40% of the run, whichever is
-     shorter. A hard end is a printed dash; a faded one is the light letting go
-     of the film.
-
-     Drawn twice, S apart, so a run overhanging the end comes back in at the
-     start and the map still tiles seamlessly along the tape — which it has to,
-     because GRAIN tiles it several times over a full length. The second pass is
-     clipped away when the run does not overhang, which costs nothing. */
-  const streak = (v: number, across: number, w: number, from: number, len: number) => {
-    const solid = shade(v);
-    const clear = shade(v, 0);
-    const fade = len < S ? Math.min(0.4, 40 / len) : 0;
-
-    for (const off of [0, -S]) {
-      const a = from + off;
-      const grad = horizontal
-        ? g.createLinearGradient(a, 0, a + len, 0)
-        : g.createLinearGradient(0, a, 0, a + len);
-      grad.addColorStop(0, fade ? clear : solid);
-      if (fade) {
-        grad.addColorStop(fade, solid);
-        grad.addColorStop(1 - fade, solid);
-      }
-      grad.addColorStop(1, fade ? clear : solid);
-
-      g.fillStyle = grad;
-      if (horizontal) g.fillRect(a, across, len, w);
-      else g.fillRect(across, a, w, len);
-
-      if (!fade) break; // a full-span run has nothing to wrap
+  for (let y = 0; y < S; y++) {
+    for (let x = 0; x < S; x++) {
+      // The field has a mean near 0.5, so `amp` is the full spread about `base`.
+      const v = base + (at(x / S, y / S) - 0.5) * amp;
+      const n = Math.max(0, Math.min(255, Math.round(v * 255)));
+      const i = (y * S + x) * 4;
+      img.data[i] = n;
+      img.data[i + 1] = n;
+      img.data[i + 2] = n;
+      img.data[i + 3] = 255;
     }
-  };
-
-  // More of them when they are broken, because each now covers a fraction of
-  // the length it used to.
-  const count = broken ? 380 : 240;
-  for (let i = 0; i < count; i++) {
-    const v = base + (Math.random() - 0.5) * amp;
-    const across = Math.random() * S;
-    const w = 2 + Math.random() * 12;
-    /* A quarter stay continuous even on the strip. Film really does carry
-       extrusion lines that run its whole length, and losing them entirely
-       trades one wrong read for another — tape for weathered paper. */
-    if (!broken || Math.random() < 0.25) streak(v, across, w, 0, S);
-    else streak(v, across, w, Math.random() * S, S * (0.06 + Math.random() * 0.34));
   }
+  g.putImageData(img, 0, 0);
 
   const tex = new CanvasTexture(c);
   tex.wrapS = tex.wrapT = RepeatWrapping;
   if (srgb) tex.colorSpace = SRGBColorSpace; // colour maps only
+  tex.anisotropy = aniso;
+  return tex;
+}
+
+/* The film's TOOTH — micro-relief, as a tangent-space normal map.
+ *
+ * This is the part roughness cannot do. Roughness says how WIDE the highlight
+ * is, so pushing it up makes a surface duller and never grainier — the light
+ * still arrives evenly, it just spreads. Tooth is the other thing: real relief,
+ * so the surface catches the key at slightly different angles a pixel apart and
+ * the eye reads texture instead of a tint. It is what separates crepe-backed
+ * tape, which has a weave you can see, from cling film.
+ *
+ * Much finer than the mottle. That map is the coating's slow unevenness, tens
+ * of cells across a tile; this starts where that one stops and runs down to a
+ * grid finer than the map is wide, so it survives being tiled several times
+ * over a full tape and still reads as a surface rather than as lumps.
+ *
+ * A HEIGHT FIELD DIFFERENCED, rather than noise written into the channels
+ * directly. RGB noise is not a normal map — its vectors point nowhere in
+ * particular and the lighting comes out as coloured static. Central differences
+ * off a scalar height give slopes that are consistent with their neighbours,
+ * which is what makes a lit bump look like a bump.
+ *
+ * Amplitude is NOT baked in: the slope gain here is fixed and FILM.TOOTH rides
+ * on the material's normalScale, so the depth is a live uniform rather than a
+ * texture to re-cut. */
+function toothTex(aniso: number) {
+  const S = 256;
+  const at = fieldOf([
+    [23, 1],
+    [53, 0.62],
+    [113, 0.36],
+    [211, 0.2],
+  ]);
+
+  // The height field, sampled once and reused — the difference below reads each
+  // texel four times, and recomputing four octaves for each of those is 16x the
+  // work for the same number.
+  const h = new Float32Array(S * S);
+  for (let y = 0; y < S; y++) {
+    for (let x = 0; x < S; x++) h[y * S + x] = at(x / S, y / S);
+  }
+
+  /* Slope per texel, then a fixed gain. GAIN sets what a unit of height means
+     against a texel's width — the map's inherent steepness, with normalScale
+     free to be the artistic dial on top. High enough that TOOTH lands near 1
+     for a plainly textured tape, so the knob reads as 0..1 rather than 0..0.05. */
+  const GAIN = 26;
+  const c = document.createElement("canvas");
+  c.width = S;
+  c.height = S;
+  const g = c.getContext("2d")!;
+  const img = g.createImageData(S, S);
+
+  // Wrapped, so the normals agree across the seam the heights already tile at.
+  const at2 = (x: number, y: number) => h[((y + S) % S) * S + ((x + S) % S)];
+
+  for (let y = 0; y < S; y++) {
+    for (let x = 0; x < S; x++) {
+      const dx = (at2(x + 1, y) - at2(x - 1, y)) * GAIN;
+      const dy = (at2(x, y + 1) - at2(x, y - 1)) * GAIN;
+      // Tangent space: +x right, +y up the texture, +z out of the surface. The
+      // slopes are negated because a surface rising to the right tilts LEFT.
+      const len = Math.hypot(dx, dy, 1);
+      const i = (y * S + x) * 4;
+      img.data[i] = Math.round(((-dx / len) * 0.5 + 0.5) * 255);
+      img.data[i + 1] = Math.round(((-dy / len) * 0.5 + 0.5) * 255);
+      img.data[i + 2] = Math.round((1 / len) * 0.5 * 255 + 127.5);
+      img.data[i + 3] = 255;
+    }
+  }
+  g.putImageData(img, 0, 0);
+
+  const tex = new CanvasTexture(c);
+  tex.wrapS = tex.wrapT = RepeatWrapping;
+  // No colorSpace: a normal map is a vector, and decoding it as sRGB would bend
+  // every one of those vectors toward the surface.
   tex.anisotropy = aniso;
   return tex;
 }
@@ -388,8 +616,8 @@ function band(n: number) {
 
 /* The tear line, as a 0..1 depth for any point across the width.
  *
- * Bands of noise summed at falling amplitude — the same trick as the streak
- * maps, in one dimension. This is the part a regular serration cannot fake: a
+ * Bands of noise summed at falling amplitude — the same trick as mottleTex, in
+ * one dimension. This is the part a regular serration cannot fake: a
  * real tear wanders across the whole width, breaks into bites within that, and
  * frays within those, and it is having all three at once that makes it read as
  * torn rather than as a pattern. */
@@ -446,8 +674,8 @@ function tearGeometry(vRow = 0) {
     nor.push(Math.sin(a), 0, Math.cos(a));
     /* u across the width, v pinned to 0 — the strip's own coordinate at the
        join, since the body is anchored there. So the cap is the body's last row
-       carried on down: the lengthwise streaks run through the tear instead of
-       stopping at it, and they do so at any length.
+       carried on down: whatever the mottle is doing at the join carries into
+       the tear instead of stopping at it, and it does so at any length.
 
        Not v up the tear, which is what this was. The cap shares the strip's
        textures, and those are now tiled along the tape — a v spanning 0..1
@@ -567,6 +795,41 @@ function toPhysical(src: MeshStandardMaterial) {
   return mat;
 }
 
+/* Which way the film's grain runs on each surface, as a rotation off that
+ * surface's own U axis — see FILM.STRETCH. three takes the anisotropy
+ * direction as the ROUGH axis, and the rough axis of a drawn film is ACROSS
+ * the direction it was drawn in. So both of these are "a quarter turn off the
+ * length", and they differ only because the two unwraps disagree about which
+ * way the length runs.
+ *
+ * The strip is a PlaneGeometry: u across the width, v down the length. The
+ * length is v, so the rough axis is u — the tangent itself, no turn.
+ *
+ * The wound side comes off Blender's cylinder unwrap, whose U runs around the
+ * circumference. On a roll the circumference IS the tape's length, so there
+ * the rough axis is v: a quarter turn.
+ *
+ * Neither surface carries a tangent attribute, so three derives the frame from
+ * the UV derivatives (getTangentFrame). That is why these are stated against
+ * the unwrap rather than against the world. */
+const TURN_STRIP = 0;
+const TURN_WOUND = Math.PI / 2;
+
+/* The film's finish — the part of it that needs a physical material. Kept
+   apart from applyFilmLook for the same reason applyFaceLook is: that one is
+   the GRADE, which every surface shares, and this is the SURFACE, which the
+   face and the film disagree about. Runs after it, since that one sets
+   roughness and metalness from the shared knobs. */
+function applyFilmFinish(mat: MeshPhysicalMaterial, turn: number) {
+  mat.clearcoat = FILM.GLAZE;
+  mat.clearcoatRoughness = FILM.GLAZE_GLOSS;
+  mat.anisotropy = FILM.STRETCH;
+  mat.anisotropyRotation = turn;
+  /* The tooth's depth. A uniform, not part of the map — which is why this can
+     sit here with the rest of the finish rather than forcing a re-cut. */
+  mat.normalScale.set(FILM.TOOTH, FILM.TOOTH);
+}
+
 /* The face's finish, kept apart from applyFilmLook's so the artwork can be
    glossier and far less metallic than the wound side and the strip. Runs after
    it, since that one sets roughness and metalness from the shared knobs. */
@@ -586,18 +849,32 @@ function applyFaceLook(mat: MeshPhysicalMaterial) {
  * read, which means in the shader.
  *
  * Fed from uniforms rather than baked into the source so a dev tweak takes
- * effect on the next frame instead of forcing a shader recompile. */
-const filmLook = {
+ * effect on the next frame instead of forcing a shader recompile.
+ *
+ * TWO SETS OF THEM, one per surface family — see FILM.FACE_SAT. The patched
+ * SOURCE is identical either way, which is the point: three keys its program
+ * cache on the shader text, so both families compile once between them and
+ * share the result, while the uniforms are bound per material and so stay
+ * independent. A second grade costs no second program. */
+type Look = { uSat: { value: number }; uPunch: { value: number } };
+
+const filmLook: Look = {
   uSat: { value: FILM.SAT },
   uPunch: { value: FILM.PUNCH },
 };
 
-function applyFilmLook(mat: MeshStandardMaterial) {
+/* The roll's face. Its own object, so writing to one never moves the other. */
+const faceLook: Look = {
+  uSat: { value: FILM.FACE_SAT },
+  uPunch: { value: FILM.FACE_PUNCH },
+};
+
+function applyFilmLook(mat: MeshStandardMaterial, look: Look = filmLook) {
   mat.roughness = FILM.GLOSS;
   mat.metalness = FILM.METAL;
   mat.onBeforeCompile = (shader) => {
-    shader.uniforms.uSat = filmLook.uSat;
-    shader.uniforms.uPunch = filmLook.uPunch;
+    shader.uniforms.uSat = look.uSat;
+    shader.uniforms.uPunch = look.uPunch;
     shader.fragmentShader =
       "uniform float uSat;\nuniform float uPunch;\n" +
       shader.fragmentShader.replace(
@@ -646,11 +923,14 @@ export function createHeroTape(
   const kick = new DirectionalLight(0xffffff, FACE_LIGHT.POWER);
   scene.add(dir, amb, kick);
 
-  /* Every surface that is meant to read as the same film. Held so a live tweak
-     can re-apply the finish to all of them at once — the roll's wound side
+  /* Every surface that is meant to read as the same film: the way its own grain
+     runs (see TURN_STRIP) and the colour it started life with, which FILM.TONE
+     is applied against rather than against the current value. Held so a live
+     tweak can re-apply the finish to all of them at once; the roll's wound side
      joins the list when the model lands. The FACE is deliberately NOT in here:
      its finish is its own (applyFaceLook), and this list would overwrite it. */
-  const filmMats: MeshStandardMaterial[] = [];
+  const filmMats: { mat: MeshPhysicalMaterial; turn: number; base: Color }[] =
+    [];
 
   /* The roll's face materials, each with the colour it arrived from the export
      with. FILM.FACE is applied against that original rather than against the
@@ -689,19 +969,34 @@ export function createHeroTape(
 
      COLOR is only the pre-load fallback; the roll's own side colour replaces it
      the moment the model arrives. The near-white tint map keeps that colour
-     authority — it only adds the faint streaks. */
+     authority — it only adds the faint unevenness.
+
+     It arrives with no maps at all: remap() below is what gives it them, and
+     tune() runs before the first frame. One code path for building them, and
+     it is the same one a live tweak takes. */
   const stripGeo = new PlaneGeometry(1, 1);
   stripGeo.translate(0, -0.5, 0);
-  const stripMat = new MeshStandardMaterial({
+  const stripMat = new MeshPhysicalMaterial({
     color: STRIP.COLOR,
-    map: streakTex(1, 0.07, false, true, aniso, true),
-    roughnessMap: streakTex(0.72, 0.5, false, false, aniso, true),
     side: DoubleSide,
   });
   applyFilmLook(stripMat);
-  filmMats.push(stripMat);
-  const stripMap = stripMat.map as Texture;
-  const stripRough = stripMat.roughnessMap as Texture;
+  applyFilmFinish(stripMat, TURN_STRIP);
+  /* Held rather than pushed anonymously: when the model lands the roll's own
+     colour replaces STRIP.COLOR, and this entry's `base` has to move with it or
+     FILM.TONE would go on being applied against the fallback. */
+  const stripFilm = {
+    mat: stripMat,
+    turn: TURN_STRIP,
+    base: new Color(STRIP.COLOR),
+  };
+  filmMats.push(stripFilm);
+  /* Reassigned every time the maps are rebuilt — pose() writes the tiling onto
+     whichever textures are current, and all three have to move together or the
+     relief would slide against the colour it belongs to. */
+  let stripMap!: Texture;
+  let stripRough!: Texture;
+  let stripTooth!: Texture;
   const strip = new Mesh(stripGeo, stripMat);
   strip.position.z = -STRIP.RADIUS;
   strip.visible = false;
@@ -766,6 +1061,31 @@ export function createHeroTape(
     dirty = true;
   }
 
+  /* Cut a fresh pair of maps for one film surface.
+   *
+   * Every map on the film goes through here, at build and at every tweak, so
+   * MOTTLE is a console knob rather than a reload. New noise each time, which
+   * is deliberate: the marks are not a design, and a rebuilt surface that
+   * happened to be identical would hide a tweak that had not taken.
+   *
+   * `ours` is the safety on the dispose. The wound side arrives from the export
+   * carrying its own textures, and those may be shared with the face's material
+   * — three's loader hands the same Texture to every material that references
+   * one image. Disposing something we did not create would take the artwork's
+   * map with it, so only maps cut here are ever released. */
+  const ours = new Set<Texture>();
+
+  function remap(mat: MeshStandardMaterial) {
+    for (const old of [mat.map, mat.roughnessMap, mat.normalMap]) {
+      if (old && ours.delete(old)) old.dispose();
+    }
+    mat.map = mottleTex(1, FILM.MOTTLE_TINT, true, aniso);
+    mat.roughnessMap = mottleTex(0.72, FILM.MOTTLE, false, aniso);
+    mat.normalMap = toothTex(aniso);
+    ours.add(mat.map).add(mat.roughnessMap).add(mat.normalMap);
+    mat.needsUpdate = true; // a map appearing or changing => recompile
+  }
+
   function tune() {
     dir.position.set(LIGHT.X, LIGHT.Y, LIGHT.Z);
     dir.intensity = LIGHT.POWER;
@@ -774,13 +1094,28 @@ export function createHeroTape(
     kick.intensity = FACE_LIGHT.POWER;
     camera.position.z = CONFIG.camZ;
 
-    // Uniforms, so these two land on the next frame with no recompile.
+    // Uniforms, so these four land on the next frame with no recompile.
     filmLook.uSat.value = FILM.SAT;
     filmLook.uPunch.value = FILM.PUNCH;
-    filmMats.forEach((m) => {
-      m.roughness = FILM.GLOSS;
-      m.metalness = FILM.METAL;
+    faceLook.uSat.value = FILM.FACE_SAT;
+    faceLook.uPunch.value = FILM.FACE_PUNCH;
+    /* No needsUpdate here, unlike the faces below: GLAZE and STRETCH crossing
+       zero adds or drops USE_CLEARCOAT / USE_ANISOTROPY, and three's own
+       setters bump the material's version when they do. Tweaking either
+       within its range is a uniform and lands on the next frame. */
+    filmMats.forEach(({ mat, turn, base }) => {
+      mat.roughness = FILM.GLOSS;
+      mat.metalness = FILM.METAL;
+      mat.color.copy(base).multiplyScalar(FILM.TONE);
+      applyFilmFinish(mat, turn);
+      remap(mat);
     });
+    /* The strip's are what pose() tiles, so the references have to follow the
+       rebuild. resize() at the foot of this function clears lastLen, so the
+       next pose writes the tiling onto the new set before anything draws. */
+    stripMap = stripMat.map as Texture;
+    stripRough = stripMat.roughnessMap as Texture;
+    stripTooth = stripMat.normalMap as Texture;
     faces.forEach((f) => {
       f.mat.color.copy(f.base).multiplyScalar(FILM.FACE);
       applyFaceLook(f.mat);
@@ -875,11 +1210,15 @@ export function createHeroTape(
        down this whole time). The tear cap's UVs sit on the strip's bottom row,
        so it follows automatically. */
     const rep = Math.max(vis * STRIP.GRAIN, 0.001);
-    stripMap.repeat.set(1, rep);
-    stripRough.repeat.set(1, rep);
     const anchor = -Math.max(body * STRIP.GRAIN, 0.001);
-    stripMap.offset.y = anchor;
-    stripRough.offset.y = anchor;
+    /* All three together. The tooth is relief on the same piece of film the
+       other two colour, so a repeat it did not share would slide the surface
+       against its own shading — which is more obviously wrong than either map
+       being off on its own. */
+    for (const tex of [stripMap, stripRough, stripTooth]) {
+      tex.repeat.set(1, rep);
+      tex.offset.y = anchor;
+    }
     dirty = true;
   }
 
@@ -902,6 +1241,7 @@ export function createHeroTape(
         done.add(m);
         m.map?.dispose();
         m.roughnessMap?.dispose();
+        m.normalMap?.dispose();
         m.dispose();
       });
     });
@@ -936,17 +1276,37 @@ export function createHeroTape(
 
           /* "Material" is the wound side in this export. The dispensed strip IS
              this tape, so it takes the side's exact colour and the shared gloss
-             — under the same key light the two render identically. Blender's
-             cylinder unwrap runs U around the circumference, so the side's
-             streaks are drawn horizontal in UV space to land along the winding
-             direction on screen. */
+             — under the same key light the two render identically, and they
+             now take the same maps too: the mottle has no direction, so there
+             is nothing to say about which way this surface is unwrapped. Only
+             the grain's axis still cares, and that is TURN_WOUND. */
           if (mat.name === "Material") {
-            applyFilmLook(mat);
-            filmMats.push(mat);
-            mat.map = streakTex(1, 0.07, true, true, aniso);
-            mat.roughnessMap = streakTex(0.72, 0.5, true, false, aniso);
-            mat.needsUpdate = true; // new maps => shader recompile
-            stripMat.color.copy(mat.color);
+            /* Onto a physical material, exactly as the face is and for the same
+               reason — a clear coat is the only honest way to put a white
+               highlight on a dielectric. Cached in `swapped` alongside the
+               faces so a material shared by several meshes stays one material
+               after the swap. */
+            let film = swapped.get(mat);
+            if (!film) {
+              film = toPhysical(mat);
+              swapped.set(mat, film);
+              applyFilmLook(film);
+              applyFilmFinish(film, TURN_WOUND);
+              remap(film); // the export's own maps are replaced, never disposed
+              /* The export's colour, before FILM.TONE has touched it — that is
+                 what TONE is a fraction OF, on this surface and on the strip
+                 alike. Taken now, because the next line applies the exposure
+                 and there is no way back to it afterwards. */
+              const base = film.color.clone();
+              filmMats.push({ mat: film, turn: TURN_WOUND, base });
+              film.color.multiplyScalar(FILM.TONE);
+              /* The strip IS this tape, so it takes the roll's colour — and its
+                 stored base with it, or TONE would go on being applied against
+                 the pre-load fallback for the rest of the session. */
+              stripFilm.base.copy(base);
+              stripMat.color.copy(base).multiplyScalar(FILM.TONE);
+            }
+            mesh.material = film;
             return;
           }
 
@@ -959,7 +1319,9 @@ export function createHeroTape(
           if (!phys) {
             phys = toPhysical(mat);
             swapped.set(mat, phys);
-            applyFilmLook(phys); // the artwork is what SAT and PUNCH are for
+            /* On the FACE's own grade, not the film's — the label is print and
+               the tape it is wound on is not. See FILM.FACE_SAT. */
+            applyFilmLook(phys, faceLook);
             applyFaceLook(phys); // after it: this overrides the shared finish
             faces.push({ mat: phys, base: phys.color.clone() });
             phys.color.multiplyScalar(FILM.FACE);

@@ -414,6 +414,10 @@ export type HeroTape = {
       settle 0..1 is the roll's wind-down — it eases the spin to the nearest
       whole turn so the label lands upright, exactly as it started. */
   pose(yawDeg: number, lenPx: number, cutPx?: number, settle?: number): void;
+  /** The roll's idle offsets, in degrees, laid OVER whatever pose() last set:
+      tilt about x, yaw, tilt about z, and extra spin about the axle. Nothing
+      here touches the dispensed strip — see `lean` below for why that matters. */
+  drift(tiltX: number, yaw: number, tiltZ: number, spin: number): void;
   /** Re-read the mount's box and reframe. */
   resize(): void;
   /** Render, but only if pose() or resize() changed something. */
@@ -1029,6 +1033,57 @@ export function createHeroTape(
   let lastCut = NaN;
   let lastSettle = NaN;
 
+  /* The idle pose, in degrees — the roll's float, its lean toward the pointer
+   * and whatever spin a drag has put on it (Hero/idle.ts). Kept as an OFFSET on
+   * top of the pose rather than folded into pose()'s own arguments, for two
+   * reasons.
+   *
+   * The owners differ. pose() is the story — scroll, then the finale's tween —
+   * and it is ratcheted and measured in document px; this is what happens once
+   * that story is over, on its own clock and in its own units. Passing it
+   * through pose would mean the idle had to restate the whole final pose every
+   * frame just to nudge the roll two degrees, and pose's early-out compares its
+   * arguments, so a tilt that did not change one of them would never be applied.
+   *
+   * And it lands on the GROUP, which is the roll alone: the dispensed strip, its
+   * two torn ends and everything the finale stuck to the cardboard live in the
+   * scene, not in the group (see the strip's construction above). So the roll
+   * can drift, lean and be spun without the tape it left behind moving a pixel —
+   * which it must not, because it has been stuck down. */
+  const lean = { tiltX: 0, yaw: 0, tiltZ: 0, spin: 0 };
+  /* The spin pose() worked out from the paid-out length, in radians, held so
+     the drift has something to be an offset FROM. */
+  let poseSpin = 0;
+
+  /* Write the rotations — the pose and the idle offset over it, in one place so
+     neither can be applied without the other. Silent until something has been
+     posed: before the first pose there is no yaw to offset. */
+  function place() {
+    if (Number.isNaN(lastYaw)) return;
+    group.rotation.set(
+      (CONFIG.rotX + lean.tiltX) * DEG,
+      (lastYaw + lean.yaw) * DEG,
+      (CONFIG.rotZ + lean.tiltZ) * DEG
+    );
+    spinner.rotation.y = poseSpin + lean.spin * DEG;
+  }
+
+  function drift(tiltX: number, yaw: number, tiltZ: number, spin: number) {
+    if (
+      tiltX === lean.tiltX &&
+      yaw === lean.yaw &&
+      tiltZ === lean.tiltZ &&
+      spin === lean.spin
+    )
+      return;
+    lean.tiltX = tiltX;
+    lean.yaw = yaw;
+    lean.tiltZ = tiltZ;
+    lean.spin = spin;
+    place();
+    dirty = true;
+  }
+
   function resize() {
     const w = mount.clientWidth || 1; // the roll's square framing box
     const h = mount.clientHeight || 1; // square + strip room to the section end
@@ -1134,6 +1189,10 @@ export function createHeroTape(
     endCap.geometry = tearGeometry();
     topCap.geometry.dispose();
     topCap.geometry = tearGeometry(1); // v = 1: continues the strip's top row
+    // CONFIG's two tilts are read by place(), and pose() early-outs on
+    // unchanged arguments — without this a rotX tweak would sit unapplied until
+    // something else happened to move the roll.
+    place();
     resize(); // pxPerWorld and the strip's width both follow camZ
   }
 
@@ -1165,8 +1224,8 @@ export function createHeroTape(
     // The turn and the unspooling are now independent: the group only ever
     // yaws, the spinner only ever spins about the axle. Positive spin sends the
     // BACK surface downward — the tangent the strip pays out from.
-    group.rotation.set(CONFIG.rotX * DEG, yawDeg * DEG, CONFIG.rotZ * DEG);
-    spinner.rotation.y = spin;
+    poseSpin = spin;
+    place(); // the idle offset rides on top of this — see `lean` above
 
     /* The cut occupies the last DEPTH of the tape, so the body stops short by
        that much and the two together measure exactly len. Below DEPTH the cut
@@ -1349,7 +1408,7 @@ export function createHeroTape(
         spinner.add(model); // the -90 that faces the artwork at us is already on it
 
         dirty = true;
-        resolve({ pose, resize, draw, tune, dispose: teardown });
+        resolve({ pose, drift, resize, draw, tune, dispose: teardown });
       },
       undefined,
       (e) => {

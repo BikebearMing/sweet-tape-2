@@ -2,6 +2,7 @@ import { preload } from "react-dom";
 import type { CSSProperties, ReactNode } from "react";
 
 import Stage from "./Stage";
+import HandNote from "@/components/HandNote";
 import Peel from "@/components/Peel";
 import { letters } from "@/components/letters";
 import { MODEL_URL } from "./engine";
@@ -16,6 +17,16 @@ const HEADLINE = ["STICK", "BY YOU"];
 const CORNER_MARK = ["STICK WITH YOU THROUGH", "THREE GENERATIONS"];
 const CARDBOARD_COPY =
   "DIY FAIL, MOVING DAY CHAOS, SCHOOL PROJECT EMERGENCY,LAST-MINUTES FIXES. WE ALWAYS STICK BY YOU.";
+
+/* The badge in the middle of the kicker — the same file the preloader draws its
+   mark from, deliberately and not by coincidence: it is one logo, and pointing
+   both at it means there is one thing to replace when the artwork changes.
+
+   It is also already in the browser by the time the hero needs it. The layout
+   preloads this for the preloader, which paints it before anything else on the
+   page, so the copy here is a cache hit and the drop has nothing to decode on
+   its first frame. */
+const HERO_MARK = "/assets/preloader-image.svg";
 
 /* Running copy split to letters — the cardboard's h2, which wraps, where the
  * headline's rows do not. Each word becomes an inline flex box of letter clips
@@ -112,11 +123,44 @@ export default function Hero() {
                 liable to be announced a fragment at a time. */}
             <p className="h4">
               <span className="sr-only">{KICKER.join(" ")}</span>
-              {KICKER.map((half) => (
-                <span className="half" key={half} aria-hidden="true">
-                  {letters(half)}
-                </span>
-              ))}
+
+              <span className="half" aria-hidden="true">
+                {letters(KICKER[0])}
+              </span>
+
+              {/* The badge that fills that gap, dropped into it from above the
+                  top of the page once the cover has gone (Hero/mark.ts).
+
+                  BETWEEN the halves rather than laid over them, and the empty
+                  span is why. The two words are different widths — WE'RE
+                  against HERE TO — so the middle of the gap is not the middle
+                  of the kicker, and a badge centred on the row sits visibly off
+                  to one side of its own slot. A zero-width item here is exactly
+                  the gap's centre, and stays exactly the gap's centre if either
+                  word is ever re-set. Nothing moves to make room: the span has
+                  no size and the badge inside it is out of flow.
+
+                  Which is also why the row is written out rather than mapped
+                  over KICKER, as it was when it was only two boxes: what is
+                  between the halves is as much the design as the halves are,
+                  and it is not something a list of two labels can express.
+
+                  Out of the a11y tree: the readable copy is the sr-only line
+                  above, and it is one phrase. A brand name announced in the
+                  middle of it would split "WE'RE HERE TO" in half, and the mark
+                  is not saying anything the page does not already say. */}
+              <span className="hero-mark-slot" aria-hidden="true">
+                <img
+                  className="hero-mark"
+                  src={HERO_MARK}
+                  alt=""
+                  draggable={false}
+                />
+              </span>
+
+              <span className="half" aria-hidden="true">
+                {letters(KICKER[1])}
+              </span>
             </p>
 
             {/* One heading, two lines. Splitting it across two <h1>s would put
@@ -247,6 +291,18 @@ export default function Hero() {
             from={0.55}
             to={0}
           />
+
+          {/* And the note written on the board above that tape: a margin ruled
+              in two strokes and four lines of handwriting beside it, all of it
+              DRAWN — the lines first, then the words, off one playhead
+              (components/HandNote/hand.ts).
+
+              The letterforms are built at runtime by Vara from a JSON font of
+              drawn strokes, which is why this is the one prop on the board with
+              nothing to show in the markup. The readable copy is inside it as a
+              hidden text node, so the sentence survives with or without any of
+              that. */}
+          <HandNote />
           <div className="sticky-note" aria-hidden="true" />
           <img id="paperclip" src="./assets/paper-clip-1.png" alt="" />
           <img src="./assets/tape top.png" alt="" id="tape-top" />

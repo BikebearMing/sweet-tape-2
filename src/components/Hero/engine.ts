@@ -28,6 +28,7 @@
  */
 import gsap from "gsap";
 import type { HeroTape } from "./heroTape";
+import { createRollIdle, IDLE, type RollIdle } from "./idle";
 
 /** Served straight from /public. Preloaded in index.tsx — see the note there. */
 export const MODEL_URL = "/assets/tapes/header-brown.glb";
@@ -129,6 +130,10 @@ export function initHero(root: HTMLElement): () => void {
   let maxPast = 0; // the ratchet on the turn: the dispense only ever advances
   let maxLen = 0; // and on the strip — scrolling up retracts nothing
   let finale: gsap.core.Timeline | null = null;
+  /* What has the roll once the story lets go of it — see Hero/idle.ts. Built at
+     the end of the finale rather than up front: until then the scroll owns the
+     pose, and the two writing to it at once would be two hands on one object. */
+  let idle: RollIdle | null = null;
   const board = root.querySelector<HTMLElement>(".cardboard-wrapper");
 
   function docTop(el: HTMLElement) {
@@ -191,6 +196,11 @@ export function initHero(root: HTMLElement): () => void {
       onComplete() {
         phase = "done";
         finale = null;
+        /* Nobody drives the roll from here, which is precisely when it needs
+           something of its own — it answers the pointer from now on. `mount!`
+           for the same reason measure() needs one: this is a function
+           declaration, and TS drops the guard's narrowing crossing into one. */
+        if (tape) idle = createRollIdle(mount!, tape);
       },
     });
     finale
@@ -198,10 +208,18 @@ export function initHero(root: HTMLElement): () => void {
       .to(s, { home: 1, duration: CUT.RETURN, ease: "power3.inOut" }, CUT.OVERLAP);
   }
 
-  function frame() {
+  function frame(time: number, deltaMs: number) {
     if (!tape || !onScreen) return;
-    // The finale and the still life after it are not the scroll's to drive.
-    if (phase !== "scrub") return;
+    // The finale is not the scroll's to drive — its tween owns the pose.
+    if (phase === "finale") return;
+    /* And after it the roll is the idle's, which is the one thing here that
+       moves without the page moving. Still behind the observer, so scrolling
+       past it stops the renderer exactly as the still life used to. */
+    if (phase === "done") {
+      idle?.frame(time, deltaMs);
+      tape.draw(); // no-ops unless the drift actually moved something
+      return;
+    }
 
     if (reduced) {
       tape.pose(YAW_REST, 0);
@@ -295,7 +313,10 @@ export function initHero(root: HTMLElement): () => void {
         // The box may have moved while the model was in flight; the observer's
         // call would have found `tape` still null.
         t.resize();
-        frame(); // catch up to where the page is now, not where it started
+        // Catch up to where the page is now, not where it started. A dt of 0
+        // is honest here: no time has passed since the last frame, and nothing
+        // in the scrub branch reads either argument anyway.
+        frame(gsap.ticker.time, 0);
 
         /* There is something in the box now, and that is news: the roll's
            entrance (Hero/entrance.ts) cannot play over an empty rectangle, so
@@ -311,6 +332,7 @@ export function initHero(root: HTMLElement): () => void {
             hero: {
               SCROLL,
               CUT,
+              IDLE,
               CONFIG: mod.CONFIG,
               STRIP: mod.STRIP,
               END: mod.END,
@@ -335,6 +357,10 @@ export function initHero(root: HTMLElement): () => void {
     gsap.ticker.remove(frame);
     finale?.kill();
     finale = null;
+    // Before the tape is disposed: stop() hands the roll back to its posed
+    // rotation, which needs the scene still standing.
+    idle?.stop();
+    idle = null;
     // dispose runs here OR in the loader's then-branch, never both: tapeGone
     // tells a load that resolves after teardown to discard itself.
     tapeGone = true;

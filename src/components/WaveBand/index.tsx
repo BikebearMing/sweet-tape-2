@@ -1,5 +1,5 @@
 import Band from "./Band";
-import { UNIT, REPEATS } from "./marquee";
+import { UNIT, REPEATS, BADGE_SIZE, BADGE_SRC } from "./marquee";
 
 /* The wavy hand-off between the hero and the slider.
  *
@@ -64,10 +64,13 @@ export default function WaveBand() {
       >
         <defs>
           <path id="wave-band-path" d={WAVE} fill="none" />
-          {/* The paper grain, width-fitted like the hero's tiling (the image
-              is 5824x3264; 1600 wide keeps its aspect). In here rather than
-              a CSS overlay because both neighbours show through the section
-              — an inset-0 sheet would grain their artwork twice. */}
+          {/* The paper grain, width-fitted like the hero's tiling. 1600x897 is
+              the tile in USER UNITS, not the file — it is the source's 1.784
+              aspect at a size that suits this viewBox, so the artwork can be
+              re-exported at any resolution and this stays right as long as the
+              shape does. In here rather than a CSS overlay because both
+              neighbours show through the section — an inset-0 sheet would grain
+              their artwork twice. */}
           <pattern
             id="wave-band-grain"
             patternUnits="userSpaceOnUse"
@@ -76,7 +79,7 @@ export default function WaveBand() {
             width="1600"
             height="897"
           >
-            <image href="/assets/paper-overlay.png" width="1600" height="897" />
+            <image href="/assets/paper-overlay.webp" width="1600" height="897" />
           </pattern>
         </defs>
         <use href="#wave-band-path" className="band-tape" />
@@ -90,6 +93,32 @@ export default function WaveBand() {
             {UNIT.repeat(REPEATS)}
           </textPath>
         </text>
+        {/* The roll in the sentence — one per repeat, standing in the hole the
+            type leaves after the comma (SLOT in marquee.ts). An image cannot
+            ride a textPath, so these are separate elements flown along the same
+            path at the same offset by the marquee, which is also what bends
+            them with the wave.
+
+            Centred on their own origin (the negative x/y against the size), so
+            placing one is a translate to a point on the path and a rotate to
+            its tangent — nothing has to know the badge's size but this line.
+
+            Between the type and the grain: the roll prints under the same paper
+            the words do. Hidden by the stylesheet until the marquee has a
+            measured position for them — there is nothing sensible to draw until
+            the font has resolved, and an unplaced image would sit at the path's
+            origin, out in the off-screen lead-in. */}
+        {Array.from({ length: REPEATS }, (_, i) => (
+          <image
+            key={i}
+            className="band-badge"
+            href={BADGE_SRC}
+            x={-BADGE_SIZE / 2}
+            y={-BADGE_SIZE / 2}
+            width={BADGE_SIZE}
+            height={BADGE_SIZE}
+          />
+        ))}
         {/* Grain last, over tape and type alike — the print sits on top of
             everything it prints. */}
         <use href="#wave-band-path" className="band-tape-grain" />

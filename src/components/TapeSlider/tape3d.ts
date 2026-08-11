@@ -6,10 +6,14 @@
  * slot. Everything three-specific lives here; the engine only ever calls
  * ready()/show()/spin().
  *
- * Every model loads up front and stays resident in the scene, one flip group
- * per tape, only the active one visible. The flip's midpoint handoff needs
- * the incoming model on the exact frame it is asked for, so there is nothing
- * to lazy-load at selection time.
+ * Every model ends up resident in the scene, one flip group per tape, only the
+ * active one visible — the flip's midpoint handoff needs the incoming model on
+ * the exact frame it is asked for, so nothing is loaded AT selection time.
+ *
+ * They do not all arrive at once, though. The selected tape's model is what the
+ * viewer waits for; the rest stream in behind it, one at a time. See the note
+ * above the loader for why, and for the fallback that covers a selection made
+ * before its model has landed.
  */
 import {
   AmbientLight,
@@ -113,6 +117,7 @@ export function createTapeViewer(
   let active: Group | null = null;
 
   function teardown() {
+    gone = true;
     cancelAnimationFrame(raf);
     ro.disconnect();
     scene.traverse((obj) => {
@@ -129,12 +134,20 @@ export function createTapeViewer(
   }
 
   const loader = new GLTFLoader();
-  const jobs = urls.map(
-    (url) =>
-      new Promise<void>((resolve, reject) => {
-        loader.load(
-          url,
-          (gltf) => {
+
+  /* Set by teardown, checked by every background load still in flight. A model
+     that lands after dispose has a scene to add itself to and a renderer that
+     has already released its context — the group would be retained by a Map
+     nobody reads, holding its textures off the collector. */
+  let gone = false;
+
+  const add = (url: string) =>
+    new Promise<void>((resolve, reject) => {
+      loader.load(
+        url,
+        (gltf) => {
+          if (gone) return resolve();
+          {
             const model = gltf.scene;
             /* Full anisotropy on every map, or the wound side's weave
                collapses to its flat grey mip average wherever the surface
@@ -164,16 +177,48 @@ export function createTapeViewer(
             flip.visible = false;
             scene.add(flip);
             groups.set(url, flip);
-            resolve();
-          },
-          undefined,
-          reject
-        );
-      })
-  );
+          }
+          resolve();
+        },
+        undefined,
+        reject
+      );
+    });
 
-  return Promise.all(jobs).then(
+  /* THE FIRST ONE IS THE ONLY ONE ANYONE IS WAITING FOR.
+   *
+   * This used to be Promise.all over every url, so the viewer did not exist —
+   * and the slot stayed empty — until the last of six models had landed.
+   * Together they are about 15MB, and they were all in flight at once, so they
+   * were also competing with each other and with everything else the page still
+   * wanted. The roll you were actually looking at was held up by five you were
+   * not.
+   *
+   * The engine passes the SELECTED tape first (see createTapeViewer's call
+   * site), so what resolves this is the model on screen. The rest follow one at
+   * a time rather than in parallel: they are a prefetch for a click that has not
+   * happened yet, and six simultaneous multi-megabyte fetches are the thing this
+   * change exists to stop.
+   *
+   * WHAT MAKES IT SAFE is that residency was already a question the engine asks.
+   * addCard checks viewer.ready(model) before it commits to the 3D flip and
+   * falls back to swapping the flat card otherwise — a path that existed for the
+   * chunk-still-loading case and was simply never reached before, because every
+   * model was always resident by the time the viewer existed. It is reached now,
+   * and it is the same fallback.
+   *
+   * A background failure is swallowed. One model that will not load should cost
+   * its own tape the 3D roll, not take down the stage and the five that work —
+   * unlike the first, whose failure means there is nothing to show at all. */
+  const [lead, ...rest] = urls;
+
+  return add(lead).then(
     () => {
+      let queue = Promise.resolve();
+      for (const url of rest) {
+        queue = queue.then(() => (gone ? undefined : add(url).catch(() => {})));
+      }
+
       // The engine's show()/spin() land in this same microtask turn, so the
       // next animation frame presents the model — fade up on that frame.
       requestAnimationFrame(() => (canvas.style.opacity = "1"));

@@ -22,6 +22,7 @@ export default function RollPicker() {
             style={cssVars(tape.colours)}
             data-card={tape.card}
             data-model={tape.model}
+            data-word={tape.word}
             data-showcase={tape.showcase.join("|")}
             data-tags={tape.tags.join("|")}
             data-copy={tape.copy}

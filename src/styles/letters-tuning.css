@@ -1,0 +1,420 @@
+/* ==========================================================================
+   Letter tuning — HAND-WRITTEN. Edit this file freely.
+   ==========================================================================
+   The counterpart to letters.css, which is machine-written and rewritten
+   wholesale by `npm run letters`. Anything typed THERE is lost the next time
+   the artwork changes. Anything typed HERE survives, because nothing generates
+   it.
+
+   The split is measurement vs taste. letters.css says what each letter IS — its
+   stencil, the width and height it was drawn at, its place in the word. This
+   file says what the DESIGN WANTS, which is a different thing and is allowed to
+   disagree with the artwork. When the mock and the measurement differ, the mock
+   wins, and it wins from here.
+
+   HOW IT WINS: this file is imported after global.css (see the frontend
+   layout), so a selector written the same way in both files resolves to this
+   one on source order. Copy a selector out of letters.css verbatim, change the
+   value, done — no !important, no extra specificity to invent, and no risk that
+   the next regeneration quietly takes it back.
+
+   WHAT CAN BE OVERRIDDEN — everything letters.css emits, plus the arc:
+
+     per word    --letters    how many letters the arc divides itself across
+                 --unit       one artwork pixel on screen; the word's type size.
+                              letters.css derives this from measured cap height
+                              so that all six words come out one size. Set it
+                              here to overrule that for a single word.
+                 --arc-depth  how far the middle of the word dips
+                 --arc-tilt   the lean on the outermost letters
+
+     per letter  --glyph      the stencil URL — swap one letter's artwork
+                 --lw / --lh  the drawn size in artwork px. Also what gives the
+                              letter its width in the flex row, so both together
+                              resize it and either one alone stretches it.
+                 --i          its place along the arc; normally just its index.
+                              Fractional values are fine and re-read the dip and
+                              tilt at that point on the curve — but only those:
+                              a letter's horizontal position comes from flex and
+                              is not touched, so use --dx to move it sideways.
+                 --dx / --dy  additive nudges, in vw, on top of the computed arc
+                 --dr         additive rotation. A DELTA, not a final angle:
+                              the arc has already tilted the letter, and this is
+                              added to that. Positive is clockwise.
+                 --dorigin    what --dr turns about. Defaults to 50% 100%, the
+                              baseline — see below.
+
+   ROTATION, and which of the three you want.
+
+   --dr turns the letter's BOX, and the artwork rides along inside it. That is
+   the one to use. It cannot clip and it cannot move the letters either side of
+   it, because a transform never affects layout — the width flex gave the letter
+   is the width it keeps, turned or not.
+
+   What --dr does NOT let you choose on its own is the pivot, and that is usually
+   what makes a hand nudge look wrong rather than the angle. The default is the
+   baseline (50% 100%), which is right for the arc: a letter standing on a curve
+   turns about its feet. But it also swings the TOP of the letter sideways, by
+   roughly the letter's height times the sine of the angle — at 220px and 2deg
+   that is about 8 artwork px of lean the eye reads as the letter having moved.
+   If you want it to lean in place instead, add --dorigin: 50% 50%.
+
+   The third rotation is turning the ARTWORK inside a box that stays put, and it
+   is the one to avoid. .glyph is overflow: hidden — that clip is load-bearing,
+   it is the hole the letter drops into during the dip — and the image fills the
+   box exactly, because every PNG is cropped tight to its ink with no transparent
+   margin. So there is no headroom: turn the image and the corners are sliced off
+   at the box edge, ink and all. A 167x220 letter at 2deg overhangs its box by
+   about 4px a side. Rotate the box instead and the clip turns with it.
+
+   If you ever do need it anyway, note that the image's `transform` is NOT free —
+   GSAP owns it for the dip and would overwrite anything declared here. The CSS
+   `rotate` property is independent of `transform` and composes with it, so
+   `.bottom-title[data-word="x"] .glyph:nth-child(n) img { rotate: 2deg }` is the
+   form that survives. It still clips.
+
+   Scoped per word, always. The spans are ONE POOL shared by all six words (see
+   WordMarks.tsx), so an unscoped :nth-child(1) would put CREATIVE's C nudge on
+   FIXER's F.
+
+   And the thing worth knowing before tuning ANY of it: THE ARTWORK IS ALREADY
+   ON AN ARC. Each PNG is a tight crop of the letter as it was drawn, tilt and
+   all, so the stencils carry the design's own per-letter rotation and the arc
+   here turns a letter that is already turned. The TRUSTY note below is the long
+   version.
+   ========================================================================== */
+
+/* THE FLOOR, so that every letter has all three to look at.
+
+   --dx / --dy / --dr are read with a fallback — var(--dr, 0deg) in global.css —
+   which means an untouched letter works fine but shows NOTHING in devtools:
+   there is no declaration to inspect, so there is no row to drag. Declaring the
+   three here puts them on every letter of every word at their no-op values, so
+   the Styles pane always has something to grab.
+
+   Two-class specificity, so every per-letter block below outranks it. Also
+   catches the spare pool spans a short word does not use, and any word added
+   later that has no section of its own yet.
+
+   --l, on every block below, is the reason those blocks stay separate. It is
+   never read by anything: it is the letter's number, and it is there because
+   the CSS optimiser merges rules whose declarations are identical, which is
+   exactly what a column of untouched letters all sitting on zero looks like.
+   Merged, devtools shows ONE row for eight letters and dragging it moves all
+   eight. One value per block that differs keeps them apart, and the number is
+   also the useful thing to see in the Styles pane when you are three letters
+   into a word and counting spans. Keep it when you add a letter. */
+.bottom-title .glyph {
+  --dx: 0vw;
+  --dy: 0vw;
+  --dr: 0deg;
+  --dorigin: 50% 100%;
+}
+
+/* ------------------------------------------------------------------
+   CREATIVE — 8 letters.
+   Tuned. These are the only numbers in this file anybody has actually sat and
+   looked at, and the TRUSTY note below explains what they are really doing:
+   CREATIVE is drawn on a valley, so its artwork and the arc agree in direction
+   and compound, and these --dr values are that being subtracted back out by
+   hand a few degrees at a time.
+   ------------------------------------------------------------------ */
+.bottom-title[data-word="creative"] .glyph:nth-child(1) {
+  --l: 1;
+  --dx: 1.389vw;
+  --dy: 0vw;
+  --dr: -4deg;
+} /* C */
+.bottom-title[data-word="creative"] .glyph:nth-child(2) {
+  --l: 2;
+  --dx: 0.2vw;
+  --dy: 0.2vw;
+  --dr: -2deg;
+} /* R */
+.bottom-title[data-word="creative"] .glyph:nth-child(3) {
+  --l: 3;
+  --dx: 0vw;
+  --dy: 0.2vw;
+  --dr: 0deg;
+} /* E */
+.bottom-title[data-word="creative"] .glyph:nth-child(4) {
+  --l: 4;
+  --dx: 0vw;
+  --dy: 0.2vw;
+  --dr: 0deg;
+} /* A */
+.bottom-title[data-word="creative"] .glyph:nth-child(5) {
+  --l: 5;
+  --dx: 0vw;
+  --dy: 0.2vw;
+  --dr: 0deg;
+} /* T */
+.bottom-title[data-word="creative"] .glyph:nth-child(6) {
+  --l: 6;
+  --dx: 0vw;
+  --dy: 0.2vw;
+  --dr: 0deg;
+} /* I */
+.bottom-title[data-word="creative"] .glyph:nth-child(7) {
+  --l: 7;
+  --dx: 0vw;
+  --dy: 0.2vw;
+  --dr: 0deg;
+} /* V */
+.bottom-title[data-word="creative"] .glyph:nth-child(8) {
+  --l: 8;
+  --dx: 1.181vw;
+  --dy: -0.486vw;
+  --dr: -2deg;
+} /* E */
+
+/* TRUSTY — and the thing to know before tuning ANY of these words.
+   --------------------------------------------------------------------------
+   THE ARTWORK IS ALREADY ON THE ARC. Each PNG is a tight crop of the letter as
+   it was DRAWN, tilt and all, so the stencils carry the design's own per-letter
+   rotation. Turning the box as well does not place the letter on a curve; it
+   turns a letter that is already turned.
+
+   For TRUSTY the two cancelled almost exactly, which is why the word looked
+   wrong in a way that was so hard to name: the glyph boxes were visibly rotated
+   in devtools while the letters inside stood bolt upright. The proof is in the
+   artwork — T and T2 are the same drawing, and T2 is T rotated 4.5 degrees
+   CLOCKWISE, so the drawn word turns clockwise from left to right. The arc
+   turns counter-clockwise. Two arcs, opposite ways, roughly equal.
+
+   So the tilt goes to nothing here and the artwork does the leaning. Not a
+   compromise — the angles in those files are the designer's, letter by letter,
+   which is better than any formula fitted to them.
+
+   What the tight crop DID throw away is where each letter sat vertically, and
+   that is what --arc-depth puts back. It is also the one number here that is
+   NOT settled, so it is worth saying how far the evidence goes.
+
+   It cannot be read off the tilts. Standing each letter normal to its baseline
+   would make the drawn angles imply a hill — the middle raised — but the tilts
+   only say that if the letters were placed by a formula, and against the design
+   they were not: the same letterform at two places on the word sits at very
+   nearly the same height. T and T2 are the measurement to use, being the same
+   drawing, and in the reference T2 is a few pixels LOWER than T rather than
+   lifted. So the vertical curve is shallow, and if it leans either way it dips
+   in the middle.
+
+   Hence a shallow positive value, and hence the caveat: this is read off a
+   screenshot at an unknown scale and is good to about half of itself. Every
+   other number in this block is measured from the artwork and will hold; this
+   one wants checking against the design file.
+
+   CREATIVE is the other side of it: drawn on a valley, so its artwork and the
+   arc AGREE in direction and compound instead of cancelling, and the --dr nudges
+   above are that being subtracted back out by hand a few degrees at a time.
+
+   ALL SIX WORDS NOW CARRY HAND VALUES, set against the mock rather than derived
+   from anything. That is the right way round — the analysis above says why the
+   formula could not be trusted, not what to replace it with, and the design's
+   own placement is better evidence than any curve fitted to it. So read the
+   numbers below as the mock, not as a correction to the arc: with --arc-tilt at
+   zero for this word, TRUSTY's --dr values ARE its rotation rather than a delta
+   on one. */
+.bottom-title[data-word="trusty"] {
+    --arc-tilt: 0deg;
+    --arc-depth: -3.5vw;
+}
+
+.bottom-title[data-word="trusty"] .glyph:first-child {
+    --l: 1;
+    --dx: -2vw;
+    --dy: -1vw;
+    --dr: 13deg;
+} /* T */
+.bottom-title[data-word="trusty"] .glyph:nth-child(2) {
+    --l: 2;
+    --dx: 0vw;
+    --dy: 2.8vw;
+    --dr: 0deg;
+} /* R */
+.bottom-title[data-word="trusty"] .glyph:nth-child(3) {
+    --l: 3;
+    --dx: 0vw;
+    --dy: 5vw;
+    --dr: 0deg;
+}/* U */
+.bottom-title[data-word="trusty"] .glyph:nth-child(4) {
+    --l: 4;
+    --dx: 0vw;
+    --dy: 5vw;
+    --dr: 0deg;
+} /* S */
+.bottom-title[data-word="trusty"] .glyph:nth-child(5) {
+    --l: 5;
+    --dx: 2vw;
+    --dy: 3vw;
+    --dr: -15deg;
+} /* T */
+.bottom-title[data-word="trusty"] .glyph:nth-child(6) {
+    --l: 6;
+    --dx: -1vw;
+    --dy: 0.7vw;
+    --dr: 0deg;
+} /* Y */
+
+/* ------------------------------------------------------------------
+   BUDDY — 5 letters.
+   The two Ds are different drawings (D.png and D2.png) and carry different
+   turns here, which is the artwork's doing rather than a hand wobble.
+   ------------------------------------------------------------------ */
+.bottom-title[data-word="buddy"] .glyph:nth-child(1) {
+  --l: 1;
+  --dx: 0vw;
+  --dy: -1vw;
+  --dr: 0deg;
+} /* B */
+.bottom-title[data-word="buddy"] .glyph:nth-child(2) {
+  --l: 2;
+  --dx: 0.4vw;
+  --dy: 1vw;
+  --dr: 0deg;
+} /* U */
+.bottom-title[data-word="buddy"] .glyph:nth-child(3) {
+  --l: 3;
+  --dx: 1vw;
+  --dy: 1vw;
+  --dr: 2deg;
+} /* D */
+.bottom-title[data-word="buddy"] .glyph:nth-child(4) {
+  --l: 4;
+  --dx: 2vw;
+  --dy: 1vw;
+  --dr: 0deg;
+} /* D */
+.bottom-title[data-word="buddy"] .glyph:nth-child(5) {
+  --l: 5;
+  --dx: 1vw;
+  --dy: 1vw;
+  --dr: 4deg;
+} /* Y */
+
+/* ------------------------------------------------------------------
+   FIXER — 5 letters.
+   ------------------------------------------------------------------ */
+.bottom-title[data-word="fixer"] .glyph:nth-child(1) {
+  --l: 1;
+  --dx: 1vw;
+  --dy: -2vw;
+  --dr: -1deg;
+} /* F */
+.bottom-title[data-word="fixer"] .glyph:nth-child(2) {
+  --l: 2;
+  --dx: 0vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* I */
+.bottom-title[data-word="fixer"] .glyph:nth-child(3) {
+  --l: 3;
+  --dx: 1vw;
+  --dy: 1vw;
+  --dr: 0deg;
+} /* X */
+.bottom-title[data-word="fixer"] .glyph:nth-child(4) {
+  --l: 4;
+  --dx: 1vw;
+  --dy: 1vw;
+  --dr: 1deg;
+} /* E */
+.bottom-title[data-word="fixer"] .glyph:nth-child(5) {
+  --l: 5;
+  --dx: 0vw;
+  --dy: 0vw;
+  --dr: 6deg;
+} /* R */
+
+/* ------------------------------------------------------------------
+   RELIABLE — 8 letters.
+   ------------------------------------------------------------------ */
+.bottom-title[data-word="reliable"] .glyph:nth-child(1) {
+  --l: 1;
+  --dx: 0.4vw;
+  --dy: -1.7vw;
+  --dr: 0deg;
+} /* R */
+.bottom-title[data-word="reliable"] .glyph:nth-child(2) {
+  --l: 2;
+  --dx: 0vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* E */
+.bottom-title[data-word="reliable"] .glyph:nth-child(3) {
+  --l: 3;
+  --dx: 0vw;
+  --dy: 1vw;
+  --dr: 0deg;
+} /* L */
+.bottom-title[data-word="reliable"] .glyph:nth-child(4) {
+  --l: 4;
+  --dx: 1vw;
+  --dy: 1vw;
+  --dr: 0deg;
+} /* I */
+.bottom-title[data-word="reliable"] .glyph:nth-child(5) {
+  --l: 5;
+  --dx: 1vw;
+  --dy: 1vw;
+  --dr: 1deg;
+} /* A */
+.bottom-title[data-word="reliable"] .glyph:nth-child(6) {
+  --l: 6;
+  --dx: 0.2vw;
+  --dy: 1vw;
+  --dr: 3deg;
+} /* B */
+.bottom-title[data-word="reliable"] .glyph:nth-child(7) {
+  --l: 7;
+  --dx: 0vw;
+  --dy: 0.8vw;
+  --dr: 4deg;
+} /* L */
+.bottom-title[data-word="reliable"] .glyph:nth-child(8) {
+  --l: 8;
+  --dx: -2vw;
+  --dy: 0.4vw;
+  --dr: 7deg;
+} /* E */
+
+/* ------------------------------------------------------------------
+   SILENT — 6 letters.
+   ------------------------------------------------------------------ */
+.bottom-title[data-word="silent"] .glyph:nth-child(1) {
+  --l: 1;
+  --dx: 1vw;
+  --dy: -1vw;
+  --dr: -4deg;
+} /* S */
+.bottom-title[data-word="silent"] .glyph:nth-child(2) {
+  --l: 2;
+  --dx: 0vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* I */
+.bottom-title[data-word="silent"] .glyph:nth-child(3) {
+  --l: 3;
+  --dx: 0vw;
+  --dy: 1vw;
+  --dr: -1deg;
+} /* L */
+.bottom-title[data-word="silent"] .glyph:nth-child(4) {
+  --l: 4;
+  --dx: 0vw;
+  --dy: 1.2vw;
+  --dr: 2deg;
+} /* E */
+.bottom-title[data-word="silent"] .glyph:nth-child(5) {
+  --l: 5;
+  --dx: 0vw;
+  --dy: 1.6vw;
+  --dr: 4deg;
+} /* N */
+.bottom-title[data-word="silent"] .glyph:nth-child(6) {
+  --l: 6;
+  --dx: 1.5vw;
+  --dy: 0vw;
+  --dr: 2deg;
+} /* T */

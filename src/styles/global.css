@@ -4,17 +4,19 @@
    Everything the (frontend) route group paints, in cascade order. The admin
    has its own root layout and never sees any of this.
 
-     1. Letters      GENERATED — imported, see the note below
+     1. Letters      GENERATED — imported, see the note below. Hand edits to
+                     the letters go in letters-tuning.css, not here.
      2. Reset
      3. Tokens       fonts, orbit sizing, fallback palette
      4. Preloader    the sheet over the page, and the scroll lock under it
      5. Hero
      6. Wave band    the hand-off between the hero and the slider
      7. Tape slider  word marks, columns, stage, rolls
-     8. Footer       the nav row, the sign-off headline, the rolls' bed
-     9. Menu         the pull-down panel and its tab
-    10. Cursor       the taped arrow
-    11. Peel         a stuck-down thing lifting a corner, wherever one is used
+     8. Giant pinning  WHY WE EXIST — the pinned camera and its three phrases
+     9. Footer       the nav row, the sign-off headline, the rolls' bed
+    10. Menu         the pull-down panel and its tab
+    11. Cursor       the taped arrow
+    12. Peel         a stuck-down thing lifting a corner, wherever one is used
 
    Section order is load-bearing where two rules touch the same property; keep
    new rules inside the section they belong to rather than appending to the
@@ -22,11 +24,19 @@
 
    letters.css stays a separate file because scripts/gen-letters.mjs rewrites
    it wholesale from the artwork — see `npm run letters`. It is pulled in here
-   so the layout still imports exactly one stylesheet; the build inlines it.
-   Its rules only set --glyph / flex-grow / aspect-ratio, which nothing below
-   also sets, so leading the file rather than sitting between Tokens and Hero
-   (where the import used to be) changes nothing in the cascade. @import has
-   to come first in a stylesheet, hence the position. */
+   so the layout still imports one stylesheet for the site itself; the build
+   inlines it. Its rules set --glyph / --lw / --lh / --i per letter and
+   --letters / --unit per word; the only one of those this file also sets is
+   --unit, on the bare .bottom-title, which loses to letters.css's per-word
+   selector on specificity. So leading the file rather than sitting between
+   Tokens and Hero (where the import used to be) changes nothing in the
+   cascade. @import has to come first in a stylesheet, hence the position.
+
+   THE THIRD FILE is letters-tuning.css, and it is deliberately NOT imported
+   here: it has to land after everything in this file, which an @import at the
+   top cannot do. The layout imports it directly, immediately after this one.
+   That is where hand-typed letter values go — it overrides both this file and
+   the generated one, and `npm run letters` cannot reach it. */
 @import "./letters.css";
 
 /* ==========================================================================
@@ -150,6 +160,37 @@ h6 {
     "Inter Tight Variable", "Inter Tight", Inter, system-ui, sans-serif;
 
   --stage-bg: #fa8005;
+
+  /* THE CAST SHADOW, for everything on this page that lies on the paper —
+   * photographs, product tags, tape, the paperclip. One recipe, because they
+   * are all the same object in the same room and a page where each prop has
+   * its own idea of where the light is reads as a collage of stock images.
+   *
+   * HARD, AND THAT IS THE WHOLE POINT OF IT. Every one of these used to carry a
+   * blur wider than its own offset — 19px of blur on 12px of offset on the
+   * giant cards — which is not a shadow, it is a grey cloud with a picture on
+   * top. What it costs you is the thing a shadow is FOR: the eye reads depth
+   * from how sharp a shadow's edge is, so a soft one says "floating somewhere
+   * above" and a crisp one says "resting just off the surface, at this exact
+   * height". These are things laid down by hand on a sheet of paper, and they
+   * should look it.
+   *
+   * The offsets are per element and stay in that element's own unit — em inside
+   * a phrase so it scales with the type, vw for a loose prop that is a physical
+   * size on the page. What is shared is the CHARACTER: this blur and this ink.
+   *
+   * --drop-blur is not 0. drop-shadow takes its shape from the alpha channel,
+   * so a zero blur hands a cut-out PNG's ragged edge straight through and it
+   * stair-steps; a third of a pixel keeps the edge crisp and takes the
+   * aliasing off it. Raise it toward 0.3vw to go back to a soft shadow — it is
+   * the one number that decides which of the two this is.
+   *
+   * --drop-ink is DARKER than what it replaced (0.34 against 0.22 and 0.28),
+   * and it had to be. Spreading ink over twenty pixels is what made the old
+   * alphas look like the right amount of shadow; concentrated into a hard edge,
+   * the same value reads as barely there. */
+  --drop-blur: 0.02vw;
+  --drop-ink: rgba(0, 0, 0, 0.34);
 
   /* Radius of the rolls' circular path; the engine reads it off .rail-track's
      measured width, so this is the one place to change the orbit size. */
@@ -285,9 +326,60 @@ html[data-loading] {
   padding-bottom: var(--pre-arc);
 }
 
+/* The mark. A components/Peel wrapper since the gif went, so this sizes the
+   whole assembly rather than an <img> — same box, same one number. */
 .site-preloader .preloader-mark {
+  /* PARKED HERE, RELEASED BY THE TIMELINE — the hand-off the letters make two
+     rules down, and for a sharper version of the same reason. The mark is in the
+     server's HTML, and the pose --peel: 0 draws is the mark FINISHED: flat,
+     landed, nothing left to do. So between the first paint and hydration the
+     answer to the animation was on screen ahead of it, and the peel arrived as a
+     correction to something the reader had already seen.
+
+     visibility rather than opacity, because GSAP's autoAlpha sets both and will
+     take this over cleanly at the mark's own beat (Preloader/reveal.ts). Without
+     JS there is nothing to release it, which is correct: the noscript rule takes
+     the whole cover off the page, and so does reduced motion. */
+  visibility: hidden;
+
   width: var(--pre-mark);
   height: auto;
+
+  /* No drop shadow. Every other peel on the site is an object lying ON the
+     pinboard and casts one; this is a mark on a sheet of paper, and the gif it
+     replaces threw no shadow either. */
+  --peel-shadow: none;
+
+  /* The artwork is a logo, not a photograph: contain, so the lemon keeps its
+     own proportions inside the box rather than being cropped to fill it. */
+  --peel-fit: contain;
+
+  /* THE TILT, folded into the frame's own turn rather than tweened as a
+     rotation. The wrapper already carries `rotate: var(--peel-dir)` — 61deg of
+     it — and GSAP's `rotation` goes through `transform`, where it reads that
+     61deg as its starting value, tweens away from it, and leaves it written
+     into transform as well. The frame ends up turned twice and the mark sits
+     visibly askew for the rest of the hold.
+
+     Adding a second term here keeps both in the one property that owns them.
+     .peel-turn cancels only --peel-dir, so the artwork keeps the tilt while the
+     fold's axis stays where it was put — which is the right way round: the mark
+     tips, the crease does not move. Preloader/reveal.ts writes it. */
+  rotate: calc(var(--peel-dir, 0deg) + var(--mark-tilt, 0deg));
+}
+
+/* The back of the sticker, where the board's props show unprinted paper. The
+   colour is measured off the gif and not chosen — see BACKS in components/Peel
+   for why it cannot be the lime it looks like it ought to be.
+
+   The brightness ramp is inverted from the props', and this is the one place it
+   has to be: everywhere else a flap lifts off a dark pinboard and catches the
+   light, so it brightens as it rises. Here it lifts off a full screen of lime,
+   the brightest thing on the site, and anything that brightened as it came up
+   would climb straight into the sheet behind it and disappear. It darkens
+   instead — away from the ground, which is the same instinct, upside down. */
+.site-preloader .preloader-mark .peel-flap img {
+  filter: url(#peel-back-mark) brightness(calc(1 - var(--peel) * 0.18));
 }
 
 /* The hero's dark green on lime, which is the pairing the hero sets on exactly
@@ -440,7 +532,7 @@ html[data-loading] {
   background: #b6fe00;
   /* Elliptical, not circular: the two radii are set independently so the
      curve's depth (24vw) holds while its width tracks the viewport. */
-  border-radius: 0 0 100% 100% / 0 0 24vw 24vw;
+  border-radius: 0 0 100% 100% / 0 0 32vw 32vw;
 }
 
 /* Paper grain — the same overlay the slider stage carries (Tape slider,
@@ -470,7 +562,7 @@ html[data-loading] {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: url("/assets/paper-overlay.png");
+  background-image: url("/assets/paper-overlay.webp");
   background-size: 100% auto;
   background-repeat: repeat-y;
   opacity: 0.2;
@@ -490,16 +582,18 @@ html[data-loading] {
    read as one family of small type — this is the hero's version of .tag .h6,
    minus the background and the padding that background needed. */
 .hero-section .corner-mark {
-  position: absolute;
-  top: 0.9vw;
-  left: 0.65vw;
-  padding-left: 0.85vw; /* clears the perforation */
-  font-family: var(--font-heading);
-  font-size: 1vw;
-  font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: 0.03em;
-  color: #013900;
+    font-family: var(--font-heading);
+    color: #013900;
+    padding-left: .85vw;
+    position: absolute;
+    top: .9vw;
+    left: .65vw;
+    font-size: 1.389vw;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 1.25vw;
+    letter-spacing: -0.042vw;
+    text-transform: uppercase;
 }
 
 /* Two set lines, not a wrap — see CORNER_MARK in Hero/index.tsx. Each is a row
@@ -565,6 +659,13 @@ html[data-loading] {
 }
 
 .hero-section .title {
+  /* The badge in the kicker's gap — its painted width, and how far it rides
+     above the line it is centred on. Both are read by .hero-mark below, which
+     is where the reasoning for them is. */
+  --hero-mark-w: 12.7vw; /* 183px at the 1440 design width */
+  --hero-mark-h: calc(var(--hero-mark-w) * 118 / 191); /* the artwork's aspect */
+  --hero-mark-lift: 0.5vw;
+
   /* Positioned only to lift the type over .top's grain — a positioned
      pseudo-element otherwise paints over ordinary inline content whatever the
      source order says. The slider keeps its copy above the grain the same way. */
@@ -576,9 +677,17 @@ html[data-loading] {
   padding-top: 5.056vw;
 }
 
-/* The kicker. One line split by a gap wide enough for the roll to sit between
-   the halves, so it is an inline-flex row rather than two elements. */
+/* The kicker. One line split by a gap wide enough for the badge to sit between
+   the halves, so it is an inline-flex row rather than two elements.
+
+   THREE items now, not two: the halves with the badge's empty slot between
+   them. Which is why the gap is written as a half — it is applied twice, once
+   either side of a slot that has no width, and --kicker-gap is still the whole
+   distance from WE'RE to HERE TO. It is the figure the design measures (236px
+   at 1440) and nothing else here is allowed to widen it. */
 .hero-section .h4 {
+  --kicker-gap: 16.389vw;
+
   font-family: var(--font-heading);
   color: #013900;
   font-size: 2.347vw;
@@ -586,9 +695,73 @@ html[data-loading] {
   line-height: 0.71;
   letter-spacing: -0.094vw;
   display: inline-flex;
-  gap: 16.389vw;
+  gap: calc(var(--kicker-gap) / 2);
   justify-content: center;
   align-items: center;
+}
+
+/* The slot. No width and no height, centred in the row by the align-items
+   above, so its own centre IS the centre of the gap and the middle of the line
+   — which is the whole job. The badge is positioned against it and therefore
+   never has to know how wide either word is.
+
+   Not a ::before on the row: a pseudo-element cannot be handed to GSAP, and the
+   drop needs to reach the mark. The menu's rules and the footer's stops are
+   real elements for the same reason. */
+.hero-section .hero-mark-slot {
+  position: relative;
+  display: block;
+  width: 0;
+  height: 0;
+}
+
+/* The badge, hanging off that slot.
+   --------------------------------------------------------------------------
+   Width is the only size chosen: the artwork is 191 x 118 and keeps its own
+   aspect, the same call the preloader's copy of this mark makes. It is cut to
+   leave a little air either side of the gap rather than filling it, so the
+   arrows in the design measure the SLOT and this measures the mark.
+
+   The lift is small and it is deliberate: centred on the kicker's line box the
+   badge reads as sitting a touch low, because the type is all capitals and its
+   optical centre is above the box's. This puts the mark back on the line the
+   words are actually written on.
+
+   Centred with MARGINS, and that is not a style choice. The drop owns
+   `transform`, so the centring has to live somewhere a tween will not overwrite
+   — and the obvious somewhere, the independent `translate` property that
+   .hero-tape uses, is not safe here. GSAP folds `translate` into the transform
+   it is about to animate and then sets it to `none`, and it does that fold by
+   splitting the computed string on spaces: a single `-50%` survives it, a
+   two-part value with a calc() in it (which is what centring on BOTH axes and
+   lifting needs) is torn apart and silently dropped, leaving the badge sitting
+   a half-width to the right and a half-height low. Margins never enter the
+   transform at all, so there is nothing to fold and nothing to lose.
+
+   The height is declared rather than left to the artwork for the same kind of
+   reason: an <img> with `height: auto` is zero until the SVG has loaded, and a
+   box centred off its own height would be placed wrong on the frames before
+   that. The aspect is the artwork's own, so this is the same picture either way.
+
+   Nothing parks it here. Hero/mark.ts has the reasoning: this is the correct
+   painted state with no JS, and the preloader is over it until there is. */
+.hero-section .hero-mark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-left: calc(var(--hero-mark-w) / -2);
+  margin-top: calc(var(--hero-mark-h) / -2 - var(--hero-mark-lift));
+  width: var(--hero-mark-w);
+  height: var(--hero-mark-h);
+  /* The reset gives every image max-width: 100%, and 100% of a slot with no
+     width is no width — which clamps the badge out of existence rather than
+     letting it hang over the edges, which is the entire point of a slot with no
+     width. It is the one place on the site where that reset is wrong. */
+  max-width: none;
+  /* Over the kicker's letters — the two overlap by design at this width, and
+     the badge is the thing in front. */
+  z-index: 1;
+  pointer-events: none;
 }
 
 .hero-section .h1 {
@@ -882,6 +1055,20 @@ html[data-loading] {
   fill: #013900;
 }
 
+/* The roll standing in the sentence — one per repeat, flown onto the path by
+   WaveBand/marquee.ts once the font has resolved and the hole it sits in can
+   be measured.
+
+   Hidden until then, and it has to be declared here rather than left to the
+   markup: an unplaced image carries no transform, so it would sit centred on
+   the svg's own origin — out in the path's off-screen lead-in, with a sliver
+   of it clipping into the top-left of the frame. Without JS that is the end of
+   the story and the band is its sentence alone, with a slightly wider pause
+   after the comma. */
+.wave-band .band-badge {
+  visibility: hidden;
+}
+
 /* The same paper grain as the hero above and the stage below, painted INSIDE
    the svg as a pattern stroke over the tape (markup in components/WaveBand)
    — a section-wide overlay would grain both neighbours a second time, since
@@ -909,23 +1096,36 @@ html[data-loading] {
 /* --------------------------------------------------------------------------
    Word marks
    -------------------------------------------------------------------------- */
-.top-title,
-.bottom-title {
+/* SCOPED, all three .top-title rules in this section and the .subhead one
+   further down, for a reason worth writing once: these class names are GENERIC
+   and this stylesheet is one file for the whole site. .top-title here means
+   THE — a row of letter images, 26.32vw wide, absolutely placed on this stage —
+   and the giant-pinning section has a .top-title of its own that means an
+   ordinary heading. Unscoped, this stage's placement was silently being applied
+   to it, which is a bug that presents as "the heading is 190px to the left of
+   where the stylesheet says it is" and takes a while to trace.
+
+   The rule of thumb: if a rule describes where something sits ON THIS STAGE, it
+   belongs under .tape-slider-parent. Only the things that are true of the
+   component anywhere — the chip's look, the letters' masks — stay unscoped. */
+.tape-slider-parent .top-title,
+.tape-slider-parent .bottom-title {
   display: flex;
   align-items: flex-end;
 }
 
-/* Each letter takes a share of the word's vw width via flex-grow, where the
-   grow value IS its intrinsic pixel width — so the proportions hold at every
-   screen size. A uniform height would be simpler but would flatten the
-   artwork's optical overshoot (round C is 221px against flat T's 217px).
+/* THE's three letters share out one fixed width via flex-grow, where the grow
+   value IS the letter's intrinsic pixel width — so the proportions hold at every
+   screen size. A uniform height would be simpler but would flatten the artwork's
+   optical overshoot (round C is 221px against flat T's 217px).
 
    flex-grow and aspect-ratio are generated into letters.css from the artwork
    itself; see scripts/gen-letters.mjs.
 
-   The flex item is the image for THE, the .glyph wrapper for CREATIVE. */
-.top-title img,
-.bottom-title .glyph {
+   THE ONLY, now. The tape's word is sized the opposite way — see .bottom-title
+   below — because sharing out a fixed width means the size of a letter depends
+   on how many letters are beside it, and the bottom word changes length. */
+.top-title img {
   flex-basis: 0;
   /* Flex items default to min-width:auto, which floors them at the image's
      intrinsic width — they would refuse to shrink and overflow the word. */
@@ -934,10 +1134,25 @@ html[data-loading] {
   max-width: none; /* the reset's max-width:100% would squash these */
 }
 
-/* CREATIVE's clipping box. The wrapper holds the letter's place on the arc, the
-   image inside holds only the dip — both want the transform property and one
-   element cannot carry both. overflow: hidden is the trick: the image slides a
-   full letter-height down and has nowhere to paint. */
+/* The tape's word, laid out AT THE SIZE IT WAS DRAWN, one letter at a time.
+   --lw and --lh are the artwork's own pixel dimensions, generated per letter;
+   --unit turns an artwork pixel into a screen one. Nothing is shared out and
+   nothing flexes, so FIXER's five letters are the same cap height as CREATIVE's
+   eight and the word is simply wider or narrower to suit.
+
+   flex: 0 0 auto because the default basis of auto plus any grow would put the
+   old behaviour back the moment a word overflowed its row. */
+.bottom-title .glyph {
+  flex: 0 0 auto;
+  width: calc(var(--lw) * var(--unit));
+  height: calc(var(--lh) * var(--unit));
+  max-width: none; /* the reset's max-width:100% would squash these */
+}
+
+/* The clipping box. The wrapper holds the letter's place on the arc, the image
+   inside holds only the dip — both want the transform property and one element
+   cannot carry both. overflow: hidden is the trick: the image slides a full
+   letter-height down and has nowhere to paint. */
 .bottom-title .glyph {
   display: block;
   overflow: hidden;
@@ -993,23 +1208,59 @@ html[data-loading] {
   content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E");
 }
 
+/* ONE ARTWORK PIXEL, on screen. The whole bottom mark is sized off this and
+   nothing else, which is what makes six words of different lengths one type
+   size — see the .glyph rule above.
+
+   0.0674vw is CREATIVE at exactly the size it has always been: its letters are
+   683 artwork px wide end to end, and 683 x 0.0674 = 46.04vw, the fixed width
+   this rule used to hardcode. So the mark that was already right did not move,
+   and the other five came to meet it. Raise or lower it to resize every word at
+   once.
+
+   BASE, because each word then corrects it: the six sets were not exported at
+   quite the same size (RELIABLE runs about 6% larger than SILENT), and
+   letters.css multiplies this by whatever each word needs to land on CREATIVE's
+   cap height. That correction is measured from the artwork, not typed — see
+   capOf in scripts/gen-letters.mjs.
+
+   The box itself is no longer given a width — it is a shrink-to-fit absolute
+   box (see .middle), so it is as wide as the word in it and the translateX(-50%)
+   that centres it keeps working. */
 .bottom-title {
-  width: 46.04vw; /* 663px at the 1440 design width */
+  --unit-base: 0.0674vw;
+  --unit: var(--unit-base);
 }
 
-.top-title {
+.tape-slider-parent .top-title {
   width: 26.32vw; /* 379px at the 1440 design width */
 }
 
-/* Arc for CREATIVE. Each letter keeps the x flex gives it and is only nudged
-   down and tilted, so the kerning is untouched — rotating about a far-off
+/* The arc every word sits on. Each letter keeps the x flex gives it and is only
+   nudged down and tilted, so the kerning is untouched — rotating about a far-off
    origin (the usual curved-text trick) would drag the letters sideways.
 
    --u runs -1 at the first letter to +1 at the last. The drop follows 1-u², a
    parabola deepest in the middle; the tilt runs linearly with u so each letter
-   leans with the slope it sits on. To arc the other way, negate BOTH values. */
+   leans with the slope it sits on. To arc the other way, negate BOTH values.
+
+   --letters is NOT here: it belongs to the word, and letters.css generates it
+   per [data-word] along with each letter's --i. The curve is written in terms of
+   both, so a five-letter word arcs across the same span an eight-letter one
+   does without a number changing here. */
+/* THE DEFAULT, not the rule. A word that has not been looked at sits on this
+   and looks deliberate; a word that has been looked at overrides either number
+   on its own [data-word] block below, and the six are free to be six different
+   curves. Nothing about the mechanism wants them to match — they are never on
+   screen together, one word per tape, and each was drawn as its own piece of
+   lettering.
+
+   What IS shared, and should stay shared, is the SIZE: --unit-base is CREATIVE
+   at its own size and letters.css scales every other word onto CREATIVE's cap
+   height from a measurement of the artwork. That is what makes six words of
+   different lengths one type size from slide to slide. The arc is taste; the
+   size is a system. */
 .bottom-title {
-  --letters: 8;
   --arc-depth: 1.3vw; /* how far the middle sits below the two ends */
   --arc-tilt: 8deg; /* lean on the outermost letters */
 }
@@ -1018,7 +1269,16 @@ html[data-loading] {
    whichever of the two was written second would win. */
 .bottom-title .glyph {
   --u: calc(2 * var(--i) / (var(--letters) - 1) - 1);
-  transform-origin: 50% 100%; /* pivot on the baseline, not the letter centre */
+
+  /* Pivot on the baseline, not the letter centre — the arc's own tilt is a
+     letter STANDING on a curve, and a letter standing on something turns about
+     its feet. Overridable per letter (--dorigin) because a hand nudge often
+     wants the other pivot: turning about 50% 50% keeps the letter where it is
+     and only leans it, where the baseline pivot also swings the top sideways by
+     the letter's height times the sine of the angle. Neither moves the letter's
+     NEIGHBOURS — a transform never does — so the kerning is safe either way. */
+  transform-origin: var(--dorigin, 50% 100%);
+
   transform: translate(
       var(--dx, 0px),
       calc(var(--arc-depth) * (1 - var(--u) * var(--u)) + var(--dy, 0px))
@@ -1026,64 +1286,14 @@ html[data-loading] {
     rotate(calc(var(--arc-tilt) * var(--u) * -1 + var(--dr, 0deg)));
 }
 
-/* Per-letter tuning — taste, not measurement, which is why it is hand-written
-   here while flex-grow / aspect-ratio are generated.
+/* Per-letter tuning — taste, not measurement — lives in letters-tuning.css,
+   NOT here and not in letters.css. That file is hand-written and imported after
+   this one, so it can override anything either file sets, and `npm run letters`
+   cannot touch it. The mechanism stays here (the transform above, and the
+   --arc-depth / --arc-tilt defaults); the per-word values are all over there.
 
-   --i is the place on the curve, keep it sequential. --dx / --dy / --dr are
-   additive nudges on top of the computed arc, correcting only what the maths
-   cannot know — round letters (C, E, V) read as floating high against a curve
-   that flat ones (T, I) sit on correctly.
-
-   --dr is a delta, not a final angle: the arc already gives the outermost
-   letters ±8deg. In vw so nudges scale with the word (1vw = 14.4px at 1440). */
-.bottom-title .glyph:nth-child(1) {
-  --i: 0;
-  --dx: 1.389vw;
-  --dy: 0vw;
-  --dr: -4deg;
-} /* C */
-.bottom-title .glyph:nth-child(2) {
-  --i: 1;
-  --dx: 0.2vw;
-  --dy: 0.2vw;
-  --dr: -2deg;
-} /* R */
-.bottom-title .glyph:nth-child(3) {
-  --i: 2;
-  --dx: 0vw;
-  --dy: 0.2vw;
-  --dr: 0deg;
-} /* E */
-.bottom-title .glyph:nth-child(4) {
-  --i: 3;
-  --dx: 0vw;
-  --dy: 0.2vw;
-  --dr: 0deg;
-} /* A */
-.bottom-title .glyph:nth-child(5) {
-  --i: 4;
-  --dx: 0vw;
-  --dy: 0.2vw;
-  --dr: 0deg;
-} /* T */
-.bottom-title .glyph:nth-child(6) {
-  --i: 5;
-  --dx: 0vw;
-  --dy: 0.2vw;
-  --dr: 0deg;
-} /* I */
-.bottom-title .glyph:nth-child(7) {
-  --i: 6;
-  --dx: 0vw;
-  --dy: 0.2vw;
-  --dr: 0deg;
-} /* V */
-.bottom-title .glyph:nth-child(8) {
-  --i: 7;
-  --dx: 1.181vw;
-  --dy: -0.486vw;
-  --dr: -6deg;
-} /* E */
+   Everything it can set, and why the split exists, is documented in its
+   header. */
 
 /* --------------------------------------------------------------------------
    Centre column
@@ -1101,20 +1311,29 @@ html[data-loading] {
     z-index: 10;
     border-radius: 3.472vw;
 
-    /* Offset down and to the right, tight and fairly dark — a card sitting
-       just off the surface with a single light above-left, not a soft ambient
-       float. Two layers: a crisp contact edge, then the body of the shadow.
-       One blur alone reads as a smudge.
+    /* A card sitting just off the surface — the site's shadow, see --drop-ink
+       in :root, and .giant-prop--shot for why a rounded-square photograph
+       throws down-LEFT and further than the round tags do. These are the same
+       object as the giant section's loose shots and take the same offset.
+
+       ONE LAYER NOW, not two. This was a crisp contact edge under a wider,
+       softer body, which is how you fake a real light source with a blur: the
+       penumbra grows with distance from the contact. That reasoning is sound
+       and it is the opposite of what the rest of the page now does, and a
+       showcase card floating on 1.15vw of haze beside a giant prop resting on a
+       hard edge reads as two photographs from two different shoots. A hard
+       shadow has no penumbra to build, so the second layer has nothing to say.
 
        box-shadow, not filter: drop-shadow — it follows the corner radius for
        free, and a filter would rasterise the card and flatten the 3D turn. It
-       also skews with the flip, which is what a real card does.
+       also skews with the flip, which is what a real card does. That is also
+       why the blur here is a literal 0 rather than --drop-blur: the reason for
+       that hairline is a cut-out PNG's ragged alpha, and a box-shadow is thrown
+       by the border box, which has no ragged edge to soften.
 
        In vw so it scales with the layout; black at low alpha so it holds over
        all four stage colours. */
-    box-shadow:
-      0.15vw 0.25vw 0.35vw rgba(0, 0, 0, 0.16),
-      0.55vw 0.9vw 1.15vw rgba(0, 0, 0, 0.3);
+    box-shadow: -0.7vw 1vw 0 var(--drop-ink);
 
     /* Negative --parallax runs ahead of the page, which reads as nearer —
        correct here, since these sit in front of the key visual. The two differ
@@ -1185,15 +1404,42 @@ html[data-loading] {
     display: block;
   }
 
+  /* FROM THE TOP, IN VW — like .top-title, the roll and the showcases, and for
+     the reason all of those are: this section's whole composition is drawn in
+     one unit, and the one element that was not drawn in it was this.
+
+     It used to be `bottom: 2vw` inside a 100vh box, which is a viewport HEIGHT
+     measurement in a layout where nothing else has one. Every other piece held
+     still as the window grew or shrank and this slid up and down past them: at
+     1440 wide the word's top ran from 455px in a short window to 779px in a
+     tall one while the roll sat at 234..591 throughout. So the arrangement was
+     only ever the designed one at a single window height, and at every other
+     height the word was somewhere the design never put it. Which is a hard
+     thing to see and name — the letters look wrong, and it is the layout.
+
+     29.9vw is where `bottom: 2vw` landed it at the frame the composition was
+     drawn on (1920 x 900, which is the aspect the reference's roll-to-word
+     overlap implies). Same place at that size, and now the same place at every
+     other size too. It is the one number to nudge if the word wants to sit
+     higher or lower against the roll — it can no longer be nudged by accident
+     with a window edge. */
   & .bottom-title {
     position: absolute;
-    left: 48%;
-    bottom: 2vw;
+    left: 49%;
+    top: 29.9vw;
     transform: translateX(-50%);
+  }
+
+  /* SILENT's artwork carries more air on its left than the other five, so the
+     shared 48% — which reads centred for them — sits it visibly left of the
+     roll. 50% is that word's centre, not a new default: the 48% above stays
+     where it is for everyone else. */
+  & .bottom-title[data-word="silent"] {
+    left: 50%;
   }
 }
 
-.top-title {
+.tape-slider-parent .top-title {
   position: absolute;
   top: 9.1vw;
   left: 48%;
@@ -1235,18 +1481,19 @@ html[data-loading] {
   gap: 0.764vw;
 }
 
-.tag .h6,
-.subhead {
-  position: relative;
-  padding: 0.5vw 0.9vw 0.5vw 1.75vw; /* extra left padding clears the perforation */
-  border-radius: 0.42vw;
-  background: var(--tag-bg);
-  color: var(--tag-ink);
-  font-size: 0.95vw;
-  font-weight: 700;
-  letter-spacing: 0.045em;
-  line-height: 1.15;
-  white-space: nowrap; /* a chip should never wrap onto two lines */
+.tag .h6, .subhead {
+    background: var(--tag-bg);
+    color: var(--tag-ink);
+    white-space: nowrap;
+    border-radius: .42vw;
+    padding: 0.678vw;
+    padding-left: 1.6em;
+    position: relative;
+    font-size: 1.111vw;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 1.111vw;
+    letter-spacing: -0.033vw;
 }
 
 /* Uneven tilts so the chips read as stuck on by hand; a repeating pattern looks
@@ -1291,8 +1538,15 @@ html[data-loading] {
 /* The same chip as the left column's — it inherits the look, perforation and
    palette from the rules above and only adds placement. A plain transform here,
    unlike the left column's --rot: this chip never moves, it is repainted in
-   place. */
-.subhead {
+   place.
+
+   SCOPED TO THE SLIDER, unlike the look above. The chip is a component — the
+   giant-pinning section wears one too — but WHERE it sits is this stage's
+   business, and an unscoped rule was quietly handing the slider's absolute
+   placement and its 8vw wave-band clearance to every other .subhead on the
+   site. Two rules, two lifetimes: what a chip IS stays global, where THIS chip
+   goes stays here. */
+.tape-slider-parent .subhead {
   position: absolute;
   left: 48%;
   top: 5.5vw;
@@ -1312,7 +1566,7 @@ html[data-loading] {
    these boxes' transforms belong to their own rules or to GSAP, and the two
    properties compose. */
 .tape-slide,
-.subhead,
+.tape-slider-parent .subhead,
 .roll-parent {
   translate: 0 8vw;
 }
@@ -1417,7 +1671,7 @@ html[data-loading] {
     content: "";
     position: absolute;
     inset: 0;
-    background: url("/assets/paper-overlay.png");
+    background: url("/assets/paper-overlay.webp");
     background-size: 100% 100%;
     opacity: 0.2;
     pointer-events: none;
@@ -1546,6 +1800,859 @@ html[data-loading] {
 }
 
 /* ==========================================================================
+   Giant pinning — WHY WE EXIST
+   ==========================================================================
+   Markup in components/GiantPinning, camera in its pin.ts.
+
+   ONE CANVAS, SEVERAL VIEWPORTS WIDE, and a camera walking it. Everything on
+   the canvas is placed absolutely from --gx / --gy, and those two numbers are
+   the whole layout: pin.ts measures the blocks and works out the camera stops
+   from them, so moving a block HERE moves the camera with it. There is no
+   second copy of these coordinates anywhere, and there must not be. That
+   includes how LONG the section is — the pin's end is the measured path at a
+   pace, not a height typed into this file.
+
+   The arrangement is a staircase, and the class names the design came with are
+   the route: come DOWN onto TO CREATE and go horizontal across it; DIAGONALLY
+   DOWN to the start of TO FIX and horizontal across that; DIAGONALLY UP to the
+   top right for TO PROTECT. The two arrows are drawn on the two diagonal legs.
+
+   The phrases are wider than the window at this type size, so the camera reads
+   each one left to right rather than framing it whole — see the note at the top
+   of pin.ts. Which means --gx has to clear a phrase's WIDTH, not a viewport:
+   the three below span 1..148, 175..264 and 292..459vw, and the gaps between
+   those spans are the legs the arrows sit on.
+
+   IN VW, ALL OF IT, including the vertical offsets — the same rule the slider's
+   composition follows and for the same reason. A vh here would mean the
+   staircase was only the designed shape at one window height, and the camera
+   centres each phrase vertically anyway, so what --gy actually controls is the
+   size of the STEP between phrases. That is a drawing, and a drawing is in one
+   unit.
+   ========================================================================== */
+.giant-pinning {
+  /* The hero's pairing exactly, not an approximation of it — this section and
+     the hero are the same lime sheet with the same dark green written on it, and
+     two greens that are nearly the same read as a mistake rather than a
+     variation. Same pair the footer and the menu use. */
+  --giant-bg: #b6fe00;
+  --giant-ink: #013900;
+
+  /* One number for the type size of all three phrases, so they read as one
+     voice saying three things rather than three headlines that happen to be
+     near each other. The mock has the longest of them, TO PROTECT, filling
+     about three quarters of the window — this is that, and it is the knob to
+     turn if the phrases want to be louder or quieter.
+
+     The scenery follows it without being told: --px / --py are percentages of
+     the row's own box, so the arrangement around a phrase is the same
+     arrangement at any type size. */
+  --giant-size: 38.194vw;
+
+  /* THE OPENING FRAME, shared by the first phrase, the heading and the camera.
+     --giant-open-gx is where the first phrase starts on the canvas.
+     --giant-inset is how far a phrase's edge stops from the window's edge when
+     the camera parks on it, as a FRACTION of the window width — unitless so
+     that pin.ts can read it straight off this element and multiply, rather than
+     keeping a second copy of the number that drifts from this one. Change it
+     here and the camera changes with it. */
+  --giant-open-gx: 1vw;
+  --giant-inset: 0.045;
+
+  /* THE TAIL — bare paper below the pinned frame, and the reason the section is
+     taller than the window it holds still.
+
+     Without it the pin lets go and the footer is immediately there: the last
+     phrase is still at full size on screen when the footer's curve arrives, and
+     two big shapes meet with nothing between them. This is the run of empty
+     ground the phrase travels up through first.
+
+     It is invisible as a band, and deliberately so — the footer opens on the
+     same lime, so what this actually does is push the curve further down the
+     page rather than draw anything of its own.
+
+     pin.ts pins .wrapper, not this element, which is what leaves the tail free
+     to scroll. */
+  --giant-tail: 18vw;
+
+  position: relative;
+  padding-bottom: var(--giant-tail);
+
+
+  /* FLAT. The paper is a separate layer — see ::before below. */
+  background-color: var(--giant-bg);
+
+  /* The canvas runs well past both edges and every bit of it that is not the
+     current phrase must be cut off. Also what stops the page scrolling
+     sideways, which an unclipped 460vw child would otherwise do. */
+  overflow: hidden;
+}
+
+/* Paper grain — the hero's layer and the slider's, built the same way, which is
+   the only way the three read as one printed surface.
+
+   ON .wrapper, NOT ON THE SECTION, and that distinction is load-bearing rather
+   than tidy. .wrapper is exactly one viewport; the section is the pin-spacer
+   plus the tail, which is around nine viewports tall. Stretching a 1.78 image
+   over a box of aspect 0.20 is an 8.9x vertical smear — paper turns into
+   vertical streaking, which is the same trap the hero's own note describes and
+   why it tiles instead of stretching.
+
+   Being on the pinned box also keeps the grain STILL. The paper is the ground
+   the camera is looking at, and ground that slides while the view is held reads
+   as the background having come loose.
+
+   AN OVERLAY, NOT A BACKGROUND ON THE ELEMENT. The difference is the opacity:
+   the file is a photograph of crumpled paper, and painted directly it is a
+   photograph — creases, highlights, a light source. At 0.2 over the flat lime it
+   stops being a picture of paper and becomes the grain of this one, which is the
+   whole point. There is no way to reach that from a background-image on the
+   element itself, because opacity there would take the colour with it.
+
+   background-size: 100% 100%, the slider's setting rather than the hero's
+   width-fitted tile. Both are right for their box: the hero is 170vw tall and
+   stretching would smear the grain three times its height, while this section
+   and the slider's stage are one viewport, which is close to the image's own
+   aspect. Stretched to a box that shape, nothing distorts.
+
+   ONE GRAIN FILE FOR THE WHOLE SITE, and it is worth knowing what it replaced.
+   There were two: a 5824px, 12.94MB PNG that the hero, the slider stage and the
+   footer painted, and an 1800px 215KB WebP that this section and the menu panel
+   had already been moved to. The PNG was the single heaviest thing on the site —
+   more than a third of everything a first visit downloaded — to paint grain at
+   0.2 opacity, which is a strength at which its extra resolution never reached
+   the screen.
+
+   This is 2560x1435 and 222KB, made from the same original: wider than the WebP
+   it replaces, so the two rules that already used that one strictly gained
+   detail, and 1/58th of the PNG's weight. Measured against the PNG at the size
+   the CSS actually paints it — resampled to a 1440 viewport — the mean
+   difference is 2.46/255 and the worst 27/255, which the 0.2 opacity takes to
+   0.49 and 5.4. The A/B also came back 15% cheaper on main-thread time across a
+   full scroll, because a 5824px source is decoded and resampled for every box it
+   tiles into.
+
+   Everything uses this now, at whichever background-size its own box wants.
+
+   Under the type, and it gets there without a z-index: .wrapper is positioned
+   and comes later in the markup, so it paints over this. Which is the right way
+   round — the phrases are printed ON the paper, not laid over it.
+
+   pointer-events: none because a full-bleed decorative layer must never be what
+   a click lands on. */
+.giant-pinning .wrapper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("/assets/paper-overlay.webp");
+  background-size: 100% 100%;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* The tail's share of the same sheet. The tail sits OUTSIDE .wrapper, so the
+   frame's overlay cannot reach it, and flat lime butted against grained lime
+   shows as a line the moment the pin lets go.
+
+   An overlay again, at the same 0.2 — a background-image on the element would
+   paint the photograph at full strength, which is the whole thing the layer
+   above exists to avoid, and the tail would read as a different material.
+
+   Height is the tail exactly, anchored to the bottom, so this never covers the
+   frame and never gets stretched over the section's nine viewports. The tile is
+   100vw x 100vh, which is precisely what .wrapper's overlay paints at 100% 100%
+   of a one-viewport box — same paper, same scale. The join is a change of phase
+   in a texture rather than a change of texture, and at this opacity there is
+   nothing in it to see. */
+.giant-pinning::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--giant-tail);
+  background: url("/assets/paper-overlay.webp");
+  background-size: 100vw 100vh;
+  background-repeat: repeat;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* Exactly one viewport, because that is what a pinned section is: the window,
+   held still. ScrollTrigger adds a spacer of its own for the scroll distance —
+   the height here is the FRAME, not the travel. */
+.giant-pinning .wrapper {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* THE ONE THING THAT MOVES. inset: 0 rather than a declared width: the blocks
+   inside overflow it in every direction and that is fine, because nothing here
+   is laid out by the box — the box exists to be the offsetParent the camera
+   measures against, and to be a single element to put one transform on.
+
+   will-change, because this transform changes on every scrolled frame for the
+   whole length of the section, which is the case the hint is actually for. */
+.giant-canvas {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+/* Everything on the canvas is placed the same way, off the same two variables,
+   so a new piece of scenery needs no rule of its own — just --gx / --gy. */
+.giant-canvas > * {
+  position: absolute;
+  left: var(--gx);
+  top: var(--gy);
+}
+
+/* --------------------------------------------------------------------------
+   The arrangement. THESE SIX NUMBERS ARE THE COMPOSITION — the staircase, the
+   spacing of the legs, and how far the camera travels, all at once.
+
+   --gx is spacing, and it must clear the phrase's own width plus a gap for the
+   leg — a phrase here is 89 to 167vw wide, so these are not viewport-sized
+   steps. Overlap two spans and the previous phrase is still on screen behind
+   the next one.
+   --gy is the step: the difference between two rows is how far the camera dips
+   or climbs on that leg. The absolute values barely matter — the camera centres
+   vertically on whatever it is aiming at — but the GAPS are the whole
+   staircase. The heading's --gy is the exception and IS read against the first
+   phrase's: the difference between them is the length of the opening drop.
+   -------------------------------------------------------------------------- */
+/* CENTRED ON THE PAGE, and this is how rather than by eye. The box is anchored
+   to the LEFT EDGE OF THE OPENING FRAME and is exactly one window wide, so it is
+   the window the camera is showing; its contents are then centred inside it.
+
+   Placing it at some --gx and nudging until it looks middled is a number that
+   only holds for one string at one font size — change the copy, or lose the
+   webfont to a fallback, and it drifts off centre again. This holds regardless
+   of what the heading says. */
+.giant-pinning .top-title {
+  --gx: calc(var(--giant-open-gx) - var(--giant-inset) * 100vw);
+  --gy: 16vw;
+  width: 100vw;
+  text-align: center;
+  z-index: 2;
+}
+
+.down-to-horizontal {
+  --gx: var(--giant-open-gx);
+  --gy: 48vw;
+
+  
+}
+
+/* RESPACED for the picture in the gap. The three phrases run 189, 130 and 208vw
+   wide now — the card added about 40vw to each — so the old --gx had them
+   overlapping by 16 and 31vw, with the previous phrase still on screen behind
+   the next. These leave a clear 25vw leg between spans for the arrow to sit on:
+
+     TO CREATE     1..190      leg 190..215
+     TO FIX      215..345      leg 345..371
+     TO PROTECT  371..579
+
+   Widen --giant-slot and these all have to move again; the camera does not, it
+   just measures whatever is there. */
+.diagdown-to-horizontal {
+  --gx: 215vw;
+  --gy: 95vw;
+}
+
+.diagup-to-horizontal {
+  --gx: 371vw;
+  --gy: 48vw; /* the climb: back to CREATE's level */
+}
+
+/* ON THE LEGS, in the clear space between two phrase spans and below both of
+   them — the row is 41vw tall from --gy, so an arrow at the phrases' own --gy
+   would be beside the type rather than on the path between. These sit under the
+   line CREATE ends on and above the line FIX begins, which is where the camera
+   actually travels.
+
+   Both at the same --gy on purpose: the two legs are mirror images (down 47vw,
+   then up 47vw), so the marks that describe them belong at the same height. Both are the same drawn line
+   in two directions — a stroke and an arrowhead, masked rather than painted, so
+   they take --giant-ink like everything else here and there is no second copy
+   of the colour inside an SVG file. Same trick the letters use. */
+/* WIDER THAN TALL, and the height is not free — it is the width over the
+   viewBox's own 3:2. The default preserveAspectRatio fits the drawing inside the
+   box and centres it, so a box of a different shape does not stretch the arrow,
+   it letterboxes it: the mark shrinks to fit the tighter axis and sits in a band
+   of empty space, which then makes --gx and --gy point somewhere other than
+   where the ink is. Change one of these three and change all three. */
+.diag-down-arrow,
+.diag-up-arrow {
+  width: 26vw;
+  height: 17.33vw; /* 26 / (150 / 100) */
+  color: var(--giant-ink);
+  opacity: 0.75; /* a pencil note on the page, not a piece of signage */
+}
+
+/* Drawn, not masked. The stroke is what reveal.ts runs a dash along, and a mask
+   has no stroke — which is the whole reason these stopped being background
+   images.
+
+   The dash is set from JS off each path's own measured length, so nothing here
+   has to know how long the curve is. Until that lands the paths are simply
+   drawn, which is also the no-JS state and the reduced-motion one. */
+.diag-down-arrow svg,
+.diag-up-arrow svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* THIS IS NOT A WIDTH ON SCREEN, and the arithmetic is worth having because
+   there is no vector-effect here to make it one. The stroke is in viewBox units
+   and the box is in vw, so what you actually see is
+
+     stroke-width x (element width / viewBox width)
+
+   — 2 x (26vw / 150) = 0.347vw, about 5px at 1440, from 3.5 x (17vw / 100) =
+   0.595vw before. So the number went UP and the line got thinner, because the
+   drawing got longer underneath it. Lengthen the arrow again and this has to
+   come back up to hold the same weight.
+
+   1.45 is 0.251vw, about 3.6px at 1440 — a pencil line rather than a marker.
+   The floor is the round caps: linecap and linejoin are both round below, so
+   the head's barbs are capped at half this on each end, and thinning past about
+   1.2 starts to lose the join at the tip to antialiasing before the line itself
+   looks any lighter. */
+.diag-down-arrow path,
+.diag-up-arrow path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 0.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Pulled left by the 9vw the arrow grew. The clear leg between two phrases is
+   about 43vw and the mark has to finish inside it — a longer arrow that keeps
+   its old --gx runs its head under the first letter of the phrase it is
+   pointing at, which reads as a mistake rather than as a mark. */
+.diag-down-arrow {
+  --gx: 184vw;
+  --gy: 77vw;
+}
+
+.diag-up-arrow {
+  --gx: 338vw;
+  --gy: 80vw;
+}
+
+
+/* --------------------------------------------------------------------------
+   The phrases
+   -------------------------------------------------------------------------- */
+/* Shrink-to-fit, which is load-bearing rather than tidy: the camera centres a
+   row on its measured width, so a row that stretched to some declared width
+   would be centred on the box instead of on the words in it. width: max-content
+   makes the box and the phrase the same thing. */
+.giant-row {
+  width: max-content;
+  color: var(--giant-ink);
+}
+
+.giant-row .giant {
+  font-family: var(--font-heading);
+  font-size: var(--giant-size);
+  font-weight: 800;
+  line-height: 0.82; /* condensed caps: the face's own leading is all shoulder */
+  letter-spacing: -0.005em;
+  white-space: nowrap; /* a phrase that wrapped would break the staircase */
+  margin: 0;
+
+  /* A ROW OF LETTER BOXES, not a run of text — the phrase is split per character
+     so each one can be masked and slid up on its own (components/letters.tsx,
+     GiantPinning/reveal.ts). The hero's headline is built the same way.
+
+     What this costs is pair kerning: every letter is its own box now, so the
+     font's kerning table has no pairs left to act on. Measured across the three
+     phrases it moved TO CREATE by 5px and left the other two identical, and the
+     camera measures whatever they end up being, so nothing downstream needed
+     telling.
+
+     NO gap ON THIS RULE, ever. There was one — a word-space between TO and the
+     noun, which did nothing while this was a plain text box and was therefore
+     easy to leave lying around. Turning the box into a flex container switched
+     it on between EVERY letter and made the phrase half as wide again. A word
+     space belongs on the space character, or as a margin on the noun below. */
+  display: flex;
+
+  /* Over the photographs, under the tags. The props sort themselves either side
+     of this with --pz, which is the only reason the type does not look pasted
+     on top of a background. */
+  position: relative;
+  z-index: 1;
+
+  /* The picture in the gap is taller than the type, so the row grows to it.
+     Centre rather than baseline: the card is meant to sit ACROSS the line, top
+     above the caps and bottom below the baseline, which is where the mock has
+     it and what stops it reading as a very tall letter. */
+  align-items: center;
+}
+
+/* THE GAP BETWEEN TO AND THE NOUN — a box, not a length.
+ *
+ * It is a flex item in the headline, so the letters make room for it exactly as
+ * they make room for a letter, and there is one number to change rather than a
+ * width and a matching `gap` that have to agree. Resize it and the noun moves;
+ * empty it and the phrase closes up.
+ *
+ * Note what this costs, because it is the one thing to watch: the phrase gets
+ * a whole --giant-slot wider, and --gx on the blocks has to clear that. Adding
+ * this pushed TO CREATE from 147 to 181vw, and the three had to be respaced.
+     Every change to this number means respacing them again — the camera needs
+     no telling, but the phrases still have to not overlap.
+ *
+ * The air either side is deliberately uneven — a shade more before the noun
+ * than after TO, which is how the mock has it and reads as the picture belonging
+ * to the word it introduces. */
+.giant-slot {
+  /* In em rather than px so the card keeps its proportion to the type: raise
+     --giant-size and it grows with the letters instead of turning into a stamp
+     beside them. 0.5947em is 327px at the current size. */
+  --giant-slot: 0.5947em;
+
+  flex: 0 0 auto;
+  width: var(--giant-slot);
+  /* margin: 0 0.16em 0 0.1em; */
+  position: relative;
+  z-index: 2; /* over the type: it is laid ON the line, not set into it */
+
+  /* Per card, from index.tsx. `rotate` rather than `transform` for the reason
+     this file keeps giving — except that here it is safe: the tape inside is a
+     .peel and .peel uses `rotate` for its own aim, but that is a DESCENDANT, so
+     the two compose down the tree rather than fighting over one property. A
+     tilt here turns the card and its tape together, which is right: they are one
+     object stuck to the page. */
+  rotate: var(--giant-tilt, 0deg);
+
+  /* The vertical nudge, per card, from index.tsx.
+   *
+   * `translate` rather than `transform`, and the difference is not stylistic.
+   * The individual properties compose in a fixed order — translate, rotate,
+   * scale, then transform — with `transform` applied INNERMOST. Written there, a
+   * straight-up nudge would be turned by --giant-tilt before it landed, so a
+   * card at 3.19deg would drift sideways as well as up. On `translate` it is
+   * applied outermost and stays vertical whatever the tilt.
+   *
+   * Layout is untouched either way, which is what we want: the row keeps its
+   * measured box, so the camera still centres on the type rather than chasing a
+   * card that has been nudged off it. The sideways half follows from that: --dx
+   * slides the picture off its own gap, it does not widen the gap — the letters
+   * either side do not move.
+   *
+   * --pdx is the parallax offset from parallax.ts, ADDED to the hand-set nudge
+   * rather than given a property of its own — there is only one `translate` and
+   * the two would overwrite each other. Note the units are deliberately mixed:
+   * --giant-dx is em so it scales with the type, --pdx is px because it is a
+   * distance on the screen. calc() is what lets one box hold both. */
+  translate: calc(var(--giant-dx, 0em) + var(--pdx, 0px)) var(--giant-dy, 0em);
+}
+
+/* The photograph itself — a plain image, and deliberately so. It is the TAPE
+   that peels (see below); a picture whose own corner lifts is a picture coming
+   unstuck from nothing. */
+.giant-card {
+  display: block;
+  width: 100%;
+
+  /* SQUARE, which the artwork is not — the shots are 204x210. object-fit crops
+     the picture to the box rather than squashing it, and the box is what the
+     design specifies. */
+  aspect-ratio: 1;
+  height: auto;
+  object-fit: cover;
+
+  border-radius: 0.09em;
+
+  /* A thing lying on the paper, the same as every other photograph on the site
+     — see --drop-ink in :root for why it is hard rather than blurred, and
+     .giant-prop--shot for why the x is negative and further out than a tag's.
+
+     The offset is in em rather than the vw the loose props use, so it holds its
+     proportion to the card when --giant-size moves. -0.0182/0.026em is about
+     -10px and 14px at the current type size, which is the same distance in
+     screen pixels the props throw — they are lying on the same sheet. */
+  filter: drop-shadow(-0.0182em 0.026em var(--drop-blur) var(--drop-ink));
+}
+
+/* The strip across the top edge, overhanging it — a photo taped to a board, not
+   a photo with a border. Peel's wrapper takes over the layout box a bare <img>
+   would have held, which is why this sizes and places the wrapper and the two
+   copies of the artwork inside it follow.
+
+   Width matches TAPE_W in index.tsx, which is also what the `box` prop is built
+   from — the two have to agree, because box is what the turned clip frame is
+   bled by. Change them together.
+
+   -46% rather than -50%: the strip sits mostly above the card with a little of
+   it on the picture, which is what makes it read as holding the thing down
+   rather than balanced on its edge. */
+.giant-slot .giant-tape,
+.giant-prop--shot .giant-tape {
+  /* THE REST POSE IS STUCK DOWN. peel.ts's own default is 0 — strip still up,
+     since 0 is Peel's `from` and `from` here is the lifted end — and that is the
+     right start for the animation but the wrong thing to LEAVE on the page. No
+     JS, or reduced motion, and nothing ever presses it: the photograph would be
+     held by a curled corner for good. reveal.ts sets it to 0 itself, on the one
+     path where something is going to move it. */
+  --peel: 1;
+
+  /* ONE SHADOW, AND IT IS THIS ELEMENT'S. Peel gives its face a shadow of its
+     own by default, which is right for a sticker lying loose on a page and wrong
+     here: it stacked under the wrapper's, so the strip carried two blurs at two
+     offsets and the sharper one below was sitting in the softer one's haze. Off,
+     so the assembly casts a single shadow — face and lifted flap together, which
+     is also the more honest reading of a strip being pressed down. */
+  --peel-shadow: none;
+
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 0.42em;
+  translate: -50% -46%;
+  z-index: 3;
+
+  /* NO rotate HERE. .peel uses that property for --peel-dir — it is how the
+     fold is aimed at an edge — so a tilt written here replaces the direction
+     rather than adding to it, and the strip stands on end while its artwork
+     stays counter-turned. The lean goes into `direction` in index.tsx instead:
+     the tilt PLUS 90deg, which is the hero's note about its angled tape and the
+     same arithmetic. translate is free, being a separate property again. */
+
+  /* HARD, NOT SOFT, and that is a statement about what the strip IS.
+   *
+   * The blur was 0.03em, which at the type size this is written in comes out
+   * around 15px — wider than the shadow's own offset, so what reached the screen
+   * was a grey cloud centred on the strip rather than a strip standing off the
+   * paper. The mock's is a crisp offset copy, and it should be: tape is thin and
+   * it is in CONTACT along its whole length. A contact shadow has no room to
+   * spread, and the amount a shadow spreads is exactly how far off the surface
+   * the eye reads the thing as being.
+   *
+   * Not literally 0 — see --drop-blur in :root, which this now shares with
+   * every other shadow on the site so there is one number that decides hard or
+   * soft. The strip's ends are torn and drop-shadow takes its shape from the
+   * alpha channel, so a zero blur hands those ragged edges straight through
+   * unfiltered and they stair-step.
+   *
+   * The ALPHA is this rule's own and deliberately heavier than --drop-ink. Every
+   * other shadow here falls on flat lime; this one falls on a PHOTOGRAPH, which
+   * is mid-toned and busy, and 0.34 disappears into it.
+   *
+   * It goes UP with the blur coming off, either way. Spreading the same ink over
+   * fifteen pixels is what made 0.25 look like the right amount of shadow; concen-
+   * trated into a sharp edge it would read as barely there.
+   *
+   * All three in em, so a strip keeps its shadow's proportions at any size —
+   * .giant-prop--shot's font-size trick is what makes that true of the loose
+   * photographs as well as of the card in the phrase. */
+  filter: drop-shadow(0.011em 0.015em var(--drop-blur) rgba(0, 0, 0, 0.42));
+}
+
+/* The noun. Its own node because the mock treats it as the word that matters —
+   nothing distinguishes it yet, and this is where that goes when it does.
+   flex rather than contents so its letters carry on the parent's row as their
+   own boxes, which is what the mask needs them to be. */
+.giant-row .giant > span {
+  display: flex;
+}
+
+/* --------------------------------------------------------------------------
+   Split letters — the two boxes the reveal walks, the hero's and the menu's.
+   .clip holds the letter's place in the row and masks it; .char is the only
+   thing that moves. One element cannot carry both, which is why there are two.
+   -------------------------------------------------------------------------- */
+.giant-pinning .clip {
+  display: block;
+  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  overflow: hidden;
+
+  /* Headroom, then handed straight back. line-height here is 0.82 on the
+     phrases and 0.94 on the heading, both under 1, so a letter's content box is
+     shorter than the capital standing in it and the mask would shave the tops
+     off. The matching negative margins take the room back out of the layout, so
+     the rows measure what they always did — which matters more here than
+     anywhere else on the site, because the camera aims at those measurements.
+
+     Nothing at the bottom: the mask's lower edge is what the letters slide out
+     through, and it wants to sit tight on the baseline. */
+  padding: 0.2em 0.05em 0;
+  margin: -0.2em -0.05em 0;
+}
+
+/* Where a letter waits before the reveal, and — since the reveal is JS — what
+   it falls back to. reveal.ts sets data-reveal on the section to lift this and
+   hand the letters to GSAP; the <noscript> in index.tsx lifts it for good if
+   that is never going to happen, and pin.ts lifts it on the reduced-motion path
+   where nothing animates at all.
+
+   130 rather than 100 for the reason the hero gives: capitals overshoot their
+   own box, so a letter moved exactly its own height still leaves a hairline of
+   tops at the mask's edge. REVEAL.HIDDEN is the same figure and the two have to
+   agree. */
+.giant-pinning .char {
+  display: block;
+  transform: translateY(130%);
+}
+
+.giant-pinning[data-reveal="live"] .char {
+  transform: none;
+}
+
+/* --------------------------------------------------------------------------
+   Scenery — the tags and photographs scattered around each phrase.
+
+   Placed from --px / --py / --pw / --pr / --pz, all of which come from PANELS in
+   index.tsx rather than from here. That is deliberate: an arrangement of thirty
+   objects is DATA, and data belongs next to the markup that emits it, where a
+   whole prop is one line you can read, move or delete. What stays here is how a
+   prop BEHAVES, which is the same for all of them.
+
+   --px / --py are PERCENTAGES OF THE ROW, not vw, and that is the one thing to
+   understand before moving anything. A percentage left resolves against the
+   row's width and a percentage top against its height, so an arrangement built
+   around TO CREATE holds its shape when --giant-size changes, and the same
+   numbers mean the same composition on the three-letter phrase and the
+   eight-letter one. In vw they would all slide left the moment the type grew.
+   -------------------------------------------------------------------------- */
+.giant-prop {
+  position: absolute;
+  left: var(--px);
+  top: var(--py);
+  width: var(--pw);
+  height: auto;
+  rotate: var(--pr);
+  z-index: var(--pz);
+
+  /* THE PARALLAX OFFSET, written per frame by parallax.ts. `translate` and not
+     `transform`, for the reason this file keeps giving: the individual
+     properties compose in a fixed order and translate lands OUTSIDE rotate, so
+     the drift stays horizontal on a prop tilted 14deg instead of sliding
+     diagonally. --pr is already spending `rotate`, which is the other half of
+     why it cannot go in a transform here. */
+  translate: var(--pdx, 0px);
+
+  /* Offset down and to the right, one light above-left. These are things lying
+     ON the paper, and a thing lying on paper casts one — see --drop-ink in
+     :root for why it is a hard edge rather than a blur.
+
+     THIS IS THE TAG'S SHADOW. The photographs take their own, further and to
+     the other side — see .giant-prop--shot below, and the note there about what
+     that costs.
+
+     IN vw AND NOT A FRACTION OF THE PROP, which is the right way round even
+     though the props run from 11vw to 21vw. Every one of them is lying the same
+     distance off the same sheet, so they all throw the same offset; scaling it
+     with the artwork would say the big photographs are floating higher than the
+     small tags, which is not what the arrangement is. */
+  filter: drop-shadow(0.35vw 0.5vw var(--drop-blur) var(--drop-ink));
+
+  /* Nothing here is interactive and the props overlap the type; without this a
+     drag on a photograph would pick up the image instead of scrolling. */
+  pointer-events: none;
+  user-select: none;
+}
+
+/* The photographs, which differ from the tags in two ways.
+ *
+ * They have a RECTANGLE TO SOFTEN — the product tags are round and already carry
+ * their own edge in the artwork. Same radius family as the slider's showcase
+ * cards, so a picture laid on the page is the same object in both sections.
+ *
+ * And they are TAPED DOWN, which is why this is a wrapper with an <img> inside
+ * rather than the bare <img> the tags still are: a strip has to be positioned
+ * against the picture, and an image cannot hold a child. Everything above still
+ * applies word for word — the wrapper is what carries .giant-prop, so it is what
+ * is placed, tilted, layered and drifted, exactly as before.
+ *
+ * THE font-size IS THE WHOLE TRICK, and it is the only line here that is not
+ * obvious. The tape rule up at .giant-slot is written in em of the giant type
+ * because that is what the slot's own width is written in — 0.42em of strip
+ * across 0.5947em of card. A prop has no such relationship to the type: it is
+ * --pw vw wide because a photograph is a physical thing of one size on the page.
+ * Setting the font-size to the width a 0.5947em card would need makes `em` mean
+ * THE SAME FRACTION OF THIS PICTURE that it means of the slot's, so one tape
+ * rule serves both and a 11vw shot and a 21vw shot wear a strip in proportion
+ * instead of the same absolute strip — which on the small ones would have been
+ * most of the picture.
+ *
+ * 1 / 0.5947 = 1.6815. If --giant-slot ever changes, this changes with it; they
+ * are two halves of one ratio. */
+.giant-prop--shot {
+  border-radius: 3.1vw;
+  font-size: calc(var(--pw) * 1.6815);
+
+  /* THE PHOTOGRAPHS THROW LEFT, and further than the tags do.
+   *
+   * A rounded square is a big flat silhouette and it is the shape the shadow
+   * has to be legible AS — the round tags read at a glance because a disc's
+   * offset copy shows as a crescent on any side, while on a square the eye is
+   * comparing two straight edges and needs more daylight between them to see
+   * one at all. So these carry about twice the tags' offset.
+   *
+   * The x is NEGATIVE, which is the one thing in here that fights the rest of
+   * the file. Every other shadow on the site comes off a light above-LEFT and
+   * falls down-right; this one falls down-left. It is a deliberate call from
+   * the design, not an oversight — but it does mean a photograph and a tag on
+   * the same panel are lit from opposite sides, so if the arrangement ever
+   * reads as two pictures pasted together rather than one board, this sign is
+   * the first thing to look at. Flipping .giant-prop, .giant-card and
+   * img.showcase to match puts the whole page back under one light. */
+  filter: drop-shadow(-0.7vw 1vw var(--drop-blur) var(--drop-ink));
+}
+
+/* The picture inside the wrapper. It fills it, so the wrapper's height is the
+   picture's height and everything placed against the wrapper — the strip — is
+   placed against the picture. The radius is inherited rather than repeated: the
+   wrapper is what the rule above rounds, and the corners have to agree. */
+.giant-prop--shot > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: inherit;
+}
+
+/* --------------------------------------------------------------------------
+   The heading, top left of the first phrase. Travels WITH the canvas rather
+   than sitting fixed over it — it belongs to TO CREATE, and the mock has it
+   gone by the time the camera reaches TO FIX.
+   -------------------------------------------------------------------------- */
+.giant-pinning .top-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1vw;
+  color: var(--giant-ink);
+
+  & .subhead {
+    width: fit-content;
+    margin-inline: auto;
+  }
+
+  & .h2 {
+    text-align: center;
+    font-size: 6.25vw;
+    font-style: normal;
+    font-weight: 800;
+    line-height:  0.77;
+    letter-spacing: -0.188vw;
+  }
+}
+
+/* The chip is the slider's, inherited whole — same perforation down its left
+   edge, same shape. Only the palette is this section's, and it is set on the
+   two variables that rule already reads rather than by overriding its
+   declarations. */
+/* Only the palette and the tilt. The chip's placement rules are scoped to the
+   slider (see .tape-slider-parent .subhead), so there is nothing to undo here —
+   this one is simply the first item in a flex column, which is what a chip
+   should be anywhere it is not being pinned to a stage.
+
+   The colours go on --tag-bg / --tag-ink rather than on background / color,
+   because those are the two variables the shared rule already reads, and the
+   perforation dots take currentColor off the same pair. Override the
+   declarations instead and the dots stay the slider's colour. */
+.giant-pinning .subhead {
+  --tag-bg: var(--giant-ink);
+  --tag-ink: var(--giant-bg);
+  transform: rotate(-2deg);
+  font-size: 0.85vw;
+}
+
+/* Three lines, each a row of letter boxes. The column is what a <br> used to
+   do — a break between plain strings cannot survive the split. */
+.giant-pinning .h2 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  font-family: var(--font-heading);
+  font-size: 2.9vw;
+  font-weight: 800;
+  line-height: 0.94;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.giant-pinning .h2 .line {
+  display: flex;
+}
+
+/* --------------------------------------------------------------------------
+   Reduced motion. The camera is exactly what this setting is asking about, so
+   pin.ts does not start and this puts the canvas back into normal flow: three
+   phrases stacked down the page, scrolled past in the ordinary way.
+
+   The section still says everything it has to say. What it loses is the
+   staircase, which is the one part that only exists as movement — hence the
+   arrows going too, since they point along legs that are no longer there.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  /* SMALLER HERE, and this one is a constraint rather than a preference — do
+     not sync it back to the size above. With the camera gone the phrases are
+     laid down the page in normal flow, so each one has to FIT THE WINDOW; at the
+     pinned size TO PROTECT is 167vw wide and simply runs off the side, with
+     nothing to scroll it into view. 20vw is the largest that lands the longest
+     phrase inside the padding.
+
+     overflow stays hidden (inherited from the rule above, not overridden here)
+     so that if this ever falls behind the pinned size again, the result is a
+     clipped word rather than the whole document scrolling sideways. */
+  .giant-pinning {
+    --giant-size: 20vw;
+  }
+
+  .giant-pinning .wrapper {
+    height: auto;
+    overflow: visible;
+    padding: 8vw 6vw;
+  }
+
+  /* The frame stops being one viewport here — it is however tall three stacked
+     phrases make it — so the grain has to tile rather than stretch to it, for
+     the reason its own note gives. Same tile the tail uses, so the whole section
+     is still one sheet. */
+  .giant-pinning .wrapper::before {
+    background-size: 100vw 100vh;
+    background-repeat: repeat;
+  }
+
+  .giant-canvas {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    gap: 7vw;
+    will-change: auto;
+  }
+
+  .giant-canvas > * {
+    position: relative;
+    left: auto;
+    top: auto;
+  }
+
+  /* The props are placed relative to a row that was several viewports wide and
+     is now a column item; their offsets no longer mean anything, and a tag
+     landing on top of a letter is worse than no tag. */
+  .giant-prop,
+  .diag-down-arrow,
+  .diag-up-arrow {
+    display: none;
+  }
+
+  .giant-row .giant {
+    white-space: normal;
+  }
+}
+
+/* ==========================================================================
    Footer
    ==========================================================================
    Markup in components/Footer. The hero's dark green and the hero's lime, the
@@ -1631,15 +2738,23 @@ html[data-loading] {
   /* Two mask layers, as on the menu tab: a solid rectangle covering everything
      below the band, and the bite's own shape filling the band itself. Percentage
      positioning is a proportion of the SLACK rather than of the box, so `0 100%`
-     puts the rectangle's top edge exactly on the band's bottom — the two meet
-     with no seam and no overlap. */
+     puts the rectangle's top edge on the band's bottom.
+
+     The 1px is an overlap, not a nudge. --footer-arc is 9vw and so almost never
+     a whole device pixel; the two layers are rasterized separately — the bite as
+     its own bitmap, the rectangle as a gradient — and a shared edge landing mid
+     pixel leaves each of them short of opaque there. The layers composite with
+     `add`, but two rounded-down edges still add up to a hairline of the slider
+     showing through, right across the width at the bottom of the curve. Growing
+     the rectangle a pixel INTO the band puts the seam under solid mask instead
+     of on it. Costs nothing: alpha clamps, and the band is opaque there anyway. */
   -webkit-mask-image: linear-gradient(#000 0 0), var(--footer-bite);
   mask-image: linear-gradient(#000 0 0), var(--footer-bite);
   -webkit-mask-size:
-    100% calc(100% - var(--footer-arc)),
+    100% calc(100% - var(--footer-arc) + 1px),
     100% var(--footer-arc);
   mask-size:
-    100% calc(100% - var(--footer-arc)),
+    100% calc(100% - var(--footer-arc) + 1px),
     100% var(--footer-arc);
   -webkit-mask-position:
     0 100%,
@@ -1673,7 +2788,7 @@ html[data-loading] {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: url("/assets/paper-overlay.png");
+  background-image: url("/assets/paper-overlay.webp");
   background-size: 100% auto;
   background-repeat: repeat-y;
   opacity: 0.2;
@@ -2050,9 +3165,21 @@ html[data-loading] {
      and only once it has stopped does the image scale up into it. OPEN is how
      long the shove takes, which is therefore also how long the image waits —
      the two are one number so the beats cannot overlap. Closing runs the same
-     sequence backwards, image first. */
-  --menu-thumb-open: 0.35s;
-  --menu-thumb-pop: 0.4s;
+     sequence backwards, image first.
+
+     BOTH SHORTENED, and the first one is the one that changes what the move
+     MEANS. At 0.35s the slot took long enough that the label read as drifting
+     out of the way of its own accord; a shove is a thing one object does to
+     another, and the eye only reads cause when the two move close enough
+     together to be the same event. Under about a quarter of a second the label
+     is being pushed. The curve is doing as much of that as the number — see the
+     transition on .menu-thumb.
+
+     The second is kept in proportion to it rather than left where it was: the
+     two beats were tuned against each other, and a fast shove followed by the
+     old settle reads as the picture dawdling in after the room was made. */
+  --menu-thumb-open: 0.22s;
+  --menu-thumb-pop: 0.3s;
 
   /* The hero's dark green on paper white — the menu belongs to the page, not
      to the slider's per-tape palette, same call the wave band makes. */
@@ -2115,12 +3242,27 @@ html[data-loading] {
 /* The same paper grain the hero, the band and the stage all carry, so the
    panel reads as another piece of the same printed sheet. Lighter than their
    0.2 — that weight is tuned for saturated colour and over near-white it stops
-   being grain and starts being grey. */
+   being grain and starts being grey.
+
+   A SMALL copy of that sheet, and it is the only place on the site that wants
+   one. `background-size: 100% auto` scales the image to the box, and this box
+   is --menu-w wide — a fraction of the viewport the full-bleed uses everywhere
+   else, so the browser cannot hand this any raster it has already made and has
+   to resample the 5824px original down to about 450 on its own. That resample
+   is worth something like 380ms, it is unavoidably spent on the FIRST frame the
+   panel paints — the panel is height: 0 until then, so nothing in it has ever
+   been drawn — and the first frame the panel paints is the first frame of the
+   drop. Which is why the menu used to hitch once, on the first pull of the
+   session, and never again: after that the tile is in the raster cache.
+
+   Same picture, cut to the size this box actually draws it at, so the work is
+   already done. Nothing else points here — the full-bleed sections still take
+   the original, where its resolution is the point. */
 .menu-panel::after {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: url("/assets/paper-overlay.png");
+  background-image: url("/assets/paper-overlay.webp");
   background-size: 100% auto;
   background-repeat: repeat-y;
   opacity: 0.12;
@@ -2230,9 +3372,20 @@ html[data-loading] {
      leaving, the slot waits POP out before it starts closing, so the image has
      shrunk away first. Arriving, the hover rule below cancels the delay and the
      slot goes at once. */
+  /* THE CURVE IS WHAT MAKES IT A SHOVE. `ease` starts slowly, and a push that
+     starts slowly is not a push — the slot crept open for the first few frames
+     and the label looked like it was moving aside politely on its own. This
+     leaves at once and decelerates into place, which is the shape of one thing
+     hitting another: all of the force is at the contact and the rest is the
+     label carrying it. Same curve on both properties, because they are one edge
+     — the width is the slot growing and the margin is the gap it opens ahead of
+     itself, and a frame where those two disagree is a frame where the label
+     slides independently of the thing supposedly pushing it. */
   transition:
-    width var(--menu-thumb-open) ease var(--menu-thumb-pop),
-    margin-right var(--menu-thumb-open) ease var(--menu-thumb-pop);
+    width var(--menu-thumb-open) cubic-bezier(0.16, 0.84, 0.3, 1)
+      var(--menu-thumb-pop),
+    margin-right var(--menu-thumb-open) cubic-bezier(0.16, 0.84, 0.3, 1)
+      var(--menu-thumb-pop);
 }
 
 /* The image, second beat. It is a fixed square inside a slot that has already
@@ -2503,7 +3656,12 @@ html[data-loading] {
   z-index: 1;
   width: 8.216vw;
   height: 9.043vw;
-  filter: drop-shadow(1px 14px 20px black);
+  /* The site's cast shadow — see --drop-ink in :root. This one was the softest
+     and heaviest on the page: 20px of pure black blur under 14px of offset, a
+     paperclip apparently hovering an inch off the board. Longer than a
+     photograph's because a clip is bent wire standing proud of the paper rather
+     than lying flat on it, so it genuinely does throw further. */
+  filter: drop-shadow(0.24vw 0.62vw var(--drop-blur) var(--drop-ink));
 }
 
 #tape-on-note {
@@ -2529,6 +3687,184 @@ html[data-loading] {
   width: 42.126vw;
   height: 8.74vw;
   object-fit: cover;
+}
+
+/* The hand-written note, in the last clear stretch of green on the left of the
+   board: under the sticky note (which ends at 84.9vw) and over the lemon
+   painting, whose paper is cut on the diagonal and so leaves the corner it is
+   written into empty. That band is what sets the size — see --hand-w.
+
+   Markup in components/HandNote, drawn by HandNote/hand.ts. Two boxes: the
+   ruled margin, which is in the markup as two cubics and therefore has a viewBox
+   this stylesheet has to agree with, and the copy, which Vara builds at runtime
+   and hand.ts re-fits to a viewBox of its own.
+
+   NO PARALLAX, deliberately. The note is written ON the board; the props that
+   drift (the gift, the painting) are things lying on it. A drifting note would
+   be a sentence sliding over the surface it was written on.
+
+   Everything inside is out of flow, so the height is only the box the two
+   drawings are placed against — nothing clips, and nothing is laid out by it. */
+.hand-note {
+  /* THE ONLY DIAL, and the default for it. Every figure below is a fraction of
+     this, so an instance is resized with one number and nothing has to be
+     re-derived — which is what lets the pinning section's copy be a third the
+     size of the hero's and still be the same note. The fractions are the
+     markup's own viewBox units over 320 — 0.225 is y = 72, 0.194 is x = 62 —
+     so the path data in HandNote/index.tsx and the boxes here stay readable
+     against each other. */
+  --hand-w: 25vw;
+
+  /* The pen, and the default for it: the hero's lime, the colour the top field
+     and the menu discs are. HandNote/hand.ts READS this property off the note
+     and draws the letters in it, so the ruled margin and the writing take one
+     value and an instance overrides both at once by setting it. */
+  --hand-ink: #b6fe00;
+
+  /* PLACEMENT IS NOT HERE, and that is the whole reason the note can appear
+     twice. Everything in this rule is what the note IS — its size dial, its
+     pen, its own box — and every rule below reads only from --hand-w. Where it
+     sits belongs to the section that put it there: .hero-section .hand-note
+     below, and .giant-note under the pinning section. */
+  position: absolute;
+  width: var(--hand-w);
+  height: calc(var(--hand-w) * 0.6875); /* 220 units of the rule's 320 */
+  /* Decoration. The readable copy inside it is a .sr-only text node, which is
+     unaffected — this only keeps the box from being what a click lands on. */
+  pointer-events: none;
+}
+
+/* The hero's copy: on the dark green above the taped-down lemon painting. The
+   25vw is what the band there will take — the writing then runs from 90.6vw to
+   100.7vw, clear of the sticky note above it and inside the painting's diagonal
+   below. Going much past 27vw puts the last line on the paper. */
+.hero-section .hand-note {
+  top: 85vw;
+  left: 3.5vw;
+  /* Above the painting it overhangs — which paints from tree order anyway, but
+     not above the gift (1) by accident. */
+  z-index: 2;
+}
+
+/* The pinning section's copy: under the photograph standing in TO CREATE's gap,
+   written in the giant ink on the lime.
+ *
+ * Placed from --px / --py exactly as the props on that row are, and the note by
+ * .giant-prop applies here word for word — those are PERCENTAGES OF THE ROW, so
+ * the arrangement holds its shape when --giant-size moves. The values are in
+ * the markup with the props' own, which is where that arrangement is kept.
+ *
+ * THE SIZE. 12.8vw is 184.4px at the 1440 design width, which is the width the
+ * design asked for. The height that comes with it is 126.8px against the 139.2
+ * asked for, and it cannot be both: the note's proportions are its ruled
+ * margin's artwork (viewBox 320 x 200 in HandNote/index.tsx) and the writing
+ * fitted beside it, so the box has ONE aspect and --hand-w picks a point on it.
+ * Fitted to the width rather than the height on purpose — this sits under a
+ * photograph in a row of giant type, where running wider than its slot would
+ * show and running shorter would not.
+ *
+ * z-index over the letters, like the props with a positive --pz around it: the
+ * note is a thing lying on the board, and the board is what the type is on. */
+.giant-note {
+  --hand-w: 12.8vw;
+  --hand-ink: var(--giant-ink);
+
+  /* Under a third of the hero's pen speed — see `pace` in HandNote/hand.ts.
+     This note is carried across the screen by the camera rather than by the
+     reader, and it is only there for about 900px of scroll: at full length the
+     writing was still on its first word when the camera took it away. */
+  --hand-draw: 0.3;
+
+  /* A LAYER OF ITS OWN, and this one is about the section around it rather than
+     about the note.
+   *
+   * .giant-canvas is composited (will-change: transform) and its painted extent
+   * is roughly 8000 x 2200px — the whole staircase. Anything painting into that
+   * layer invalidates tiles inside it, and this note spends its first 1.3s
+   * animating stroke-dashoffset on 72 paths, at exactly the moment the camera
+   * is transforming the same layer. So the compositor is rasterising fresh
+   * tiles for the camera move AND re-rasterising tiles for the writing, in the
+   * same frames.
+   *
+   * Promoted, the writing re-rasters its own 184 x 127 box and the canvas's
+   * tiles are left alone. The cost is one small extra layer, held for the life
+   * of the page.
+   *
+   * will-change rather than `contain: paint`, which would be the more precise
+   * tool and is the wrong one here: the writing deliberately overhangs the
+   * note's box (the svg is taller than the 0.6875 aspect the ruled artwork
+   * gives it), and paint containment would clip the last line off. */
+  will-change: transform;
+
+  left: var(--px);
+  top: var(--py);
+  z-index: 1;
+}
+
+/* Ten units to the vw at the default width: the markup's viewBox is 0 0 320 200
+   against this box, which is what lets the path data and the figures here be
+   read against each other. Height is left to the aspect ratio rather than set —
+   only one of the two should be a fact.
+
+   overflow visible because the round caps sit half a stroke outside the box at
+   all four ends, and two of the strokes start hard against the edge. */
+.hand-note .hand-rule {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* 2.6 units, so 0.26vw at the default width — the same weight the letters are
+   drawn at, which is what makes the margin and the writing one pen rather than a
+   rule and a note.
+
+   The dash pattern that hides them is written by hand.ts on mount: undrawn is a
+   state this stylesheet must not park them in, or a page without JS would be a
+   note with no lines. */
+.hand-note .hand-stroke {
+  fill: none;
+  stroke: var(--hand-ink);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+}
+
+/* Where the writing sits: clear of the down-stroke (x = 46..59) and a little
+   below the top rule. Its WIDTH is what sets the size of the hand — hand.ts
+   fits the finished artwork to this box, so the longest line is exactly this
+   long and every other figure in the note follows from it.
+
+   font-family is set rather than inherited because Vara MEASURES IT: the scale
+   it draws at comes from a reference glyph rendered in this element's CSS font.
+   It is the one place on the page where a font nobody will ever see decides how
+   big something is, and that should not be an accident of inheritance. */
+.hand-note .hand-ink {
+    top: calc(var(--hand-w) * .215);
+    left: calc(var(--hand-w) * .205);
+    /* Brought down from .703, which is a hand about 3.5px smaller at the 1440
+       design width — the writing measured a 24.6px x-height there, and against
+       Inter Tight's 0.546 x-height per em that is the same apparent size as a
+       45px font, so this is 41.5px of one. Everything else about the note is
+       untouched: the ruled margin is drawn from --hand-w and does not pass
+       through here, and every figure in HandNote/hand.ts is in the FONT's own
+       units, so the stroke weight, the line spacing and the drift all come down
+       with the letters rather than needing to be re-tuned after them. */
+    width: calc(var(--hand-w) * .648);
+    font-family: var(--font-body);
+    position: absolute;
+    transform: rotate(
+353deg);
+}
+
+/* hand.ts strips Vara's px width/height and gives the svg a viewBox, so the box
+   above is the only thing that decides the size. */
+.hand-note .hand-ink svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
 }
 
 /* ==========================================================================
@@ -2645,7 +3981,17 @@ html[data-loading] {
     var(--peel-far) var(--peel-far),
     var(--peel-shut) var(--peel-far)
   );
-  filter: var(--peel-shadow, drop-shadow(0.12vw 0.2vw 0.35vw rgba(0, 0, 0, 0.28)));
+  /* The site's cast shadow, thrown by the FACE — see --drop-ink in :root. Kept
+     a shade tighter than a photograph's because a peel is a strip of tape or a
+     sticker, which lies flatter against the paper than a card does.
+
+     Still overridable, and both overrides matter: the giant tapes take it off
+     entirely (their wrapper casts one shadow for face and lifted flap together)
+     and the preloader's mark sets it to none because it is not on paper at all. */
+  filter: var(
+    --peel-shadow,
+    drop-shadow(0.22vw 0.32vw var(--drop-blur) var(--drop-ink))
+  );
 }
 
 /* The strip that came off: the same image, upside down, one height above the

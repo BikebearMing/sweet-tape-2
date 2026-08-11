@@ -45,8 +45,13 @@ type PeelProps = {
   /**
    * What moves it. "loop" lifts and settles on its own; "scroll" scrubs the
    * fold off the page position, forwards and back. See Peel/peel.ts.
+   *
+   * "manual" is neither: peel.ts leaves it alone and something else writes
+   * --peel on the wrapper. For a peel that is one beat of a longer piece of
+   * choreography rather than a thing with a life of its own — the preloader's
+   * mark unfolding (Preloader/reveal.ts) is the case it exists for.
    */
-  drive?: "loop" | "scroll";
+  drive?: "loop" | "scroll" | "manual";
   /**
    * The fold's travel: where it sits at `--peel: 0` and where it has got to at
    * 1. CSS `--peel-from` / `--peel-to`.
@@ -150,10 +155,18 @@ export default function Peel({
   );
 }
 
-/* The one filter every peel on the page shares, rendered once in the frontend
- * layout. Per-instance <defs> would mean duplicate ids in the document, and the
- * first one wins — so every peel would be wearing the first peel's filter
- * anyway, just with a console full of duplicate-id warnings to go with it.
+/* The undersides, one filter per colour. They are rendered once in the frontend
+ * layout and shared. Per-instance <defs> would mean duplicate ids in the
+ * document, and the first one wins — so every peel would be wearing the first
+ * peel's filter anyway, just with a console full of duplicate-id warnings to go
+ * with it.
+ *
+ * A COLOUR PER FILTER, and not one filter reading a custom property, because a
+ * filter primitive resolves var() against ITSELF — against the <feFlood> inside
+ * the shared <defs> — and not against whatever element referenced the filter.
+ * One filter is therefore one colour for the whole document however it is
+ * written; the only way to have two is to have two. Each entry below costs a
+ * few bytes and nothing at runtime: an unreferenced filter never runs.
  *
  * What it does: take the image's alpha, throw the image itself away, and flood
  * the remaining silhouette with one flat colour. That keeps the cut-out shape
@@ -170,6 +183,20 @@ export default function Peel({
  * fully hidden SVG has a history of resolving to nothing in WebKit. It is taken
  * out of flow and out of the a11y tree instead.
  */
+const BACKS: [string, string][] = [
+  /* The board's props: paper, card, tape. The back of any of them is the
+     unprinted side, and this is that paper. */
+  ["peel-back", "#d7d2c7"],
+  /* The preloader's mark, which is not paper — it is a sticker, and its back is
+     a mid green. Taken off the gif it replaces rather than picked: through the
+     unfold the folded-over part is dominantly #60a000, and the reason it has to
+     be a measurement is that the sheet the mark unfolds against is the hero's
+     lime, #b6fe00. Flood the back with the lime its own outline is drawn in —
+     which is what it looks like it should be — and the flap is invisible for
+     the whole of the move, lime on lime. */
+  ["peel-back-mark", "#60a000"],
+];
+
 export function PeelDefs() {
   return (
     <svg
@@ -180,10 +207,12 @@ export function PeelDefs() {
       style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
     >
       <defs>
-        <filter id="peel-back" x="0%" y="0%" width="100%" height="100%">
-          <feFlood floodColor="#d7d2c7" result="flood" />
-          <feComposite operator="in" in="flood" in2="SourceAlpha" />
-        </filter>
+        {BACKS.map(([id, colour]) => (
+          <filter key={id} id={id} x="0%" y="0%" width="100%" height="100%">
+            <feFlood floodColor={colour} result="flood" />
+            <feComposite operator="in" in="flood" in2="SourceAlpha" />
+          </filter>
+        ))}
       </defs>
     </svg>
   );

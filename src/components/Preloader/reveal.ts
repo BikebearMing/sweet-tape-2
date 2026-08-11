@@ -17,10 +17,14 @@
  *
  * Four beats, in order:
  *
- *   the mark drops in      the gif's own animation, about 0.75s of it
+ *   the mark lays down     a peel, then a tick of the head — about 0.9s of it
  *   the line writes itself the hero's letter reveal, imported not copied
  *   the line drops back    the same letters, back under their masks
  *   the stack leaves       lime first, then the four tapes behind it
+ *
+ * In that order and not overlapping, which is the one thing to know before
+ * moving any of the numbers in PRELOADER: each beat is timed off the end of the
+ * one before it, so a change to an early beat pushes everything after it.
  *
  * On a clock, not on the network. The cover runs its four beats and goes,
  * whatever has or has not arrived — the load is not what this is about, and a
@@ -57,21 +61,161 @@ export const PRELOADER = {
      numbers are easier to read against each other than a chain of "and then".
      Two of them are constrained, and only two:
 
-       LINE_IN must clear the mark's own entrance — the gif drops its lemon in
-       at about frame 20 of 125, so a little under 0.8s. Earlier and the line is
-       writing itself while the logo is still landing.
+       LINE_IN must clear the mark's own entrance: MARK.IN_AT plus
+       MARK.IN_DURATION, which is where the peel has finished laying down.
+       Earlier and the line is writing itself while the logo is still landing —
+       two things moving at once in a composition that only has two things in
+       it, and neither of them is watched.
 
        SWEEP must clear the line going back: LINE_OUT, plus OUT_DURATION, plus
        the stagger's spread across however many letters the line has (0.02 x 12
-       at the copy it carries now). The paper must not start moving while the
-       letters are still falling.
+       at the copy it carries now — the spaces get a box each, so it is the
+       string's whole length and not its letter count). The paper must not start
+       moving while the letters are still falling.
 
-     Everything else is taste. The whole cover is about four seconds; LINE_OUT
-     is the number to pull if that is too long, since the beat between the line
-     landing and it leaving is the one with nothing happening in it. */
-  LINE_IN: 0.15,
-  LINE_OUT: 2.15,
-  SWEEP: 2.8,
+     ONE AFTER THE OTHER, and it costs about six tenths of a second against the
+     two overlapping — which is the whole of why they ever overlapped. The line
+     used to open the cover at 0.15 and the mark landed on top of it at 1.0;
+     that was not a decision so much as what was left when the mark's beat had
+     to move back for the frame rate (see MARK.IN_AT). Sequential is the reading
+     the piece was built for and it is worth the six tenths, but the price is
+     real and it is paid twice: the cover is longer, and its first second is now
+     an empty sheet, because the one thing that used to fill it now happens at
+     the end. MARK.IN_AT is the number that decides that opening second, and it
+     cannot come much further forward without being drawn in five frames.
+
+     Everything else is taste. The whole cover is about four and a half seconds;
+     LINE_OUT is the number to pull if that is too long, since the beat between
+     the line landing and it leaving is still the one with nothing happening in
+     it. That beat is down from well over a second to about a quarter of one,
+     which is less generous than it sounds — the letters have been arriving
+     since 1.7 and the line is readable from about 2.3, so what is actually on
+     screen to be read is closer to half a second. */
+  LINE_IN: 1.7,
+  LINE_OUT: 2.85,
+  SWEEP: 3.5,
+
+  /* THE MARK'S OWN BEATS. Most of them are measured rather than chosen — they
+     are the gif this replaces, read frame by frame. The two that are not say so
+     where they stand: IN_AT, which had to move for the frame rate, and IN_FROM,
+     which had to move because the gif's own value does not survive being slowed
+     down enough to watch.
+
+     That gif was 125 frames at 40ms. Its ink is blank for twelve of them, then
+     unfolds over six, then holds dead still for twenty-three, then tilts out
+     and back over eight, then holds unchanged for the remaining seventy-five —
+     three quarters of the file spent on a still image, which is most of why it
+     weighed 1.8 MB.
+
+     The unfold is a PEEL, which is what makes this replaceable at all: through
+     those six frames the ink still folded over sits at a steady bearing of 61
+     degrees from the centre, and what shows of it is flat lime — a flap, lit
+     from the front, exactly what components/Peel draws. The apparent rotation
+     across the same frames is not the mark turning; it is the principal axis of
+     a shape that is still half hidden, and it settles the moment the last of it
+     lies down. */
+  MARK: {
+    /* LATER THAN THE GIF, and this is the one beat that had to leave it.
+       Measured on the built site, the cover's own frame cadence is:
+
+         300-600ms     2 frames    one 334ms stall
+         600-900ms     5 frames    median 49ms, so about 20fps
+         900-1200ms   12 frames    median 16.7ms with a 117ms worst
+         1200ms on    18 frames    a flat 16.7ms
+
+       which is hydration and three's first compile landing on top of each
+       other. The gif put the unfold at 0.52s and did not care — it was decoded
+       off the main thread. A timeline is on it, and a 240ms move starting at
+       0.52s was being drawn in five frames. No easing survives that; it is a
+       slideshow, and no amount of tuning the curve would have fixed it.
+
+       So it waits for the page to settle. Which makes this the number the whole
+       cover is now built around: everything else follows it (the tilt, then the
+       line, then the sweep), and the second before it is an empty sheet with
+       nothing in it. Bringing it forward buys that second back and spends the
+       unfold on a five-frame slideshow to do it. */
+    IN_AT: 1.0,
+
+    /* Six frames, 13 to 19. Taking the fold still to run as (0.92, 0.42, 0.33,
+       0.23, 0.11, 0.01, 0), the progress through the move at each of them is
+       0, .54, .64, .75, .88, .99 — and from the third frame on that is
+       power1.out to within a hundredth (.56, .75, .89, .97). It is NOT
+       power2.out, which is at .875 by the halfway point where the gif is at
+       .75; the mark lands early and then crawls, which reads as a stutter.
+
+       The first frame is the odd one and is left un-fitted: half the move
+       inside the first 40ms is more likely the artwork appearing part-way into
+       an unfold that began on a frame with too little ink to measure than a
+       genuine lurch.
+
+       ALL OF WHICH IS NOW HISTORY, and kept only so the next person does not
+       re-derive it. The measured curve is not what runs: it is 0.5s rather than
+       the gif's 0.24, which is a straight call that the gif's unfold is too
+       quick to watch. Twice the length, and at 60fps thirty frames to draw it
+       in against the five it was getting.
+
+       sine.inOut rather than the measured power1.out, for the same reason. A
+       fitted power1.out starts at full speed from a dead stop, which at 0.24s
+       is over before it registers and at 0.5s is a lurch. This eases out of
+       rest and back into it — a sticker let go and settling, rather than one
+       yanked flat. */
+    IN_DURATION: 0.5,
+    IN_EASE: "sine.inOut",
+
+    /* Where the fold already is when it appears — and this is the one number
+       here that deliberately contradicts the gif.
+
+       The gif starts at 0.92: 92% of the artwork still folded over at the first
+       frame with any ink in it. Reproduced faithfully, that does not read as a
+       peel. At 0.92 there is no sticker on the screen at all, only a sliver at
+       one edge, so what you watch is the mark UNROLLING INTO EXISTENCE — and a
+       peel with nothing to peel off is just a strange way of fading in. The gif
+       got away with it by being over in 240ms; at half a second and 60fps there
+       is time to notice.
+
+       0.4 is the first value going down from there where the badge is legibly
+       itself — the blob, most of the word, a big corner turned back — so the
+       move is a sticker being smoothed down onto the sheet rather than one
+       being conjured. Push it back up toward 0.7 and the flap starts to cover
+       the word again; take it to 0 and there is no fold left to lay down.
+
+       Two things follow from lowering it, both handled below: the fold now
+       travels less than half as far in the same IN_DURATION, which is what
+       makes it read as settling rather than snapping, and the arrival can no
+       longer be a hard cut — see IN_FADE. */
+    IN_FROM: 0.4,
+
+    /* The arrival, which at 0.92 did not need to exist: near enough nothing was
+       on screen at the cut, so the fold itself was the entrance. With a legible
+       badge at IN_FROM this is a third of the artwork appearing between one
+       frame and the next, which reads as a glitch rather than as a beat.
+
+       Short on purpose. Long enough that nothing snaps, short enough to be over
+       while the fold has barely started, so what carries the entrance is still
+       the peel and not a fade. */
+    IN_FADE: 0.14,
+
+    /* Then the tilt, frames 42 to 50: out over four, back over four, and the
+       measured angles are symmetrical to two decimal places (2.20, 3.66, 5.83,
+       7.26, 5.83, 3.66, 2.20). One move out and the same move back. */
+    /* Straight off the back of the unfold, which lands at 1.5. The mark's whole
+       arrival is one continuous action — it lies down, it ticks, it is done —
+       and only then does the line write itself. Given a beat of its own instead
+       (the 1.8 it sat at when the line had already been standing for most of a
+       second) it becomes a third event in a queue of three, and the cover grows
+       by however long that beat is. */
+    TILT_AT: 1.55,
+    TILT: -7.26, // degrees; the shape's own axis, counter-clockwise
+    TILT_DURATION: 0.16, // each way
+
+    /* Linear, which is what the gif measures: through the four frames out the
+       move is 0, .30, .50, .80 of the way there — near enough a straight line,
+       and nowhere near an ease-in-out, which would still be at .15 by the
+       quarter mark. The peak is a corner, not a pause (7.26 with 5.83 either
+       side of it), so the yoyo turning hard at the top is right too. It is a
+       tick of the head, not a swing. */
+    TILT_EASE: "none",
+  },
 
   /* The line's exit. Quicker than its entrance and eased the other way — it
      arrived under its own steam and it leaves under gravity, which is also why
@@ -123,6 +267,28 @@ export const PRELOADER = {
      before the next one catches it up. Past about 0.2 they stop reading as one
      move and start being four wipes in a row. */
   STACK_STEP: 0.09,
+
+  /* How far a gap may stray from that, as a fraction of it — so 0.4 is a gap
+     anywhere between 0.054s and 0.126s. This is the "organic" half: an even
+     0.09 all the way down reads as a machine dealing cards, and the eye finds
+     the rhythm within about three bands. Uneven gaps mean uneven bands, which
+     is what a stack of paper actually does when it is pulled.
+
+     The unevenness is DETERMINISTIC, not random — see the golden-ratio step
+     where it is used. A cover that dealt a different hand every reload would be
+     a different gesture every time, and none of them chosen. */
+  STACK_SPREAD: 0.4,
+
+  /* And how much longer each sheet deeper in the stack takes, as a fraction of
+     DURATION per sheet. The other half of it: with one duration for all of them
+     the stack keeps whatever spacing it left with, and the bands travel as a
+     rigid comb. Letting the deeper ones drag slightly means the stack fans out
+     as it goes — the gaps open, the bands widen, and the last colour is still
+     unrolling when the first is long gone.
+
+     Small on purpose. At 0.018 the deepest of seven takes 11% longer than the
+     first, which is a lean rather than a lag. */
+  STACK_DRAG: 0.018,
 
   /* The mark's lead. It starts a moment before the sheet and travels a little
      further, so it lifts OFF the paper rather than being carried away on it —
@@ -199,7 +365,89 @@ export function initPreloader(root: HTMLElement): () => void {
      sits a second into the timeline. */
   root.dataset.reveal = "live";
 
+  /* THE COVER IS CHOREOGRAPHY ON A CLOCK, and its clock runs through the worst
+     frames of the page's life: hydration, three's first compile, the GLB
+     landing. With lag smoothing off — which is what the page runs on once it is
+     scrolling, see SmoothScroll — a single 200ms stall advances this timeline by
+     200ms, and the beats it lands on simply do not happen. The mark's unfold is
+     240ms, half a second in, and one stall can take four fifths of it.
+
+     GSAP's own default would not help: its threshold is 500ms, and these stalls
+     are half that. So the threshold comes down to just over two frames for the
+     length of the hold, and any frame worse than that is counted as 33ms. The
+     cover then runs a little longer in wall-clock on a slow machine and keeps
+     its shape, which for a fixed piece of choreography is the right way round.
+
+     SmoothScroll puts it back to 0 at the handoff, which is where it belongs:
+     nothing scrolls before then. */
+  gsap.ticker.lagSmoothing(120, 33);
+
   const tl = gsap.timeline();
+
+  /* The mark, unfolding. Three beats off PRELOADER.MARK, all of them measured
+     off the gif this replaces — see the note there.
+
+     --peel is written as a bare number rather than tweened as a property,
+     because that is what it is: no unit for GSAP's CSSPlugin to infer, and
+     Peel/peel.ts writes it the same way. The rotation is a separate matter and
+     goes through GSAP's transform, which composes with the `rotate` the
+     stylesheet uses for --peel-dir rather than fighting it — and with the
+     yPercent the sweep gives this same element later. */
+  if (mark) {
+    const fold = { v: PRELOADER.MARK.IN_FROM };
+    const write = () => mark.style.setProperty("--peel", String(fold.v));
+    write();
+
+    /* Held off the screen until its beat, which is what the gif's first twelve
+       blank frames are. The stylesheet is what hides it for the first paint —
+       see the visibility on .preloader-mark — and this is the release; the set at
+       0 is for the replay, so a StrictMode second run starts hidden again rather
+       than inheriting the first run's visible mark.
+
+       The release is a fade and not a cut, and IN_FADE says why. It runs on the
+       same beat as the fold, so the badge is already on its way down as it
+       resolves — one gesture, not a fade followed by a peel. */
+    tl.set(mark, { autoAlpha: 0 }, 0);
+    tl.to(
+      mark,
+      { autoAlpha: 1, duration: PRELOADER.MARK.IN_FADE, ease: "none" },
+      PRELOADER.MARK.IN_AT,
+    );
+
+    tl.to(
+      fold,
+      {
+        v: 0,
+        duration: PRELOADER.MARK.IN_DURATION,
+        ease: PRELOADER.MARK.IN_EASE,
+        onUpdate: write,
+      },
+      PRELOADER.MARK.IN_AT,
+    );
+
+    /* The tilt, and back. yoyo rather than two tweens, so the return is
+       guaranteed to be the same move reversed — which is what the measured
+       angles say it is.
+
+       Written as --mark-tilt and not as GSAP's `rotation`, for the reason
+       global.css gives at the property: the wrapper's rotate already holds
+       --peel-dir, and a rotation tween picks that up as its start and then
+       leaves a copy of it in `transform` — 61deg of turn applied twice, and a
+       mark sitting crooked for the rest of the hold. */
+    const tilt = { deg: 0 };
+    tl.to(
+      tilt,
+      {
+        deg: PRELOADER.MARK.TILT,
+        duration: PRELOADER.MARK.TILT_DURATION,
+        ease: PRELOADER.MARK.TILT_EASE,
+        yoyo: true,
+        repeat: 1,
+        onUpdate: () => mark.style.setProperty("--mark-tilt", `${tilt.deg}deg`),
+      },
+      PRELOADER.MARK.TILT_AT,
+    );
+  }
 
   /* The line, in — the site's one text entrance, imported from the hero rather
      than copied so the two cannot drift apart. */
@@ -238,13 +486,51 @@ export function initPreloader(root: HTMLElement): () => void {
     (el): el is HTMLElement => el !== null,
   );
 
-  sheets.forEach((el, i) => {
-    tl.to(
+  /* EACH SHEET LEAVES IN ITS OWN TIME. Two things vary and one does not.
+   *
+   * The gap before each is knocked off STACK_STEP by a golden-ratio walk:
+   * frac(i x 0.618) never repeats, never clumps, and is the same sequence on
+   * every machine on every reload — which is the point. This is a designed
+   * gesture that happens to be uneven, not a random one.
+   *
+   * The duration grows with depth by STACK_DRAG, so the stack fans out rather
+   * than travelling as a rigid comb.
+   *
+   * THE EASE DOES NOT VARY, and that is not an oversight. The sheets are opaque
+   * and stacked, so each one's colour is only the strip between its own bottom
+   * edge and the edge of the sheet in front of it. Let a deeper sheet overtake
+   * the one in front — which a springier ease on the wrong sheet would do
+   * mid-flight — and it does not slide past: it goes BEHIND it, its strip
+   * closes to nothing, and that colour vanishes from the sweep entirely.
+   *
+   * With one shared ease, no crossing is possible as long as the starts only
+   * increase and the durations never decrease, both of which hold by
+   * construction below. Position is DURATION x f((t - start) / duration) with
+   * the same f for everyone: a later start and a longer duration can only ever
+   * put a sheet further behind, never in front. That is the whole reason the
+   * drag is allowed to be positive and never negative. */
+  const PHI = 0.6180339887; // frac(i x PHI) — the least clumping walk there is
+
+  let at = PRELOADER.SWEEP;
+  const schedule = sheets.map((el, i) => {
+    if (i > 0) {
+      const wobble = (((i * PHI) % 1) * 2 - 1) * PRELOADER.STACK_SPREAD;
+      at += PRELOADER.STACK_STEP * (1 + wobble);
+    }
+    return {
       el,
-      { yPercent: -100, duration: PRELOADER.DURATION, ease: PRELOADER.EASE },
-      PRELOADER.SWEEP + i * PRELOADER.STACK_STEP,
-    );
+      at,
+      duration: PRELOADER.DURATION * (1 + i * PRELOADER.STACK_DRAG),
+    };
   });
+
+  for (const s of schedule) {
+    tl.to(
+      s.el,
+      { yPercent: -100, duration: s.duration, ease: PRELOADER.EASE },
+      s.at,
+    );
+  }
 
   if (mark) {
     tl.to(
@@ -261,19 +547,27 @@ export function initPreloader(root: HTMLElement): () => void {
   /* Where the last sheet — the deepest colour, and the one that actually
      uncovers anything — starts to move. Both of the signals below are measured
      from here, because both are about something behind the stack becoming
-     visible, and nothing is visible until this one has gone. */
-  const lastSweep =
-    PRELOADER.SWEEP + Math.max(sheets.length - 1, 0) * PRELOADER.STACK_STEP;
+     visible, and nothing is visible until this one has gone.
+
+     Read off the schedule rather than recomputed from it: the gaps and the
+     durations both vary now, so there is no longer a formula for where the last
+     sheet is, and a second copy of the arithmetic would be a second place to
+     get it wrong. Both fractions below are of that sheet's OWN duration, which
+     is the longest of them. */
+  const last = schedule.at(-1) ?? {
+    at: PRELOADER.SWEEP,
+    duration: PRELOADER.DURATION,
+  };
 
   /* The roll, told to start with the paper still over it — just. */
   tl.call(
     startSweep,
     undefined,
-    lastSweep + PRELOADER.DURATION * PRELOADER.SWEEP_MARK,
+    last.at + last.duration * PRELOADER.SWEEP_MARK,
   );
 
   /* And the page itself, later in that same sheet's sweep. */
-  tl.call(release, undefined, lastSweep + PRELOADER.DURATION * PRELOADER.HANDOFF);
+  tl.call(release, undefined, last.at + last.duration * PRELOADER.HANDOFF);
 
   /* Parked off-screen is not the same as gone: the cover is still a fixed box
      over the page, and `visibility` is what stops it being one. Not display —

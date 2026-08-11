@@ -101,8 +101,14 @@ export function initPeel(root: HTMLElement): () => void {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (!els.length || reduced) return () => {};
 
+  /* Named explicitly, both of them. Anything else — "manual" — is a peel whose
+     --peel somebody else is writing, and the whole point of it is that nothing
+     here touches it: the preloader's mark is one beat of a fixed piece of
+     choreography (Preloader/reveal.ts), not a thing that lifts on its own. This
+     used to be `!== "scroll"`, which would have quietly put that mark on the
+     idle loop the moment anything scanned the preloader for peels. */
   const scrolled = els.filter((el) => el.dataset.peel === "scroll");
-  const looped = els.filter((el) => el.dataset.peel !== "scroll");
+  const looped = els.filter((el) => el.dataset.peel === "loop");
 
   const stop = [initLoops(looped), initScrub(scrolled)];
   return () => stop.forEach((fn) => fn());

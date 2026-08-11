@@ -53,6 +53,8 @@ export function initTapeSlider(root: HTMLElement): () => void {
   const glyphs = qa<HTMLImageElement>(".bottom-title .glyph img");
   const topWord = q<HTMLElement>(".top-title");
   const bottomWord = q<HTMLElement>(".bottom-title");
+  // The hidden heading that carries the word mark in text; see setWord.
+  const srWord = q<HTMLElement>("h2.sr-only");
   const card = q<HTMLImageElement>(".key-visual img");
   const showcase = qa<HTMLImageElement>(".middle img.showcase");
   const left = q<HTMLElement>(".left");
@@ -360,9 +362,39 @@ export function initTapeSlider(root: HTMLElement): () => void {
     stagger: number,
     apply: (el: HTMLElement, y: number) => void,
     read: (el: HTMLElement) => number,
-    returnAt: number
+    returnAt: number,
+    /* Fired the moment the LAST letter has finished dropping — the one frame
+       where every letter is below the clip and the word can be changed for a
+       different one without anybody watching it happen. Only the bottom mark
+       passes it; THE is the same three letters on every tape.
+
+       It is handed `repark`, which MUST be called after the swap: see the note
+       on it below. */
+    atBottom?: (repark: () => void) => void
   ) {
     const sub = gsap.timeline();
+
+    /* Every letter's travel, kept so the swap can rewrite it. The letters are
+       tweened through these proxies rather than directly, so this is also where
+       the return tween reads its start from. */
+    const states: { el: HTMLElement; st: { y: number } }[] = [];
+
+    /* Re-measure and re-park, after the word has been changed underneath.
+       Without this the mark flickers: each letter dropped by ITS OWN height,
+       measured while the OLD word was still in the box, and the incoming word's
+       letters are not the same height. Swap CREATIVE (216px) for RELIABLE
+       (225px) and the R is nine pixels taller than the hole it is hiding in —
+       so the top of the new word is on screen from the instant it arrives,
+       before the rise that is supposed to reveal it has started.
+
+       Reading offsetHeight here forces a synchronous layout, which is the
+       point: it has to be this frame, while everything is still down. */
+    const repark = () => {
+      for (const s of states) {
+        s.st.y = dipTo(s.el);
+        apply(s.el, s.st.y);
+      }
+    };
 
     // One hold shared by the whole word. A per-letter hold would have the first
     // letter back up before the last had left, and the sheet is coming.
@@ -374,6 +406,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
       // second click the previous dip is killed mid-flight, and assuming 0 here
       // would snap the letter home for one frame before dropping it again.
       const st = { y: read(el) };
+      states.push({ el, st });
       const move = () => apply(el, st.y);
       const offset = i * stagger;
 
@@ -389,6 +422,9 @@ export function initTapeSlider(root: HTMLElement): () => void {
             // in the same tick and an ease-out brings ~12% of the letter back
             // into view within one frame.
             el.style.setProperty("--word-colour", colour);
+            // The stagger means the last letter to start is the last to land,
+            // so this is the whole word down rather than just this letter.
+            if (i === els.length - 1) atBottom?.(repark);
           },
         },
         offset
@@ -435,6 +471,22 @@ export function initTapeSlider(root: HTMLElement): () => void {
 
   const modelOf = (btn: HTMLElement) => btn.dataset.model || "";
 
+  /* The tape's word mark, as the key letters.css generates its stencils under.
+     Writing it on .bottom-title re-points all eight spans at once — artwork,
+     intrinsic widths, arc indices and the display:none on the tail — so a word
+     change is one attribute and no DOM work. See WordMarks.tsx on the pool. */
+  const wordOf = (btn: HTMLElement) => btn.dataset.word || "";
+
+  function setWord(index: number) {
+    const word = wordOf(rolls[index]);
+    if (!word || !bottomWord) return;
+    bottomWord.dataset.word = word;
+    /* The mark is pictures, so the readable copy is a hidden heading beside it
+       (TapeSlider/index.tsx). It would otherwise still announce the word the
+       page was served with. */
+    if (srWord) srWord.textContent = `THE ${word.toUpperCase()}`;
+  }
+
   /* The 3D flip. Out to edge-on on one clean axis — where the roll's real
      side is showing — then the incoming model takes over and continues the
      same direction home. The handoff is invisible as geometry because the
@@ -452,6 +504,10 @@ export function initTapeSlider(root: HTMLElement): () => void {
 
     if (viewer && model && viewer.ready(model)) {
       const v = viewer;
+      /* Back under the roll. Only ever needed after the branch below has put
+         the card up for a tape whose model had not landed yet — harmless
+         otherwise, and cheaper to write unconditionally than to track. */
+      if (card) card.style.visibility = "hidden";
 
       const out = { deg: 0 };
       sub.to(
@@ -491,7 +547,29 @@ export function initTapeSlider(root: HTMLElement): () => void {
     } else {
       const src = card && cardOf(rolls[index]);
       if (!card || !src) return null;
-      sub.call(() => void (card.src = src), undefined, half);
+      /* AND PUT THE CARD BACK, which is new and is what makes this branch
+         actually work rather than merely exist.
+       *
+       * The card is hidden from mount because the roll is coming and flashing
+       * artwork it is about to replace is worse than an empty slot. That was
+       * safe while every model was resident before the viewer existed: this
+       * branch could only run with no viewer at all, and then the card had
+       * never been hidden in the first place.
+       *
+       * Models stream now, so it is reachable with the viewer live and the
+       * card hidden — which would have been a swap onto an invisible image and
+       * an empty slot for the whole flip. Showing it here means a tape clicked
+       * before its model lands turns to the flat card, exactly as it does on a
+       * browser that never got three.js at all, and the branch above puts it
+       * away again on the next selection that has its roll. */
+      sub.call(
+        () => {
+          card.src = src;
+          card.style.visibility = "visible";
+        },
+        undefined,
+        half,
+      );
     }
 
     tl.add(sub, at);
@@ -822,6 +900,8 @@ export function initTapeSlider(root: HTMLElement): () => void {
         el.style.setProperty("--word-colour", wc);
         gsap.set(el, { y: 0 });
       });
+      // No dip to hide the change behind, so it simply happens.
+      setWord(index);
       const rm = modelOf(rolls[index]);
       if (viewer && rm && viewer.ready(rm)) {
         viewer.show(rm);
@@ -879,7 +959,15 @@ export function initTapeSlider(root: HTMLElement): () => void {
         BOTTOM_STAGGER,
         shiftDip,
         shiftAt,
-        atOpen + sheetClears(bottomWord) + WORD_AFTER_SHEET
+        atOpen + sheetClears(bottomWord) + WORD_AFTER_SHEET,
+        // The word itself changes here, under the fold, between the drop and
+        // the return — so the letters go down as CREATIVE and come back as
+        // FIXER, which is the whole point of the dip. Then re-park, because the
+        // hole each letter is hiding in was measured around the old word.
+        (repark) => {
+          setWord(index);
+          repark();
+        }
       );
 
     cardTl = addCard(timeline, index, CARD_AT);
@@ -971,7 +1059,14 @@ export function initTapeSlider(root: HTMLElement): () => void {
      The img is hidden rather than removed when the viewer takes over, in
      case the WebGL context is ever lost. */
   const keyVisual = q<HTMLElement>(".key-visual");
-  const modelUrls = Array.from(new Set(rolls.map(modelOf).filter(Boolean)));
+  /* THE SELECTED TAPE FIRST, and the order is load order — createTapeViewer
+     waits for the head of this list and streams the tail behind it. Put the
+     active one anywhere else and the slot stays empty while models for tapes
+     nobody has clicked come down ahead of the one on screen. */
+  const active = modelOf(rolls[activeIndex]);
+  const modelUrls = Array.from(
+    new Set([active, ...rolls.map(modelOf)].filter(Boolean)),
+  );
   if (keyVisual && modelUrls.length) {
     /* Hidden from mount, not from viewer-ready. The img is the no-JS
        fallback; once scripts are running the roll is coming, and letting the

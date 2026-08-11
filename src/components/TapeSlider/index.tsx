@@ -2,7 +2,7 @@
 import { tapes } from "@/data/tapes";
 import Stage from "./Stage";
 import RollPicker from "./RollPicker";
-import { TopTitle, BottomTitle, WORDMARK_TEXT } from "./WordMarks";
+import { TopTitle, BottomTitle, wordmarkText } from "./WordMarks";
 
 /* Section-level copy. Not per tape, so it does not live in tapes.ts — but it is
    the other obvious CMS field, so it is a named constant rather than a string
@@ -30,9 +30,10 @@ export default function TapeSlider() {
           <div className="bg-layer bg-layer--next" />
         </div>
 
-        {/* The word mark is eleven images with no text in them, so the headline
-            is announced here instead. */}
-        <h2 className="sr-only">{WORDMARK_TEXT}</h2>
+        {/* The word mark is a row of images with no text in them, so the
+            headline is announced here instead. It is the FIRST tape's — the
+            engine rewrites it as the word changes. */}
+        <h2 className="sr-only">{wordmarkText(first.word)}</h2>
 
         <h6 className="subhead">{SUBHEAD}</h6>
 
@@ -79,7 +80,7 @@ export default function TapeSlider() {
                 <img src={first.card} alt="" />
               </div>
 
-              <BottomTitle />
+              <BottomTitle word={first.word} />
             </div>
           </div>
         </div>

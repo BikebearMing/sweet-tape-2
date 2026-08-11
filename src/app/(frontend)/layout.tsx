@@ -9,6 +9,11 @@ import "lenis/dist/lenis.css";
    — see `npm run letters`. */
 import "@/styles/global.css";
 
+/* AFTER global.css, and that is the whole point: this is the hand-written
+   counterpart to the generated letters.css, and being last is what lets a typed
+   value beat a measured one without inventing specificity. Keep it below. */
+import "@/styles/letters-tuning.css";
+
 import Cursor from "@/components/Cursor";
 import Menu from "@/components/Menu";
 import { PeelDefs } from "@/components/Peel";
@@ -30,11 +35,13 @@ export default function FrontendLayout({ children }: { children: ReactNode }) {
      the head, since these are hoisted in call order and the layout renders
      first: the roll has the whole hold to arrive in, the mark does not.
 
-     1.8 MB is a lot for a logo loop, and the obvious follow-up is an animated
-     WebP or a muted video of the same 125 frames — either lands in a few
-     hundred kB. Nothing here changes if the file does; only MARK in
-     components/Preloader. */
-  preload("/assets/preloader-middle.gif", {
+     It used to be 1.8 MB of gif with the animation baked into it, and the note
+     here used to point at an animated WebP as the way out. It went further than
+     that: the movement turned out to be a peel and a tilt, both of which the
+     site already draws, so the artwork is now 5 kB of flat SVG and the motion
+     is a timeline (Preloader/reveal.ts). Nothing here changes if the file does;
+     only MARK in components/Preloader. */
+  preload("/assets/preloader-image.svg", {
     as: "image",
     fetchPriority: "high",
   });

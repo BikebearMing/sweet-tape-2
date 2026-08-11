@@ -1,18 +1,60 @@
 {
-  "_comment": "Letterform artwork for the two word marks. Read by the React components AND by scripts/gen-letters.mjs, which turns the same list into the mask stencils and intrinsic sizes in src/styles/letters.css. Keep it the single source: DOM order here is what the nth-child rules in letters.css are numbered against. Run `npm run letters` after changing it.",
+  "_comment": "Letterform artwork for the word marks. Read by the React components AND by scripts/gen-letters.mjs, which turns the same lists into the mask stencils, intrinsic sizes and arc indices in src/styles/letters.css. Keep it the single source: DOM order here is what the nth-child rules in letters.css are numbered against. THE is fixed; the bottom word changes per tape, and each tape's `word` in src/data/tapes.ts names a key of `words`. Repeated letters get their OWN artwork (E / E2), because the delivery draws each occurrence separately. Run `npm run letters` after changing it.",
   "the": [
     { "letter": "T", "src": "/assets/middle-T.png" },
     { "letter": "H", "src": "/assets/middle-H.png" },
     { "letter": "E", "src": "/assets/middle-E.png" }
   ],
-  "creative": [
-    { "letter": "C", "src": "/assets/creative/creative-c.png" },
-    { "letter": "R", "src": "/assets/creative/creative-r.png" },
-    { "letter": "E", "src": "/assets/creative/creative-e.png" },
-    { "letter": "A", "src": "/assets/creative/creative-a.png" },
-    { "letter": "T", "src": "/assets/creative/creative-t.png" },
-    { "letter": "I", "src": "/assets/creative/creative-i.png" },
-    { "letter": "V", "src": "/assets/creative/creative-v.png" },
-    { "letter": "E", "src": "/assets/creative/creative-e.png" }
-  ]
+  "words": {
+    "creative": [
+      { "letter": "C", "src": "/assets/words/creative/C.png" },
+      { "letter": "R", "src": "/assets/words/creative/R.png" },
+      { "letter": "E", "src": "/assets/words/creative/E.png" },
+      { "letter": "A", "src": "/assets/words/creative/A.png" },
+      { "letter": "T", "src": "/assets/words/creative/T.png" },
+      { "letter": "I", "src": "/assets/words/creative/I.png" },
+      { "letter": "V", "src": "/assets/words/creative/V.png" },
+      { "letter": "E", "src": "/assets/words/creative/E2.png" }
+    ],
+    "trusty": [
+      { "letter": "T", "src": "/assets/words/trusty/T.png" },
+      { "letter": "R", "src": "/assets/words/trusty/R.png" },
+      { "letter": "U", "src": "/assets/words/trusty/U.png" },
+      { "letter": "S", "src": "/assets/words/trusty/S.png" },
+      { "letter": "T", "src": "/assets/words/trusty/T2.png" },
+      { "letter": "Y", "src": "/assets/words/trusty/Y.png" }
+    ],
+    "buddy": [
+      { "letter": "B", "src": "/assets/words/buddy/B.png" },
+      { "letter": "U", "src": "/assets/words/buddy/U.png" },
+      { "letter": "D", "src": "/assets/words/buddy/D.png" },
+      { "letter": "D", "src": "/assets/words/buddy/D2.png" },
+      { "letter": "Y", "src": "/assets/words/buddy/Y.png" }
+    ],
+    "fixer": [
+      { "letter": "F", "src": "/assets/words/fixer/F.png" },
+      { "letter": "I", "src": "/assets/words/fixer/I.png" },
+      { "letter": "X", "src": "/assets/words/fixer/X.png" },
+      { "letter": "E", "src": "/assets/words/fixer/E.png" },
+      { "letter": "R", "src": "/assets/words/fixer/R.png" }
+    ],
+    "reliable": [
+      { "letter": "R", "src": "/assets/words/reliable/R.png" },
+      { "letter": "E", "src": "/assets/words/reliable/E.png" },
+      { "letter": "L", "src": "/assets/words/reliable/L.png" },
+      { "letter": "I", "src": "/assets/words/reliable/I.png" },
+      { "letter": "A", "src": "/assets/words/reliable/A.png" },
+      { "letter": "B", "src": "/assets/words/reliable/B.png" },
+      { "letter": "L", "src": "/assets/words/reliable/L2.png" },
+      { "letter": "E", "src": "/assets/words/reliable/E2.png" }
+    ],
+    "silent": [
+      { "letter": "S", "src": "/assets/words/silent/S.png" },
+      { "letter": "I", "src": "/assets/words/silent/I.png" },
+      { "letter": "L", "src": "/assets/words/silent/L.png" },
+      { "letter": "E", "src": "/assets/words/silent/E.png" },
+      { "letter": "N", "src": "/assets/words/silent/N.png" },
+      { "letter": "T", "src": "/assets/words/silent/T.png" }
+    ]
+  }
 }

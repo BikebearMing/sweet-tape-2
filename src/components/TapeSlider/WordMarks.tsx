@@ -10,6 +10,32 @@ import marks from "@/data/wordmarks.json";
  * file.
  */
 
+type Glyph = { letter: string; src: string };
+
+const WORDS = marks.words as Record<string, Glyph[]>;
+
+/* THE POOL. The bottom mark is one fixed set of spans sized to the longest word,
+   not a list rebuilt per tape — the same call buildChips makes in engine.ts, and
+   for the same reason: a swap happens while the letters are mid-dip, and
+   replacing the elements would pull them out from under the tween holding them.
+
+   So a tape does not change the DOM here. It changes ONE attribute, and
+   letters.css re-points every span's stencil, width and arc index off it. Words
+   shorter than the pool take their tail out of the flex flow with display:none,
+   which is also generated. */
+const POOL = Math.max(...Object.values(WORDS).map((w) => w.length));
+
+/* The src is genuinely unused: the `content` line in global.css replaces the
+   bitmap with this same 1x1, because the element paints --word-colour through
+   the stencil and the original artwork would otherwise sit on top of it. Spares
+   get it so the pool costs no requests it will never show. */
+const BLANK =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E";
+
+export function lettersOf(word: string): Glyph[] {
+  return WORDS[word] ?? [];
+}
+
 /** THE. The image is the flex item; its own mask slides to do the dip. */
 export function TopTitle() {
   return (
@@ -21,20 +47,28 @@ export function TopTitle() {
   );
 }
 
-/* CREATIVE. Each letter is wrapped so it has a box to be clipped by: the
-   wrapper holds its place on the arc, the image inside does the dip. One
-   element cannot carry both transforms. */
-export function BottomTitle() {
+/* The tape's word — CREATIVE, FIXER, RELIABLE... Each letter is wrapped so it
+   has a box to be clipped by: the wrapper holds its place on the arc, the image
+   inside does the dip. One element cannot carry both transforms.
+
+   `word` is the first tape's, which is the first paint and the no-JS fallback;
+   after mount the engine owns the attribute. */
+export function BottomTitle({ word }: { word: string }) {
+  const glyphs = lettersOf(word);
   return (
-    <div className="bottom-title">
-      {marks.creative.map((g, i) => (
-        <span className="glyph" key={`${g.letter}-${i}`}>
-          <img src={g.src} alt="" />
+    <div className="bottom-title" data-word={word}>
+      {Array.from({ length: POOL }, (_, i) => (
+        <span className="glyph" key={i}>
+          <img src={glyphs[i]?.src ?? BLANK} alt="" />
         </span>
       ))}
     </div>
   );
 }
 
-/** The word the two marks spell, for anyone not looking at pictures. */
-export const WORDMARK_TEXT = "THE CREATIVE";
+/** The words the two marks spell, for anyone not looking at pictures. */
+export function wordmarkText(word: string): string {
+  return `THE ${lettersOf(word)
+    .map((g) => g.letter)
+    .join("")}`;
+}

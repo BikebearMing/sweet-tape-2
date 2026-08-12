@@ -1,4 +1,4 @@
-/* The custom cursor — the taped arrow (public/assets/cursor.svg).
+/* The custom cursor — the taped arrow (public/assets/new-cursor.svg).
  *
  * It IS the pointer, so it tracks 1:1 by default: a cursor that lags where
  * you clicked is a cursor that lies, and every target on this page is small

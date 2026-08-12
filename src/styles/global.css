@@ -4262,7 +4262,7 @@ html.has-cursor textarea {
      that grows with the viewport stops reading as one. */
   width: 60px;
   height: 65px;
-  background: url("/assets/cursor.svg") center / contain no-repeat;
+  background: url("/assets/new-cursor.svg") center / contain no-repeat;
 
   /* The hotspot. The arrow's tip sits at (14, 15) inside the 60x65 artwork,
      so the box is offset by exactly that much and the tip — not the corner,

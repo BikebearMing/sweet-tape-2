@@ -40,7 +40,9 @@ import { initGiantParallax } from "./parallax";
 import { initGiantReveal } from "./reveal";
 
 export const GIANT = {
-  /** Where the section takes the screen. Full bleed, so its top at the top. */
+  /** Where the FRAME takes the screen — .wrapper, not the section around it.
+      Full bleed, so its top at the top. See the trigger below for why the
+      difference between the two is not academic. */
   START: "top top",
 
   /* THE PACE, and the one number that decides how long the section is.
@@ -511,7 +513,19 @@ export function initGiantPinning(root: HTMLElement): () => void {
   });
 
   const st = ScrollTrigger.create({
-    trigger: root,
+    /* THE FRAME, NOT THE SECTION, and the two stopped being the same box when
+       the arc went in. .giant-pinning now opens with a --giant-arc band of
+       padding that the bite is cut out of, so the section's top edge is that
+       much higher than the frame's. Triggering off the section fired "top top"
+       a band early and pinned the frame wherever it happened to be at that
+       moment — which is a band BELOW the top of the screen, held there for the
+       whole section. A full-bleed frame with a strip of bare paper above it.
+
+       The pinned element is the honest trigger regardless: `start` is about
+       where THIS box takes the screen, and the pin is what holds it there. The
+       fallback matches `pin` below, so the two cannot disagree about which
+       element the trigger is describing. */
+    trigger: frame ?? root,
     start: GIANT.START,
     /* MEASURED, not typed. The camera's path is however long the arrangement
        makes it, and this is that length at the chosen pace. Move a phrase in the

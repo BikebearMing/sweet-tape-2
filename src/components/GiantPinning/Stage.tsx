@@ -52,6 +52,15 @@ export default function Stage({ children }: { children: ReactNode }) {
 
   return (
     <section ref={ref} className="giant-pinning">
+      {/* The bite in the top edge — the footer's arc, at the other end of the
+          page. Decoration, and an element only because the mask has to be kept
+          off the section itself: .wrapper is pinned with position: fixed, and a
+          masked ancestor is a containing block for that in some engines. The
+          full argument is on .giant-brow in global.css.
+
+          BEFORE .wrapper, so the paint order matches the layout — the band is
+          the section's top edge and the frame begins under it. */}
+      <span className="giant-brow" aria-hidden="true" />
       <div className="wrapper">{children}</div>
     </section>
   );

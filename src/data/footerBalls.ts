@@ -18,10 +18,18 @@
  * seen in — and what it is seen in with no JS at all, since the transform the
  * simulation writes is an offset from here.
  *
- * These figures are read off the mock. Two are load-bearing: the masking roll's
- * bottom edge lands at 46.85vw, a third of a vw inside the bed's floor, and the
- * stationery roll's left edge sits at -1.15vw, hanging off the viewport exactly
- * as it does in the mock. The walls in balls.ts are placed to allow both.
+ * ALL FOUR ROLLS ARE ONE DIAMETER, 18.7vw. They are four faces of the same
+ * product and they now read as one set rather than as a range of sizes. Keep
+ * them equal when adding a fifth: the moment one is bigger the bed reads as a
+ * size chart. (The discs are deliberately smaller — they are a different kind
+ * of object, not a smaller tape.)
+ *
+ * The positions are read off the mock. One figure is load-bearing: the masking
+ * roll's bottom edge lands at 46.85vw, a third of a vw inside the bed's floor,
+ * and the walls in balls.ts are placed to allow it. The stationery roll used to
+ * hang off the left edge at -1.15vw, which was the second such figure; levelling
+ * it from 21.5 to 18.7 pulled its left edge back to 0.25vw and the bleed is
+ * gone. Moving its x to 8.2 puts it back, at the cost of the mock's spacing.
  *
  * NO TWO OF THEM MAY OVERLAP TO BEGIN WITH. Overlapping circles are a
  * collision on the engine's first frame, so the pair springs apart with a
@@ -79,7 +87,7 @@ export const footerBalls: FooterBall[] = [
     label: "STATIONERY TAPE",
     kind: "roll",
     art: "/assets/footer-stationery.svg",
-    d: 21.5,
+    d: 18.7,
     x: 9.6,
     y: 18.7,
   },
@@ -100,7 +108,7 @@ export const footerBalls: FooterBall[] = [
     label: "DOUBLE-SIDED TISSUE TAPE",
     kind: "roll",
     art: "/assets/footer-double.svg",
-    d: 19,
+    d: 18.7,
     x: 65.5,
     y: 37.3,
   },

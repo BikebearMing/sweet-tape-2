@@ -238,9 +238,16 @@ type Panel = {
    * The hand-written note, if this panel has one — placed on the same --px/--py
    * percentages of the row as a prop, and for the same reason given there.
    *
-   * Optional because most panels do not: the note is an aside in someone's
-   * handwriting, and a section with three of them is not an aside any more, it
-   * is a caption style.
+   * ALL THREE PANELS CARRY ONE NOW, which this was originally optional to
+   * prevent: the argument was that an aside in someone's handwriting stops
+   * being an aside at three and becomes a caption style. That was overruled by
+   * the design, and the field stays optional because it still describes
+   * something a panel may not have — but if a fourth phrase is ever added, the
+   * question of whether it needs one is a real question, not a default.
+   *
+   * The placements are NOT interchangeable between panels. See the values
+   * themselves: the percentages are of each row's own width, and the three rows
+   * are different widths.
    */
   note?: { x: number; y: number };
 };
@@ -332,6 +339,27 @@ const PANELS: Panel[] = [
       { src: "/assets/slider/opp/card.svg", kind: "tag", x: 61, y: -66, w: 11, r: 6, z: 1, p: -0.02, e: "power2.inOut" },
       { src: "/assets/slider/opp/card.svg", kind: "tag", x: 43, y: 71, w: 16, r: 9, z: 1, p: 0.032, e: "power1.inOut" },
     ],
+    /* Under the slot, the same reading TO CREATE's note takes — and NOT the
+       same numbers, because --px/--py are percentages of the ROW and this row
+       is the widest of the three. The slot itself is identical and sits at the
+       same absolute offset in every phrase (it follows TO, which never
+       changes), so the longer the noun, the smaller a fraction of the row that
+       offset is. Copying 26/78 across would have put the note under the P.
+
+       Worked from CREATE's own figures. Its note is 7.9% of its row and 12.8vw
+       wide (--hand-w on .giant-note), which makes that row 162vw; PROTECT is
+       one letter longer and measures about 179. The slot box centres at 47.8vw
+       from the row's left edge in both, and this card is nudged a further 3vw
+       right by its dx — so 50.8/179 is 28.4%, less half the note's 7.2%, is 25.
+
+       y is CREATE's 78 less the 1.5vw this card rides higher (dy -0.1571em
+       against -0.118em, on a row 41vw tall), plus a little back for the steeper
+       tilt dropping its low corner. It keeps the same 1.7vw of air under the
+       card that the first note has.
+
+       Clear of the tag at x 43 — that one starts 11% of the row to the right of
+       where this ends. */
+    note: { x: 25, y: 75 },
   },
 ];
 

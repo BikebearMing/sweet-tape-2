@@ -161,6 +161,36 @@ h6 {
 
   --stage-bg: #fa8005;
 
+  /* THE BITE — the site's one concave edge, used as a mask by any section that
+   * wants its top edge dipped: the footer and the pinning section both take it.
+   * It lives here rather than on either of them because it is a SHAPE, and two
+   * copies of a path is two things to get wrong.
+   *
+   * Read it as the paper that SURVIVES the bite: the two lobes either side of
+   * the curve. One half-ellipse, rx half the width and ry the arc's depth,
+   * written as two quadrant arcs through the explicit low point at (50,15) — a
+   * single 180° arc between two points on the ellipse's own horizontal diameter
+   * is the degenerate case, where the flags no longer say which half is meant.
+   *
+   * Which way the quadrants run is the whole shape. The tangent is VERTICAL
+   * where the curve leaves each corner and HORIZONTAL where the two meet at the
+   * bottom — that is what makes it a valley. Run them the other way and the
+   * tangents swap ends: the curve leaves the corners flat and the two halves
+   * arrive at the centre travelling straight down, meeting in a cusp. Which is
+   * a spike, not an arc.
+   *
+   * The viewBox is 100 x 15 and preserveAspectRatio="none" stretches it to
+   * whatever box it is given, so the radii land at half the width and the full
+   * arc depth however wide the window is, and each section picks its own depth.
+   * The menu tab's torn edge is built out of the same parts for the same
+   * reason.
+   *
+   * It is CONVEX EVERYWHERE ELSE ON THIS PAGE — the hero's lime field, the
+   * preloader's sheets, the slider's colour wipe are all bulges, and those are
+   * border-radius. This one is not, which is the whole reason it is a mask: a
+   * radius can round a corner off, it cannot take a bite out of an edge. */
+  --edge-bite: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 15' preserveAspectRatio='none'%3E%3Cpath d='M0 0A50 15 0 0 0 50 15A50 15 0 0 0 100 0L100 15L0 15Z' fill='%23000'/%3E%3C/svg%3E");
+
   /* THE CAST SHADOW, for everything on this page that lies on the paper —
    * photographs, product tags, tape, the paperclip. One recipe, because they
    * are all the same object in the same room and a page where each prop has
@@ -1313,8 +1343,8 @@ html[data-loading] {
 
     /* A card sitting just off the surface — the site's shadow, see --drop-ink
        in :root, and .giant-prop--shot for why a rounded-square photograph
-       throws down-LEFT and further than the round tags do. These are the same
-       object as the giant section's loose shots and take the same offset.
+       throws further than the round tags do. These are the same object as the
+       giant section's loose shots and take the same offset.
 
        ONE LAYER NOW, not two. This was a crisp contact edge under a wider,
        softer body, which is how you fake a real light source with a blur: the
@@ -1333,7 +1363,7 @@ html[data-loading] {
 
        In vw so it scales with the layout; black at low alpha so it holds over
        all four stage colours. */
-    box-shadow: -0.7vw 1vw 0 var(--drop-ink);
+    box-shadow: 0.7vw 1vw 0 var(--drop-ink);
 
     /* Negative --parallax runs ahead of the page, which reads as nearer —
        correct here, since these sit in front of the key visual. The two differ
@@ -1875,17 +1905,121 @@ html[data-loading] {
      to scroll. */
   --giant-tail: 18vw;
 
+  /* THE BITE IN THE TOP EDGE — the footer's move, at the other end of the
+     section. The corners run up over the slider and the edge sweeps down
+     between them, so the stage above is seen through the dip.
+
+     Same depth as the footer's on purpose: two arcs of different sizes on one
+     page read as two different mouths rather than as one way this site cuts an
+     edge. The shape is --edge-bite in :root, shared with the footer.
+
+     The band is added ABOVE the section with padding and taken straight back
+     out with a negative margin, so the arc costs the document no height and
+     .wrapper's position in the page is unchanged — which matters more here than
+     it does in the footer, because .wrapper is what ScrollTrigger pins and its
+     start is measured off exactly that position. */
+  --giant-arc: 9vw;
+
+  /* ONE SHEET OF PAPER ACROSS THE BAND AND THE FRAME, and it has to be said as
+     a length because two boxes are painting halves of it.
+
+     The frame's grain is one tile stretched over one viewport. Give the band a
+     tile of its own and the two do not line up — a stretched image has no rows
+     above its first one, so whatever the band shows at its bottom edge is some
+     other part of the photograph butted against the frame's top edge, and a
+     crumple that stops and restarts across the full width is a hard line. It
+     was plainly visible: flat lime above, grain below, a rule between them.
+
+     So the tile is sized to the band AND the frame together, and each box shows
+     its own share of it: the band anchors the sheet's top, the frame anchors
+     its bottom. One photograph, cut in two at the seam, which is the only join
+     that cannot show. See .giant-brow::before and .wrapper::before below —
+     changing this figure in one of them and not the others reopens the line. */
+  --giant-sheet: calc(100vh + var(--giant-arc));
+
   position: relative;
+  /* Over the slider (10), which is what the arc rises into — without this the
+     stage simply paints on top of the band and the curve is never seen. Under
+     the footer (12), whose own bite comes down into this section's tail. */
+  z-index: 11;
+  margin-top: calc(var(--giant-arc) * -1);
+  padding-top: var(--giant-arc);
   padding-bottom: var(--giant-tail);
 
+  /* FLAT. The paper is a separate layer — see .wrapper::before below.
 
-  /* FLAT. The paper is a separate layer — see ::before below. */
-  background-color: var(--giant-bg);
+     NOT a background-color any more: the colour has to stop at the bottom of
+     the arc band and let .giant-brow paint what is above it. A gradient of one
+     colour is the way to give a background a size — position 0 100% pins it to
+     the foot of the padding box and the size is everything below the band.
+
+     The 1px is the footer's overlap and is there for the footer's reason: the
+     band and this rectangle are rasterized separately, --giant-arc is almost
+     never a whole device pixel, and two edges rounding down at the same seam
+     leave a hairline of slider showing right across the width. */
+  background-color: transparent;
+  background-image: linear-gradient(var(--giant-bg) 0 0);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% calc(100% - var(--giant-arc) + 1px);
 
   /* The canvas runs well past both edges and every bit of it that is not the
      current phrase must be cut off. Also what stops the page scrolling
      sideways, which an unclipped 460vw child would otherwise do. */
   overflow: hidden;
+}
+
+/* The arc band, and it is A REAL ELEMENT rather than the mask on the section
+   that the footer uses. That difference is the whole reason this rule exists,
+   and it is not a matter of taste:
+ *
+   .wrapper is PINNED, and pin.ts pins it for real — position: fixed, see the
+   note beside pinSpacing there. A mask on an ancestor establishes a stacking
+   context, and in some engines a containing block for fixed descendants along
+   with it. If .giant-pinning were the masked element, the browser would be
+   within its rights to resolve the pinned frame against this section instead of
+   against the viewport, and the failure is not subtle — the camera stops
+   holding still. The footer has no pin inside it and can mask itself freely.
+   Confining the mask to a nine-vw band that contains nothing sidesteps the
+   question rather than betting on it.
+ *
+   It also has to be an element and not .giant-pinning::before, because the band
+   needs a child of its own for the paper — see below. ::after is the tail's
+   grain and ::before would leave nothing to hang this on.
+ *
+   Inside the section's padding box, so `overflow: hidden` above is not a
+   problem: the band is not something poking out over the top edge, it is the
+   top edge, opened up by the padding. */
+.giant-brow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--giant-arc);
+  background: var(--giant-bg);
+  -webkit-mask-image: var(--edge-bite);
+  mask-image: var(--edge-bite);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  pointer-events: none;
+}
+
+/* The band's share of the sheet — the TOP of it, --giant-arc tall. The frame
+   below takes the rest, and the two are one photograph: see --giant-sheet for
+   why anything else draws a line across the width here. Anchored 0 0, which is
+   what makes this the top of the sheet rather than an arbitrary crop of it. */
+.giant-brow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("/assets/paper-overlay.webp");
+  background-size: 100% var(--giant-sheet);
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  opacity: 0.2;
+  pointer-events: none;
 }
 
 /* Paper grain — the hero's layer and the slider's, built the same way, which is
@@ -1945,7 +2079,14 @@ html[data-loading] {
   position: absolute;
   inset: 0;
   background: url("/assets/paper-overlay.webp");
-  background-size: 100% 100%;
+  /* The lower share of --giant-sheet, anchored to the FOOT of it — the arc band
+     above holds the top. `100% 100%` was right when the frame's top edge was
+     the section's, and became a seam the moment there was paper above it. The
+     stretch this adds is 9vw over a viewport, under a tenth, which is nothing
+     against the smear the note above is warning about. */
+  background-size: 100% var(--giant-sheet);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
   opacity: 0.2;
   pointer-events: none;
 }
@@ -1960,10 +2101,10 @@ html[data-loading] {
 
    Height is the tail exactly, anchored to the bottom, so this never covers the
    frame and never gets stretched over the section's nine viewports. The tile is
-   100vw x 100vh, which is precisely what .wrapper's overlay paints at 100% 100%
-   of a one-viewport box — same paper, same scale. The join is a change of phase
-   in a texture rather than a change of texture, and at this opacity there is
-   nothing in it to see. */
+   --giant-sheet tall, which is precisely what .wrapper's overlay paints — same
+   paper, same scale, and it tracks that rule rather than restating its figure.
+   The join is a change of phase in a texture rather than a change of texture,
+   and at this opacity there is nothing in it to see. */
 .giant-pinning::after {
   content: "";
   position: absolute;
@@ -1972,7 +2113,7 @@ html[data-loading] {
   bottom: 0;
   height: var(--giant-tail);
   background: url("/assets/paper-overlay.webp");
-  background-size: 100vw 100vh;
+  background-size: 100vw var(--giant-sheet);
   background-repeat: repeat;
   opacity: 0.2;
   pointer-events: none;
@@ -2489,7 +2630,7 @@ html[data-loading] {
   border-radius: 3.1vw;
   font-size: calc(var(--pw) * 1.6815);
 
-  /* THE PHOTOGRAPHS THROW LEFT, and further than the tags do.
+  /* THE PHOTOGRAPHS THROW FURTHER THAN THE TAGS DO.
    *
    * A rounded square is a big flat silhouette and it is the shape the shadow
    * has to be legible AS — the round tags read at a glance because a disc's
@@ -2497,15 +2638,12 @@ html[data-loading] {
    * comparing two straight edges and needs more daylight between them to see
    * one at all. So these carry about twice the tags' offset.
    *
-   * The x is NEGATIVE, which is the one thing in here that fights the rest of
-   * the file. Every other shadow on the site comes off a light above-LEFT and
-   * falls down-right; this one falls down-left. It is a deliberate call from
-   * the design, not an oversight — but it does mean a photograph and a tag on
-   * the same panel are lit from opposite sides, so if the arrangement ever
-   * reads as two pictures pasted together rather than one board, this sign is
-   * the first thing to look at. Flipping .giant-prop, .giant-card and
-   * img.showcase to match puts the whole page back under one light. */
-  filter: drop-shadow(-0.7vw 1vw var(--drop-blur) var(--drop-ink));
+   * The x is positive, down-RIGHT, which is the light above-left that every
+   * other shadow on the site is thrown by. This used to fall down-left and was
+   * the one thing in the file fighting the rest; a photograph and a tag on the
+   * same panel were lit from opposite sides. They now agree — keep the sign
+   * positive here and on img.showcase, which is the same object. */
+  filter: drop-shadow(0.7vw 1vw var(--drop-blur) var(--drop-ink));
 }
 
 /* The picture inside the wrapper. It fills it, so the wrapper's height is the
@@ -2618,9 +2756,16 @@ html[data-loading] {
   /* The frame stops being one viewport here — it is however tall three stacked
      phrases make it — so the grain has to tile rather than stretch to it, for
      the reason its own note gives. Same tile the tail uses, so the whole section
-     is still one sheet. */
+     is still one sheet.
+
+     Which also puts back the position the base rule moved: anchoring the sheet's
+     foot to the frame's foot is how the band and the frame share one photograph,
+     and with a frame of unknown height there is no sheet to share — it tiles
+     from the top like the tail does. The band above still reads correctly, since
+     the top of a tile is the top of a tile either way. */
   .giant-pinning .wrapper::before {
-    background-size: 100vw 100vh;
+    background-size: 100vw var(--giant-sheet);
+    background-position: 0 0;
     background-repeat: repeat;
   }
 
@@ -2691,25 +2836,10 @@ html[data-loading] {
      the line the layout below is measured from. */
   --footer-arc: 9vw;
 
-  /* The bite, as the shape that SURVIVES it: the two lobes of paper either side
-     of the curve. It is one half-ellipse, rx half the width and ry the arc's
-     depth, written as two quadrant arcs through the explicit low point at
-     (50,15) — a single 180° arc between two points on the ellipse's own
-     horizontal diameter is the degenerate case, where the flags no longer say
-     which half is meant.
-
-     Which way the quadrants run is the whole shape. The tangent is VERTICAL
-     where the curve leaves each corner and HORIZONTAL where the two meet at the
-     bottom — that is what makes it a valley. Run them the other way and the
-     tangents swap ends: the curve leaves the corners flat and the two halves
-     arrive at the centre travelling straight down, meeting in a cusp. Which is
-     a spike, not an arc.
-
-     The viewBox is 100 x 15 against a box of 100% x --footer-arc and
-     preserveAspectRatio="none" stretches it to fit, so the radii land at half
-     the width and the full arc depth however wide the window is. The menu tab's
-     torn edge is built out of the same parts for the same reason. */
-  --footer-bite: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 15' preserveAspectRatio='none'%3E%3Cpath d='M0 0A50 15 0 0 0 50 15A50 15 0 0 0 100 0L100 15L0 15Z' fill='%23000'/%3E%3C/svg%3E");
+  /* The shape itself is --edge-bite in :root — the pinning section's top edge
+     takes the same one, and the path is documented there. Stretched here to
+     100% x --footer-arc, which is what picks this section's depth. */
+  --footer-bite: var(--edge-bite);
 
   /* The hero's pairing, reversed — #0d470c is the hero's own ground and #b6fe00
      the lime it puts overhead. */
@@ -3057,9 +3187,14 @@ html[data-loading] {
 /* The social mark. react-icons draw at 1em square in currentColor, so the size
    is a font-size off the ball's own diameter and the colour is --ball-ink —
    the hero's dark green, cut into the lime. Both come from the ball, so a disc
-   in another pair of shades needs nothing here. */
+   in another pair of shades needs nothing here.
+
+   0.235 of the diameter is 2.986vw on a 12.7vw disc — 43px at the 1440 design
+   width, which is the mark's drawn height. Kept as a fraction of --ball-d
+   rather than a flat vw so a disc at another size still wears it in
+   proportion; the px figure is only true at the size the discs are now. */
 .footer-ball-mark {
-  font-size: calc(var(--ball-d) * 0.42vw);
+  font-size: calc(var(--ball-d) * 0.235vw);
   pointer-events: none;
 }
 
@@ -3079,17 +3214,20 @@ html[data-loading] {
    box. It is small type on a dark field and a roll passing over it would take
    it out entirely. */
 .footer-legal {
-  position: absolute;
-  left: 50%;
-  bottom: 1.6vw;
-  transform: translateX(-50%);
-  z-index: 2;
-  font-family: var(--font-body);
-  font-size: 0.9vw;
-  font-weight: 500;
-  line-height: 1;
-  white-space: nowrap;
-  color: var(--footer-ink);
+    z-index: 42;
+    font-family: var(--font-body);
+    white-space: nowrap;
+    color: var(--footer-ink);
+    font-size: .9vw;
+    font-weight: 500;
+    line-height: 1;
+    position: absolute;
+    bottom: 1.6vw;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 0.556vw;
+    background: #003500;
+    padding: 0.347vw;
 }
 
 /* Thirty letters flying in from nowhere is exactly what this setting is asking
@@ -3162,10 +3300,11 @@ html[data-loading] {
   --menu-dash-h: 0.12vw;
 
   /* The hover preview, in two beats: the slot opens and shoves the label aside,
-     and only once it has stopped does the image scale up into it. OPEN is how
-     long the shove takes, which is therefore also how long the image waits —
-     the two are one number so the beats cannot overlap. Closing runs the same
-     sequence backwards, image first.
+     and the image scales up into it. OPEN is how long the shove takes; how long
+     the image waits is --menu-thumb-wait below, which is SHORTER, so the second
+     beat starts while the first is still running. They were one number once and
+     the beats could not overlap; see that variable for why they now do. Closing
+     runs the same sequence backwards, image first.
 
      BOTH SHORTENED, and the first one is the one that changes what the move
      MEANS. At 0.35s the slot took long enough that the label read as drifting
@@ -3180,6 +3319,23 @@ html[data-loading] {
      old settle reads as the picture dawdling in after the room was made. */
   --menu-thumb-open: 0.22s;
   --menu-thumb-pop: 0.3s;
+
+  /* How long the image waits before it starts growing — and the one place the
+     two beats are allowed to overlap.
+   *
+     This used to BE --menu-thumb-open, which made the sequence strictly
+     sequential: the slot finished shoving, and only then did anything appear in
+     it. Correct, and a beat too polite — the pause between the room being made
+     and the picture filling it was long enough to read as a wait rather than as
+     a consequence. Starting at 0.1s the image is already growing while the slot
+     is still travelling, so the two land together and the shove looks like what
+     put the picture there.
+   *
+     The floor is not 0. At 0 the image scales inside a slot that has barely
+     opened, so it is clipped to a sliver for the first few frames and appears to
+     unfold sideways — which is the squash this whole arrangement exists to
+     avoid. Keep it at or above about a third of --menu-thumb-open. */
+  --menu-thumb-wait: 0.1s;
 
   /* The hero's dark green on paper white — the menu belongs to the page, not
      to the slider's per-tape palette, same call the wave band makes. */
@@ -3388,9 +3544,10 @@ html[data-loading] {
       var(--menu-thumb-pop);
 }
 
-/* The image, second beat. It is a fixed square inside a slot that has already
-   finished opening, so it scales into standing room rather than being uncovered
-   by the slot's own edge.
+/* The image, second beat. It is a fixed square inside the slot rather than
+   something the slot's edge uncovers, so it scales up under its own steam — it
+   now starts before the slot has finished opening (--menu-thumb-wait), and the
+   only reason that is safe is that its size never depended on the slot's.
 
    max-width: none because the reset caps images at 100%, which here is the
    slot's width — the animating one. Left alone the image would track the slot
@@ -3429,7 +3586,9 @@ html[data-loading] {
 .menu-link:hover .menu-thumb img,
 .menu-link:focus-visible .menu-thumb img {
   transform: scale(1);
-  transition-delay: var(--menu-thumb-open);
+  /* Shorter than the slot's own open, deliberately — the beats overlap now.
+     See --menu-thumb-wait for what that buys and where the floor is. */
+  transition-delay: var(--menu-thumb-wait);
 }
 
 /* 60px / 60px / -1.8px at the 1440 design width, carried to vw the way the

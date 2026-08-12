@@ -13,10 +13,11 @@
      6. Wave band    the hand-off between the hero and the slider
      7. Tape slider  word marks, columns, stage, rolls
      8. Giant pinning  WHY WE EXIST — the pinned camera and its three phrases
-     9. Footer       the nav row, the sign-off headline, the rolls' bed
-    10. Menu         the pull-down panel and its tab
-    11. Cursor       the taped arrow
-    12. Peel         a stuck-down thing lifting a corner, wherever one is used
+     9. Make it stick  the closing key visual — photo, card, and tape across
+    10. Footer       the nav row, the sign-off headline, the rolls' bed
+    11. Menu         the pull-down panel and its tab
+    12. Cursor       the taped arrow
+    13. Peel         a stuck-down thing lifting a corner, wherever one is used
 
    Section order is load-bearing where two rules touch the same property; keep
    new rules inside the section they belong to rather than appending to the
@@ -1326,6 +1327,41 @@ html[data-loading] {
    header. */
 
 /* --------------------------------------------------------------------------
+   Sitting the drawing where the window can see it
+   --------------------------------------------------------------------------
+   The composition in the middle of this section — the subhead chip, THE, the
+   roll, CREATIVE — is one rigid drawing in vw, and the note by .bottom-title
+   below is the argument for why it has to stay that way: the pieces hold their
+   positions against EACH OTHER, and a viewport HEIGHT anywhere inside it makes
+   one piece slide past the rest as the window changes shape.
+
+   What that cannot do is sit right in a window whose height is not a fixed
+   fraction of its width. At 1920 the drawing is a third bigger than at 1440
+   while the monitor under it is typically only a fifth taller, so the whole
+   thing rides down the screen and the roll — which is what the eye judges this
+   section by — went from 57.6% down the window to 64%.
+
+   So the drawing is MOVED UP by one length. TapeSlider/fit.ts measures the
+   window and writes it; everything here is where that length lands.
+
+   IT IS A TRANSLATION AND NOT A SCALE, deliberately. The roll is the product
+   shot, and how big it is at a given page width is a decision the design has
+   already made — shrinking it to buy room is answering a question nobody asked.
+   What that costs is a ceiling: the wave band's tape hangs into this section's
+   top and the chip cannot rise past it, so on a tall-and-narrow window the lift
+   runs out before the roll is fully back on its seat. See FRAME.CLEAR in
+   fit.ts, which is where the measured gap lives.
+
+   Registered as a length, so an unset element is the designed drawing at 0
+   rather than an invalid value. Inherited: fit.ts writes it on the section and
+   both of the boxes that read it are further down. */
+@property --slide-lift {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+/* --------------------------------------------------------------------------
    Centre column
    -------------------------------------------------------------------------- */
 .middle {
@@ -1333,58 +1369,172 @@ html[data-loading] {
   width: 100%;
   height: 100vh;
 
+  /* The drawing's lift — see "Sitting the drawing where the window can see it"
+     above. `translate` as its own property, which is free here: .middle carries
+     no transform of its own and GSAP never touches it (it writes to
+     .key-visual and the showcases INSIDE, which compose under this).
+
+     It costs the layout nothing: a transform does not move this box's own
+     geometry, so #creative.wrapper is still 100vh tall and .left — the chips
+     and the intro copy, which are already centred on the window and have no
+     business tracking the drawing — stays exactly where it is. */
+  translate: 0 var(--slide-lift);
+
   /* Tilts are --rot, not a transform, for the same reason the left column's
      chips are: GSAP owns these elements' transform during the swap and a
      transform declared here would simply be overwritten. Tune the angles. */
-  & img.showcase {
+  /* THE WRAPPER IS THE CARD NOW. It was a bare <img>; it is a <span> holding
+     that image and the strip of tape across its top edge (see TapeSlider's
+     markup), and everything this rule ever said about placement, tilt, drift and
+     the turn belongs to the assembly rather than to the picture inside it — so
+     the strip travels with the photograph through the swap instead of hanging in
+     the air while it turns.
+
+     Only the two things that are about the PICTURE moved down to the img below:
+     its corner radius and the shadow that follows it. */
+  & .showcase {
     position: absolute;
     z-index: 10;
-    border-radius: 3.472vw;
 
-    /* A card sitting just off the surface — the site's shadow, see --drop-ink
-       in :root, and .giant-prop--shot for why a rounded-square photograph
-       throws further than the round tags do. These are the same object as the
-       giant section's loose shots and take the same offset.
+    /* An inline box would leave a line-box's worth of space under the image and
+       hand the wrapper a taller box than the card it is standing in for, which
+       the tape's own placement is measured against. */
+    display: block;
+    line-height: 0;
 
-       ONE LAYER NOW, not two. This was a crisp contact edge under a wider,
-       softer body, which is how you fake a real light source with a blur: the
-       penumbra grows with distance from the contact. That reasoning is sound
-       and it is the opposite of what the rest of the page now does, and a
-       showcase card floating on 1.15vw of haze beside a giant prop resting on a
-       hard edge reads as two photographs from two different shoots. A hard
-       shadow has no penumbra to build, so the second layer has nothing to say.
+    /* Deliberately no --parallax, on either — the same call the key visual
+       makes just below, and now the whole centre column holds still against the
+       scroll. What was left once the roll stopped drifting was two photographs
+       sliding past a stationary object they are arranged around, which reads as
+       the composition coming apart rather than as depth. The tilts stay: those
+       are how the pair is laid down, not how it moves.
 
-       box-shadow, not filter: drop-shadow — it follows the corner radius for
-       free, and a filter would rasterise the card and flatten the 3D turn. It
-       also skews with the flip, which is what a real card does. That is also
-       why the blur here is a literal 0 rather than --drop-blur: the reason for
-       that hairline is a cut-out PNG's ragged alpha, and a box-shadow is thrown
-       by the border box, which has no ragged edge to soften.
-
-       In vw so it scales with the layout; black at low alpha so it holds over
-       all four stage colours. */
-    box-shadow: 0.7vw 1vw 0 var(--drop-ink);
-
-    /* Negative --parallax runs ahead of the page, which reads as nearer —
-       correct here, since these sit in front of the key visual. The two differ
-       so they separate from each other as well as from it. */
+       nth-CHILD, not nth-of-type: these were the only two <img> in .middle and
+       are now the only two <span>, so of-type still happened to work — but it is
+       counting element names that this rule has no business knowing, and the
+       next span dropped into the column would silently steal the second card's
+       placement. Both showcases are the first two children of .middle. */
     &:first-child {
       top: 14.5vw;
       left: 19.878vw;
       --rot: -6.487deg;
-      --parallax: -0.09;
     }
 
-    &:nth-of-type(2) {
+    &:nth-child(2) {
       top: 18.3vw;
       right: 24vw;
       --rot: 10.359deg;
-      --parallax: -0.15;
     }
 
     /* The swap happens edge-on, so the reverse face is never meant to show.
        Insurance against a frame landing a hair past 90deg. */
     backface-visibility: hidden;
+  }
+
+  /* The photograph itself — see the wrapper above for why only these two are
+     down here. The child combinator matters: the tape is two copies of a fourth
+     image inside this same box, and they are the strip's business.
+
+     A card sitting just off the surface — the site's shadow, see --drop-ink in
+     :root, and .giant-prop--shot for why a rounded-square photograph throws
+     further than the round tags do. These are the same object as the giant
+     section's loose shots and take the same offset.
+
+     ONE LAYER, not two. This was a crisp contact edge under a wider, softer
+     body, which is how you fake a real light source with a blur: the penumbra
+     grows with distance from the contact. That reasoning is sound and it is the
+     opposite of what the rest of the page now does, and a showcase card floating
+     on 1.15vw of haze beside a giant prop resting on a hard edge reads as two
+     photographs from two different shoots. A hard shadow has no penumbra to
+     build, so the second layer has nothing to say.
+
+     box-shadow, not filter: drop-shadow — it follows the corner radius for free,
+     and a filter would rasterise the card and flatten the 3D turn. It also skews
+     with the flip, which is what a real card does. That is also why the blur
+     here is a literal 0 rather than --drop-blur: the reason for that hairline is
+     a cut-out PNG's ragged alpha, and a box-shadow is thrown by the border box,
+     which has no ragged edge to soften.
+
+     In vw so it scales with the layout; black at low alpha so it holds over all
+     four stage colours. */
+  & .showcase > img {
+    display: block;
+    border-radius: 3.472vw;
+    box-shadow: 0.7vw 1vw 0 var(--drop-ink);
+  }
+
+  /* THE STRIP, across the photograph's top edge.
+   *
+   * Sized off --peel-w / --peel-h rather than by a width of its own, and that is
+   * load-bearing twice over. Those two ARE the box Peel was told about, so there
+   * is one statement of the strip's size and the clip frame cannot drift out of
+   * step with the element it is clipping. And they are what the engine rewrites
+   * when the tape changes: the four rolls are four different shapes, and the
+   * strip has to become the incoming one's rather than wear the outgoing one's
+   * proportions. (strips.ts is where the numbers come from, and why they are in
+   * px on a page otherwise drawn in vw.)
+   *
+   * -46% rather than -50%: the strip sits mostly above the picture with a little
+   * of it on, which is what makes it read as holding the thing down rather than
+   * balanced on its edge. Same figure the pinning section's tapes use.
+   *
+   * NO rotate HERE — .peel spends that property on --peel-dir, which is how the
+   * fold is aimed, and a tilt written here would replace it rather than add to
+   * it. The strip needs none: it is inside the photograph's box and takes that
+   * box's lean, which is the lean it should have. translate is free, being a
+   * separate property. */
+  & .showcase-tape {
+    /* THE REST POSE IS STUCK DOWN. peel.ts's own default is 0 — the strip still
+       up, since 0 is Peel's `from` and `from` here is the lifted end — which is
+       the right start for the animation and the wrong thing to leave on the
+       page. No JS, or reduced motion, and nothing ever presses it: the
+       photograph would be held by a curled strip for good. engine.ts sets it to
+       0 itself, on the one path where something is going to move it.
+
+       This also out-specifies the reduced-motion rule in the Peel section, which
+       parks --peel at 0 — correct for a peel that lifts, backwards for one that
+       sticks down. Two classes to that rule's one. */
+    --peel: 1;
+
+    /* ONE SHADOW, AND IT IS THIS ELEMENT'S. Peel gives its face a shadow of its
+       own, which is right for a sticker lying loose on a page and wrong here: it
+       would stack under this one, so the strip carried two blurs at two offsets. */
+    --peel-shadow: none;
+
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: var(--peel-w);
+    height: var(--peel-h);
+    translate: -50% -46%;
+    z-index: 3;
+
+    /* TURNED A QUARTER, because this element is. --peel-dir is 90deg and a
+       filter is applied in the element's own coordinates, before the rotation
+       carries the result round — so an offset written down-and-right here
+       arrives on screen down-and-LEFT. Swapped and signed to come out at
+       (3px, 4px): down and right, with everything else on the page.
+
+       Hard, not soft, and heavier than --drop-ink. Tape is thin and in contact
+       along its whole length, so its shadow has no room to spread — and this one
+       falls on a PHOTOGRAPH rather than on flat colour, which is mid-toned and
+       busy enough to swallow the site's usual alpha. The blur is not literally
+       0: the strip's ends are torn and drop-shadow takes its shape from the
+       alpha channel, so a zero blur stair-steps them. */
+    filter: drop-shadow(4px -3px var(--drop-blur) rgba(0, 0, 0, 0.42));
+
+    /* HOW THE STRIP MEETS THE PICTURE. normal for the three tapes you cannot
+       see through; screen for the clear one, whose artwork is a set of
+       highlights drawn to be added to whatever it is lying on rather than a
+       picture of a strip — see strips.ts, which is where this is chosen and
+       where the engine reads it from on a swap.
+
+       It blends against the photograph and nothing else: the wrapper above is a
+       stacking context of its own, so the strip cannot reach the stage colour
+       behind it. And the shadow goes with it, which is right — screen leaves
+       black alone, so the one tape that should barely cast a shadow stops
+       casting one without a second rule saying so. */
+    mix-blend-mode: var(--strip-blend, normal);
   }
 
   & .key-visual {
@@ -1393,15 +1543,19 @@ html[data-loading] {
     width: 24.804vw;
     height: 24.804vw;
     top: 28vw;
-    /* The `translate` property, not `transform` — GSAP owns this element's
-       transform for the parallax, and a translate declared there would be
-       overwritten the first time it scrolls, dropping the centring. These are
+    /* The `translate` property, not `transform`, still: the slot is left free
+       of transform so nothing here can fight the canvas inside it. These are
        separate properties and compose. */
     translate: -50% -50%;
     z-index: 4;
 
-    /* Positive: lags the page slightly, so it sits behind the pair above. */
-    --parallax: 0.08;
+    /* Deliberately no --parallax. The roll is the one element here that moves
+       in three dimensions on its own — it leans with the pointer inside the
+       scene (see MAX_YAW in tape3d.ts) — and sliding the whole slot up and
+       down against the scroll on top of that read as two unrelated motions
+       competing rather than one object sitting in space. The showcase pair
+       above keeps its drift; the depth cue it gives against a stationary roll
+       is the same one it gave against a drifting one. */
 
     & img {
       visibility: hidden;
@@ -1580,7 +1734,14 @@ html[data-loading] {
   position: absolute;
   left: 48%;
   top: 5.5vw;
+
   transform: translateX(-50%) rotate(-2deg);
+
+  /* Its `translate` — the wave-band clearance plus the drawing's lift — is set
+     further down, with the rest of the section's 8vw shift. It cannot be set
+     here: that rule comes later and translate is one property, so this would
+     lose. See the note on it. */
+
   font-size: 1.05vw;
   z-index: 6;
 }
@@ -1596,9 +1757,26 @@ html[data-loading] {
    these boxes' transforms belong to their own rules or to GSAP, and the two
    properties compose. */
 .tape-slide,
-.tape-slider-parent .subhead,
 .roll-parent {
   translate: 0 8vw;
+}
+
+/* THE CHIP TAKES THE CLEARANCE AND THE DRAWING'S LIFT TOGETHER, and it has to be
+   said here rather than up with the rest of .subhead's rules: `translate` is one
+   property, this rule is the last word on it, and a lift written earlier was
+   simply overwritten by the 8vw — which fails silently and looks like the chip
+   having been forgotten while everything under it moved. It was: THE rose 69px
+   and landed on top of it.
+
+   Why the chip moves at all is with the rule that caps the lift — there are 14px
+   between its foot and the top of THE, so the two travel together or not at
+   all. See "Sitting the drawing where the window can see it" above.
+
+   .subhead--next inside the sweep stencil wears .subhead too, so it takes both
+   shifts and the two stay exactly on top of each other — which is the whole
+   trick that repaint depends on. */
+.tape-slider-parent .subhead {
+  translate: 0 calc(8vw + var(--slide-lift));
 }
 
 /* --------------------------------------------------------------------------
@@ -1644,6 +1822,7 @@ html[data-loading] {
 .tape-slider-parent {
   position: relative;
   width: 100%;
+
   /* A viewport of stage plus room for the wave band's tape, which dips up to
      ~16vw of tilted valley into this section's top (Wave band, above). The
      extra height is matched by the content shift below, so everything the
@@ -2794,6 +2973,291 @@ html[data-loading] {
 
   .giant-row .giant {
     white-space: normal;
+  }
+}
+
+/* ==========================================================================
+   Make it stick — the closing key visual
+   ==========================================================================
+   Markup in components/MakeItStick. Two boxes side by side on the pinning
+   section's own lime sheet — the product photograph, tilted, and the line set
+   in lime on the same dark green — with a strip of kraft tape stood upright
+   across the seam between them.
+
+   THE DESIGN'S FOUR FIGURES are the four properties at the top of the block
+   below, in vw off the 1440 design width like every other length on this site.
+   They were specified in px and are carried across the way the hero's and the
+   menu's numbers are: the px is kept in the comment so the source is never in
+   doubt, and the vw is what actually paints, so the composition holds its shape
+   at any window width rather than being the designed arrangement at exactly one.
+
+   The row's two widths are NOT both declared. The photograph is a fixed column
+   and the card takes what is left, so the pair always spans the padding box
+   exactly — one number to move if the balance changes, and no third figure that
+   has to be kept equal to the difference of the other two.
+   ========================================================================== */
+.make-it-stick {
+  /* Clear of the viewport's edges — 128.67px at the design width. */
+  --stick-pad-x: 8.935vw;
+  /* Above and below the row — 135px. */
+  --stick-pad-y: 9.375vw;
+  /* Both boxes, the same corner — 175px. A squircle at this size rather than a
+     rounded rectangle, which is what stops the pair reading as two cards. */
+  --stick-radius: 12.153vw;
+  /* The photograph's lean. Nothing on this page is put down straight. */
+  --stick-tilt: 2.966deg;
+
+  /* The photograph's column, 578px, and the card's height, 608px — the figure
+     the design marked on it. The card's WIDTH is whatever is left; see the
+     section note. */
+  --stick-shot: 40.139vw;
+  --stick-card-h: 42.222vw;
+  /* The seam. Small on purpose: the two boxes are held together by the tape
+     across them, and a gap wide enough to read as a column gutter would be two
+     things standing near each other instead. 16.66px. */
+  --stick-gap: 1.157vw;
+
+  /* The pinning section's pairing, and the hero's before it — this section is
+     the same lime sheet with the same dark green written on it, and a fourth
+     green nearly like the other three would read as a mistake rather than a
+     variation. */
+  --stick-bg: #b6fe00;
+  --stick-card-bg: #013900;
+  --stick-ink: #b6fe00;
+
+  /* THE ROOM THE FOOTER TAKES BACK. The footer rises into whatever is above it
+     — margin-top: calc(--footer-arc * -1) — so its corners would otherwise land
+     --footer-arc above this section's bottom edge, which is about five pixels
+     under the card. This is that depth handed back as padding, so the 135px of
+     air below the row is 135px of air that is actually there.
+
+     IT MUST EQUAL --footer-arc, and the two cannot be one custom property
+     because that one lives on .site-footer and this element is not inside it.
+     Change one and change the other; the pinning section pays the same toll
+     with --giant-tail, for the same reason. */
+  --stick-arc: 9vw;
+
+  position: relative;
+  width: 100%;
+  padding: var(--stick-pad-y) var(--stick-pad-x)
+    calc(var(--stick-pad-y) + var(--stick-arc));
+  background: var(--stick-bg);
+}
+
+/* The paper grain, the same layer the hero, the band, the stage and the footer
+   all carry — it is the only way the sections read as one printed surface.
+   Width-fitted and tiled DOWN rather than stretched, for the reason the hero
+   gives: stretching one tile over a box of a different aspect turns paper into
+   vertical streaking.
+
+   THE TOP EDGE HAD A RULE ACROSS IT, and the mask is what takes it off. This
+   section opens on the same lime the pinning section's tail closes on, so the
+   two are meant to read as one unbroken sheet — but the sheet ABOVE is a single
+   image stretched over one viewport (--giant-sheet) and this one is a tile
+   repeating, and there is no phase that makes the bottom row of the one meet
+   the top row of the other. What lands at the join is a crumple that stops and
+   a different crumple that starts, straight across the full width, which is
+   exactly the hard line --giant-sheet exists to prevent one box further up.
+
+   It cannot be solved by sharing a sheet here: the pinning section's grain is
+   on its .wrapper, which is pinned — position: fixed for the length of the
+   section — so there is no shared box to hang one image on. So the join is
+   RAMPED instead of matched. The grain comes in over the top padding, which is
+   empty lime anyway, and it starts at a little under half strength rather than
+   at nothing: fading to zero would simply move the step to the top edge instead
+   of removing it. Nothing to see either way, which is the whole aim.
+
+   pointer-events: none, because a full-bleed decorative layer must never be
+   what a click lands on. */
+.make-it-stick::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/paper-overlay.webp");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  opacity: 0.2;
+  -webkit-mask-image: linear-gradient(
+    rgba(0, 0, 0, 0.45) 0,
+    #000 var(--stick-pad-y)
+  );
+  mask-image: linear-gradient(rgba(0, 0, 0, 0.45) 0, #000 var(--stick-pad-y));
+  pointer-events: none;
+}
+
+/* Positioned, which lifts the row over the grain above it — a positioned
+   pseudo-element otherwise paints over ordinary content whatever the source
+   order says. The footer's nav row and the hero's title make the same call.
+
+   It is also the containing block for the tape, which is placed off the seam
+   between its two children. */
+.stick-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--stick-shot) 1fr;
+  gap: var(--stick-gap);
+  /* Centred on each other rather than stretched: the photograph is square and
+     the card is 30px taller, and the design has them sharing a middle line. */
+  align-items: center;
+}
+
+/* SQUARE, which the artwork already is (608x608) — object-fit is here for the
+   day it is recropped rather than to correct it now.
+
+   The tilt is on `transform` and not on `rotate`: nothing in this section reads
+   or writes either, so both are free, and transform is the one an eye scanning
+   this file expects to find a lean on. */
+.stick-shot {
+  width: 100%;
+  aspect-ratio: 1;
+  height: auto;
+  object-fit: cover;
+  border-radius: var(--stick-radius);
+  transform: rotate(var(--stick-tilt));
+
+  /* The site's cast shadow — hard rather than blurred, see --drop-ink in
+     :root. In vw because this is a physical thing of one size on the page
+     rather than something inside a phrase. */
+  filter: drop-shadow(0.22vw 0.32vw var(--drop-blur) var(--drop-ink));
+}
+
+/* The line, on its own ground. Nothing absolute inside it: the heading sits at
+   the top of the box and the sub-line at the foot, and space-between is what
+   holds them there — so the card can grow or the copy can gain a line without
+   either end having to be re-measured. */
+.stick-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  height: var(--stick-card-h);
+  padding: 4.236vw 2vw 3.819vw; /* 61px / 55px at the design width */
+  border-radius: var(--stick-radius);
+  background: var(--stick-card-bg);
+  color: var(--stick-ink);
+  text-align: center;
+}
+
+/* The house voice: condensed, heavy, set tight and tracked in a shade so the
+   three lines stack as one block. 10.069vw is 145px at the design width, which
+   is the size that puts the longest line — MAKE IT — at the 437px the design
+   draws it; the tracking is part of that measurement and the two move together.
+
+   LINE-HEIGHT UNDER 1 IS WHAT HOLDS THE BLOCK'S TOP EDGE STILL. At 0.83 the
+   text overflows its own line box by half the difference at each end, and that
+   overhang grows with the type — so the cap line stays about 66px under the
+   card's top edge whether this figure is 110 or 145, and the padding above does
+   not have to be re-tuned every time the size moves.
+
+   Lines are block spans rather than <br>, so the leading is the element's own
+   and a line can be reached by a rule if one of them ever needs to be. */
+.stick-headline {
+  font-family: var(--font-heading);
+  font-size: 10.069vw;
+  font-weight: 800;
+  line-height: 0.83;
+  letter-spacing: -0.185vw;
+}
+
+.stick-headline .line {
+  display: block;
+}
+
+/* Body copy, not a heading — the same face and weight the slider's small print
+   takes. 1.181vw is 17px at the design width. */
+.stick-sub {
+  font-family: var(--font-body);
+  font-size: 1.181vw;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------------
+   The strip across the seam
+   --------------------------------------------------------------------------
+   Markup and the peel's own numbers are in components/MakeItStick/index.tsx;
+   this is where it stands and which way up.
+
+   SIZED OFF --peel-w / --peel-h, which is Peel's `box` prop arriving as inline
+   custom properties on this very element. The box is what the turned clip frame
+   is bled by, so the wrapper and the box HAVE to agree — and the way to make
+   two things agree is to have one of them. (The pinning section's .giant-tape
+   types its width separately and the two have already drifted apart; that is
+   the failure this avoids.)
+
+   TWO CLASSES DEEP, and not for tidiness. Peel's wrapper is `peel stick-tape`,
+   so .peel and .stick-tape are the same specificity and the Peel section is
+   further down this file — its `position: relative` therefore beat a bare
+   .stick-tape's `position: absolute`, and the strip came back into flow as a
+   third grid item under the row. It fails silently, so it is worth saying: this
+   rule has to out-specify .peel, not merely follow it.
+
+   STOOD UPRIGHT BY `transform`, and the half turn that lands on the frame as a
+   side effect is the thing to understand here rather than a wart.
+
+   `rotate` is spoken for — .peel uses it for --peel-dir, which is how the fold
+   is AIMED, and .peel-turn takes exactly that much back off the artwork so the
+   picture stays the way up it was drawn. So --peel-dir cannot turn the strip:
+   the picture's angle on screen is whatever is applied ON TOP of it, and
+   nothing else. The 90deg below is that.
+
+   Which leaves the FRAME at --peel-dir plus this turn — half a turn, with
+   direction at +90deg — and half a turn is precisely what makes the strip lay
+   itself on FROM THE BOTTOM. The fold always travels one way in the frame's own
+   coordinates: from --peel-edge, the near end of the clip axis, towards the far
+   one. Turn the frame over and that axis points up the page instead of down, so
+   the same geometry runs the other way and the free end is the bottom one.
+   Direction is therefore the switch for which end lifts: -90deg here is the
+   same strip laid on from the top.
+
+   WHAT THE HALF TURN COSTS is the cast shadow, and it is paid below rather than
+   left wrong — see --peel-shadow.
+
+   CENTRED WITH MARGINS, not with a percentage translate. Two reasons, and
+   either is enough: `translate` composes AHEAD of `rotate`, so a percentage
+   offset written there is turned by --peel-dir before it is applied — and
+   Lightning CSS drops the declaration outright on the way through the build,
+   which is a nuisance to diagnose from a strip sitting 160px off its mark. A
+   negative margin of half the box is neither transformed nor rewritten. */
+.make-it-stick .stick-tape {
+  position: absolute;
+  /* The seam: the photograph's right edge, a little under half way down. */
+  left: var(--stick-shot);
+  top: 52%;
+  width: var(--peel-w);
+  height: var(--peel-h);
+  margin: calc(var(--peel-h) / -2) 0 0 calc(var(--peel-w) / -2);
+  transform: rotate(90deg);
+  /* Over both boxes. They are static, so any positioned element would clear
+     them; this is said out loud because the strip lying UNDER the card would
+     not look like a z-index mistake, it would look like the peel not running. */
+  z-index: 2;
+
+  /* THE LIGHT COMES FROM THE SAME PLACE IT DOES EVERYWHERE ELSE ON THIS PAGE.
+     Peel writes the face's shadow in the FACE'S own coordinates, and the frame
+     those coordinates belong to has been turned over by the rule above — so the
+     site's down-and-right offset would arrive on the page pointing up and to the
+     left, and one prop with its own idea of where the window is is exactly what
+     --drop-ink in :root exists to prevent.
+
+     So it is written pre-turned: negated here, negated again by the half turn,
+     and it lands as the 0.22/0.32 every other object on this page throws.
+     Recompute if the turn above changes. */
+  --peel-shadow: drop-shadow(-0.22vw -0.32vw var(--drop-blur) var(--drop-ink));
+}
+
+/* Pressed flat when motion is not wanted. The general rule in the Peel section
+   parks --peel at 0, which is the right answer for a peel that lifts and the
+   wrong one here: 0 is this strip's `from`, the end still turned back. Left
+   alone it would be a curled strip nobody is ever going to press down.
+
+   Two classes deep so it wins on specificity rather than on order — the Peel
+   section is further down this file and its own reduced-motion rule would
+   otherwise take it. The <noscript> block in index.tsx is the same fix for the
+   other way peel.ts can fail to run. */
+@media (prefers-reduced-motion: reduce) {
+  .make-it-stick .stick-tape {
+    --peel: 1;
   }
 }
 
@@ -4027,7 +4491,7 @@ html[data-loading] {
 }
 
 /* ==========================================================================
-   11. Peel — a stuck-down thing lifting a corner
+   13. Peel — a stuck-down thing lifting a corner
    ==========================================================================
    The geometry of components/Peel. Everything below is a calc() off --peel, a
    single 0..1 that Peel/peel.ts writes on the wrapper each frame — 0 is the
@@ -4202,7 +4666,17 @@ html[data-loading] {
    it lifts, which is what the original got from a mouse-tracked specular
    highlight that a pointerless loop has no way to aim. */
 .peel-flap img {
-  filter: url(#peel-back) brightness(calc(1 + var(--peel) * 0.22));
+  /* WHICH underside comes from the markup — Peel's `back` prop writes
+     --peel-back on the wrapper, because what a thing's back is made of is a
+     fact about the artwork and not about where it is used. The fallback is the
+     board's paper, which is what a prop with nothing to say wants.
+
+     It has to be the id that varies and not the colour: a filter primitive
+     resolves var() against the <feFlood> inside the shared <defs> rather than
+     against the element that referenced it, so one filter is one colour for the
+     whole document however it is written. See BACKS in components/Peel. */
+  filter: var(--peel-back, url(#peel-back))
+    brightness(calc(1 + var(--peel) * 0.22));
 }
 
 .peel-face,
@@ -4260,20 +4734,21 @@ html.has-cursor textarea {
   top: 0;
   /* The artwork's own size. In px, not vw: this is a pointer, and a pointer
      that grows with the viewport stops reading as one. */
-  width: 60px;
-  height: 65px;
+  width: 48px;
+  height: 52px;
   background: url("/assets/new-cursor.svg") center / contain no-repeat;
 
-  /* The hotspot. The arrow's tip sits at (14, 15) inside the 60x65 artwork,
-     so the box is offset by exactly that much and the tip — not the corner,
-     and not the centre — lands on the pointer's real position.
+  /* The hotspot. The arrow's tip sits at (14, 15) inside the artwork's own
+     60x65 coordinates; the box is drawn at 0.8 of that, so the offset scales
+     with it and the tip — not the corner, and not the centre — still lands on
+     the pointer's real position.
 
      The `translate` property, not `transform` — GSAP owns the transform for
      the tracking and would overwrite this the first time the mouse moved.
      They are separate properties and compose, and because translate is
      applied first, the hover scale still pivots on the tip below. */
-  translate: -14px -15px;
-  transform-origin: 14px 15px;
+  translate: -11.2px -12px;
+  transform-origin: 11.2px 12px;
 
   pointer-events: none; /* never be what a click lands on */
   z-index: 9999; /* over the slider's stage (10) and the band's svg (11) */

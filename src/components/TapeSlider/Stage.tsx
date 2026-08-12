@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import { initTapeSlider } from "./engine";
+import { initSliderFit } from "./fit";
 
 /* The only client component in the slider.
  *
@@ -17,8 +18,21 @@ export default function Stage({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (!ref.current) return;
-    return initTapeSlider(ref.current);
+    const root = ref.current;
+    if (!root) return;
+
+    /* Two independent drivers, each with its own teardown. The fit is pure
+       layout — one number written on this element — and it is kept out of the
+       engine deliberately: it has to be right on the first frame and stay right
+       whatever the engine is doing, and a section whose tape swap failed to
+       start is still a section that should be the right size. */
+    const stopEngine = initTapeSlider(root);
+    const stopFit = initSliderFit(root);
+
+    return () => {
+      stopEngine();
+      stopFit();
+    };
   }, []);
 
   return (

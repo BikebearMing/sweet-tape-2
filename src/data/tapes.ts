@@ -148,9 +148,12 @@ export const tapes: Tape[] = [
     word: "reliable",
     roll: "/assets/slider/opp/roll.png",
     card: "/assets/slider/opp/card.svg",
-    /* Best guess: opp.glb was already in the tree, unused, and is the only OPP
-       model there is. Unverified against the artwork. */
-    model: "/assets/tapes/opp.glb",
+    /* THE HERO'S ROLL. It was opp.glb, which was in the tree, unused, and was a
+       guess — this is the brown packing roll the hero dispenses down the whole
+       first screen (Hero/engine.ts MODEL_URL), and OPP tape is what that is. So
+       the section is now showing the same object the page opened with rather
+       than a second model of the same product. */
+    model: "/assets/tapes/header-brown.glb",
     showcase: ["/assets/slider/opp/shot-1.png", "/assets/slider/opp/shot-2.png"],
     tags: ["CARTON SEALING", "BULK PACKING", "BROWN"], // placeholder
     copy: "Placeholder copy for the OPP tape — replace before this goes anywhere near a build.", // placeholder

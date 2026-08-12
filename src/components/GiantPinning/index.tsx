@@ -182,7 +182,10 @@ type Slot = {
 
 /* THE ROLLS. Two strips, and the ratio is the only number either of them needs
  * from its file — it is what turns one width into the box Peel wants, so the
- * height is never typed and never drifts from the artwork.
+ * height is never typed and never drifts from the artwork. `back` is the other:
+ * the underside a strip shows when it lifts is the colour of the roll it came
+ * off, and the two rolls here are nothing like each other. See BACKS in
+ * components/Peel for where those colours came from.
  *
  * THE TWO ARE NOT THE SAME SHAPE — kraft is 428x173 and black is 213x106, so
  * 2.47 against 2.01 — and that is exactly why this is a table rather than one
@@ -194,8 +197,8 @@ type Slot = {
  * In em of the giant type, like everything else inside a phrase, so a strip
  * scales with --giant-size along with the card it is holding down. */
 const TAPES = {
-  kraft: { src: "/assets/tape top.png", ratio: 428 / 173 },
-  black: { src: "/assets/black-tape.png", ratio: 213 / 106 },
+  kraft: { src: "/assets/tape top.png", ratio: 428 / 173, back: "peel-back-kraft" },
+  black: { src: "/assets/black-tape.png", ratio: 213 / 106, back: "peel-back-black" },
 } as const;
 
 type TapeName = keyof typeof TAPES;
@@ -432,6 +435,7 @@ function Props({ items, tape, lift }: { items: Prop[]; tape: TapeName; lift: num
             <Peel
               className="giant-tape"
               src={TAPES[tape].src}
+              back={TAPES[tape].back}
               drive="manual"
               direction={TAPE_DIR}
               box={tapeBox(tape)}
@@ -601,6 +605,7 @@ export default function GiantPinning() {
                   <Peel
                     className="giant-tape"
                     src={TAPES[roll].src}
+                    back={TAPES[roll].back}
                     drive="manual"
                     direction={TAPE_DIR}
                     box={tapeBox(roll)}

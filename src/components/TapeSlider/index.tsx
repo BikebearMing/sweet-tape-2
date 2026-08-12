@@ -1,8 +1,22 @@
 /* eslint-disable @next/next/no-img-element */
+import type { CSSProperties } from "react";
+
+import Peel from "@/components/Peel";
 import { tapes } from "@/data/tapes";
 import Stage from "./Stage";
 import RollPicker from "./RollPicker";
+import { stripOf } from "./strips";
 import { TopTitle, BottomTitle, wordmarkText } from "./WordMarks";
+
+/* HOW MUCH OF THE STRIP IS STILL UP BEFORE THE SECTION IS REACHED, as a
+ * fraction of it — Peel's `from`, with `to` at 0, which is flat. The strip is
+ * being PUT ON, so the far value goes in `from` and the same geometry runs
+ * backwards; there is no second code path for a peel that sticks down rather
+ * than lifting. GiantPinning tapes its photographs on the same way.
+ *
+ * The two differ so the pair does not read as one mechanism — the same reason
+ * the photographs themselves turn over a beat apart (SHOW_LAG in engine.ts). */
+const LIFT = [0.66, 0.54];
 
 /* Section-level copy. Not per tape, so it does not live in tapes.ts — but it is
    the other obvious CMS field, so it is a named constant rather than a string
@@ -70,9 +84,48 @@ export default function TapeSlider() {
             </div>
 
             <div className="middle">
-              {first.showcase.map((src, i) => (
-                <img className="showcase" src={src} alt="" key={i} />
-              ))}
+              {/* THE TAPE IS WHAT PEELS, not the photograph — a picture whose
+                  corner lifts is a picture coming unstuck from nothing, where a
+                  strip of tape is the thing that was holding it. The wrapper
+                  takes over the layout box the bare <img> used to hold, so the
+                  stylesheet's placement, tilt and drift are unchanged; it is
+                  also what the engine now turns, which is what carries the strip
+                  through the swap with the picture it is stuck to.
+
+                  drive="manual": the press belongs to the section's entrance and
+                  is written by engine.ts, once, on the way in. Neither of
+                  peel.ts's own drivers fits. "loop" alternates, so it would rest
+                  either flat (and the motion is a peel, which is the wrong way
+                  round) or lifted (a permanently curled strip that occasionally
+                  presses down). "scroll" scrubs both ways, so the tape would
+                  come back off on the way up — and this one goes on and stays
+                  on.
+
+                  direction 90deg swings the fold ACROSS the strip so it lands
+                  end-first; the tilt alone would crease it lengthwise into a
+                  stripe. No lean of its own: the strip is a child of the
+                  photograph's box and takes the tilt the stylesheet gives that,
+                  which is the tilt it should have — it was laid on the picture,
+                  not on the page. */}
+              {first.showcase.map((src, i) => {
+                const strip = stripOf(first.id);
+                return (
+                  <span className="showcase" key={i}>
+                    <img src={src} alt="" />
+                    <Peel
+                      className="showcase-tape"
+                      src={strip.src}
+                      back={strip.back}
+                      drive="manual"
+                      direction="90deg"
+                      box={`${strip.w.toFixed(2)}px ${strip.h.toFixed(2)}px`}
+                      from={LIFT[i] ?? LIFT[0]}
+                      to={0}
+                      style={{ "--strip-blend": strip.blend } as CSSProperties}
+                    />
+                  </span>
+                );
+              })}
 
               <TopTitle />
 

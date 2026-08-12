@@ -31,6 +31,31 @@ import {
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 const FOV = 35;
+/* Mouse parallax. Applied to the stage the flip groups hang off — NOT to the
+   models themselves, whose rotation.y is the flip's and only the flip's. The
+   two compose instead of fighting: the roll can be halfway through a swap and
+   still lean with the cursor, and because every model shares the one stage,
+   the pair either side of the edge-on handoff is leaning identically at the
+   frame it happens — so the handoff stays invisible however far the tilt is
+   from home.
+
+   The signs read as a camera that moves with the pointer rather than an object
+   that follows it: cursor right shows more of the roll's right side and slides
+   it left, which is what the eye expects from a thing sitting in a scene. */
+const MAX_YAW = 0.3; // rad at full deflection, ~17deg
+const MAX_PITCH = 0.2; // ~11deg; less than the yaw, as a head moves less vertically
+/* World units — the roll is ~1.0 across inside a canvas 1.3 wide, so there is
+   0.15 of margin each side and the yaw's own foreshortening gives a little
+   back. Held under that: past it the roll starts clipping at full deflection. */
+const SHIFT_X = 0.09;
+const SHIFT_Y = 0.065;
+/* Response rate in 1/s for the chase below. High enough to feel attached to the
+   cursor, low enough that the roll has weight and keeps drifting for a beat
+   after the pointer stops. */
+const TILT_EASE = 5;
+/* Below this share of full deflection the remaining travel is under a tenth of
+   a degree — take it in one step rather than render a tail nobody can see. */
+const TILT_EPS = 0.001;
 /* The rolls are exported at diameter ~1.0. The stylesheet oversizes the
    canvas to 130% of the slot, and this distance is derived from that pair:
    the face-on roll spans 1/1.3 of the canvas — exactly the slot, matching
@@ -48,6 +73,9 @@ export type TapeViewer = {
   show(url: string): void;
   /** Rotation of the visible model about the flip axis, in degrees. */
   spin(deg: number): void;
+  /** Where the pointer is, as -1..1 either side of the roll's centre. The
+   *  lean is eased toward it internally, so this may be called raw. */
+  point(nx: number, ny: number): void;
   dispose(): void;
 };
 
@@ -106,8 +134,43 @@ export function createTapeViewer(
   ro.observe(container);
   size();
 
-  let raf = requestAnimationFrame(function loop() {
+  /* Every flip group hangs off this one, so the pointer lean is a single
+     transform above all of them rather than something each model has to carry.
+     See MAX_YAW above for why that matters to the flip. */
+  const stage = new Group();
+  scene.add(stage);
+
+  const to = { x: 0, y: 0 }; // where the pointer is
+  const at = { x: 0, y: 0 }; // where the ease has got to
+
+  /* Exponential chase, frame-rate independent: the same fraction of the
+     remaining distance is covered per second whatever the frame time. Returns
+     whether anything actually moved, so a still pointer costs no render. */
+  function lean(dt: number) {
+    const k = 1 - Math.exp(-TILT_EASE * dt);
+    let x = at.x + (to.x - at.x) * k;
+    let y = at.y + (to.y - at.y) * k;
+    if (Math.abs(to.x - x) < TILT_EPS) x = to.x;
+    if (Math.abs(to.y - y) < TILT_EPS) y = to.y;
+    if (x === at.x && y === at.y) return false;
+    at.x = x;
+    at.y = y;
+    stage.rotation.y = x * MAX_YAW;
+    stage.rotation.x = -y * MAX_PITCH;
+    // Opposite the rotation: a camera that steps right sees more of the right
+    // side AND finds the subject further left in frame.
+    stage.position.x = -x * SHIFT_X;
+    stage.position.y = y * SHIFT_Y;
+    return true;
+  }
+
+  let prev = 0;
+  let raf = requestAnimationFrame(function loop(now) {
     raf = requestAnimationFrame(loop);
+    // A backgrounded tab resumes with a huge gap; clamp it or the roll snaps.
+    const dt = prev ? Math.min((now - prev) / 1000, 0.1) : 0;
+    prev = now;
+    if (dt && lean(dt)) dirty = true;
     if (!dirty) return;
     dirty = false;
     renderer.render(scene, camera);
@@ -175,7 +238,7 @@ export function createTapeViewer(
             const flip = new Group(); // spin() turns this
             flip.add(inner);
             flip.visible = false;
-            scene.add(flip);
+            stage.add(flip);
             groups.set(url, flip);
           }
           resolve();
@@ -239,6 +302,14 @@ export function createTapeViewer(
         active.rotation.y = (deg * Math.PI) / 180;
         dirty = true;
       },
+
+        point(nx: number, ny: number) {
+          // Clamped here rather than at the call site: the caller's normalising
+          // depends on where the roll sits, this range does not.
+          to.x = Math.max(-1, Math.min(1, nx));
+          to.y = Math.max(-1, Math.min(1, ny));
+          // No dirty flag — the loop's ease raises it as soon as it moves.
+        },
 
         dispose: teardown,
       };

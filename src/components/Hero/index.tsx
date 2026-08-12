@@ -263,6 +263,7 @@ export default function Hero() {
           <Peel
             src="./assets/tape-on-note.png"
             id="tape-on-note"
+            back="peel-back-masking"
             drive="scroll"
             direction="90deg"
             box="11vw 5.667vw"
@@ -285,6 +286,7 @@ export default function Hero() {
           <Peel
             src="./assets/tape-on-lemon.png"
             id="tape-on-lemon"
+            back="peel-back-masking"
             drive="scroll"
             direction="106.952deg"
             box="19vw 8.997vw"

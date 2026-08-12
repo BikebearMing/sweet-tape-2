@@ -55,8 +55,16 @@ export function initTapeSlider(root: HTMLElement): () => void {
   const bottomWord = q<HTMLElement>(".bottom-title");
   // The hidden heading that carries the word mark in text; see setWord.
   const srWord = q<HTMLElement>("h2.sr-only");
+  const keyVisual = q<HTMLElement>(".key-visual");
   const card = q<HTMLImageElement>(".key-visual img");
-  const showcase = qa<HTMLImageElement>(".middle img.showcase");
+  /* The showcase pair. `showcase` is the WRAPPER — the thing that is placed,
+     tilted, drifted and turned — and the photograph and the strip of tape across
+     it are the two things inside that a swap has to rewrite. Held as parallel
+     arrays rather than re-queried per swap: the swap runs on the one frame the
+     card is edge-on and has no room for a querySelector. */
+  const showcase = qa<HTMLElement>(".middle .showcase");
+  const shots = showcase.map((el) => el.querySelector<HTMLImageElement>(":scope > img"));
+  const strips = showcase.map((el) => el.querySelector<HTMLElement>(".showcase-tape"));
   const left = q<HTMLElement>(".left");
   const tagBox = left?.querySelector<HTMLElement>(".tag") ?? null;
   const copyBox = left?.querySelector<HTMLElement>(".subtext .h5") ?? null;
@@ -120,6 +128,18 @@ export function initTapeSlider(root: HTMLElement): () => void {
   const SHOW_DEPTH = 55; // px each withdraws at the edge-on moment
   const SHOW_PERSPECTIVE = 900;
 
+  /* The strip of tape across each photograph, being PUT ON — see the markup in
+     TapeSlider/index.tsx, and strips.ts for the artwork.
+     Once, on the way in, and never again: a selection swaps the strip for the
+     incoming tape's behind the same edge-on turn as the photograph, but it does
+     not lift and re-stick. It was taped down when the section arrived and it
+     stays taped down.
+     Slower than the turn that precedes it, because pressing tape on is a slower
+     thing than turning a card over, and power2.out so it arrives rather than
+     stops. */
+  const PRESS = 0.62;
+  const PRESS_EASE = "power2.out";
+
   const CHIP_OUT = 0.34;
   const CHIP_IN = 0.5;
   const CHIP_STAGGER = 0.07;
@@ -159,6 +179,11 @@ export function initTapeSlider(root: HTMLElement): () => void {
     MARGIN: "0px 0px -45% 0px",
     RING_AT: 0.4, // the active ring opens as the rail's own fade lands
     SHOW_AT: 0.22,
+    /* The tape goes on AFTER the photograph has arrived — SHOW_AT plus the half
+       turn that brings it face-on, plus a beat. A strip pressing onto a card
+       that is still edge-on is a strip pressing onto nothing. Each follows its
+       own picture, so the pair's SHOW_LAG carries through to them. */
+    TAPE_AT: 0.22 + SHOW_TURN / 2 + 0.08,
     TOP_AT: 0.1, // THE
     BOTTOM_AT: 0.26, // CREATIVE, trailing it as it does on a selection
     LEFT_AT: 0.2,
@@ -177,6 +202,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
   let leftTl: gsap.core.Timeline | null = null;
   let cardTl: gsap.core.Timeline | null = null;
   let showTl: gsap.core.Timeline | null = null;
+  let pressTl: gsap.core.Timeline | null = null;
 
   /* The 3D stage arrives asynchronously (its chunk, then two GLBs), so the
      engine runs with or without it: null until ready, and every card path
@@ -188,11 +214,17 @@ export function initTapeSlider(root: HTMLElement): () => void {
     radius = track!.getBoundingClientRect().width / 2;
   }
 
-  /* Parallax. --parallax is the share of the scroll distance an element gives
-     back: positive lags behind the page and reads as further away, negative
-     runs ahead of it and reads as nearer. The signs are set to match the
-     stacking order — the showcase pair is in front of the key visual, so it
-     moves more, not less.
+  /* Scroll parallax. --parallax is the share of the scroll distance an element
+     gives back: positive lags behind the page and reads as further away,
+     negative runs ahead of it and reads as nearer.
+
+     NOTHING IN THIS SECTION DECLARES ONE ANY MORE — see global.css. The roll
+     stopped drifting when it got a lean of its own, and the pair in front of it
+     followed, because two photographs sliding past a stationary object they are
+     arranged around is the composition coming apart rather than depth. The
+     machinery is kept, and the query below still names all three elements, so
+     any of them can be given a drift again with one line of CSS. What still
+     earns the ticker callback is measureRoll, which the pointer lean reads.
 
      Driven off GSAP's ticker, which is also driving Lenis, so the offset is
      computed from the same scroll value the page was just laid out with. */
@@ -201,20 +233,53 @@ export function initTapeSlider(root: HTMLElement): () => void {
 
   function collectParallax() {
     drifters = [];
-    qa<HTMLElement>(".key-visual, .middle img.showcase").forEach((el) => {
+    qa<HTMLElement>(".key-visual, .middle .showcase").forEach((el) => {
       const k = parseFloat(getComputedStyle(el).getPropertyValue("--parallax"));
       if (k) drifters.push({ el, k });
     });
   }
 
   function applyParallax() {
-    if (!drifters.length) return;
     const y = window.scrollY || window.pageYOffset || 0;
     if (lastScroll !== null && Math.abs(y - lastScroll) < 0.5) return;
     lastScroll = y;
     const rel = y - root.offsetTop;
     drifters.forEach((d) => gsap.set(d.el, { y: rel * d.k }));
+    // Measured here, after the drift has been written, because the roll's own
+    // parallax is one of the things that moves it. Same gate: the centre only
+    // changes when the page has scrolled, so pointermove reads a cached pair
+    // instead of forcing a layout on every move.
+    measureRoll();
   }
+
+  /* Mouse parallax on the 3D roll. The lean itself lives in tape3d, on a group
+     above the flip so the two run concurrently rather than overwriting each
+     other; all this side does is say where the pointer is, relative to the
+     roll's own centre, and how far out counts as full deflection.
+     TILT_REACH is a share of the viewport's short side: the roll is at its
+     limit well before the pointer reaches the corner, so the lean is at full
+     travel across most of the section rather than only at the extremes. */
+  const TILT_REACH = 0.42;
+  let rollX = 0;
+  let rollY = 0;
+  let inView = true;
+
+  function measureRoll() {
+    if (!keyVisual) return;
+    const b = keyVisual.getBoundingClientRect();
+    rollX = b.left + b.width / 2;
+    rollY = b.top + b.height / 2;
+  }
+
+  function aimRoll(e: PointerEvent) {
+    if (!viewer || !inView) return;
+    const reach = Math.min(window.innerWidth, window.innerHeight) * 0.5 * TILT_REACH;
+    viewer.point((e.clientX - rollX) / reach, (e.clientY - rollY) / reach);
+  }
+
+  // Pointer gone — off the window, or the tab blurred with it mid-lean. Home
+  // is the pose every other part of the section is composed around.
+  const restRoll = () => viewer?.point(0, 0);
 
   // Runs on every tick of the spin tween, so rolls travel along the arc rather
   // than cutting straight across it.
@@ -579,14 +644,60 @@ export function initTapeSlider(root: HTMLElement): () => void {
   const showcaseOf = (btn: HTMLElement) =>
     (btn.dataset.showcase || "").split("|").filter(Boolean);
 
+  /* THE STRIP HOLDING THE PAIR DOWN, packed onto the button by RollPicker as
+     artwork, underside and box — see strips.ts. The box is two lengths because
+     the four rolls are four different shapes: hand a black strip the clear
+     strip's proportions and it is not a squashed picture, it is the peel
+     appearing not to run properly at one end. */
+  function stripOf(btn: HTMLElement) {
+    const [src, back, w, h, blend] = (btn.dataset.strip || "").split("|");
+    return src && back && w && h ? { src, back, w, h, blend: blend || "normal" } : null;
+  }
+
+  /* The strip on ONE card, or on both when `card` is left off.
+   *
+   * WHICH CARD MATTERS, and getting it wrong is visible. The two photographs
+   * turn over a beat apart — SHOW_LAG — so at the moment the first is edge-on
+   * and swapping, the second is still face-on showing the OUTGOING picture.
+   * Repainting both here put the incoming tape's strip on that picture and left
+   * it there for the quarter second until the second card turned: the new tape
+   * arriving early, on the old slide, in front of you.
+   *
+   * Both at once is still right where nothing is mid-turn — the first paint,
+   * and the reduced-motion path, which has no turn to hide anything behind.
+   *
+   * --peel-from / --peel-to are written by Peel as fractions of --peel-span,
+   * which is derived from the box below, so rewriting the box carries the
+   * fold's travel with it and neither has to be touched here. --peel itself is
+   * deliberately left alone: a tape change is a swap, not a re-peel. */
+  function setStrip(index: number, card?: number) {
+    const s = stripOf(rolls[index]);
+    if (!s) return;
+    strips.forEach((tape, i) => {
+      if (!tape || (card !== undefined && i !== card)) return;
+      tape.style.setProperty("--peel-w", s.w);
+      tape.style.setProperty("--peel-h", s.h);
+      // The filter id, not a colour — one filter is one colour for the whole
+      // document. See BACKS in components/Peel.
+      tape.style.setProperty("--peel-back", `url(#${s.back})`);
+      // Only the clear roll asks for one, and it asks because its artwork is
+      // highlights rather than a picture of tape. See strips.ts.
+      tape.style.setProperty("--strip-blend", s.blend);
+      // Both copies: the face and the mirrored flap are the same picture.
+      tape.querySelectorAll("img").forEach((img) => (img.src = s.src));
+    });
+  }
+
   // Rotation is reapplied every time because GSAP owns the transform; the CSS
   // only supplies the angle.
   function setShowcase(index: number) {
     const srcs = showcaseOf(rolls[index]);
     showcase.forEach((el, i) => {
-      if (srcs[i]) el.src = srcs[i];
+      const shot = shots[i];
+      if (srcs[i] && shot) shot.src = srcs[i];
       gsap.set(el, { rotation: rotOf(el) });
     });
+    setStrip(index);
   }
 
   /* Same turn as the key visual: out to edge-on, swap where there is no width
@@ -608,7 +719,13 @@ export function initTapeSlider(root: HTMLElement): () => void {
 
       sub.call(
         () => {
-          if (srcs[i]) el.src = srcs[i];
+          const shot = shots[i];
+          if (srcs[i] && shot) shot.src = srcs[i];
+          /* The tape changes with the picture it is stuck to, behind the same
+             edge-on frame — this card's strip and only this card's, or the
+             other one is repainted while still face-on and showing the tape it
+             is about to stop being. See setStrip. */
+          setStrip(index, i);
           gsap.set(el, { rotationY: -90 });
         },
         undefined,
@@ -750,6 +867,12 @@ export function initTapeSlider(root: HTMLElement): () => void {
     // Edge-on and withdrawn, the same pose addShowcase swaps the artwork at.
     gsap.set(showcase, { rotationY: -90, z: -SHOW_DEPTH });
 
+    /* And the tape not yet on. The stylesheet's rest pose is 1 — stuck down —
+       so that a page with no JS shows a photograph properly taped rather than
+       one held by a curled strip; this is the one path where something is
+       coming to press it, so it is also the only place that may take it off. */
+    strips.forEach((t) => t?.style.setProperty("--peel", "0"));
+
     // The key visual is deliberately absent — see the block comment above.
   }
 
@@ -812,6 +935,33 @@ export function initTapeSlider(root: HTMLElement): () => void {
     return sub;
   }
 
+  /* The strips going on. Written as a plain number onto --peel rather than
+     tweened by GSAP's CSSPlugin, for the reason peel.ts gives: the value is
+     unitless and there is nothing for the plugin to infer. */
+  function addPress(tl: gsap.core.Timeline, at: number) {
+    const live = strips.filter(Boolean) as HTMLElement[];
+    if (!live.length) return null;
+
+    const sub = gsap.timeline();
+    live.forEach((tape, i) => {
+      const st = { p: 0 };
+      sub.to(
+        st,
+        {
+          p: 1,
+          duration: PRESS,
+          ease: PRESS_EASE,
+          onUpdate: () => tape.style.setProperty("--peel", String(st.p)),
+        },
+        // The pair's own offset, so each strip follows its own photograph in.
+        i * SHOW_LAG
+      );
+    });
+
+    tl.add(sub, at);
+    return sub;
+  }
+
   function playEntrance() {
     // The rail's own 0.4s fade, in global.css. ENTER.RING_AT is set to
     // land the opening ring on the end of it.
@@ -833,6 +983,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
        who selects a tape mid-entrance is covered by goTo's existing interrupt
        handling rather than by a second copy of it. */
     showTl = addShowcaseIn(enter, ENTER.SHOW_AT);
+    pressTl = addPress(enter, ENTER.TAPE_AT);
     leftTl = addReturn(enter, ENTER.LEFT_AT);
   }
 
@@ -872,6 +1023,11 @@ export function initTapeSlider(root: HTMLElement): () => void {
     // have the next turn reverse direction from wherever it stopped.
     if (cardTl && cardTl.isActive()) cardTl.progress(1);
     if (showTl && showTl.isActive()) showTl.progress(1);
+    /* And the tape stuck. A selection made while the section is still arriving
+       kills the entrance below, and the strip would be left curled at whatever
+       fraction it had reached — for good, since the press runs once. Completed
+       rather than killed, for the same reason as the two turns above. */
+    if (pressTl && pressTl.isActive()) pressTl.progress(1);
 
     // Killing leaves spin.rot where it stopped, which is what delta was measured
     // against — so an interrupted selection re-aims instead of snapping.
@@ -1011,6 +1167,30 @@ export function initTapeSlider(root: HTMLElement): () => void {
     { signal }
   );
 
+  /* Pointer-driven lean. Skipped on touch, where there is no hover to read and
+     the handler would only ever fire on a tap, and skipped under reduced
+     motion, which is what a lean that follows the cursor is exactly a case of.
+     Left on the window rather than the section so the roll keeps responding
+     while the pointer is out over the margins. */
+  const hover = window.matchMedia("(hover: hover)").matches;
+  let viewIo: IntersectionObserver | null = null;
+  if (!reduced && hover) {
+    window.addEventListener("pointermove", aimRoll, { signal, passive: true });
+    document.addEventListener("pointerleave", restRoll, { signal });
+    window.addEventListener("blur", restRoll, { signal });
+
+    /* The section is one viewport tall on a long page, and the pointer carries
+       on moving after it has been scrolled past. Without this the roll would go
+       on easing — and the renderer on drawing frames for it — somewhere nobody
+       is looking. Sent home on the way out, so scrolling back finds it face-on
+       rather than holding the last lean it was given. */
+    viewIo = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      if (!inView) restRoll();
+    });
+    viewIo.observe(root);
+  }
+
   let resizeTimer: ReturnType<typeof setTimeout>;
   window.addEventListener(
     "resize",
@@ -1040,9 +1220,22 @@ export function initTapeSlider(root: HTMLElement): () => void {
      edge-on, and an undecoded image draws nothing. The elements are retained
      rather than discarded: a bare `new Image().src` is collectable the moment it
      leaves scope, taking the decoded bitmap with it. */
-  const preloaded = rolls
-    .reduce<string[]>((list, b) => list.concat(cardOf(b) || [], showcaseOf(b)), [])
-    .filter(Boolean)
+  const preloaded = Array.from(
+    new Set(
+      rolls
+        .reduce<string[]>(
+          (list, b) =>
+            /* The strips are in here for the same reason and are the ones that
+               most need to be: three of the six tapes share one 3.9MB SVG, so
+               without a decode up front the first selection onto a clear tape
+               would turn a card over onto an empty strip. Deduped — the six
+               tapes are four rolls. */
+            list.concat(cardOf(b) || [], showcaseOf(b), stripOf(b)?.src || []),
+          []
+        )
+        .filter(Boolean)
+    )
+  )
     .map((src) => {
       const img = new Image();
       img.src = src;
@@ -1058,7 +1251,6 @@ export function initTapeSlider(root: HTMLElement): () => void {
      a slow network or a failed chunk degrades to exactly the old behaviour.
      The img is hidden rather than removed when the viewer takes over, in
      case the WebGL context is ever lost. */
-  const keyVisual = q<HTMLElement>(".key-visual");
   /* THE SELECTED TAPE FIRST, and the order is load order — createTapeViewer
      waits for the head of this list and streams the tail behind it. Put the
      active one anywhere else and the slot stays empty while models for tapes
@@ -1137,9 +1329,14 @@ export function initTapeSlider(root: HTMLElement): () => void {
     ac.abort();
     clearTimeout(resizeTimer);
     io?.disconnect();
+    viewIo?.disconnect();
     gsap.ticker.remove(applyParallax);
-    [timeline, enter, wipe, word, bottom, leftTl, cardTl, showTl].forEach((t) => t?.kill());
+    [timeline, enter, wipe, word, bottom, leftTl, cardTl, showTl, pressTl].forEach((t) =>
+      t?.kill()
+    );
     gsap.killTweensOf([...rings, ...letters, ...glyphs, ...showcase, ...chips, spin]);
+    // Back to the stylesheet's rest pose, which is the photograph taped down.
+    strips.forEach((t) => t?.style.removeProperty("--peel"));
     if (card) gsap.killTweensOf(card);
     if (copyBox) gsap.killTweensOf(copyBox);
     // The dispose runs here OR in the loader's then-branch, never both:

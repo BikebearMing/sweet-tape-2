@@ -89,6 +89,17 @@ type PeelProps = {
    */
   in?: number;
   out?: number;
+  /**
+   * WHAT THE UNDERSIDE IS MADE OF — one of the ids in BACKS below. Defaults to
+   * "peel-back", the board's unprinted paper.
+   *
+   * It belongs beside `src` and not in a stylesheet rule, because it is a fact
+   * about the ARTWORK rather than about the place it is used: the giant section
+   * tapes two of its three panels down with kraft and the third with a black
+   * strip, and both wear the same class. A rule keyed on that class cannot tell
+   * them apart, and the roll is already chosen here.
+   */
+  back?: BackName;
 } & Omit<ComponentPropsWithoutRef<"span">, "children" | "in">;
 
 /* A fold position given as a fraction of the artwork becomes a lerp between the
@@ -112,6 +123,7 @@ export default function Peel({
   every,
   in: scrubIn,
   out,
+  back,
   className,
   style,
   ...rest
@@ -123,6 +135,10 @@ export default function Peel({
     ...(from !== undefined ? { "--peel-from": along(from) } : null),
     ...(to !== undefined ? { "--peel-to": along(to) } : null),
     ...(direction ? { "--peel-dir": direction } : null),
+    /* The id, not the colour — one filter is one colour for the whole document,
+       so choosing an underside is choosing which of BACKS to point at. The
+       stylesheet reads this with url(#peel-back) as its fallback. */
+    ...(back ? { "--peel-back": `url(#${back})` } : null),
     ...style,
   } as CSSProperties;
 
@@ -183,10 +199,41 @@ export default function Peel({
  * fully hidden SVG has a history of resolving to nothing in WebKit. It is taken
  * out of flow and out of the a11y tree instead.
  */
-const BACKS: [string, string][] = [
-  /* The board's props: paper, card, tape. The back of any of them is the
-     unprinted side, and this is that paper. */
-  ["peel-back", "#d7d2c7"],
+const BACKS = {
+  /* The board's props: paper and card. The back of either is the unprinted
+     side, and this is that paper. The default, and no longer what the tape
+     wears — see below. */
+  "peel-back": "#d7d2c7",
+
+  /* THE ROLLS, EACH THE COLOUR OF ITS OWN ARTWORK. A strip of tape turned back
+     on itself shows the same stuff it is made of, and the one paper grey these
+     all used to share was reading as a strip of card lying on top of the tape
+     rather than as the tape's own underside — plainly wrong on the black strip,
+     which lifted to reveal a pale grey.
+
+     MEASURED, NOT CHOSEN, like the mark's green below: each is the median of
+     the fully opaque pixels of its own file, so it is the body colour of the
+     roll with the printed marks and the soft torn edges outvoted. Re-sample if
+     the artwork is ever replaced — a value picked by eye off a screenshot picks
+     up whatever the page was showing through it. */
+  "peel-back-kraft": "#dcad81", // tape top.png — the brown packing roll
+  "peel-back-black": "#2b2b2b", // black-tape.png
+  "peel-back-masking": "#d3c393", // tape-on-note / tape-on-lemon, the pale roll
+
+  /* The slider's two, sampled the same way — median of the fully opaque pixels
+     of each file. The method checks out: re-run on black-tape.png it returns
+     #2b2b2b to the digit, and on tape-on-lemon.png #d3c494 against the #d3c393
+     above.
+
+     The clear one is the odd entry. Its artwork is drawn to be SCREENED over
+     what it is stuck to, so its opaque pixels are a mid grey rather than
+     anything you would call the colour of the tape — and that is the right
+     answer here anyway: the underside of a turned-back clear strip is two
+     thicknesses of it over itself, which is exactly the darker grey the file
+     already is. */
+  "peel-back-tissue": "#e1e1e1", // double-side.svg — white tissue tape
+  "peel-back-clear": "#6a6a6a", // stationery-silent-opp-tape.svg
+
   /* The preloader's mark, which is not paper — it is a sticker, and its back is
      a mid green. Taken off the gif it replaces rather than picked: through the
      unfold the folded-over part is dominantly #60a000, and the reason it has to
@@ -194,8 +241,10 @@ const BACKS: [string, string][] = [
      lime, #b6fe00. Flood the back with the lime its own outline is drawn in —
      which is what it looks like it should be — and the flap is invisible for
      the whole of the move, lime on lime. */
-  ["peel-back-mark", "#60a000"],
-];
+  "peel-back-mark": "#60a000",
+} as const;
+
+type BackName = keyof typeof BACKS;
 
 export function PeelDefs() {
   return (
@@ -207,7 +256,7 @@ export function PeelDefs() {
       style={{ position: "absolute", width: 0, height: 0, overflow: "hidden" }}
     >
       <defs>
-        {BACKS.map(([id, colour]) => (
+        {Object.entries(BACKS).map(([id, colour]) => (
           <filter key={id} id={id} x="0%" y="0%" width="100%" height="100%">
             <feFlood floodColor={colour} result="flood" />
             <feComposite operator="in" in="flood" in2="SourceAlpha" />

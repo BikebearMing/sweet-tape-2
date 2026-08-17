@@ -1,5 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import Peel from "@/components/Peel";
+import { bodyCopy } from "@/components/body";
+import { letters } from "@/components/letters";
 import Stage from "./Stage";
 
 /* LET'S MAKE IT STICK — the key visual, and the last thing said before the
@@ -14,7 +16,18 @@ import Stage from "./Stage";
  *
  * Server-rendered like the slider, the pinning section and the footer. Stage is
  * a hair-thin client wrapper that owns the ref and hands the section to
- * Peel/peel.ts; nothing below this line is a client component.
+ * Peel/peel.ts, reveal.ts and parallax.ts; nothing below this line is a client
+ * component.
+ *
+ * THREE THINGS ARRIVE AS THE SECTION DOES, and they are three files because
+ * they are three different moves. The strip presses itself down (Peel, scrubbed
+ * by the scroll). The headline writes itself letter by letter in a scattered
+ * order, which is the site's headline voice — the hero's, the footer's and the
+ * pinning section's (reveal.ts). The sub-line rises a line at a time out of a
+ * floor that is not drawn, which is the site's BODY voice and deliberately not
+ * the headline's — components/bodyReveal.ts, shared with the footer's small
+ * print. And the photograph drifts inside its own frame without the frame
+ * moving a pixel (parallax.ts).
  *
  * THE GEOMETRY IS IN global.css, in vw, off the 1440 design width like the rest
  * of the site — the four figures the design specified (128.67px of inline
@@ -65,30 +78,60 @@ export default function MakeItStick() {
           middle of it for good. Press it flat instead and leave it there: the
           arrangement still reads, it is just no longer being taped down in
           front of you. Same escape the hero and the pinning section carry, and
-          the reduced-motion rule in global.css is the other half of it. */}
+          the reduced-motion rule in global.css is the other half of it.
+
+          NOR DOES THE TYPE ARRIVE. Both entrances are parked by global.css and
+          released by the section's own scripts — the headline's letters under
+          their masks, the sub-line's words under theirs — so a page where
+          neither runs is a page with an empty green card on it. The
+          stylesheet's hold is lifted here as well, which costs nothing when
+          scripting is on: the contents are not even parsed. The hero, the
+          pinning section and the footer all carry the same escape. */}
       <noscript>
-        <style>{`.make-it-stick .stick-tape { --peel: 1 }`}</style>
+        <style>{`.make-it-stick .stick-tape { --peel: 1 }
+          .make-it-stick .char, .make-it-stick .body-rise { transform: none }`}</style>
       </noscript>
 
       <div className="stick-row">
-        {/* Not decorative and so not aria-hidden: this is the product, and it
-            is the only picture of it in the section. */}
-        <img className="stick-shot" src={SHOT} alt={SHOT_ALT} />
+        {/* THE FRAME AND THE PICTURE ARE TWO BOXES, and they are two so that one
+            can hold still while the other drifts (parallax.ts). The rounded
+            box, the tilt and the cast shadow all belong to the frame — it is
+            what is taped to the card beside it, and it does not move. The
+            artwork inside is cut taller than the hole and slides in that slack.
+
+            The picture keeps the alt: it is not decorative, it is the product,
+            and it is the only photograph of it in the section. The wrapper is a
+            plain div and carries nothing to announce. */}
+        <div className="stick-shot">
+          <img className="stick-shot-img" src={SHOT} alt={SHOT_ALT} />
+        </div>
 
         <div className="stick-card">
-          {/* aria-label rather than a second hidden copy of the words — it is
+          {/* Split to letters for the reveal, which is the hero's and the
+              footer's — each one waits below its own mask and slides up in a
+              shuffled order (reveal.ts).
+
+              aria-label rather than a second hidden copy of the words: it is
               honoured on a heading, so the line is announced whole and the
-              three block-level spans are never read out a fragment at a time.
-              The footer's headline is marked up the same way. */}
+              rows of letter boxes are never read out a fragment at a time. The
+              footer's headline is marked up the same way. */}
           <h2 className="stick-headline" aria-label={HEADING.join(" ")}>
             {HEADING.map((line) => (
               <span className="line" key={line} aria-hidden="true">
-                {line}
+                {letters(line)}
               </span>
             ))}
           </h2>
 
-          <p className="stick-sub">{SUB}</p>
+          {/* Body copy, so it takes the BODY entrance and not the headline's —
+              split to words and revealed a measured line at a time. aria-label
+              is not honoured on a paragraph, so the readable copy is a real
+              (hidden) text node and the split version is taken out of the tree;
+              the hero's corner mark makes the same call for the same reason. */}
+          <p className="stick-sub body-copy">
+            <span className="sr-only">{SUB}</span>
+            <span aria-hidden="true">{bodyCopy(SUB)}</span>
+          </p>
         </div>
 
         {/* THE PEEL, RUN BACKWARDS — the strip is found turned back on itself

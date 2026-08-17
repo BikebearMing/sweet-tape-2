@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa6";
 
 import Stage from "./Stage";
+import { bodyCopy } from "@/components/body";
 import { letters } from "@/components/letters";
 import { footerBalls, type SocialIcon } from "@/data/footerBalls";
 
@@ -25,9 +26,14 @@ const SOCIAL_ICONS: Record<SocialIcon, typeof FaTiktok> = {
    reads as a list and leads with ABOUT, this reads as a row across the foot of
    the page and leads with OUR FAMILY. Deliberately its own array rather than an
    import — when these routes gain children it is the menu that will grow them,
-   and the footer row will stay four. */
+   and the footer row will stay four.
+
+   OUR FAMILY'S SLUG IS /products, which is not a typo and is the only row here
+   whose label and href are different words. The family IS the products; OUR
+   FAMILY is how the brand says it in a nav and /products is what the page is
+   called everywhere outside one. See (frontend)/products/page.tsx. */
 const LINKS = [
-  { label: "OUR FAMILY", href: "/our-family" },
+  { label: "OUR FAMILY", href: "/products" },
   { label: "ABOUT", href: "/about" },
   { label: "NEWS", href: "/news" },
   { label: "CONTACT", href: "/contact" },
@@ -66,7 +72,7 @@ export default function Footer() {
           hold is lifted here instead. Costs nothing when scripting is on: the
           contents are not even parsed. The hero carries the same escape. */}
       <noscript>
-        <style>{`.site-footer .char { transform: none }`}</style>
+        <style>{`.site-footer .char, .site-footer .body-rise { transform: none }`}</style>
       </noscript>
 
       <nav className="footer-nav" aria-label="Footer">
@@ -188,7 +194,21 @@ export default function Footer() {
           })}
         </div>
 
-        <p className="footer-legal">{LEGAL}</p>
+        {/* The one piece of body copy in the footer, so it takes the BODY
+            entrance and not the letter-by-letter one the row and the headline
+            above it take — split to words and revealed a measured line at a
+            time (components/bodyReveal.ts). One line as it is set, which is
+            what that reveal resolves it to; it is written this way so a longer
+            notice, or a narrower window, is still handled.
+
+            aria-label is not honoured on a paragraph, so the readable copy is a
+            real (hidden) text node and the split version is taken out of the
+            tree — a row of inline boxes is otherwise liable to be announced a
+            fragment at a time. */}
+        <p className="footer-legal body-copy">
+          <span className="sr-only">{LEGAL}</span>
+          <span aria-hidden="true">{bodyCopy(LEGAL)}</span>
+        </p>
       </div>
     </Stage>
   );

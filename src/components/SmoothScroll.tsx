@@ -16,6 +16,35 @@ import { whenRevealed } from "@/components/Preloader/gate";
  *
  * Renders nothing; it exists for the effect.
  */
+
+/* The live instance, for the one caller outside this file — see resetScroll.
+   A module variable rather than a context because the caller is a plain DOM
+   engine and there is exactly one scroller on the site, which is the same pair
+   of reasons the preloader's gate is on the document. */
+let scroller: Lenis | null = null;
+
+/* Back to the top, now, with nothing animated about it.
+ *
+ * WHY IT CANNOT BE window.scrollTo. Lenis does set a real scroll position, but
+ * it also keeps its own — the target it is easing towards — and it writes that
+ * one to the document on every frame. Move the document behind its back and the
+ * next frame puts it straight back. So a route change that scrolled the native
+ * way would land the reader wherever they had got to on the page they just
+ * left, on a page they have never seen.
+ *
+ * Called from the page transition while the cover is still down, which is what
+ * makes an instant jump the right kind: there is nothing on screen to jump.
+ * Falls back to the native scroll for the case where Lenis is not running at
+ * all — reduced motion, where the transition is called off anyway and this is
+ * only ever the router's own reset. */
+export function resetScroll(): void {
+  if (scroller) {
+    scroller.scrollTo(0, { immediate: true, force: true });
+    return;
+  }
+  window.scrollTo(0, 0);
+}
+
 export default function SmoothScroll() {
   useEffect(() => {
     // Hijacked scrolling is one of the things "reduce motion" is actually
@@ -31,6 +60,7 @@ export default function SmoothScroll() {
        a notch asks for in the first place, so drop it below 1 to make the page
        travel less per notch rather than take longer over the same travel. */
     const lenis = new Lenis({ duration: 1.8 });
+    scroller = lenis;
     const raf = (t: number) => lenis.raf(t * 1000); // ticker counts seconds, Lenis wants ms
 
     gsap.ticker.add(raf);
@@ -77,6 +107,10 @@ export default function SmoothScroll() {
       gsap.ticker.remove(raf);
       gsap.ticker.lagSmoothing(500, 33); // GSAP's own defaults
       lenis.destroy();
+      /* Only if it is still ours. StrictMode's second mount has already put its
+         own instance here by the time the first one tears down, and clearing it
+         blind would leave resetScroll talking to nothing. */
+      if (scroller === lenis) scroller = null;
     };
   }, []);
 

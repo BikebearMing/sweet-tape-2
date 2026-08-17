@@ -35,3 +35,41 @@ export function letters(text: string): ReactNode[] {
     </span>
   ));
 }
+
+/* The same letters, in copy that WRAPS.
+ *
+ * letters() gives a row that cannot break — its boxes are flex items, and a flex
+ * row lays them out on one line however long it gets. That is right for a
+ * headline whose breaks are set by design, which is most of them on this site;
+ * it is wrong for a long line that has to fit whatever box it is given, which is
+ * the hero's cardboard copy and the lead story's title.
+ *
+ * So each WORD becomes an inline-flex box of letter clips. The letters row up
+ * inside it, the line breaks BETWEEN the boxes exactly where the unsplit text
+ * would have broken, and the spaces between them are real text nodes carrying
+ * their own width — so the word spacing is the font's rather than a margin's.
+ *
+ * LONG TOKENS ARE CHUNKED FURTHER, after commas and hyphens: "EMERGENCY,LAST-"
+ * is one whitespace token but three chunks. Adjacent chunks butt together
+ * seamlessly because they are inline boxes with nothing between them, and the
+ * line is allowed to break at the join — which is where plain text would have
+ * broken too.
+ *
+ * --i restarts at each chunk, which the arc would care about and nothing that
+ * uses this does: an arc is for a row of set width, and this is for copy that
+ * does not know its own. The reveals only ever collect .char, and to them a
+ * wrapped block is one pool of letters like any other.
+ *
+ * Server-rendered wherever the caller is, like letters() — no unsplit flash and
+ * no splitter running on mount.
+ */
+export function words(text: string): ReactNode[] {
+  return text.split(/\s+/).flatMap((token, t) => [
+    t > 0 ? " " : null,
+    ...token.split(/(?<=[,-])/).map((chunk, c) => (
+      <span className="word" key={`${t}-${c}`}>
+        {letters(chunk)}
+      </span>
+    )),
+  ]);
+}

@@ -19,6 +19,7 @@ import Menu from "@/components/Menu";
 import { PeelDefs } from "@/components/Peel";
 import Preloader from "@/components/Preloader";
 import SmoothScroll from "@/components/SmoothScroll";
+import TopBand from "@/components/TopBand";
 
 export const metadata: Metadata = {
   title: "Sweet Tape",
@@ -47,11 +48,19 @@ export default function FrontendLayout({ children }: { children: ReactNode }) {
   });
 
   return (
-    /* data-loading is the whole preloader hand-off: the stylesheet locks the
-       scroll off it before any JS has run, the hero's title reveal waits on it,
-       and the sweep takes it off as it clears. See components/Preloader/gate.ts.
-       In the server HTML rather than set on mount, so it is true from the first
-       byte. */
+    /* data-loading is the whole cover hand-off: the stylesheet locks the scroll
+       off it before any JS has run, the hero's title reveal waits on it, and the
+       sweep takes it off as it clears. See components/Preloader/gate.ts. In the
+       server HTML rather than set on mount, so it is true from the first byte.
+
+       ON EVERY ROUTE, not just the one with the overture on it. What is home-
+       only is the MARK and the line under it — the site introducing itself, a
+       thing to do once and at the front door. The coloured stack is site-wide:
+       it covers any cold load for a beat and sweeps off (PRELOADER.SWEEP_BARE),
+       and it is the same seven sheets that come back down over every route
+       change from then on. So the hold is site-wide too, and the transition
+       closes it again on each navigation rather than the page ever being
+       uncovered while something is on its way in. */
     <html lang="en" data-loading="">
       <head>
         {/* Futura PT Condensed. The kit is domain-locked: every host you serve
@@ -75,6 +84,16 @@ export default function FrontendLayout({ children }: { children: ReactNode }) {
             layout rather than on the page — it is not the hero's furniture
             even though that is what sits behind it on load. */}
         <Menu />
+        {/* The masthead — the claim in the top-left corner and the badge in the
+            middle. Site-wide like the menu, and rendered beside it for that
+            reason, but it is NOT pinned the way the menu's tab is: it is
+            positioned against the document and scrolls away with the top of the
+            page, which is where it belongs. Only the tab has to be reachable
+            from anywhere.
+
+            It renders nothing on the home page, whose hero prints its own copy
+            of both. See components/TopBand. */}
+        <TopBand />
         {/* One <defs> for every peel on the site — the filter is referenced by
             id, so a copy per instance would be duplicate ids for a filter they
             all already share. Out of flow and paints nothing. */}

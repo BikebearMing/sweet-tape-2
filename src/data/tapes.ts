@@ -148,11 +148,11 @@ export const tapes: Tape[] = [
     word: "reliable",
     roll: "/assets/slider/opp/roll.png",
     card: "/assets/slider/opp/card.svg",
-    /* THE HERO'S ROLL. It was opp.glb, which was in the tree, unused, and was a
-       guess — this is the brown packing roll the hero dispenses down the whole
-       first screen (Hero/engine.ts MODEL_URL), and OPP tape is what that is. So
-       the section is now showing the same object the page opened with rather
-       than a second model of the same product. */
+    /* The brown packing roll. It was opp.glb, which was in the tree, unused,
+       and was a guess; this is the export the artwork was actually made for.
+       It USED to be the hero's roll too — the hero now dispenses the low-noise
+       one (Hero/engine.ts MODEL_URL), so the object the page opens with is the
+       entry below rather than this one. */
     model: "/assets/tapes/header-brown.glb",
     showcase: ["/assets/slider/opp/shot-1.png", "/assets/slider/opp/shot-2.png"],
     tags: ["CARTON SEALING", "BULK PACKING", "BROWN"], // placeholder
@@ -172,6 +172,9 @@ export const tapes: Tape[] = [
     word: "silent",
     roll: "/assets/slider/opp-quiet/roll.png",
     card: "/assets/slider/opp-quiet/card.png",
+    /* THE HERO'S ROLL — the same file Hero/engine.ts opens the page with, so
+       the slider shows the object the visitor has already been watching rather
+       than a second model of it. */
     model: "/assets/tapes/Low-Noise-Tape.glb",
     showcase: [
       "/assets/slider/opp-quiet/shot-1.png",

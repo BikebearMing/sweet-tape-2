@@ -26,7 +26,7 @@
 import gsap from "gsap";
 import Vara from "vara";
 
-import { NOTE_LINES } from "./copy";
+import { LINE_SEP, NOTE_LINES } from "./copy";
 
 /* Copied out of node_modules/vara/fonts by hand — the package is not on the
    public path, and the CDN copy everyone links is a raw.githubusercontent URL,
@@ -232,6 +232,14 @@ function initOne(note: HTMLElement): () => void {
 
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  /* WHAT THIS ONE SAYS, off the element — the board's sentence on the home page,
+     the news page's own on that one. Read here for the same reason the pen and
+     the pace are: this file finds its instances by querying the DOM, so anything
+     that differs between them has to be ON the element or the drawing cannot see
+     it. See LINE_SEP in copy.ts. The fallback is a note whose markup predates the
+     attribute, not a default anybody should be relying on. */
+  const lines = note.dataset.lines?.split(LINE_SEP) ?? NOTE_LINES;
+
   /* The pen, off the note itself — see HAND.INK. Read here rather than passed
      in, so an instance is configured in one place: the same custom property the
      stylesheet already paints the ruled strokes with is the one the letters are
@@ -253,6 +261,22 @@ function initOne(note: HTMLElement): () => void {
   const pace =
     parseFloat(getComputedStyle(note).getPropertyValue("--hand-draw")) || 1;
 
+  /* And how long it waits after being seen before the pen touches down, in
+     seconds — 0 unless an instance asks for one, which is what every note on the
+     board does. It exists for the news page's, which is on the opening screen
+     and therefore in view from the first frame, so "when it is seen" is not a
+     beat at all: without a hold it writes itself across the same moment the
+     headline's letters are arriving, and the two gestures cancel. See the value
+     WhatsRolling/reveal.ts publishes and why it is the headline that publishes
+     it.
+
+     A NUMBER OF SECONDS AND NOT A CSS TIME. `0.15s` would parse to NaN here and
+     fall back to zero silently, which is the kind of thing that is found six
+     months later; a bare number cannot be mistaken for a value this file knows
+     how to convert. Same reading as --hand-draw above, for the same reason. */
+  const delay =
+    parseFloat(getComputedStyle(note).getPropertyValue("--hand-delay")) || 0;
+
   /* Vara's container, created here rather than sitting in the markup: it is
      what a teardown detaches, and detaching it is what makes a build still in
      flight harmless. */
@@ -262,6 +286,10 @@ function initOne(note: HTMLElement): () => void {
 
   let stopped = false;
   let tl: gsap.core.Timeline | null = null;
+  /* The hold between being seen and being written — see `delay`. Kept so the
+     teardown can kill it: a note torn down inside its own hold would otherwise
+     leave a call in flight that plays a timeline nothing is watching. */
+  let held: gsap.core.Tween | null = null;
   /* What releases the timeline — see the note by its construction in drawIt.
      Nothing here reacts to a resize any more: the observer works off the
      rendered box, so a new viewport is a new box and nothing to re-measure. */
@@ -328,8 +356,8 @@ function initOne(note: HTMLElement): () => void {
          for; word spacing is a separate judgement and this leaves it alone.
 
          Vara builds one group per character INCLUDING spaces, so the source
-         line indexes the groups directly — the counts agree exactly, 12/17/19
-         and 10 for the four lines. Which is what lets a gap be identified by
+         line indexes the groups directly — the counts agree exactly, whatever
+         the copy is. Which is what lets a gap be identified by
          the characters either side of it rather than by inspecting what Vara
          drew there (a space is a group with no paths and a transparent stroke,
          which is a far more fragile thing to test for).
@@ -340,7 +368,7 @@ function initOne(note: HTMLElement): () => void {
          writes the attribute back rather than using the transform list, and
          takes the scale from the group's own matrix rather than the outer
          `scale` — the same number, but only one of them is this element's. */
-      const source = NOTE_LINES[i] ?? "";
+      const source = lines[i] ?? "";
       let taken = 0;
       Array.from(line.children).forEach((node, k) => {
         // The gap BEFORE this glyph, closed only if a letter stands on both
@@ -426,7 +454,14 @@ function initOne(note: HTMLElement): () => void {
     io = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;
-        tl?.play();
+        /* The hold, if this instance asked for one — a delayedCall rather than
+           the timeline's own `delay`, which on a paused timeline is ambiguous
+           about what it is measured from. This one is measured from HERE, the
+           moment the note counted as seen, which is the only thing it could
+           mean. The site's other deferred entrances are built the same way (see
+           the delayedCalls in WhatsRolling/reveal.ts). */
+        if (delay > 0) held = gsap.delayedCall(delay, () => tl?.play());
+        else tl?.play();
         io?.disconnect(); // once written, it stays written
         io = null;
       },
@@ -449,7 +484,7 @@ function initOne(note: HTMLElement): () => void {
       FONT_SRC,
       [
         {
-          text: NOTE_LINES,
+          text: lines,
           fontSize: HAND.NOMINAL,
           strokeWidth: HAND.STROKE,
           color: ink,
@@ -471,6 +506,7 @@ function initOne(note: HTMLElement): () => void {
     stopped = true;
     io?.disconnect();
     io = null;
+    held?.kill();
     tl?.kill();
     /* Detaching the container IS the teardown. Vara has no destroy, and its
        build begins with an XHR deep enough to land after the section has gone:

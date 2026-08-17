@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 import { letters } from "@/components/letters";
 import Peel from "@/components/Peel";
 import { tapes } from "@/data/tapes";
 import { initPreloader } from "./reveal";
+import { createTransition, type Transition } from "./transition";
 
 /** The mark. A flat SVG — the movement is components/Peel plus the timeline in
  *  Preloader/reveal.ts, where it used to be 1.8 MB of gif with the animation
@@ -79,30 +81,94 @@ const STACK = STACK_ORDER.flatMap((id) => {
   return tape ? [{ id, bg: tape.colours.bg }] : [];
 });
 
-/* The preloader.
+/** The one route the overture belongs to. */
+const HOME = "/";
+
+/* The preloader — and, once it has gone, the curtain the whole site changes
+ * pages behind.
  *
  * A sheet of paper over the page with the mark in the middle, lifted off after
  * a beat — Preloader/reveal.ts owns all of that and this component owns none of
- * it, the same division the hero and the menu make.
+ * it, the same division the hero and the menu make. The coloured stack behind
+ * that sheet then stays where it is parked, off the top of the screen, and comes
+ * back down over every route change; Preloader/transition.ts owns that, and this
+ * component owns none of it either.
+ *
+ * ONE ELEMENT FOR BOTH, deliberately. A separate curtain component would be the
+ * same seven sheets with the same arcs in the same colours, kept in step with
+ * these by hand — and the transition's whole claim is that it IS the preloader's
+ * rainbow, coming the other way.
+ *
+ * THE OVERTURE IS THE HOME PAGE'S. The mark and the line under it are the site
+ * introducing itself, which is a thing to do once, at the front door: land on
+ * /products from a search result and what you want is the page, not a logo you
+ * have not asked about. So every other route gets the same cover with nothing
+ * printed on it, and it sweeps off after a beat rather than after four seconds
+ * (PRELOADER.SWEEP_BARE).
+ *
+ * Frozen at the first render rather than followed, and that is the point of the
+ * useState: `here` changes under a client-side transition, and a mark that
+ * reappeared on the curtain the moment the router pointed at the home page would
+ * turn every navigation home into a second overture — sliding in from off the
+ * top of the screen, on paper that is on its way down.
  *
  * Server-rendered, deliberately. The cover has to be in the first painted frame
  * or there is a flash of the page it exists to cover, so it is markup in the
  * document rather than something mounted on hydration; the "use client" here
- * buys the effect, not the rendering.
+ * buys the effects, not the rendering. usePathname is honest under that — Next
+ * renders client components on the server too, and it has the route there — so
+ * the home page's HTML carries the mark and no other page's does.
  *
  * The scroll lock is not here either. It hangs off `html[data-loading]` in
  * global.css — written into the server HTML by the layout, taken off by the
- * sweep (gate.ts) — so the page is held from the first byte rather than from
- * whenever hydration happens to land.
+ * sweep and put back by the transition (gate.ts) — so the page is held from the
+ * first byte rather than from whenever hydration happens to land.
  */
 export default function Preloader() {
   const ref = useRef<HTMLDivElement>(null);
+  const here = usePathname();
+  const router = useRouter();
+  const [overture] = useState(() => here === HOME);
 
   useEffect(() => {
     const root = ref.current;
     if (!root) return;
     return initPreloader(root);
   }, []);
+
+  /* The transition, built once and kept — it outlives every route, which is the
+     whole reason it can animate across one. */
+  const tr = useRef<Transition | null>(null);
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+
+    /* scroll: false, and the transition does it by hand instead — see
+       resetScroll in SmoothScroll. The router's own reset writes the document's
+       scroll directly, which Lenis overwrites from its own held position on the
+       next frame; two of them fighting over the same number is worse than
+       either, and only one of them knows about the smooth scroller. */
+    const built = createTransition(root, (href) =>
+      router.push(href, { scroll: false }),
+    );
+    tr.current = built;
+    return () => {
+      tr.current = null;
+      built.destroy();
+    };
+  }, [router]);
+
+  /* THE LANDING. There is no "navigation finished" callback in the app router —
+     the pathname changing IS the signal, and it changes on the render that
+     commits the new page. So the cover waits here rather than on a promise:
+     effects run after that commit, which is exactly the moment the new route's
+     own components have mounted and queued themselves on the gate.
+
+     Skipped on the first run by the controller itself, which knows whether it
+     asked for this route or merely woke up on it. */
+  useEffect(() => {
+    tr.current?.arrived();
+  }, [here]);
 
   return (
     <>
@@ -135,34 +201,45 @@ export default function Preloader() {
           />
         ))}
 
+        {/* The front sheet, and the only one with anything printed on it. It is
+            here on every route even when the overture is not: it is the lime
+            the cover opens on, the last colour to leave, and the first to
+            arrive when the curtain comes back down between pages. Empty, it is
+            simply the seventh sheet. */}
         <div className="preloader-sheet" style={{ zIndex: STACK.length + 1 }}>
-          {/* The mark, unfolding. It was a gif of itself doing this; it is now
-              the same peel the pinboard's tape uses, run once off the
-              preloader's own clock — drive="manual" is what keeps Peel/peel.ts
-              from adopting it into the idle loop.
+          {overture && (
+            <>
+              {/* The mark, unfolding. It was a gif of itself doing this; it is
+                  now the same peel the pinboard's tape uses, run once off the
+                  preloader's own clock — drive="manual" is what keeps
+                  Peel/peel.ts from adopting it into the idle loop.
 
-              from={0} is the fold at the near edge — nothing folded, the mark
-              lying flat — and that is the pose --peel: 0 draws, which is what
-              paints before any JS runs and if none ever does. The folded pose
-              is the far end, to={1}; the timeline starts there and comes back.
+                  from={0} is the fold at the near edge — nothing folded, the
+                  mark lying flat — and that is the pose --peel: 0 draws, which
+                  is what paints before any JS runs and if none ever does. The
+                  folded pose is the far end, to={1}; the timeline starts there
+                  and comes back.
 
-              Sized by .site-preloader .preloader-mark in global.css, exactly as
-              the <img> here was — the wrapper takes over the layout box. */}
-          <Peel
-            className="preloader-mark"
-            src={MARK}
-            drive="manual"
-            direction={MARK_PEEL_DIR}
-            box={MARK_BOX}
-            from={0}
-            to={1}
-          />
+                  Sized by .site-preloader .preloader-mark in global.css,
+                  exactly as the <img> here was — the wrapper takes over the
+                  layout box. */}
+              <Peel
+                className="preloader-mark"
+                src={MARK}
+                drive="manual"
+                direction={MARK_PEEL_DIR}
+                box={MARK_BOX}
+                from={0}
+                to={1}
+              />
 
-          {/* Parked under their masks by the stylesheet and released by
-              Preloader/reveal.ts, exactly as the hero's headline is — same
-              structure, same tween, and it goes back the way it came before
-              the paper moves. */}
-          <p className="preloader-line">{letters(LINE)}</p>
+              {/* Parked under their masks by the stylesheet and released by
+                  Preloader/reveal.ts, exactly as the hero's headline is — same
+                  structure, same tween, and it goes back the way it came before
+                  the paper moves. */}
+              <p className="preloader-line">{letters(LINE)}</p>
+            </>
+          )}
         </div>
       </div>
     </>

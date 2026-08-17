@@ -3,7 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import type gsap from "gsap";
 
+/* The arrow printed on each row's lime disc. Shared rather than local since the
+   news cards took the same mark — see components/Arrow. The disc under it, and
+   the swing on hover, are this section's own (.menu-arrow in global.css). */
+import Arrow from "@/components/Arrow";
 import { letters } from "@/components/letters";
+import { onHold } from "@/components/Preloader/gate";
 import {
   buildMenuOpen,
   initTabEntrance,
@@ -13,41 +18,30 @@ import {
 
 /* The nav itself. Labels are set in caps here rather than by text-transform so
    the copy reads in the markup exactly as it paints — the same call the hero
-   makes with its headline. Hrefs are placeholders until the routes exist, and
-   every row is on the same preview until there is artwork per section. */
+   makes with its headline.
+
+   OUR FAMILY is the one row that leads somewhere. It is the product page —
+   the family IS the products, and there is no second row for them — so it
+   carries the real preview as well as the real route: the shot of all six
+   rolls the closing key visual uses. The rest are placeholders on the shared
+   preview until their routes and their artwork exist, which is what this list
+   has always said would happen a row at a time.
+
+   ITS SLUG IS NOT ITS LABEL, and it is the only row here of which that is true.
+   /products is the word for that page everywhere outside this menu — in a
+   search result, in a pasted link, in an address bar — and OUR FAMILY is how
+   the brand says it in the nav. The page itself explains the split; the footer's
+   row is the only other place the pairing is written. */
 const ITEMS = [
   { label: "ABOUT", href: "/about", thumb: "/assets/mask-image-1.jpg" },
   {
     label: "OUR FAMILY",
-    href: "/our-family",
-    thumb: "/assets/mask-image-1.jpg",
+    href: "/products",
+    thumb: "/assets/make-it-stick.jpg",
   },
   { label: "NEWS", href: "/news", thumb: "/assets/mask-image-1.jpg" },
   { label: "CONTACT", href: "/contact", thumb: "/assets/mask-image-1.jpg" },
 ];
-
-/* The link marker — a small arrow printed on a lime disc, aligned with the top
-   of the label's capitals rather than its centre (see the Menu section of
-   global.css, which sizes and places both). Inline rather than an asset: it is
-   two strokes, and inline it inherits currentColor for free when the palette
-   changes.
-
-   The stroke is heavy against the 12-unit box because the glyph renders at
-   about 8px — a hairline at that size disappears into the disc, and it got
-   smaller without the disc doing the same, so the weight had to go up to hold
-   the ink it had. */
-function Arrow() {
-  return (
-    <svg viewBox="0 0 12 12" fill="none" aria-hidden="true" focusable="false">
-      <path
-        d="M1.4 10.6 10.6 1.4M3.6 1.4h7v7"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="square"
-      />
-    </svg>
-  );
-}
 
 /* The pull-down menu.
  *
@@ -56,6 +50,25 @@ function Arrow() {
  * panel collapses to nothing the tab rides up to the top of the viewport on its
  * own — which is the closed state, a torn tab stuck to the top-right corner
  * reading PULL ME. Nothing has to position it twice.
+ *
+ * AND A THIRD PIECE THAT IS NOT STACKED WITH THEM: the mark, pinned to the top
+ * MIDDLE of the viewport. It lives in this component because it is the same
+ * kind of thing — the site's nav furniture, fixed, on every page, and outside
+ * any one page's layout — and putting it in the root layout beside this would
+ * be a second fixed box in the same band with no relationship to the first.
+ *
+ * It escapes this element's box by being fixed itself rather than by any
+ * trickery: .site-menu is a 31vw column pinned to the right, and a fixed child
+ * is positioned against the viewport, not against it. (That holds only while no
+ * ancestor carries a transform or a filter, which would make it the containing
+ * block instead. Nothing here does.)
+ *
+ * THE BADGE AND THE CLAIM ARE NOT HERE, and they were for a while. Putting the
+ * masthead in this component made it fixed along with the tab, so the logo sat
+ * over the middle of the page all the way down it. Only the TAB is meant to be
+ * pinned: it is the way into the menu and has to be reachable from anywhere.
+ * The rest of the top of the page belongs to the top of the page and now
+ * scrolls with it — see components/TopBand, which the layout mounts.
  *
  * The motion is two paused timelines in Menu/reveal.ts and this component owns
  * none of it — it only sets them running. Because they are built at mount
@@ -107,6 +120,22 @@ export default function Menu() {
       built.contents.kill();
     };
   }, []);
+
+  /* SHUT ON THE WAY OUT. Four of the five ways off this page go through a row
+     of this menu, which means the panel is standing wide open at the moment the
+     transition's cover starts falling — and it does not remount, so without
+     this it would still be open behind the curtain when the curtain lifted on
+     the page it led to.
+
+     Off the gate closing rather than off the pathname: the gate closes as the
+     first sheet starts to move, a full cover before the route commits, so the
+     close runs its own timing under the paper and is long finished by the time
+     anything is visible. Waiting for the new pathname would put it a beat late
+     and behind nothing.
+
+     NOT one-shot, which is why this is onHold and not whenRevealed's shape: it
+     has to work on the second navigation as well as the first. */
+  useEffect(() => onHold(() => setOpen(false)), []);
 
   /* The tab's own arrival, once, after the preloader — its own effect because
      it shares nothing with the pair above: it is on a different clock, it

@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 
-import { NOTE_COPY } from "./copy";
+import { LINE_SEP, NOTE_LINES } from "./copy";
 
 /* Sweet Tape — the hand-written note.
  *
@@ -17,15 +17,24 @@ import { NOTE_COPY } from "./copy";
  * saying the same things would be a second place to look.
  *
  * `decorative` is the one thing that is not CSS, and it is not a style choice.
- * The two notes carry the SAME sentence, so the second one to appear must not
- * put it into the accessibility tree again — a reader would meet the same words
- * twice with nothing to say why.
+ * The board's two notes carry the SAME sentence, so the second one to appear
+ * must not put it into the accessibility tree again — a reader would meet the
+ * same words twice with nothing to say why.
+ *
+ * `lines` is the other. The home page's two copies say what the brand is; the
+ * news page's says what the page is for, which is a different sentence in the
+ * same hand — so the copy is an argument with the board's as its default rather
+ * than a constant this component reaches for. The BREAKS come with it: they are
+ * part of the drawing, not wrapping (see copy.ts), so a caller passing new words
+ * is choosing where they fall.
  */
 type Props = {
   className?: string;
   style?: CSSProperties;
   /** Leave the copy out of the a11y tree — for a repeat of a note already read. */
   decorative?: boolean;
+  /** The written lines, break by break. Defaults to the board's own sentence. */
+  lines?: string[];
 };
 
 /* The ruled margin, drawn rather than ruled: a long stroke down the left and a
@@ -72,12 +81,22 @@ function Rule() {
   );
 }
 
-export default function HandNote({ className, style, decorative }: Props) {
+export default function HandNote({
+  className,
+  style,
+  decorative,
+  lines = NOTE_LINES,
+}: Props) {
   return (
     <div
       className={className ? `hand-note ${className}` : "hand-note"}
       style={style}
       aria-hidden={decorative || undefined}
+      /* The copy handed to the drawing, which reads it back off the element —
+         see LINE_SEP in copy.ts for why it travels as an attribute and not as a
+         prop. Written on every instance, the board's included, so hand.ts has
+         one place to look rather than a value and a fallback that can drift. */
+      data-lines={lines.join(LINE_SEP)}
     >
       {/* The written copy exists only as SVG strokes, which carry no text.
           aria-label is not honoured on a div, so the readable version is a real
@@ -85,7 +104,7 @@ export default function HandNote({ className, style, decorative }: Props) {
           in Hero/index.tsx. Dropped entirely on a decorative copy rather than
           left inside an aria-hidden wrapper, so there is no hidden text sitting
           in the markup pretending to be read. */}
-      {!decorative && <span className="sr-only">{NOTE_COPY}</span>}
+      {!decorative && <span className="sr-only">{lines.join(" ")}</span>}
 
       <Rule />
 

@@ -36,6 +36,21 @@
  *
  * Scoped to `root` and released by the returned cleanup, so StrictMode's double
  * mount replays rather than running two sweeps on the same sheet.
+ *
+ * TWO OF THOSE FOUR BEATS ARE THE HOME PAGE'S ONLY. The mark and the line are
+ * the site introducing itself and index.tsx prints them nowhere else, so on
+ * every other route this file finds neither and runs the sweep alone after a
+ * beat — see SWEEP_BARE. What it must not do is wait PRELOADER.SWEEP for two
+ * things that are not there.
+ *
+ * AND THE SWEEP OUTLIVES THE COVER. The same seven sheets come back down over
+ * every route change from here on and lift off the page they land on, which is
+ * the site's page transition (Preloader/transition.ts). That is why the two
+ * pieces of the sweep that have nothing to do with the preloader's clock —
+ * which elements it moves and in what order they go — are exported below as
+ * sheetsOf and scheduleSheets rather than living inside initPreloader. The
+ * transition builds the identical gesture out of them at its own speed, in
+ * either direction, and there is one place to change what the rainbow does.
  */
 import gsap from "gsap";
 
@@ -94,6 +109,15 @@ export const PRELOADER = {
   LINE_IN: 1.7,
   LINE_OUT: 2.85,
   SWEEP: 3.5,
+
+  /* And where the sweep starts when there is nothing to wait for — a cover with
+     no mark and no line on it, which is what every route that is not the home
+     page gets on a cold load (see the note on `overture` in index.tsx).
+     Everything the three numbers above are timed against is simply absent
+     there, so the whole of the hold is a beat: long enough that the stack is
+     seen to be a stack before it moves, short enough that it reads as the page
+     arriving rather than as a wait. */
+  SWEEP_BARE: 0.3,
 
   /* THE MARK'S OWN BEATS. Most of them are measured rather than chosen — they
      are the gif this replaces, read frame by frame. The two that are not say so
@@ -306,6 +330,90 @@ export const PRELOADER = {
   HANDOFF: 0.55,
 };
 
+/* Every sheet in the cover, front to back — the lime one the mark is printed on
+   and then the coloured stack behind it, in the order the markup declares and
+   therefore in descending z-index (index.tsx counts it down the list).
+ *
+ * Front to back is also the order they LEAVE in, which is why the array wants
+ * no sorting at the far end: the sweep walks it as it stands, and the cover
+ * coming down walks it backwards. */
+export function sheetsOf(root: HTMLElement): HTMLElement[] {
+  return [
+    root.querySelector<HTMLElement>(".preloader-sheet"),
+    ...Array.from(root.querySelectorAll<HTMLElement>(".preloader-layer")),
+  ].filter((el): el is HTMLElement => el !== null);
+}
+
+export type SheetStep = { el: HTMLElement; at: number; duration: number };
+
+/* EACH SHEET MOVES IN ITS OWN TIME. Two things vary and one does not.
+ *
+ * The gap before each is knocked off `step` by a golden-ratio walk:
+ * frac(i x 0.618) never repeats, never clumps, and is the same sequence on
+ * every machine on every reload — which is the point. This is a designed
+ * gesture that happens to be uneven, not a random one.
+ *
+ * The duration grows down the list by `drag`, so the stack fans out rather than
+ * travelling as a rigid comb.
+ *
+ * THE EASE DOES NOT VARY, and that is not an oversight — it is the reason this
+ * function returns a schedule instead of just tweening. The sheets are opaque
+ * and stacked, so each one's colour is only the strip between its own edge and
+ * the edge of the sheet in front of it. Let one overtake its neighbour — which
+ * a springier ease on the wrong sheet would do mid-flight — and it does not
+ * slide past: it goes BEHIND it, its strip closes to nothing, and that colour
+ * vanishes from the sweep entirely.
+ *
+ * With one shared ease, no crossing is possible as long as the starts only
+ * increase and the durations never decrease, both of which hold by construction
+ * here. Position is duration x f((t - start) / duration) with the same f for
+ * everyone: a later start and a longer duration can only ever put a sheet
+ * further behind, never in front. That is the whole reason `drag` is allowed to
+ * be positive and never negative.
+ *
+ * Which also says what `sheets` must be: the list in the order they should
+ * LEAD, deepest colour first for a cover coming down, front sheet first for one
+ * lifting off. Hand it the wrong way round and the leading sheet is the one at
+ * the back of the z-stack, which paints over nothing and shows one colour. */
+const PHI = 0.6180339887; // frac(i x PHI) — the least clumping walk there is
+
+export function scheduleSheets(
+  sheets: HTMLElement[],
+  opts: {
+    at: number;
+    step: number;
+    spread: number;
+    duration: number;
+    drag: number;
+  },
+): SheetStep[] {
+  let at = opts.at;
+  return sheets.map((el, i) => {
+    if (i > 0) {
+      const wobble = (((i * PHI) % 1) * 2 - 1) * opts.spread;
+      at += opts.step * (1 + wobble);
+    }
+    return { el, at, duration: opts.duration * (1 + i * opts.drag) };
+  });
+}
+
+/* Where the LAST sheet moves — the one that actually uncovers anything, since
+   everything in front of it is opaque. Both of the sweep's signals are measured
+   from here and so is anything else that wants to know when the page behind the
+   cover becomes visible.
+
+   Read off the schedule rather than recomputed from it: the gaps and the
+   durations both vary, so there is no longer a formula for where the last sheet
+   is, and a second copy of the arithmetic would be a second place to get it
+   wrong. */
+export function lastOf(
+  schedule: SheetStep[],
+  at: number,
+  duration: number,
+): { at: number; duration: number } {
+  return schedule.at(-1) ?? { at, duration };
+}
+
 export function initPreloader(root: HTMLElement): () => void {
   /* Already gone. Not the first mount of this document's life — a layout
      remount, or StrictMode arriving after a sweep has finished — and the cover
@@ -342,17 +450,21 @@ export function initPreloader(root: HTMLElement): () => void {
     window.scrollTo(0, 0);
   }
 
-  const sheet = root.querySelector<HTMLElement>(".preloader-sheet");
   const mark = root.querySelector<HTMLElement>(".preloader-mark");
   const chars = Array.from(
     root.querySelectorAll<HTMLElement>(".preloader-line .char"),
   );
-  /* Document order, which is back to front — the stylesheet's z-index is what
-     decides which is uncovered first, and index.tsx counts it down the list.
-     So the stagger below can simply follow the array. */
-  const layers = Array.from(
-    root.querySelectorAll<HTMLElement>(".preloader-layer"),
-  );
+
+  /* Front to back, which is the order they leave in. */
+  const sheets = sheetsOf(root);
+
+  /* NO MARK, NO LINE, NO HOLD. On every route but the home page the cover is
+     bare — index.tsx prints the overture only where it belongs — and the three
+     beats before the sweep have nothing to run. Waiting PRELOADER.SWEEP for
+     them anyway would be three and a half seconds of a blank lime screen, which
+     is the worst version of this component there is. */
+  const bare = !mark && chars.length === 0;
+  const sweepAt = bare ? PRELOADER.SWEEP_BARE : PRELOADER.SWEEP;
 
   /* Hand the letters over from the stylesheet — the hero's manoeuvre exactly,
      and for the same reason: global.css parks them with a percentage translate,
@@ -481,47 +593,16 @@ export function initPreloader(root: HTMLElement): () => void {
      depth (the stylesheet gives them that extra height so the arc's lowest
      point starts below the fold and nothing shows around it at rest). So this
      clears the screen exactly, with no figure here that has to be kept in step
-     with the CSS. */
-  const sheets = [sheet, ...layers].filter(
-    (el): el is HTMLElement => el !== null,
-  );
+     with the CSS.
 
-  /* EACH SHEET LEAVES IN ITS OWN TIME. Two things vary and one does not.
-   *
-   * The gap before each is knocked off STACK_STEP by a golden-ratio walk:
-   * frac(i x 0.618) never repeats, never clumps, and is the same sequence on
-   * every machine on every reload — which is the point. This is a designed
-   * gesture that happens to be uneven, not a random one.
-   *
-   * The duration grows with depth by STACK_DRAG, so the stack fans out rather
-   * than travelling as a rigid comb.
-   *
-   * THE EASE DOES NOT VARY, and that is not an oversight. The sheets are opaque
-   * and stacked, so each one's colour is only the strip between its own bottom
-   * edge and the edge of the sheet in front of it. Let a deeper sheet overtake
-   * the one in front — which a springier ease on the wrong sheet would do
-   * mid-flight — and it does not slide past: it goes BEHIND it, its strip
-   * closes to nothing, and that colour vanishes from the sweep entirely.
-   *
-   * With one shared ease, no crossing is possible as long as the starts only
-   * increase and the durations never decrease, both of which hold by
-   * construction below. Position is DURATION x f((t - start) / duration) with
-   * the same f for everyone: a later start and a longer duration can only ever
-   * put a sheet further behind, never in front. That is the whole reason the
-   * drag is allowed to be positive and never negative. */
-  const PHI = 0.6180339887; // frac(i x PHI) — the least clumping walk there is
-
-  let at = PRELOADER.SWEEP;
-  const schedule = sheets.map((el, i) => {
-    if (i > 0) {
-      const wobble = (((i * PHI) % 1) * 2 - 1) * PRELOADER.STACK_SPREAD;
-      at += PRELOADER.STACK_STEP * (1 + wobble);
-    }
-    return {
-      el,
-      at,
-      duration: PRELOADER.DURATION * (1 + i * PRELOADER.STACK_DRAG),
-    };
+     Front sheet first, deepest last — see scheduleSheets for why the order of
+     this array is the whole of whether the sweep shows six colours or one. */
+  const schedule = scheduleSheets(sheets, {
+    at: sweepAt,
+    step: PRELOADER.STACK_STEP,
+    spread: PRELOADER.STACK_SPREAD,
+    duration: PRELOADER.DURATION,
+    drag: PRELOADER.STACK_DRAG,
   });
 
   for (const s of schedule) {
@@ -540,24 +621,13 @@ export function initPreloader(root: HTMLElement): () => void {
         duration: PRELOADER.DURATION,
         ease: PRELOADER.EASE,
       },
-      PRELOADER.SWEEP - PRELOADER.LEAD,
+      sweepAt - PRELOADER.LEAD,
     );
   }
 
-  /* Where the last sheet — the deepest colour, and the one that actually
-     uncovers anything — starts to move. Both of the signals below are measured
-     from here, because both are about something behind the stack becoming
-     visible, and nothing is visible until this one has gone.
-
-     Read off the schedule rather than recomputed from it: the gaps and the
-     durations both vary now, so there is no longer a formula for where the last
-     sheet is, and a second copy of the arithmetic would be a second place to
-     get it wrong. Both fractions below are of that sheet's OWN duration, which
-     is the longest of them. */
-  const last = schedule.at(-1) ?? {
-    at: PRELOADER.SWEEP,
-    duration: PRELOADER.DURATION,
-  };
+  /* Both fractions below are of the last sheet's OWN duration, which is the
+     longest of them. */
+  const last = lastOf(schedule, sweepAt, PRELOADER.DURATION);
 
   /* The roll, told to start with the paper still over it — just. */
   tl.call(
@@ -568,6 +638,21 @@ export function initPreloader(root: HTMLElement): () => void {
 
   /* And the page itself, later in that same sheet's sweep. */
   tl.call(release, undefined, last.at + last.duration * PRELOADER.HANDOFF);
+
+  /* THE OVERTURE IS OVER AND THE SHEET IT WAS PRINTED ON IS NOT. That lime
+     sheet is the front of the curtain the page transition pulls down from here
+     on (Preloader/transition.ts), and the mark is still sitting on it, still
+     visible, parked wherever MARK_TRAVEL left it. Come back down without this
+     and the first route change opens with a logo sliding in from off the top of
+     the screen at an angle.
+
+     The letters need no such thing — they went back under their masks at
+     LINE_OUT and that is where they stay — but they are named here anyway, so
+     that the one rule about this sheet ("nothing printed on it survives the
+     first sweep") is written in one place rather than half implied by an
+     earlier beat. */
+  if (mark) tl.set(mark, { autoAlpha: 0 });
+  if (chars.length) tl.set(chars, { autoAlpha: 0 });
 
   /* Parked off-screen is not the same as gone: the cover is still a fixed box
      over the page, and `visibility` is what stops it being one. Not display —
@@ -593,7 +678,10 @@ export function initPreloader(root: HTMLElement): () => void {
     delete root.dataset.reveal;
     gsap.set(root, { clearProps: "visibility" });
     gsap.set([...sheets, ...(mark ? [mark] : []), ...chars], {
-      clearProps: "transform",
+      /* opacity and visibility as well as the transform, because the sweep's
+         last act is to put the mark and the line out for good — and a replay
+         that inherited that would run the whole overture on an empty sheet. */
+      clearProps: "transform,opacity,visibility",
     });
   };
 }

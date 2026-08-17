@@ -30,8 +30,16 @@ import gsap from "gsap";
 import type { HeroTape } from "./heroTape";
 import { createRollIdle, IDLE, type RollIdle } from "./idle";
 
-/** Served straight from /public. Preloaded in index.tsx — see the note there. */
-export const MODEL_URL = "/assets/tapes/header-brown.glb";
+/** Served straight from /public. Preloaded in index.tsx — see the note there.
+ *
+ * The low-noise OPP roll. Same export rig as the brown one it replaced —
+ * identical bounds, identical prim layout — so STRIP.ROLL_W and the framing in
+ * heroTape.ts carry over untouched. What differs is the FILM: this roll's wound
+ * side is a near-white clear film rather than a brown backing, which is why the
+ * film grade there moved with the model (see FILM.TONE / FILM.PUNCH), and its
+ * wound-side material has a name of its own (see WOUND). The face's grade is
+ * unchanged — the label is the same print in a different palette. */
+export const MODEL_URL = "/assets/tapes/Low-Noise-Tape.glb";
 
 /* The choreography, in px of scroll travel. All live-tweakable in dev via
    `hero.SCROLL` in the console; the ticker re-reads them every frame. */
@@ -339,6 +347,10 @@ export function initHero(root: HTMLElement): () => void {
               LIGHT: mod.LIGHT,
               FACE_LIGHT: mod.FACE_LIGHT,
               FILM: mod.FILM,
+              /* The film's translucency, and the one knob here that is also a
+                 rollback: hero.GLASS.AMOUNT = 0; hero.tune() puts the strip
+                 back to solid without a rebuild. */
+              GLASS: mod.GLASS,
               tune: t.tune,
             },
           });

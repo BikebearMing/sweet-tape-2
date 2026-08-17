@@ -1,10 +1,23 @@
-/* Sweet Tape — the hand-off between the preloader and the page under it.
+/* Sweet Tape — the hand-off between the cover and the page under it.
  *
  * One fact, held on the document rather than in a module variable: while
  * `html[data-loading]` is set, the page is still behind the cover and anything
  * that plays on load should wait. Right now that is the hero's title reveal and
  * nothing else — everything else on the page is either scroll-driven, below the
  * fold, or shut.
+ *
+ * IT HAPPENS MORE THAN ONCE NOW, which is the one thing to know before touching
+ * anything here. The gate was written for the preloader, which runs at most once
+ * per document, and everything below assumed that: fire, clear, done. Since the
+ * coloured stack became the site's page transition as well (Preloader/
+ * transition.ts) the same gate is closed again on every route change and opened
+ * again as the cover lifts — so the incoming page's entrances are held and let
+ * go on exactly the beat the preloader's are, off the same two signals.
+ *
+ * What that costs is `hold`, below, and the discipline it needs: whenRevealed
+ * and whenSweeping are still ONE-SHOT per subscription, so anything that has to
+ * arrive on every route has to subscribe on every route. Page-level components
+ * get that for free by remounting. The layout's do not — see the note on onHold.
  *
  * On the DOM and not in a React context, for the same reason the engines are
  * plain DOM: the two ends are in different subtrees (the layout's preloader and
@@ -38,6 +51,17 @@ const EVENT = "sweettape:revealed";
  * outside this bundle needs to read it. */
 const SWEEP_EVENT = "sweettape:sweeping";
 let sweeping = false;
+
+/* And one BEFORE either of them: the gate closing again. Only the transition
+ * dispatches it — the preloader's hold is in the server HTML, so on first load
+ * there is no moment at which it closes and nothing to announce.
+ *
+ * It exists for the pieces that live in the layout and therefore do not remount
+ * across a route change: they cannot re-subscribe to the two signals above by
+ * being built again, so they listen here and do it by hand. The menu is the
+ * whole of it today — a pull-down standing open when the reader clicks a row in
+ * it, which has to be shut before the cover lifts on the page it led to. */
+const HOLD_EVENT = "sweettape:holding";
 
 /** Is the page still behind the cover? False on any page with no preloader. */
 export function isHeld(): boolean {
@@ -78,6 +102,31 @@ export function whenSweeping(fn: () => void): () => void {
 export function startSweep(): void {
   sweeping = true;
   window.dispatchEvent(new Event(SWEEP_EVENT));
+}
+
+/* Runs `fn` every time the gate closes — a route change starting, and nothing
+   else. NOT one-shot, unlike the two above: its subscribers are the ones that
+   never remount, so a subscription that spent itself on the first navigation
+   would be exactly the bug it exists to avoid. Returns an unsubscribe. */
+export function onHold(fn: () => void): () => void {
+  const ac = new AbortController();
+  window.addEventListener(HOLD_EVENT, fn, { signal: ac.signal });
+  return () => ac.abort();
+}
+
+/* Shut the gate again, which is the transition's first act — before the cover
+   has moved and well before the router is told anything, so that every
+   component the new route mounts finds the page held and queues its entrance
+   behind the sweep rather than playing it under the paper.
+
+   `sweeping` goes back to false with it. It is the one piece of state here that
+   is not on the document, and leaving it set would let whenSweeping fire on the
+   spot for the whole of the next hold — the roll would bounce in behind an
+   opaque cover and be revealed already standing. */
+export function hold(): void {
+  sweeping = false;
+  document.documentElement.dataset.loading = "";
+  window.dispatchEvent(new Event(HOLD_EVENT));
 }
 
 /* Called from the sweep, later — see PRELOADER.HANDOFF. Clearing the attribute

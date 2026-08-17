@@ -61,8 +61,10 @@ export const STRIP = {
   // held under it so the strip reads as tape, not as wider than its roll.
   // On-screen width is ROLL_W * WIDTH * mountW / (2 * (camZ - RADIUS) * tan(FOV/2)),
   // so at the 1440 design width one unit of WIDTH is ~253px: 0.004 ~= 1px.
-  COLOR: 0xc08a49, // pre-load fallback only — the roll's own wound-side
-  // colour is copied over it once the model arrives
+  COLOR: 0xe7e7e7, // pre-load fallback only — the roll's own wound-side
+  // colour is copied over it once the model arrives. Near-white now rather
+  // than the brown it was: the low-noise roll's film is clear, and the export
+  // states it as a flat 0.8 linear grey, which is this in sRGB.
   /* How many times the film's own pattern repeats per world unit of tape.
    *
    * This is what stops the strip reading as an extrusion. The maps are tiled
@@ -232,8 +234,17 @@ export const FILM = {
      one, so tuning it repeatedly sets the exposure instead of compounding it —
      the same arrangement FACE has.
    *
+     Down from 0.82 with the low-noise roll, and the number moved because what
+     it is a fraction OF moved. The brown export's wound side was 0.54 linear at
+     its brightest channel; this one is a flat 0.8 grey, so the same exposure
+     lands half a stop higher and lands it on a NEUTRAL, where there is no
+     saturation to carry the difference — the film went from a colour with a
+     sheen to a bright surface with a sheen washed out on top of it. This puts
+     the albedo back near where the brown sat (~0.58 linear after the mottle and
+     PUNCH), which is the level GLAZE's white coat was tuned to read against.
+
      Live-tweak in dev: hero.FILM.TONE = 0.7; hero.tune() */
-  TONE: 0.82,
+  TONE: 0.72,
   /* Near zero, and it used to be 0.25 — the same correction the face made, a
      surface late.
    *
@@ -303,9 +314,25 @@ export const FILM = {
    * carrying a sheen, the artwork is ink.
    *
    * Contrast is about mid grey, and small numbers go a long way; 1.25 is a
-   * lot. */
-  SAT: 0.57,
-  PUNCH: 1.6,
+   * lot.
+   *
+   * BOTH ARE NEAR THEIR NO-OPS NOW, which is the low-noise roll's film rather
+   * than a retreat. SAT is at 1 because it has nothing to act on: this wound
+   * side is a flat grey and the tint map over it is neutral, so the sampled
+   * colour equals its own luma and mix(luma, rgb, uSat) returns the same value
+   * for any uSat whatsoever. Holding it at the brown's 0.57 would not desaturate
+   * anything; it would only claim to.
+   *
+   * PUNCH came down from 1.6 for the reason FILM.FACE gives about clipping,
+   * arriving a surface early. Contrast about a 0.21 pivot DEEPENED the brown —
+   * it was a saturated colour well clear of white, so pushing it away from mid
+   * grey had somewhere to go. A near-white film has no such room: at 1.6 the
+   * albedo lands past 0.9 linear, the mottle's variation is squashed flat
+   * against the ceiling with it, and the clear coat's highlight then has nothing
+   * left to be brighter than. Just over 1 keeps the unevenness legible without
+   * spending the headroom the sheen needs. */
+  SAT: 1,
+  PUNCH: 1.05,
   /* Exposure on the roll's FACE alone — the artwork, not the wound side or the
      strip. It scales the texture on its way in, so nothing else in the scene
      moves, and the face's own shading is untouched.
@@ -405,6 +432,82 @@ export const FILM = {
    * The mesh's own scale.x (~0.67) amplifies the tilt by about 1.5x on its way
    * through the normal matrix; the number below is the pre-amplification one. */
   CURL: 0.6,
+};
+
+/* THE FILM'S TRANSLUCENCY — the dispensed strip only, and the page behind it is
+ * the real page.
+ *
+ * WHAT THIS IS NOT: three's `transmission`. That is the obvious tool and it is
+ * the wrong one here, for a reason that is about this canvas rather than about
+ * the material. Transmission is not a backdrop filter — it renders the SCENE's
+ * opaque objects into a second target and refracts that. This scene is a roll on
+ * nothing: the clear colour is transparent black, so a transmissive strip would
+ * sample emptiness and go dark and hollow. Everything the tape appears to lie
+ * over — the lime field, the dark green under it, the cardboard, the gift, the
+ * taped-down painting, the headline — is DOM behind the canvas, and WebGL cannot
+ * see a pixel of it. Feeding it a painted backdrop mesh would work over the flat
+ * lime and lie about everything below it, which is most of the strip's run.
+ *
+ * WHAT IT IS: alpha. The canvas is already a transparent overlay (`alpha: true`,
+ * clear alpha 0), so a fragment that leaves here at less than full alpha is
+ * composited by the BROWSER against whatever is actually behind it — the right
+ * props, at the right scroll position, with the right parallax, for nothing. It
+ * is the one version of this that cannot be wrong about what is back there,
+ * because it does not have an opinion about what is back there.
+ *
+ * WHAT IT COSTS: no second render pass, no backdrop to author and keep in step,
+ * and — the part that matters most for this file — no disturbance to the grade.
+ * At transmission ~1 the diffuse term goes to nothing, which is where FILM.TONE,
+ * the `base` colour registries, SAT and PUNCH all quietly stop doing anything
+ * and the tint has to move to attenuationColor. On alpha the diffuse is
+ * untouched and every knob above still means exactly what it says.
+ *
+ * WHAT IT CANNOT DO is BEND. Refraction has to sample the backdrop at an offset
+ * and there is no backdrop to sample. What stands in for it is the Fresnel below,
+ * which is not a substitute so much as the other half of the same physics: a
+ * film's transmission FALLS toward grazing angles, so the edges close up and
+ * catch light while the middle stays open. That is what an edge of real tape
+ * does, and it reads as one.
+ *
+ * THE STRIP ONLY. The wound side is not translucent here and the printed label
+ * never will be — see the note where filmGlass is passed. The roll is a single
+ * shell in this export with no inner wall, so a see-through wound side would be
+ * a see-through hollow, which is a different job entirely.
+ *
+ * Live-tweak in dev: hero.GLASS.CLARITY = 0.5; hero.tune() */
+export const GLASS = {
+  /* The master, and the rollback. At 0 the strip's alpha is 1 everywhere, the
+     material goes back to opaque, and the frame is today's frame — not nearly
+     it, exactly it: three defines OPAQUE on a material that is not transparent
+     and forces diffuseColor.a to 1 itself, so the block below cannot contribute
+     even a rounding error. Everything else here is scaled by it. */
+  AMOUNT: 1,
+  /* How much of the page shows through where the film faces the camera squarely,
+     0..1 — so the alpha there is 1 minus this.
+   *
+   * It is the whole look, and both ends of it are failures. Under about 0.15 the
+   * tape reads as slightly dirty rather than as see-through; past about 0.45 the
+   * board behind starts to win and the strip stops being a thing lying ON the
+   * page and becomes a tint over it. What is wanted is the read you get holding
+   * real tape against print: you can tell what is under it, and you can tell
+   * there is tape.
+   *
+   * Face-on is the WORST case, deliberately. This is the maximum clarity the
+   * strip ever reaches; the Fresnel below only ever closes it up from here. */
+  CLARITY: 0.3,
+  /* How fast it closes toward grazing — the exponent on the Fresnel term.
+   *
+   * 1 is a linear ramp, which puts haze halfway up a surface that is barely
+   * turned and reads as fog rather than as an edge. The real curve is far
+   * sharper than that: Schlick's is a fifth power, and anything from about 3 up
+   * keeps the effect in the last few degrees where the eye reads it as the edge
+   * of a material. Below 2 the strip's own cross-curl (FILM.CURL) starts to show
+   * as a band of opacity down the tape rather than as a highlight.
+   *
+   * The strip is nearly square to the camera for most of its run, so this
+   * mostly draws the two long slit edges and the tear — which is exactly where
+   * the thickness of real tape is visible. */
+  EDGE: 3.2,
 };
 
 export type HeroTape = {
@@ -819,6 +922,26 @@ function toPhysical(src: MeshStandardMaterial) {
 const TURN_STRIP = 0;
 const TURN_WOUND = Math.PI / 2;
 
+/* WHICH EXPORTED MATERIAL IS THE WOUND SIDE — the one surface in the model this
+ * file has to be able to name, because it is the only one that is not artwork.
+ * Everything else the traverse meets is a printed surface and takes the face's
+ * grade; this one takes the film's, and the dispensed strip copies its colour.
+ *
+ * A LIST rather than a single name, and Blender is why. These rolls are one rig
+ * re-dressed per product, so the wound side is "Material" on the brown export
+ * and "Material.003" on the low-noise one — the suffix is nothing but the order
+ * the slots happened to be created in, and it does not survive a re-export.
+ *
+ * Matching the "Material" PREFIX instead would be the obvious shortcut and is a
+ * trap: the low-noise export calls its printed FACE "Material.004". A prefix
+ * test would hand the label the film's grade, the film's translucency and none
+ * of its dome — the artwork would go see-through and flat. Whole names only.
+ *
+ * A roll whose wound side is not in here still loads: it is read as artwork, so
+ * the roll goes matte and the dispensed tape keeps STRIP.COLOR instead of the
+ * roll's own — which is what a mismatched name looks like on screen. */
+const WOUND = new Set(["Material", "Material.003"]);
+
 /* The film's finish — the part of it that needs a physical material. Kept
    apart from applyFilmLook for the same reason applyFaceLook is: that one is
    the GRADE, which every surface shares, and this is the SURFACE, which the
@@ -873,17 +996,53 @@ const faceLook: Look = {
   uPunch: { value: FILM.FACE_PUNCH },
 };
 
-function applyFilmLook(mat: MeshStandardMaterial, look: Look = filmLook) {
+/* The translucency's uniforms — see GLASS.
+ *
+ * A THIRD SET AND NOT TWO MORE FIELDS ON Look, because the split is a different
+ * one. Look divides the FILM from the FACE — a grade, and the wound side and the
+ * strip share it. This divides the STRIP from everything else: those two are one
+ * grade and emphatically not one translucency, since the roll is a solid object
+ * and the tape coming off it is a film. Folding these into Look would make the
+ * wound side see-through the moment the strip was, which is error 11 waiting to
+ * happen (this export is a single shell with no inner wall).
+ *
+ * The patched SOURCE stays identical for every material either way, which is
+ * the same point the two Look objects make: three keys its program cache on the
+ * shader text, so all three families compile once between them and share the
+ * result, while the uniforms are bound per material and stay independent. A
+ * third grade still costs no third program. */
+type Glass = { uClarity: { value: number }; uEdge: { value: number } };
+
+/* The default, and it is the safe one: clarity 0 is alpha 1 is today's look.
+ * Shared by every material that is not the dispensed strip — the wound side and
+ * the printed label — so both of them carry the block and neither can be moved
+ * by it. Never written to. */
+const noGlass: Glass = { uClarity: { value: 0 }, uEdge: { value: 1 } };
+
+/* And the strip's own, which tune() drives off GLASS. */
+const filmGlass: Glass = {
+  uClarity: { value: GLASS.CLARITY * GLASS.AMOUNT },
+  uEdge: { value: GLASS.EDGE },
+};
+
+function applyFilmLook(
+  mat: MeshStandardMaterial,
+  look: Look = filmLook,
+  glass: Glass = noGlass
+) {
   mat.roughness = FILM.GLOSS;
   mat.metalness = FILM.METAL;
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uSat = look.uSat;
     shader.uniforms.uPunch = look.uPunch;
+    shader.uniforms.uClarity = glass.uClarity;
+    shader.uniforms.uEdge = glass.uEdge;
     shader.fragmentShader =
-      "uniform float uSat;\nuniform float uPunch;\n" +
-      shader.fragmentShader.replace(
-        "#include <map_fragment>",
-        `#include <map_fragment>
+      "uniform float uSat;\nuniform float uPunch;\nuniform float uClarity;\nuniform float uEdge;\n" +
+      shader.fragmentShader
+        .replace(
+          "#include <map_fragment>",
+          `#include <map_fragment>
         {
           // Rec. 709 luma, and a pivot of 0.21 — mid grey, in the linear space
           // the map has already been decoded into. Before any lighting, so the
@@ -892,7 +1051,50 @@ function applyFilmLook(mat: MeshStandardMaterial, look: Look = filmLook) {
           diffuseColor.rgb = mix( vec3( l ), diffuseColor.rgb, uSat );
           diffuseColor.rgb = clamp( mix( vec3( 0.21 ), diffuseColor.rgb, uPunch ), 0.0, 1.0 );
         }`
-      );
+        )
+        /* THE SECOND PATCH, and it is composed into this same callback rather
+           than being a second onBeforeCompile — assigning that property again
+           would silently drop the grade above, which is the one edit this
+           material must never lose.
+       *
+       * AT opaque_fragment, and that site is chosen rather than convenient. It
+       * is the last thing the fragment stage does, `gl_FragColor = vec4(
+       * outgoingLight, diffuseColor.a )`, so writing the alpha immediately
+       * before it is writing the alpha that leaves. It is also AFTER
+       * normal_fragment_maps, which is what makes the Fresnel worth having:
+       * `normal` at this point is the normal-mapped one, so the film's own tooth
+       * — and, at step 4, its bubbles and scratches — modulate how see-through
+       * the tape is, rather than the transparency being a flat sheet laid over a
+       * textured surface.
+       *
+       * AND THE CHUNK ITSELF IS THE SAFETY. opaque_fragment opens with
+       * `#ifdef OPAQUE diffuseColor.a = 1.0;`, and three defines OPAQUE on any
+       * material that is not `transparent`. So the wound side and the printed
+       * label have their alpha forced back to 1 by three's own code a line
+       * after this block runs, whatever the uniforms say. Two independent
+       * reasons the label cannot go glassy, which is the acceptance criterion
+       * least worth being clever about. */
+        .replace(
+          "#include <opaque_fragment>",
+          `{
+          /* Schlick's shape, with the exponent as a knob — see GLASS.EDGE. The
+             view direction is the one three uses itself: vViewPosition runs from
+             the fragment to the camera, which is the eye vector in view space.
+
+             abs() on the dot, for the strip's DoubleSide. three already flips
+             the normal by faceDirection on a double-sided material, so this is
+             belt and braces rather than the fix — but it costs one instruction
+             and a back face reading as inside-out would be a black edge down the
+             tape at exactly the angle the effect is for. */
+          float ndv = abs( dot( normal, normalize( vViewPosition ) ) );
+          /* Face-on the film is at its clearest and the page shows through;
+             toward grazing it closes to solid. Never past 1 and never under
+             1 - uClarity, so the knob is the full range of the effect and there
+             is nothing to clamp. */
+          diffuseColor.a = mix( 1.0 - uClarity, 1.0, pow( 1.0 - ndv, uEdge ) );
+        }
+        #include <opaque_fragment>`
+        );
   };
   mat.needsUpdate = true; // patched source => recompile
 }
@@ -984,7 +1186,15 @@ export function createHeroTape(
     color: STRIP.COLOR,
     side: DoubleSide,
   });
-  applyFilmLook(stripMat);
+  /* THE ONE TRANSLUCENT SURFACE IN THE SCENE — filmGlass rather than the default
+     noGlass, and this argument is the entire scope of the effect. The wound side
+     a few hundred lines down takes the default and stays solid; so does the
+     label. See GLASS for why it is the strip and only the strip.
+
+     `transparent` itself is set in tune(), which runs before the first frame and
+     is what a live tweak goes through — so the flag and the uniform can only
+     ever be turned on together. */
+  applyFilmLook(stripMat, filmLook, filmGlass);
   applyFilmFinish(stripMat, TURN_STRIP);
   /* Held rather than pushed anonymously: when the model lands the roll's own
      colour replaces STRIP.COLOR, and this entry's `base` has to move with it or
@@ -1154,6 +1364,31 @@ export function createHeroTape(
     filmLook.uPunch.value = FILM.PUNCH;
     faceLook.uSat.value = FILM.FACE_SAT;
     faceLook.uPunch.value = FILM.FACE_PUNCH;
+
+    /* The strip's translucency — see GLASS. Two uniforms and one flag, and the
+     * flag is the only thing here that is not free.
+     *
+     * `transparent` DOES need a recompile when it crosses, unlike the four
+     * above and unlike GLAZE or STRETCH crossing zero. Those are three's own
+     * setters, which bump the material's version themselves; `transparent` is a
+     * plain field with no setter, and it decides the OPAQUE define — so a
+     * material switched from solid to see-through without this would go on
+     * running the program that forces its alpha back to 1, and the tweak would
+     * silently do nothing. Only when it actually changes: at load this runs
+     * once with the flag already right, and needsUpdate on every tune() would
+     * be a recompile for a knob that did not move.
+     *
+     * Clarity carries the master rather than being multiplied at the shader,
+     * so AMOUNT is one number in one place and the rollback is literally the
+     * same code path as the effect. */
+    const clarity = GLASS.CLARITY * GLASS.AMOUNT;
+    filmGlass.uClarity.value = clarity;
+    filmGlass.uEdge.value = GLASS.EDGE;
+    const glassy = clarity > 0;
+    if (stripMat.transparent !== glassy) {
+      stripMat.transparent = glassy;
+      stripMat.needsUpdate = true;
+    }
     /* No needsUpdate here, unlike the faces below: GLAZE and STRETCH crossing
        zero adds or drops USE_CLEARCOAT / USE_ANISOTROPY, and three's own
        setters bump the material's version when they do. Tweaking either
@@ -1333,13 +1568,14 @@ export function createHeroTape(
             mat.map.needsUpdate = true;
           }
 
-          /* "Material" is the wound side in this export. The dispensed strip IS
-             this tape, so it takes the side's exact colour and the shared gloss
-             — under the same key light the two render identically, and they
-             now take the same maps too: the mottle has no direction, so there
-             is nothing to say about which way this surface is unwrapped. Only
-             the grain's axis still cares, and that is TURN_WOUND. */
-          if (mat.name === "Material") {
+          /* The wound side — see WOUND for how it is told from the artwork. The
+             dispensed strip IS this tape, so it takes the side's exact colour
+             and the shared gloss — under the same key light the two render
+             identically, and they now take the same maps too: the mottle has no
+             direction, so there is nothing to say about which way this surface
+             is unwrapped. Only the grain's axis still cares, and that is
+             TURN_WOUND. */
+          if (WOUND.has(mat.name)) {
             /* Onto a physical material, exactly as the face is and for the same
                reason — a clear coat is the only honest way to put a white
                highlight on a dielectric. Cached in `swapped` alongside the

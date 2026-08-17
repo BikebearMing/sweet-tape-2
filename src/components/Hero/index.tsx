@@ -1,10 +1,10 @@
 import { preload } from "react-dom";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties } from "react";
 
 import Stage from "./Stage";
 import HandNote from "@/components/HandNote";
 import Peel from "@/components/Peel";
-import { letters } from "@/components/letters";
+import { letters, words } from "@/components/letters";
 import { MODEL_URL } from "./engine";
 
 /* Section-level copy. Two lines rather than one string: the headline is set as
@@ -37,17 +37,12 @@ const HERO_MARK = "/assets/preloader-image.svg";
  * Long tokens are further chunked after commas and hyphens ("EMERGENCY,LAST-"
  * is one whitespace token but three chunks): adjacent chunks butt together
  * seamlessly, but the line is allowed to wrap between them — which is where
- * plain text would have broken too. */
-function words(text: string): ReactNode[] {
-  return text.split(/\s+/).flatMap((token, t) => [
-    t > 0 ? " " : null,
-    ...token.split(/(?<=[,-])/).map((chunk, c) => (
-      <span className="word" key={`${t}-${c}`}>
-        {letters(chunk)}
-      </span>
-    )),
-  ]);
-}
+ * plain text would have broken too.
+ *
+ * IT LIVES IN components/letters NOW, beside the split it is built on. It was
+ * local to this file while the cardboard was the only copy on the site that both
+ * split to letters and wrapped; the news page's lead story is the second, and a
+ * second copy of a splitter is two answers to where a line breaks. */
 
 /* The hero, server-rendered.
  *

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 
+import { initBodyReveal } from "@/components/bodyReveal";
 import { initFooterBalls } from "./balls";
 import { initFooterReveal } from "./reveal";
 
@@ -13,10 +14,10 @@ import { initFooterReveal } from "./reveal";
  * none of it ships in the client bundle twice. The hero and the slider are
  * built the same way.
  *
- * The two are independent: the copy's arrival and the loose objects in the bed
- * share nothing but the element they are scoped to, and either can fail to
- * start without touching the other — the physics is dynamically imported, so
- * "fail to start" includes a chunk that never arrives.
+ * The three are independent: the type's arrival, the legal line's and the loose
+ * objects in the bed share nothing but the element they are scoped to, and any
+ * one can fail to start without touching the others — the physics is
+ * dynamically imported, so "fail to start" includes a chunk that never arrives.
  *
  * Both return their own teardown, so a StrictMode double-mount tears down
  * cleanly and re-binds rather than stacking a second tween on the same letters,
@@ -31,10 +32,16 @@ export default function Stage({ children }: { children: ReactNode }) {
     if (!root) return;
 
     const stopReveal = initFooterReveal(root);
+    /* The legal line, on the site's body entrance rather than the letter one
+       the row and the headline take — its own cue, its own timeline, and it
+       does not belong in reveal.ts's cascade: that is the footer arriving, and
+       this is small print at the very foot of it, half a section lower. */
+    const stopBody = initBodyReveal(root);
     const stopBalls = initFooterBalls(root);
 
     return () => {
       stopReveal();
+      stopBody();
       stopBalls();
     };
   }, []);

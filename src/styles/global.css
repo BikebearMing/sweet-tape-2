@@ -14,10 +14,16 @@
      7. Tape slider  word marks, columns, stage, rolls
      8. Giant pinning  WHY WE EXIST — the pinned camera and its three phrases
      9. Make it stick  the closing key visual — photo, card, and tape across
-    10. Footer       the nav row, the sign-off headline, the rolls' bed
-    11. Menu         the pull-down panel and its tab
-    12. Cursor       the taped arrow
-    13. Peel         a stuck-down thing lifting a corner, wherever one is used
+    10. Pick your player  /products — the six rolls in a row, and their ground
+    11. Footer       the nav row, the sign-off headline, the rolls' bed
+    12. Menu         the pull-down panel and its tab
+    13. Cursor       the taped arrow
+    14. Peel         a stuck-down thing lifting a corner, wherever one is used
+
+   Sections 1-9 are the home page and 10 is the product page; everything from
+   11 down is site-wide. The product page's rules are all scoped under
+   .pick-player, so its position in the cascade is a filing decision rather than
+   a load-bearing one — it sits with the page sections rather than after them.
 
    Section order is load-bearing where two rules touch the same property; keep
    new rules inside the section they belong to rather than appending to the
@@ -142,6 +148,93 @@ h6 {
 }
 
 /* ==========================================================================
+   Body copy — the line reveal
+   ==========================================================================
+   The site's second text entrance, and the one that is NOT the headlines'.
+   Markup comes from components/body.tsx and the move is in
+   components/bodyReveal.ts; what is here is the mask and the park.
+
+   Headlines split to letters and go up in a shuffled scatter. Body copy rises a
+   LINE at a time, out of a floor that is not drawn — small type is read rather
+   than looked at, and forty characters twitching into place is a lot of event
+   for one sentence.
+
+   A LINE IS NOT IN THE MARKUP. It cannot be: where the copy breaks is settled
+   by the font, the measure and the window. So the split is to WORDS, each in
+   its own mask, and the reveal measures which of them landed on the same line
+   and moves those together. Every word in a line shares one tween and there is
+   no stagger inside it, so what the eye sees is one line moving, not a wipe
+   across one.
+
+   THE FLOOR IS INVISIBLE BECAUSE THE MASK IS THE LINE BOX. .body-clip is
+   exactly as tall as the line the word sits on, so its lower edge is the line
+   itself — there is no rule, no seam and no box edge on the page for the copy
+   to appear from, only the place the copy was going to be.
+
+   vertical-align: top AND NOT THE DEFAULT BASELINE, which is the one thing in
+   here that fails quietly. An inline-block whose overflow is not visible takes
+   its baseline from its bottom margin edge rather than from the text inside it,
+   so a row of masked words hangs above the line and the block grows by the
+   font's whole descent. Every row of split letters on this site is flex for
+   exactly this reason — but flex cannot wrap a paragraph, so the fix here is to
+   stop the box being baseline-aligned at all. Aligned to the top of the line
+   box, a mask the height of the line box is the line box. */
+.body-clip {
+  display: inline-block;
+  vertical-align: top;
+  overflow: hidden;
+
+  /* HEADROOM AND FOOTROOM, and both default to nothing.
+   *
+   * At an ordinary body line-height the line box already carries half-leading
+   * above and below the text, and that is where ascenders and descenders live —
+   * a mask flush to it clips neither. Copy set at line-height 1 or under has no
+   * such room: half-leading goes negative, the tail of a `g` hangs below the
+   * box, and a mask flush to it shaves it off. Those blocks say so themselves;
+   * see .footer-legal.
+   *
+   * The matching negative margins hand the room straight back to the layout, so
+   * a block that asks for it is still the size it always was and still sits
+   * where it always sat. Only the mask grows. */
+  padding: var(--body-head, 0) 0 var(--body-foot, 0);
+  margin: calc(var(--body-head, 0) * -1) 0 calc(var(--body-foot, 0) * -1);
+}
+
+/* Parked, and handed over exactly as the headlines' letters are: the stylesheet
+   holds the words under their masks until bodyReveal.ts sets data-reveal on the
+   block, which lifts this and lets GSAP own the whole transform. A percentage
+   translate coming from CSS is reported as resolved px, and GSAP would ADD its
+   yPercent to it and leave every line a full height low.
+
+   110 rather than 100: one box height is already past the mask's floor, and the
+   extra is for a font whose descenders run deeper than the leading allows for.
+   It is all behind the mask. BODY_REVEAL.HIDDEN is the same figure and the two
+   have to agree — change both. */
+.body-rise {
+  /* block, not inline-block, and it is the same call .char makes inside .clip:
+     a block child's height IS the line box it makes, so the mask around it is
+     exactly one line tall with no baseline arithmetic in between. An
+     inline-block would be baseline-aligned inside its own parent, which is one
+     more place for the font's descent to turn up as a gap. */
+  display: block;
+  transform: translateY(110%);
+}
+
+.body-copy[data-reveal="live"] .body-rise {
+  transform: none;
+}
+
+/* Copy sliding in from under the floor is exactly what the setting is asking
+   about. Here as well as in bodyReveal.ts, so it also covers the window before
+   hydration, when the stylesheet is holding the words down on its own — the
+   hero and the footer make the same pair of statements for the same reason. */
+@media (prefers-reduced-motion: reduce) {
+  .body-rise {
+    transform: none;
+  }
+}
+
+/* ==========================================================================
    Tokens
    ========================================================================== */
 :root {
@@ -244,6 +337,58 @@ h6 {
   --tag-ink: #16110a;
   --ink: #16110a;
   --word-colour: #fcd805;
+
+  /* THE H2, and it is the site's first heading level that is not a section's
+   * private business.
+   *
+   * Every other .hN on this site is scoped and sized where it stands — the
+   * hero's h1 at 20.361vw, the pinning section's h2 at 6.25vw, the slider's h5
+   * at 1.12vw. That is right for display type: those are compositions, and the
+   * size is part of the composition rather than a rung on a ladder. Nothing was
+   * shared because nothing needed to be.
+   *
+   * This one is different. 40/35/-1.2 is a WORKING heading — the size a card's
+   * title is set at, a size that turns up wherever a block of copy needs a head
+   * on it — and the second place it was wanted was the moment to stop typing it
+   * out. So the three figures live here and .h2 below reads them.
+   *
+   * CARRIED ACROSS IN VW off the 1440 design width like every other length on
+   * this site, so the type holds its proportion at any window rather than being
+   * the designed size at exactly one. The px is kept in the comments because the
+   * source of a figure should never be in doubt.
+   *
+   * The line-height is a LENGTH and not a ratio, deliberately — 87.5% of the
+   * size, but written out. Anything that has to line something else up with the
+   * copy needs to know the leading without also knowing the font-size, and the
+   * news page's ruled cards are exactly that: their dotted rules are pitched off
+   * --h2-line directly. */
+  --h2-size: 2.778vw; /* 40px */
+  --h2-line: 2.431vw; /* 35px — 87.5% */
+  --h2-track: -0.083vw; /* -1.2px */
+}
+
+/* The level itself. Unscoped, which is the whole point of it — put .h2 on a
+   heading anywhere and it is set the same way.
+ *
+ * IT LOSES TO EVERY SECTION THAT ALREADY HAD ONE, and that is by design rather
+ * than by luck: .hero-section h2 is (0,1,1) and .giant-pinning .h2 is (0,2,0),
+ * both of which out-specify a bare class, so the two headings that already wore
+ * this class keep the sizes their compositions were built around. The only
+ * declaration that reaches them is text-transform, and both are already written
+ * in caps — this site sets copy in the case it paints in, so that is a no-op
+ * rather than a change.
+ *
+ * text-transform even so, because the level has to be complete: a heading given
+ * .h2 and nothing else must come out looking like the design, and the next
+ * person to use it should not have to know that the copy is expected to arrive
+ * shouting. */
+.h2 {
+  font-family: var(--font-heading);
+  font-size: var(--h2-size);
+  font-weight: 800;
+  line-height: var(--h2-line);
+  letter-spacing: var(--h2-track);
+  text-transform: uppercase;
 }
 
 /* ==========================================================================
@@ -256,6 +401,20 @@ h6 {
    (the stack's order and colours are set there, from src/data/tapes.ts); the
    whole sequence is a GSAP timeline in Preloader/reveal.ts and nothing here
    declares a transform.
+
+   AND IT IS THE PAGE TRANSITION TOO. Once the cover has swept off, these same
+   sheets stay parked above the top of the screen and come back DOWN over every
+   route change, then lift off the page they delivered — Preloader/transition.ts,
+   which reuses the sweep's own schedule builder rather than owning a second copy
+   of it. Nothing here changes for that: the geometry a sheet needs to fall is
+   the geometry it needs to rise, and the arc is the leading edge both ways,
+   which is the whole reason the transition covers downward and uncovers upward
+   instead of carrying on out of the bottom of the window.
+
+   WHAT IS ON THE FRONT SHEET IS THE HOME PAGE'S, though. The mark and the line
+   under it are printed only on / (see components/Preloader), so everywhere else
+   these rules size and place nothing — the sheet is a plain lime box that holds
+   the front of the stack.
 
    Lime, and the stack is what makes lime possible. The mark's lemon is dark
    green (#104a00, within a shade of the hero's own #0d470c), so on a green
@@ -292,6 +451,21 @@ html[data-loading] {
 @media (prefers-reduced-motion: no-preference) {
   html[data-loading] .menu-tab {
     transform: translateY(-115%);
+  }
+
+  /* The masthead's BADGE waits with it, off the same attribute and for the same
+     reason: it drops into the top MIDDLE, which is the one part of the screen
+     the cover's own mark is sitting on, and two of the same logo in the same
+     band is not an arrival, it is a duplicate. TOP_BAND.HIDDEN is the same
+     figure and the two have to agree.
+
+     The claim beside it is NOT here, and its absence is the point. It does not
+     drop — it is printed, like the hero's corner mark: its letters are held
+     under their own masks (see .top-band .char) and its perforation is clipped
+     to nothing (see .top-perf), which are both holds of their own that need no
+     help from the cover. */
+  html[data-loading] .top-mark {
+    transform: translateY(-260%);
   }
 }
 
@@ -613,18 +787,18 @@ html[data-loading] {
    read as one family of small type — this is the hero's version of .tag .h6,
    minus the background and the padding that background needed. */
 .hero-section .corner-mark {
-    font-family: var(--font-heading);
-    color: #013900;
-    padding-left: .85vw;
-    position: absolute;
-    top: .9vw;
-    left: .65vw;
-    font-size: 1.389vw;
-    font-style: normal;
-    font-weight: 700;
-    line-height: 1.25vw;
-    letter-spacing: -0.042vw;
-    text-transform: uppercase;
+  font-family: var(--font-heading);
+  color: #013900;
+  padding-left: 0.85vw;
+  position: absolute;
+  top: 0.9vw;
+  left: 0.65vw;
+  font-size: 1.389vw;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.25vw;
+  letter-spacing: -0.042vw;
+  text-transform: uppercase;
 }
 
 /* Two set lines, not a wrap — see CORNER_MARK in Hero/index.tsx. Each is a row
@@ -694,7 +868,9 @@ html[data-loading] {
      above the line it is centred on. Both are read by .hero-mark below, which
      is where the reasoning for them is. */
   --hero-mark-w: 12.7vw; /* 183px at the 1440 design width */
-  --hero-mark-h: calc(var(--hero-mark-w) * 118 / 191); /* the artwork's aspect */
+  --hero-mark-h: calc(
+    var(--hero-mark-w) * 118 / 191
+  ); /* the artwork's aspect */
   --hero-mark-lift: 0.5vw;
 
   /* Positioned only to lift the type over .top's grain — a positioned
@@ -1665,19 +1841,32 @@ html[data-loading] {
   gap: 0.764vw;
 }
 
-.tag .h6, .subhead {
-    background: var(--tag-bg);
-    color: var(--tag-ink);
-    white-space: nowrap;
-    border-radius: .42vw;
-    padding: 0.678vw;
-    padding-left: 1.6em;
-    position: relative;
-    font-size: 1.111vw;
-    font-style: normal;
-    font-weight: 700;
-    line-height: 1.111vw;
-    letter-spacing: -0.033vw;
+/* THE CHIP, and it is a component rather than a rule of this section: a small
+   label of stuck-on paper with a perforation punched down its left edge. Five
+   places wear it now — the slider's left column, the slider's own subhead, the
+   pinning section, and all three of the news pages' (the title card's tag, the
+   lead story's HIGHLIGHT and the story page's kind). WHAT A CHIP IS lives here;
+   WHERE ONE GOES lives with the thing it is stuck to, which is the split the
+   .tape-slider-parent .subhead note below makes at length. Add a class here to
+   gain the chip; set --tag-bg and --tag-ink where you add it, and never the
+   declarations. */
+.tag .h6,
+.subhead,
+.rolling-tag,
+.story-chip,
+.article-chip {
+  background: var(--tag-bg);
+  color: var(--tag-ink);
+  white-space: nowrap;
+  border-radius: 0.42vw;
+  padding: 0.678vw;
+  padding-left: 1.6em;
+  position: relative;
+  font-size: 1.111vw;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.111vw;
+  letter-spacing: -0.033vw;
 }
 
 /* Uneven tilts so the chips read as stuck on by hand; a repeating pattern looks
@@ -1701,7 +1890,10 @@ html[data-loading] {
    height, so the count follows from the strip height and the dots stay evenly
    spaced whatever the chip's font size. currentColor picks up --tag-ink. */
 .tag .h6::before,
-.subhead::before {
+.subhead::before,
+.rolling-tag::before,
+.story-chip::before,
+.article-chip::before {
   content: "";
   position: absolute;
   left: 0.62vw;
@@ -2361,8 +2553,6 @@ html[data-loading] {
 .down-to-horizontal {
   --gx: var(--giant-open-gx);
   --gy: 48vw;
-
-  
 }
 
 /* RESPACED for the picture in the gap. The three phrases run 189, 130 and 208vw
@@ -2463,7 +2653,6 @@ html[data-loading] {
   --gx: 338vw;
   --gy: 80vw;
 }
-
 
 /* --------------------------------------------------------------------------
    The phrases
@@ -2858,7 +3047,7 @@ html[data-loading] {
     font-size: 6.25vw;
     font-style: normal;
     font-weight: 800;
-    line-height:  0.77;
+    line-height: 0.77;
     letter-spacing: -0.188vw;
   }
 }
@@ -2995,8 +3184,28 @@ html[data-loading] {
    and the card takes what is left, so the pair always spans the padding box
    exactly — one number to move if the balance changes, and no third figure that
    has to be kept equal to the difference of the other two.
+
+   IT IS TWO SECTIONS NOW, and every rule in this block that names one names both.
+   The news page's lead story (components/TopStory) is not a section that looks
+   like this one — it IS this one: the same photograph in the same tilted frame,
+   the same card, the same strip of kraft standing across the same seam, and the
+   same three engines driving them, none of which knows what section it is in.
+
+   So the arrangement is written once and the two differences are declared where
+   they belong. The PALETTE is three custom properties, because this section
+   closes a lime page in lime-on-green and that one sits on a dark green page in
+   green-on-paper. The CARD'S FURNITURE — a chip, a date, an arrow — is markup and
+   a handful of .story-* rules in the News page section below, because it is
+   content and not geometry.
+
+   What must NOT happen is a second copy of any length in this block. If a figure
+   here needs to differ between the two, make it a custom property and override it
+   on .top-story; the moment a vw is typed twice the two arrangements start
+   drifting, which is exactly the failure the pinning section's .giant-tape
+   documents further up this file.
    ========================================================================== */
-.make-it-stick {
+.make-it-stick,
+.top-story {
   /* Clear of the viewport's edges — 128.67px at the design width. */
   --stick-pad-x: 8.935vw;
   /* Above and below the row — 135px. */
@@ -3069,6 +3278,10 @@ html[data-loading] {
 
    pointer-events: none, because a full-bleed decorative layer must never be
    what a click lands on. */
+/* .top-story USED TO BE ON THIS RULE AND IS NOT ANY MORE. The news page's dark
+   green carries no grain — see the note above .news-index, which is the other
+   half of the same sheet and had to lose it in the same breath. What is left
+   here is the key visual's lime, which is where the ramp below was designed. */
 .make-it-stick::before {
   content: "";
   position: absolute;
@@ -3101,24 +3314,86 @@ html[data-loading] {
   align-items: center;
 }
 
-/* SQUARE, which the artwork already is (608x608) — object-fit is here for the
-   day it is recropped rather than to correct it now.
+.top-story .stick-row {
+  gap: unset;
+}
+
+/* THE FRAME — the box that is taped to the card beside it, and the one thing in
+   this arrangement that must never move.
+
+   SQUARE, which the artwork already is (608x608). The rounded corner, the lean
+   and the cast shadow all live here rather than on the picture inside, because
+   they belong to the object on the page: it is the FRAME that is stuck down,
+   and the photograph is only what can be seen through it.
+
+   overflow: hidden is what makes it a frame at all. The artwork inside is cut
+   taller than this box and drifts within the overhang as the section crosses
+   the screen (MakeItStick/parallax.ts) — the alternative, drifting the whole
+   box the way the hero drifts its props, would open the seam and slide the
+   photograph out from under the strip of tape that is supposedly holding the
+   two of them together.
 
    The tilt is on `transform` and not on `rotate`: nothing in this section reads
    or writes either, so both are free, and transform is the one an eye scanning
    this file expects to find a lean on. */
 .stick-shot {
+  /* HOW MUCH TALLER THAN ITS FRAME THE ARTWORK IS CUT, as a fraction of the
+   * frame — half of it hangs above and half below, so this is also the drift
+   * each way. 5% of 578px is about 29px in either direction.
+   *
+   * Small on purpose, and the ceiling is not taste. The overhang is the only
+   * part of the picture that is not on screen, so drift past it would show lime
+   * through the corner of the frame; parallax.ts reads the slack back off the
+   * layout rather than keeping its own copy of this figure, which is what makes
+   * that impossible however this is retuned. What is left to judge is speed:
+   * the travel is spent over the frame's whole visible life, so doubling this
+   * doubles how fast the picture creeps, and past about a tenth it stops
+   * reading as depth and starts reading as a photograph sliding about inside a
+   * hole. */
+  --stick-drift: 5%;
+
+  position: relative;
   width: 100%;
   aspect-ratio: 1;
-  height: auto;
-  object-fit: cover;
+  overflow: hidden;
   border-radius: var(--stick-radius);
   transform: rotate(var(--stick-tilt));
 
   /* The site's cast shadow — hard rather than blurred, see --drop-ink in
      :root. In vw because this is a physical thing of one size on the page
-     rather than something inside a phrase. */
+     rather than something inside a phrase. Still the frame's own: drop-shadow
+     takes the shape of what is actually painted, which after the clip above is
+     the rounded box and not the oversized picture behind it. */
   filter: drop-shadow(0.22vw 0.32vw var(--drop-blur) var(--drop-ink));
+}
+
+.top-story .stick-card,
+.top-story .stick-shot {
+  border-radius: 6.944vw;
+}
+
+/* THE PICTURE — taller than the hole it is seen through, hung half its overhang
+   above the top edge so that a pan of zero is the artwork centred and the crop
+   the design drew.
+
+   Absolutely positioned rather than laid out, so its height can exceed its
+   parent's without the parent growing to fit it; top/bottom percentages resolve
+   against the containing block's HEIGHT, which is what makes the overhang and
+   the offset one figure rather than two that have to be kept in step.
+
+   --stick-pan is parallax.ts's one output, in px, and it defaults to nothing —
+   so the picture with no script running is the picture the design cropped, not
+   a frame with a strip of lime down one edge. translate3d rather than translateY
+   to keep the pan on the compositor: this is the one thing in the section that
+   is written on every scrolled frame. */
+.stick-shot-img {
+  position: absolute;
+  left: 0;
+  top: calc(var(--stick-drift) * -1);
+  width: 100%;
+  height: calc(100% + var(--stick-drift) * 2);
+  object-fit: cover;
+  transform: translate3d(0, var(--stick-pan, 0px), 0);
 }
 
 /* The line, on its own ground. Nothing absolute inside it: the heading sits at
@@ -3159,12 +3434,76 @@ html[data-loading] {
   letter-spacing: -0.185vw;
 }
 
+/* The rows. Flex rather than block, for the reason every row of split letters
+   on this site is: .clip below carries overflow: hidden, and an inline-block
+   whose overflow is not visible takes its baseline from its bottom margin edge
+   rather than from the text inside it — which would hang every letter above the
+   baseline and grow each line box by the font's whole descent, pushing the
+   three lines apart for no visible reason. Flex items have no baseline to get
+   wrong.
+
+   justify-content, not the card's text-align: centring text is not something
+   that reaches flex items, and the three lines are different widths. */
 .stick-headline .line {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* Split letters — the footer's boxes and the footer's headroom, because this is
+   the footer's setting: line-height well under 1 (0.83 here), so a letter's
+   content box is shorter than the capital standing in it and a mask flush to
+   the box would shave the tops off. The padding gives it room on three sides
+   and the matching negative margins hand that room straight back to the layout,
+   so the rows are the width and height they always were.
+
+   Nothing at the bottom — the mask's lower edge is what the letters slide out
+   through, and it wants to sit tight on the baseline. */
+.make-it-stick .clip,
+.top-story .clip {
   display: block;
+  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  overflow: hidden;
+  padding: 0.2em 0.06em 0;
+  margin: -0.2em -0.06em 0;
+}
+
+/* Parked, and handed over exactly as the hero's and the footer's are: the
+   stylesheet holds the letters under their masks until MakeItStick/reveal.ts
+   sets data-reveal, which lifts this and lets GSAP own the whole transform. A
+   percentage translate coming from CSS is reported as resolved px, and GSAP
+   would ADD its yPercent to it and leave every letter a full height low.
+
+   130 for the reason the hero gives: capitals overshoot their own box, so a
+   letter moved exactly its own height still leaves a hairline of tops at the
+   mask's edge. REVEAL.HIDDEN is the same figure and the two have to agree. */
+.make-it-stick .char,
+.top-story .char {
+  display: block;
+  transform: translateY(130%);
+}
+
+.make-it-stick[data-reveal="live"] .char,
+.top-story[data-reveal="live"] .char {
+  transform: none;
+}
+
+/* Seventeen letters flying in from nowhere is exactly what the setting is
+   asking about. Here as well as in reveal.ts, so it also covers the window
+   before hydration, when the stylesheet is holding them down on its own — the
+   hero and the footer make the same pair of statements for the same reason. */
+@media (prefers-reduced-motion: reduce) {
+  .make-it-stick .char,
+  .top-story .char {
+    transform: none;
+  }
 }
 
 /* Body copy, not a heading — the same face and weight the slider's small print
-   takes. 1.181vw is 17px at the design width. */
+   takes. 1.181vw is 17px at the design width. It also takes the site's BODY
+   entrance rather than the headline's, which is the .body-copy class on it in
+   index.tsx; at line-height 1.4 the line box already carries enough leading for
+   the mask to sit flush, so it asks for no --body-head or --body-foot. */
 .stick-sub {
   font-family: var(--font-body);
   font-size: 1.181vw;
@@ -3219,7 +3558,8 @@ html[data-loading] {
    Lightning CSS drops the declaration outright on the way through the build,
    which is a nuisance to diagnose from a strip sitting 160px off its mark. A
    negative margin of half the box is neither transformed nor rewritten. */
-.make-it-stick .stick-tape {
+.make-it-stick .stick-tape,
+.top-story .stick-tape {
   position: absolute;
   /* The seam: the photograph's right edge, a little under half way down. */
   left: var(--stick-shot);
@@ -3256,9 +3596,2565 @@ html[data-loading] {
    otherwise take it. The <noscript> block in index.tsx is the same fix for the
    other way peel.ts can fail to run. */
 @media (prefers-reduced-motion: reduce) {
-  .make-it-stick .stick-tape {
+  .make-it-stick .stick-tape,
+  .top-story .stick-tape {
     --peel: 1;
   }
+}
+
+/* ==========================================================================
+   Pick your player — the product page
+   ==========================================================================
+   Markup in components/PickYourPlayer. The only section on /products, and the
+   whole of that page above the footer: six printed rolls read across in a row,
+   each lapping the one before it, standing on a green rise; the headline over
+   the top, a dashed guide ruled straight through the row, and two lines of
+   small print at the foot.
+
+   THE ROLLS ARE THE SLIDER'S OWN ARTWORK — src/data/tapes.ts `card`, the hang
+   tag the slider hangs at the centre of its stage. One set of pictures on the
+   site rather than two, and the chips (NORMAL, LOW NOISE, CELLO • EASY-TEAR)
+   are printed into them rather than set in markup beside them.
+
+   THE SECTION IS IN FLOW, top to bottom, and nothing in it is placed off the
+   section's own box. The rise and the guide are absolute inside .pick-stage,
+   which is the row's own box — so retuning the headline above moves the ground
+   with the rolls instead of leaving it behind, and neither of them needs to
+   know how tall this section is.
+
+   Geometry is in vw off the 1440 design width like the rest of the site, read
+   off the mock at its own scale. The three figures worth knowing are the roll's
+   diameter, the lap between two of them, and the rise's depth; everything else
+   is spacing between blocks that are already the right size.
+   ========================================================================== */
+.pick-player {
+  /* Clear of the viewport's edges. Wider than the closing key visual's 8.9vw
+     because this sheet holds one row of round objects rather than two boxes —
+     the row wants air at its ends, not a margin it is butted against. */
+  --pick-pad-x: 4vw;
+  /* Above the headline, and it is measured against the two things that hang in
+     that space rather than chosen to look right on its own: the menu's tab at
+     the top right, and the masthead's badge in the top middle (--top-mark-h
+     plus --top-inset, in the Top band section below). It clears the badge by
+     about three quarters of a vw, which is the tighter of the two. */
+  --pick-pad-top: 7.5vw;
+
+  /* THE ROLL, and the row is built out of these two and nothing else. 16.7vw is
+     240px at the design width — a shade under the footer's 18.7vw beds and a
+     shade over the slider's 16.366vw orbit, which is the size range every round
+     thing on this site lives in.
+
+     THE LAP is how far each roll rides over the one before it: about a seventh
+     of the diameter, which is enough for the row to read as one object and not
+     enough to cover a word. It is also what PICK_FAN.PUSH in fan.ts is sized
+     against — the push exists to clear this, so if the lap grows the push has
+     to grow with it or a picked roll stays half buried. */
+  --pick-roll: 18.7vw;
+  --pick-lap: 4.4vw;
+
+  /* THE RISE — the ground the rolls stand on, and the section's one shape.
+   *
+   * IT IS THE DESIGN'S OWN ELLIPSE, and the artwork is in the repo: see
+   * public/assets/"Ellipse 31.svg", which is 1922 x 491 with rx 961 and ry
+   * 245.5. Nothing here draws that file — an ellipse is a border-radius and
+   * shipping 175 bytes of SVG to paint a filled oval would be a request for a
+   * shape CSS already has — but the two figures below are taken off it, and it
+   * is worth keeping around as the statement of what this is.
+   *
+   * A WHOLE ELLIPSE, top and bottom both. It went through two wrong versions
+   * first and they are worth knowing, because they look similar in a stylesheet
+   * and read as different things on a page. A box with its top corners rounded
+   * off was one: that is a semi-circle with a straight cut across the bottom,
+   * and it reads as one. An arc across the page with flat colour under it to the
+   * foot of the section was the other, which loses the bottom curve entirely.
+   * The design has both, and the bottom one is only nearly off the page rather
+   * than absent — it tucks in behind the footer's own arc.
+   *
+   * THE ASPECT IS THE ARTWORK'S, not a depth typed in vw, and that is what makes
+   * the curvature match rather than merely resemble. An ellipse's shape is its
+   * two radii and nothing else; give the box the artwork's ratio and every
+   * tangent along it is the artwork's too, at any width. --pick-rise-ratio is
+   * that ratio, written as the two numbers off the file so the source is never
+   * in doubt.
+   *
+   * IT OVERHANGS THE PAGE BY 230px A SIDE, which is --pick-rise-bleed, and that
+   * is the second half of the shape: an ellipse is steep at its ends and flat at
+   * its crest, so how much of the steep part is on screen is decided entirely by
+   * how far past the edges it runs. 230px puts the sides falling away hard into
+   * the two corners with the ends themselves just out of frame. It was 112vw
+   * once — nearly twice this — and at that width only the flat middle showed:
+   * the green met both edges high, the curve barely read, and the sheet carried
+   * far more colour than it needed.
+   *
+   * --pick-rise-crest is where the top of it sits, measured DOWN from the top of
+   * the rolls: at 12.5vw of a 16.7vw roll the crest crosses their lower quarter,
+   * which is what makes them stand on it rather than float over it. Raising this
+   * figure is how to take green off the page without touching anything else —
+   * the rolls and the small print are laid out against each other and never
+   * against this. */
+  --pick-rise-ratio: 1922 / 491;
+  --pick-rise-bleed: 15.972vw; /* 230px at the 1440 design width */
+  --pick-rise-crest: 12.5vw;
+
+  /* The hero's pairing, which this page opens on exactly as the home page does:
+     lime sheet, dark green type. */
+  --pick-bg: #b6fe00;
+  --pick-ink: #013900;
+
+  /* THE RISE'S GREEN IS MIXED, NOT PICKED, and that is the whole reason it is
+     allowed to exist. The site runs on two greens and a lime — #013900, #0d470c
+     and #b6fe00 — and the note in the closing key visual is blunt about a fourth
+     nearly like the other three reading as a mistake. This is not a fourth: it
+     is the two ends of that pairing mixed, so it is the lime with the hero's
+     ground taken through it, and it moves if either of them does.
+
+     Off --pick-bg rather than off the literal lime, which is the same recipe to
+     the letter that --pick-roll-rise runs on each of the six tapes further down
+     — so the section's own ground and all six of the hovered ones are one
+     family with one rule behind them, and changing the mix means changing it in
+     two places that say the same sentence. */
+  --pick-rise-colour: color-mix(in srgb, var(--pick-bg) 72%, #0d470c);
+
+  /* The guide, and the site's cloth-tape blue rather than a new colour: it is a
+     cut line ruled across the sheet, and a rule in the lime's own family would
+     read as an underline that had come loose. See src/data/tapes.ts, where the
+     same value is that tape's stage. */
+  --pick-guide-colour: #2e3eac;
+
+  /* THE ROOM THE FOOTER TAKES BACK. The footer rises into whatever is above it
+     — margin-top: calc(--footer-arc * -1) — so the small print above would
+     otherwise be sat on by the arc. This is that depth handed back as padding.
+
+     IT MUST EQUAL --footer-arc, and the two cannot be one custom property
+     because that one lives on .site-footer and this element is not inside it.
+     Change one and change the other; the closing key visual pays the same toll
+     with --stick-arc and the pinning section with --giant-tail. */
+  --pick-arc: 6vw;
+
+  position: relative;
+  width: 100%;
+  padding: var(--pick-pad-top) var(--pick-pad-x) calc(4vw + var(--pick-arc));
+  background: var(--pick-bg);
+  color: var(--pick-ink);
+
+  /* WHAT CUTS THE RISE OFF AT THE FOOT, as well as tidying the edges. The green
+     under the arc is thrown a page-width past the end of this section (see
+     .pick-rise) and this is the only thing that stops it: without it the colour
+     would run down over the footer and add a page-width of empty scroll to the
+     document, since an absolutely positioned box still overflows the root even
+     though it is out of flow. The sides are the older reason — the scatter
+     nudges the end rolls a little past the row's own box.
+
+     Clip rather than hidden, and BOTH axes rather than the x alone it used to
+     be. `hidden` on either axis makes the box a scroll container on both, which
+     would give the page a second scroller to fight the smooth scroll for the
+     wheel; `clip` never does. The hero and the footer clip for the same reason,
+     on x only, because neither has anything to cut off at the bottom.
+
+     The footer is a SIBLING, not a child, so the arc it rises into this
+     section with is untouched by any of this. */
+  overflow: clip;
+
+  /* WHAT MAKES THE COLOUR WIPE POSSIBLE, and it is one word doing real work.
+     .pick-wash sits at z-index -1 so the paper grain and everything else paints
+     over it — and a negative z-index is measured against the nearest STACKING
+     CONTEXT, not the nearest positioned box. Without this the nearest one is
+     the page root, and the wash would paint behind this section's own
+     background: invisible, permanently. Isolating makes this element the
+     context, so -1 means "above my background, below my content", which is
+     exactly where a ground belongs.
+
+     It changes nothing outside: this section is z-index auto either way, and
+     the footer still wins on its own 12. */
+  isolation: isolate;
+}
+
+/* --------------------------------------------------------------------------
+   The ground, and the colour it takes from whichever roll is hovered
+   --------------------------------------------------------------------------
+   Two flat sheets: the page's colour, and the page's next colour parked above
+   it. recolour.ts slides the second down over the first with its leading edge
+   cut into one wide convex arc, then hands the colour to the base and parks it
+   again. Markup in components/PickYourPlayer.
+
+   The geometry — the height, the arc's depth, the travel — is all written by
+   the script, because all three are measured from the section as it actually
+   is at the moment of the hover. What is here is where the sheets live and what
+   colour they are before anything has happened. */
+.pick-wash {
+  position: absolute;
+  inset: 0;
+  /* Above the section's own background, below the grain and everything else.
+     See isolation on .pick-player, without which this line does the opposite of
+     what it says. */
+  z-index: -1;
+  pointer-events: none;
+}
+
+.pick-wash-layer {
+  position: absolute;
+  inset: 0;
+  background: var(--pick-bg);
+}
+
+/* The incoming colour. Parked a full height above and brought down over the old
+   one — the long-horizontal, short-vertical radius the script writes turns its
+   leading edge into one wide convex arc rather than two visible corner curves,
+   and it holds that shape for the whole slide.
+
+   `bottom: auto` releases the bottom that .pick-wash-layer's inset: 0 pins, so
+   the measured height wins: the sheet has to be TALLER than the section to
+   finish past the bottom edge without its arc's shallow ends leaving wedges of
+   the old colour in the corners. The slider's own sheet says the same thing. */
+.pick-wash-next {
+  bottom: auto;
+  transform: translateY(-100%);
+  will-change: transform;
+}
+
+/* The same paper grain the hero, the band, the stage, the closing key visual
+   and the footer all carry, at the same weight — it is the only way the sections
+   read as one printed surface. Width-fitted and tiled DOWN rather than
+   stretched, for the reason the hero gives: stretching one tile over a box of a
+   different aspect turns paper into vertical streaking.
+
+   No mask on the top edge, unlike the closing key visual's: that one has to ramp
+   into the sheet above it, and this is the top of a page.
+
+   pointer-events: none because a full-bleed decorative layer must never be what
+   a click lands on. */
+.pick-player::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/paper-overlay.webp");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* THERE IS NO CLOSING RULE, and there was one — a hairline in the hero's brown
+   across the section's foot, at the line the footer's deepest dip reaches. It
+   was drawn on the assumption that the sheet ended in lime and needed saying so.
+   It does not: the rise fills the bottom of the section now, and against that
+   green the rule read as a seam between two panels of the same colour rather
+   than as the edge of anything. The footer's own bitten edge is what ends this
+   page, and it does it without help. */
+
+/* The house voice: condensed, heavy, set tight and tracked in a shade so the
+   two lines stack as one block. Centred, which is the one thing that separates
+   this headline from the closing key visual's — that one is set in a card beside
+   a photograph and this one is the top of a page.
+
+   LINE-HEIGHT UNDER 1 IS WHAT HOLDS THE BLOCK'S TOP EDGE STILL. At 0.83 the text
+   overflows its own line box by half the difference at each end, and that
+   overhang grows with the type — so the cap line stays put under the section's
+   padding whether this figure is 70 or 120, and the padding above does not have
+   to be re-tuned every time the size moves.
+
+   Positioned, which lifts the type over the grain above it — a positioned
+   pseudo-element otherwise paints over ordinary content whatever the source
+   order says. The footer's nav row and the hero's title make the same call.
+
+   Lines are block spans rather than <br>, so the leading is the element's own
+   and a line can be reached by a rule if one of them ever needs to be. */
+.pick-title {
+  position: relative;
+  font-family: var(--font-heading);
+  font-size: 8.4vw;
+  font-weight: 800;
+  line-height: 0.83;
+  letter-spacing: -0.16vw;
+  margin-bottom: 3.2vw;
+}
+
+/* The rows. Flex rather than block, for the reason every row of split letters on
+   this site is: .clip below carries overflow: hidden, and an inline-block whose
+   overflow is not visible takes its baseline from its bottom margin edge rather
+   than from the text inside it — which would hang every letter above the
+   baseline and grow each line box by the font's whole descent, pushing the two
+   lines apart for no visible reason. Flex items have no baseline to get wrong.
+
+   justify-content, not text-align: centring text is not something that reaches
+   flex items, and the two lines are different widths. */
+.pick-title .line {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* Split letters — the closing key visual's boxes and its headroom, because this
+   is the same setting: line-height well under 1, so a letter's content box is
+   shorter than the capital standing in it and a mask flush to the box would
+   shave the tops off. The padding gives it room on three sides and the matching
+   negative margins hand that room straight back to the layout, so the rows are
+   the width and height they always were.
+
+   Nothing at the bottom — the mask's lower edge is what the letters slide out
+   through, and it wants to sit tight on the baseline. */
+.pick-player .clip {
+  display: block;
+  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  overflow: hidden;
+  padding: 0.2em 0.06em 0;
+  margin: -0.2em -0.06em 0;
+}
+
+/* Parked, and handed over exactly as the hero's, the footer's and the closing
+   key visual's are: the stylesheet holds the letters under their masks until
+   PickYourPlayer/reveal.ts sets data-reveal, which lifts this and lets GSAP own
+   the whole transform. A percentage translate coming from CSS is reported as
+   resolved px, and GSAP would ADD its yPercent to it and leave every letter a
+   full height low.
+
+   130 for the reason the hero gives: capitals overshoot their own box, so a
+   letter moved exactly its own height still leaves a hairline of tops at the
+   mask's edge. REVEAL.HIDDEN is the same figure and the two have to agree. */
+.pick-player .char {
+  display: block;
+  transform: translateY(130%);
+}
+
+.pick-player[data-reveal="live"] .char {
+  transform: none;
+}
+
+/* Sixteen letters flying in from nowhere is exactly what the setting is asking
+   about. Here as well as in reveal.ts, so it also covers the window before
+   hydration, when the stylesheet is holding them down on its own — the hero, the
+   footer and the closing key visual all make the same pair of statements for the
+   same reason. */
+@media (prefers-reduced-motion: reduce) {
+  .pick-player .char {
+    transform: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   The row, and the ground under it
+   --------------------------------------------------------------------------
+   The box the rise and the guide are placed inside, and it is the ROW's box:
+   its height is one roll, so both of them are positioned against the rolls
+   rather than against the section.
+
+   isolation: isolate, and it is load-bearing. The rolls stack against each other
+   with small numbers (2 upwards) and fan.ts lifts the picked one clear with one
+   more — none of which is meant to be a statement about the footer, which sits
+   at 12 and must always win. A stacking context here keeps that whole
+   conversation inside this box. `position: relative` alone would not: it makes
+   this a containing block without making it a context. */
+.pick-stage {
+  position: relative;
+  isolation: isolate;
+  height: var(--pick-roll);
+
+  /* The drop from the rolls' feet to the small print, and it is a plain figure
+     again: the rise has no foot to clear now that it runs to the bottom of the
+     section, so the notes sit ON the green rather than in a gap under it and
+     this is only how far below the rolls they are set. The green is light
+     enough that the dark green ink reads on it exactly as it does on the lime;
+     they are the section's two grounds, not a ground and a highlight. */
+  margin-bottom: 7.5vw;
+}
+
+/* THE RISE — the design's ellipse, hung off the top of the rolls. See
+   --pick-rise-ratio in the block above for where its shape comes from.
+
+   THE HEIGHT IS NOT DECLARED, and that is the whole of the curvature matching.
+   The insets fix the WIDTH — the section's own width plus the bleed at each end
+   — and aspect-ratio takes the height from it, so the box is always the
+   artwork's box scaled, and `border-radius: 50%` inscribes the artwork's exact
+   ellipse in it. Type a height in vw instead and the two radii drift apart the
+   moment the window is not the design width.
+
+   The insets undo the section's own side padding as well as adding the bleed:
+   this box lives inside the ROW's box, which is the padding box, so the padding
+   has to be given back before anything can hang past the page. Bled with
+   left/right rather than centred on a declared width, so it is the SECTION's
+   width whatever that turns out to be, with no scrollbar gutter to reason
+   about.
+
+   NO `bottom`. It had one — thrown a page-width past the end of everything,
+   back when the shape was an arc with flat colour under it and the section's
+   clip was what ended it. The ellipse ends itself now. The clip on .pick-player
+   still matters, but only for the last of the bottom curve, which lands within
+   a whisker of the section's foot and behind the footer's own arc. */
+.pick-rise {
+  position: absolute;
+  z-index: 0;
+  top: var(--pick-rise-crest);
+  left: calc((var(--pick-pad-x) + var(--pick-rise-bleed)) * -1);
+  right: calc((var(--pick-pad-x) + var(--pick-rise-bleed)) * -1);
+  aspect-ratio: var(--pick-rise-ratio);
+  background: var(--pick-rise-colour);
+  border-radius: 50%;
+  /* So the sheet inside is cut to this shape and appears only within the rise's
+     own silhouette. Clip rather than hidden, for the reason given all over this
+     file: hidden on either axis makes the box programmatically scrollable, and
+     this one holds a child taller than itself. */
+  overflow: clip;
+}
+
+/* The rise's own copy of the incoming sheet. It needs one because the rise
+   paints ABOVE the ground's wash — it is in the row's box and the wash is
+   behind everything — so a wipe passing underneath would leave it standing in
+   the old colour while the page around it changed.
+
+   Everything about it is written by recolour.ts and on the ground sheet's own
+   clock: the same arc, the same travel, offset by exactly how far down the
+   section this element starts. That offset is the whole trick — it puts this
+   copy of the edge at the same place on the page as the ground's, so what the
+   eye follows is one line crossing the sheet rather than two curves sweeping
+   past each other.
+
+   Parked above like the other one. Its colour is the ground's mixed with the
+   hero's green; see --pick-roll-rise, which is where that mixing is done. */
+.pick-rise-next {
+  position: absolute;
+  top: 0;
+  /* CENTRED ON THE SECTION, AND AS WIDE AS THE SECTION — the width and the
+     matching negative margin are written by the script.
+
+     Its parent is that width too, now that the rise runs corner to corner, so
+     stretching to it would give the same answer today. Measured anyway: a
+     percentage corner radius resolves against the box's OWN width, so the
+     moment the rise is ever made wider or narrower than the sheet again, the
+     same `50%` here would describe a different ellipse from the ground sheet's
+     and the two edges would part company toward the sides of the window — a
+     step across the page, tens of pixels deep. Reading the sheet's own width is
+     what makes that impossible rather than merely unlikely. */
+  left: 50%;
+  background: var(--pick-rise-colour);
+  transform: translateY(-100%);
+  will-change: transform;
+}
+
+/* The guide — one dashed line ruled straight through the row, bled to the
+   viewport's edges like the rise. It reads as a cut line on a sheet of labels,
+   which is what the rolls are printed as.
+
+   Through the row's upper third rather than through its middle: on the centre
+   line it splits every roll in half and reads as a strike-through. */
+.pick-guide {
+  position: absolute;
+  z-index: 1;
+  left: calc(var(--pick-pad-x) * -1);
+  right: calc(var(--pick-pad-x) * -1);
+  top: 35%;
+  /* THE DASH TAKES currentColor AND THE COLOUR IS SET SEPARATELY, which is not
+     a flourish: recolour.ts crosses this line over to the hovered tape's ink
+     along with the small print, and it does that by tweening `color` on both.
+     A border-colour named directly would be a second property to tween on a
+     second kind of element. The slider's perforations are drawn off
+     currentColor for the same reason. */
+  color: var(--pick-guide-colour);
+  border-top: 0.14vw dashed currentColor;
+  opacity: 0.55;
+}
+
+/* THE ROW IS EXACTLY AS WIDE AS THE ROLLS, and that is not a tidiness point:
+   fan.ts divides this element's measured width into one portion per roll to
+   decide which one the pointer is over. A full-width row would spread six
+   portions across the whole sheet, and every roll would be picked up from a
+   place that is not where it is standing.
+
+   width: max-content and auto margins, so the box is the contents and the
+   contents are centred. */
+.pick-fan {
+  position: relative;
+  display: flex;
+  width: max-content;
+  max-width: 100%;
+  margin-inline: auto;
+  padding: 0;
+  list-style: none;
+}
+
+/* The place in the line, and the one box in a roll that never moves — which is
+   why the stacking lives here. --i comes from the markup; +2 clears the rise and
+   the guide below. fan.ts writes a z-index of its own on this element to lift
+   the picked roll over the rest, and takes it off again on release. */
+.pick-roll {
+  /* THE TAPE'S RISE COLOUR, mixed here rather than picked in the data.
+   *
+   * --bg is the tape's own stage colour, put on this element by cssVars() in
+   * src/data/tapes.ts; the dark green is the hero's ground. Every tape's rise is
+   * therefore that tape's page with the same amount of the same green through
+   * it, which is what stops six hand-picked "slightly darker" greens drifting
+   * apart — and it is the same recipe --pick-rise-colour uses on the lime, so
+   * the section's own ground and all six of the hovered ones are one family.
+   *
+   * recolour.ts reads this back with getComputedStyle and hands it straight to
+   * a background. What it gets is the color-mix() expression with --bg
+   * substituted in rather than a resolved colour, which is exactly as useful:
+   * it is a valid colour either way and the browser does the mixing. */
+  --pick-roll-rise: color-mix(in srgb, var(--bg) 72%, #0d470c);
+
+  position: relative;
+  z-index: calc(var(--i) + 2);
+  flex: 0 0 auto;
+  width: var(--pick-roll);
+  aspect-ratio: 1;
+}
+
+/* Each roll rides over the one before it. A negative margin rather than a
+   translate: this has to come out of the row's WIDTH as well as its look, or the
+   row would measure a full six diameters wide and the portions fan.ts cuts it
+   into would all be offset. */
+.pick-roll + .pick-roll {
+  margin-left: calc(var(--pick-lap) * -1);
+}
+
+/* THE ROLL BEING PUT DOWN AND PICKED UP. Its rest pose is written by fan.ts —
+   a small random offset and a small random turn — and this rule states nothing
+   about it, which is deliberate: with no script the row is square, evenly lapped
+   and in order, and that is a row the design would accept rather than a fallback
+   of one. */
+.pick-roll-tilt {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* The artwork, and the only thing that slides when a NEIGHBOUR is picked up.
+   The site's cast shadow — hard rather than blurred, see --drop-ink in :root —
+   in vw, because a roll is a physical thing of one size on the page rather than
+   something inside a phrase. drop-shadow rather than box-shadow: the card is a
+   circle with a hanging tab cut into the top of it, and only the filter takes
+   its shape from what is actually painted. */
+.pick-roll-face {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0.22vw 0.32vw var(--drop-blur) var(--drop-ink));
+}
+
+/* --------------------------------------------------------------------------
+   The small print under the row
+   --------------------------------------------------------------------------
+   Two lines pushed to the sheet's own margins — the reason for the page on the
+   left, the promise on the right. space-between rather than a grid: they are two
+   blocks at two ends, and neither has an opinion about the middle.
+
+   Positioned, which lifts them over the grain. */
+.pick-notes {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 4vw;
+}
+
+/* Body copy, not a heading — the same face and weight the slider's small print
+   and the closing key visual's sub-line take. 1.25vw is 18px at the design
+   width. It also takes the site's BODY entrance rather than the headline's,
+   which is the .body-copy class on it in index.tsx; at line-height 1.4 the line
+   box already carries enough leading for the mask to sit flush, so it asks for
+   no --body-head or --body-foot.
+
+   The measure is set so both blocks break where the design breaks them — two
+   lines on the left, three on the right — rather than running the width of the
+   sheet. */
+.pick-note {
+  /* THE MASK NEEDS ROOM HERE, and it did not before this copy was set solid.
+     line-height is 100% of the font size, so the line box is SHORTER than the
+     font's own ascent plus descent — half-leading goes negative — and a mask
+     flush to it cuts the tail off every `y` and `g` in the two lines and clips
+     the tops of the capitals. The matching negative margins in .body-clip hand
+     the room straight back, so the block is the height it always was and still
+     sits where the layout puts it; only what the mask covers changes.
+
+     In em, so they follow the type rather than the window: it is the FONT's
+     overshoot being allowed for, and that is a proportion of the size. The
+     footer's legal line is set solid for the same reason and asks for very
+     nearly the same pair. */
+  --body-head: 0.16em;
+  --body-foot: 0.2em;
+
+  font-family: var(--font-body);
+  font-size: 1.667vw;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.667vw; /* 100% */
+  letter-spacing: -0.017vw;
+  max-width: 20.431vw;
+}
+
+.pick-note--end {
+  text-align: right;
+}
+
+/* ==========================================================================
+   News — the title card
+   ==========================================================================
+   Markup in components/WhatsRolling. A lime sheet with the page's name arced
+   across it and a tag hanging over the top of the type — no picture, no copy, no
+   furniture. It is a title card, and the reason it is one is that everything
+   under it is a list.
+
+   THE ARC IS THE HERO'S, and the three declarations below are the hero's three.
+   The long version of why it is done this way — each letter keeping the x its row
+   gives it, dropped and tilted and never rotated about a far-off origin — is up
+   at .hero-section .warped-text, and it is worth reading before touching --u
+   here. What is different is only the numbers: this headline is set smaller and
+   its two lines sit further apart, so it can afford a deeper curve than the
+   hero's, whose middle letters would otherwise dip into the line below.
+
+   THE BOTTOM EDGE IS ONE WIDE ARC, the site's convex edge — the same shape the
+   preloader's sheets carry and the slider's colour wipe leaves behind it. A flat
+   edge between this sheet and the dark green under it would read as two blocks
+   stacked; the bulge reads as one sheet lying over another, which is what the
+   whole page is made of.
+   ========================================================================== */
+.whats-rolling {
+  /* Above the type, and it is measured against the two things that hang in that
+     space rather than chosen: the menu's tab at the top right, and the masthead's
+     badge in the top middle (--top-mark-h plus --top-inset, in the Top band
+     section below). The product page's opener clears the same pair with the same
+     figure, and the two should move together. */
+  --rolling-pad-top: 9.236vw;
+  --rolling-pad-x: 4vw;
+  --rolling-pad-bottom: 5vw;
+
+  /* How far the sheet's bottom edge bulges over the section under it. Shallow:
+     the design draws this edge as very nearly straight, and the arc is here to
+     stop the join reading as two blocks stacked rather than to be a feature of
+     its own. It is also what the next section's top padding has to clear — see
+     --stick-pad-y on .top-story, which is the one relationship between them. */
+  --rolling-arc: 3.5vw;
+
+  /* The hero's pairing, and the preloader's: dark green written on lime. A
+     fourth green nearly like the other three would read as a mistake rather than
+     as a variation. */
+  --rolling-bg: #b6fe00;
+  --rolling-ink: #013900;
+
+  /* Positioned for the grain below, and lifted over the section under it — which
+     is what makes the arc read as a sheet lying ON the dark green rather than as
+     a shape cut out of it. The masthead is at 13 and stays above. */
+  position: relative;
+  z-index: 1;
+
+  width: 100%;
+  padding: var(--rolling-pad-top) var(--rolling-pad-x) var(--rolling-pad-bottom);
+  background: var(--rolling-bg);
+  color: var(--rolling-ink);
+  text-align: center;
+}
+
+/* THE ARC, HUNG BELOW THE SHEET RATHER THAN CUT OUT OF IT — and the difference
+   is not stylistic, it is the only version of this that works.
+
+   The obvious way is a border-radius on the box: 0 0 50% 50% with the vertical
+   radii at the arc's depth, which is exactly how the preloader's sheets and the
+   slider's colour wipe are cut. Those are FIXED boxes lying over the page, so
+   what shows through the two rounded-off corners is the page — which is the
+   point of them. This is a section in flow, and what shows through is the
+   document's own background: two white notches either side of a lime sheet.
+
+   So the sheet stays a rectangle and the bulge is a separate box hanging off its
+   bottom edge, painted in the same lime and overlapping the section below. The
+   radii here are 100% rather than the depth because this element IS the arc — it
+   is --rolling-arc tall, so half its own height in each corner is the whole of
+   it, and the two meet in the middle as one convex sweep.
+
+   It paints over the lead story because .whats-rolling carries z-index: 1 and is
+   therefore a stacking context of its own; everything inside it, this included,
+   goes over a section whose z-index is auto.
+
+   NO GRAIN ON IT, unlike the sheet above. The texture is on ::before at inset: 0
+   and this is outside that box. At three and a half vw of a colour with no detail
+   in it there is nothing to see; it is worth knowing rather than worth fixing. */
+.whats-rolling::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: var(--rolling-arc);
+  background: var(--rolling-bg);
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  pointer-events: none;
+}
+
+/* The paper grain, the same layer every other sheet on this site carries — it is
+   the only way the sections read as one printed surface. Width-fitted and tiled
+   DOWN rather than stretched, for the reason the hero gives: stretching one tile
+   over a box of a different aspect turns paper into vertical streaking.
+
+   pointer-events: none, because a full-bleed decorative layer must never be what
+   a click lands on. */
+.whats-rolling::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/paper-overlay.webp");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* Positioned, which lifts the type over the grain — a positioned pseudo-element
+   otherwise paints over ordinary content whatever the source order says. Every
+   section on this site that carries the grain makes the same call. */
+.rolling-tag,
+.rolling-warp {
+  position: relative;
+}
+
+/* THE TAG IS THE SLIDER'S CHIP TOO, and for the same reason the lead story's is:
+   it already exists (.tag .h6 / .subhead in the Tape slider block), the pinning
+   section already wears it, and a page that invented a second kind of small label
+   would be a second thing to keep in step with the first.
+
+   Only the palette, the placement and the hold are here. Dark ground with the
+   sheet's own lime knocked out of it, which is this page's inversion of the
+   pairing everywhere else — and the tilt every chip on this site wears, because
+   they are stuck on by hand.
+
+   PARKED AT NOTHING, AND HANDED OVER BY THE ATTRIBUTE, exactly as every split
+   headline on this site is: the flip's `from` is a chip turned past edge-on, and
+   a chip visible before that lands is a page correcting itself in front of the
+   reader. autoAlpha in GSAP writes both of these, so the tween takes the hold over
+   cleanly. The <noscript> in index.tsx lifts it for good if the script is never
+   going to run.
+
+   inline-flex rather than the chip's own inline-block, so the section's
+   text-align: center has something to centre — and so the transform below has a
+   block box to turn. */
+.rolling-tag {
+  --tag-bg: var(--rolling-ink);
+  --tag-ink: var(--rolling-bg);
+
+  display: inline-block;
+  transform: rotate(-1.8deg);
+  font-size: 0.972vw; /* 14px at the design width */
+  opacity: 0;
+  visibility: hidden;
+}
+
+.whats-rolling[data-reveal="live"] .rolling-tag {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* THE HEADLINE. The house voice at the size the design draws it — 15.2vw is
+   219px at the 1440 width, which is what puts ROLLING across the measure the mock
+   gives it.
+
+   LINE-HEIGHT UNDER 1 IS WHAT HOLDS THE BLOCK TOGETHER, the same statement the
+   key visual's headline makes: at 0.8 the type overflows its own line box at each
+   end, so the two rows stack tight and the arc has room to drop the middle
+   letters without them landing on the row below. */
+.rolling-title {
+  font-family: var(--font-heading);
+  font-size: 15.2vw;
+  font-weight: 800;
+  line-height: 0.8;
+  letter-spacing: -0.2vw;
+}
+
+/* The rows. Flex rather than block, for the reason every row of split letters on
+   this site is: .clip below carries overflow: hidden, and an inline-block whose
+   overflow is not visible takes its baseline from its bottom margin edge rather
+   than from the text inside it — which would hang every letter above the baseline
+   and grow each line box by the font's whole descent, pushing the two rows apart
+   for no visible reason. Flex items have no baseline to get wrong.
+
+   justify-content, not the section's text-align: centring text is not something
+   that reaches flex items, and the two rows are different widths. */
+.rolling-title .line {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* The arc's two knobs, on the wrapper rather than on the heading — so the curve
+   can be retuned without touching the type and the type re-set without disturbing
+   the curve. The hero's .warped-text carries the identical pair.
+
+   SHALLOWER THAN THE HERO'S 1.2vw / 7deg, and it was deeper: at 2vw / 9deg the
+   two ends of each row were lifted far enough that WHAT'S read as a smile drawn
+   under the type rather than as a line of type set on a curve — the S in
+   particular came away leaning at an angle the design never asks for. What the
+   design draws is a curve you notice second, after the words. Negate BOTH to arc
+   the other way. */
+.rolling-warp {
+  --arc-drop: 1.1vw;
+  --arc-tilt: 5.5deg;
+
+  /* AND A THIRD, WHICH IS NOT A DEPTH — where the low point of the curve sits,
+     as a fraction of half a row's width. 0 is the middle and a symmetric arc,
+     which is what ROLLING wants and what this row-level default gives it.
+
+     Pushed off centre the parabola is no longer level end to end: the near end
+     falls INSIDE the curve and drops, the far end passes outside it and rises
+     above the baseline (1-u² goes negative past |u| = 1), and each end leans by
+     a different amount because the tilt reads the same shifted u. So it is a row
+     sitting crooked ON its curve rather than a deeper or shallower curve, which
+     is a thing the depth knobs cannot say however they are set. See the override
+     on WHAT'S below, which is the only row that uses it. */
+  --arc-shift: 0;
+}
+
+/* THE FIRST ROW SITS CROOKED, and the design draws it that way: WHAT'S runs
+   uphill to the right, where ROLLING is level end to end. A positive shift is
+   what does it — the W falls inside the curve and the S climbs out past the top
+   of it, so the right end finishes about 1.3vw above the left.
+
+   ON :first-child RATHER THAN ON THE MARKUP because it is a property of the
+   composition and not of the words: the row is crooked because it is the row
+   above, sitting on the shoulder of a longer one. Re-set the copy and it stays
+   true. Everything else about the row — depth, lean, the arc itself — is
+   inherited from above and untouched, which is what keeps this one number
+   readable as "and this row is tipped".
+
+   Dial it toward 0 to bring the row level; past about 0.5 the S leaves the arc
+   far enough that it reads as a letter that has come off rather than as a line
+   that is tipped. */
+.rolling-title .line:first-child {
+  --arc-shift: 0.3;
+}
+
+/* --u runs -1 at the first letter of a row to +1 at the last, so each row curves
+   over its OWN width rather than sharing one curve — which is what stops the
+   short line coming out nearly straight. The drop follows 1-u², a parabola
+   deepest in the middle; the tilt runs linearly with u, so each letter leans with
+   the slope it is standing on. letters() writes --i, the markup writes --letters.
+   --arc-shift slides the whole mapping sideways — see above.
+
+   The transform does not affect layout, so nothing reflows out of the way of it.
+   .clip carries the arc and .char carries the entrance — two elements, because
+   both want the transform property and one cannot hold both. */
+.rolling-title .line .clip {
+  --u: calc(2 * var(--i) / (var(--letters) - 1) - 1 + var(--arc-shift));
+  transform-origin: 50% 100%; /* pivot on the baseline, not the letter centre */
+  transform: translateY(calc(var(--arc-drop) * (1 - var(--u) * var(--u))))
+    rotate(calc(var(--arc-tilt) * var(--u) * -1));
+}
+
+/* Split letters — the boxes. Headroom on three sides and then handed straight
+   back, the hero's manoeuvre: line-height is well under 1 here, so a letter's
+   content box is shorter than the capital standing in it and the mask would shave
+   the tops off. The matching negative margins take that room back out of the
+   layout, so the rows are the size they always were.
+
+   Nothing at the bottom — the mask's lower edge is what the letters slide out
+   through, and it wants to sit tight on the baseline. */
+.whats-rolling .clip {
+  display: block;
+  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  overflow: hidden;
+  padding: 0.2em 0.06em 0;
+  margin: -0.2em -0.06em 0;
+}
+
+/* Parked, and handed over exactly as the hero's are: the stylesheet holds the
+   letters under their masks until WhatsRolling/reveal.ts sets data-reveal, which
+   lifts this and lets GSAP own the whole transform. A percentage translate coming
+   from CSS is reported as resolved px, and GSAP would ADD its yPercent to it and
+   leave every letter a full height low.
+
+   130 for the reason the hero gives: capitals overshoot their own box, so a
+   letter moved exactly its own height still leaves a hairline of tops at the
+   mask's edge. REVEAL.HIDDEN is the same figure and the two have to agree. */
+.whats-rolling .char {
+  display: block;
+  transform: translateY(130%);
+}
+
+.whats-rolling[data-reveal="live"] .char {
+  transform: none;
+}
+
+/* Thirteen letters flying in from nowhere and a chip turning over are exactly
+   what this setting is asking about. Here as well as in reveal.ts, so it also
+   covers the window before hydration, when the stylesheet is holding both on its
+   own — every other section on this site makes the same pair of statements. */
+@media (prefers-reduced-motion: reduce) {
+  .whats-rolling .char {
+    transform: none;
+  }
+
+  .whats-rolling .rolling-tag,
+  .whats-rolling .rolling-note {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* ==========================================================================
+   News — the lead story
+   ==========================================================================
+   Markup in components/TopStory. THE GEOMETRY IS NOT HERE: this section is the
+   closing key visual's arrangement, and every length it takes is declared once in
+   the Make it stick block above, which names .top-story alongside .make-it-stick
+   in each of its rules. Read that section's header note first — it says what may
+   and may not be written here.
+
+   What IS here is the two things that are genuinely this page's: the colour pair,
+   inverted, and the card's furniture — a chip, a date and an arrow, which are
+   content rather than layout. The .story-* rules below are shared with the nine
+   cards in the index further down, which carry the same foot.
+   ========================================================================== */
+.top-story {
+  /* INVERTED. The key visual writes lime on dark green because it closes a lime
+     page; this sits on the news page's dark green and is a card of paper on it.
+
+     --stick-bg AND --index-bg BELOW MUST AGREE. The lead story and the index are
+     one sheet with a row of cards lying on it, and the join between them is a
+     hard full-width line the moment they differ by a shade. They cannot share one
+     custom property — neither section contains the other — so they are two
+     declarations of one colour, which is the same bargain .make-it-stick strikes
+     with --stick-arc and .site-footer with --footer-arc. */
+  --stick-bg: #0b2f07;
+  --stick-card-bg: #fdfbe8;
+  --stick-ink: #0d470c;
+
+  /* THE ROW, STRAIGHT OFF THE REDLINES — 697 x 502 for the photograph, a 12px
+     seam, a 675px card, and 20px of margin either side of the lot. The key
+     visual's own figures are a 578px square with 128px margins, which is a
+     different composition entirely: that one is a pair of objects sitting in the
+     middle of a page, this one is a banner that all but touches the edges.
+
+     THE CARD'S WIDTH IS STILL NOT DECLARED, and that is the arrangement's rule
+     rather than an omission: the photograph is a fixed column and the card takes
+     what is left, so the pair spans the padding box exactly and 46.9vw is a
+     figure nobody has to keep equal to the difference of the other two. */
+  --stick-pad-x: 1.389vw; /* 20px */
+  --stick-shot: 48.611vw; /* 697px */
+  --stick-gap: 0.833vw; /* 12px */
+  --stick-card-h: 34.861vw; /* 502px */
+
+  /* AND THE PHOTOGRAPH IS NOT SQUARE HERE. The key visual's artwork is 608x608
+     and its frame is an aspect-ratio: 1; this box is landscape, so the ratio is
+     given as the two figures above rather than a third number that would have to
+     be kept equal to their quotient. See .top-story .stick-shot. */
+
+  /* A rounded rectangle rather than the key visual's 175px squircle. That radius
+     is what stops a pair of BIG boxes reading as two cards; at this size it would
+     eat the photograph's corners. 46px is what the design draws. */
+  --stick-radius: 3.194vw;
+
+  /* AND IT LIES STRAIGHT. Nothing else on this site does — the key visual's frame
+     is put down by hand at 2.966deg and so is every prop on the pinboard — but
+     this is a masthead-width banner butted to both margins, and a banner that
+     leans is a banner that has slipped. The things put down by hand on this page
+     are the pictures INSIDE the cards below, which is where the gesture belongs. */
+  --stick-tilt: 0deg;
+
+  /* NO TOLL TO PAY HERE. --stick-arc is the room the footer takes back out of
+     the key visual, which the footer rises into; this section has the whole index
+     under it and nothing is reaching up into its padding. */
+  --stick-arc: 0vw;
+
+  /* Tighter than the key visual's 9.375vw above and below: that section is the
+     last thing on its page and is meant to breathe, this one has two more screens
+     under it and a page that pauses this long in the middle reads as ending.
+
+     AND IT HAS TO CLEAR THE ARC. The title card's bottom edge bulges
+     --rolling-arc (3.5vw) over the top of this section, so the air above the row
+     is this figure minus that at the deepest point and this figure at the edges.
+     Keep it comfortably clear of 3.5 — at 7 there is half of it left in the
+     middle, which is where the photograph's corner is. */
+  --stick-pad-y: 7vw;
+}
+
+/* Landscape, where the key visual's frame is square — the two figures it is cut
+   from are the row's own, so the picture's box and the boxes either side of it
+   cannot drift apart. aspect-ratio rather than a height, so it is still the WIDTH
+   that decides the frame and the card beside it still matches by construction. */
+.top-story .stick-shot {
+  aspect-ratio: 697 / 502;
+}
+
+/* THE CARD'S CONTENTS, where .stick-card is the box. Set to the left rather than
+   centred and stretched rather than middled, which is the whole difference: the
+   key visual's card holds one centred line of type, and this holds a chip, a
+   title and a foot rule that each start at the same left edge.
+
+   AND IT STACKS FROM THE TOP, where the key visual's box spreads its two ends
+   apart. Three items under space-between would hang the title in the middle of a
+   card two thirds of it empty; the chip and the title sit together at the top
+   instead, the way the design sets them, and the foot is pinned to the bottom by
+   its own margin-top: auto — which is what keeps it there however many lines the
+   title runs to. */
+.story-card {
+  /* HOW FAR APART THE LINES OF THIS CARD ARE, and it is declared on the card
+     rather than on the title because BOTH of them read it: the copy takes it as
+     its line-height and the paper behind takes it as the pitch of its rules. A
+     custom property inherits down and not sideways, so a figure written on the
+     title would be invisible to the sibling ruling the box it sits in.
+
+     THE H2'S OWN LEADING, not a copy of it — see --h2-line in the Tokens block.
+     The title is set at the site's h2 and the rules are the paper that type is
+     written on, so the two are one figure by construction: re-set the level and
+     the card re-rules itself. Type the leading out again here instead and it is
+     copy floating between its own lines the first time the heading moves. */
+  --story-line: var(--h2-line);
+
+  /* THERE USED TO BE A --story-rule-top HERE, and its going is the good news in
+     this block. It was the distance from the card's top edge down to the title's
+     first line — the sum of this card's padding, the chip's height and the
+     title's margin, none of which CSS can add up — so it was measured by eye and
+     carried the warning that it had to be re-checked after any of those three
+     moved. The ruling is drawn by the title itself now (see .story-title), which
+     knows where its own first line is without being told. */
+
+  /* THE SIDE PADDING, PULLED OUT AS A NUMBER because the box below reads it and
+     so does the foot rule. Written once so they cannot drift. */
+  --story-pad-x: 4.792vw;
+
+  position: relative; /* the chip, title and foot stack against this box */
+  overflow: hidden; /* so they stop at the rounded corner */
+  justify-content: flex-start;
+  align-items: stretch;
+  text-align: left;
+  /* It is an <a> — the whole card is the link to the story. Only the underline
+     is turned off; the colour is .stick-card's already and is the card's rather
+     than a link's, which is the point of a card that is one. */
+  text-decoration: none;
+  /* Tighter than the key visual's, because there are three things in this box
+     rather than two and the type inside is a fraction of the size. */
+  padding: 4.167vw var(--story-pad-x) 4.167vw;
+}
+
+/* Positioned, which is a habit rather than a need now that the ruling is the
+   title's own background — but it costs nothing and it is what keeps this card's
+   three children in one stacking story. */
+.story-chip,
+.story-title,
+.story-foot {
+  position: relative;
+}
+
+/* THE CHIP IS THE SLIDER'S, inherited whole — same shape, same perforation down
+   its left edge, same pair of variables. It is a component the site already has
+   (.tag .h6 / .subhead, up in the Tape slider block, which says so at length),
+   and the pinning section wears the same one; the design's HIGHLIGHT label is
+   that object and not a new one.
+
+   Only the palette and the placement are this card's. The colours go on
+   --tag-bg / --tag-ink rather than on background / color, because those are the
+   two variables the shared rule already reads and the perforation dots take
+   currentColor off the same pair — override the declarations instead and the
+   dots stay the slider's yellow.
+
+   align-self, because the card stretches its children and a chip is the width of
+   its own label. The tilt is the one every chip on this site wears: they are
+   stuck on by hand. */
+.story-chip {
+  --tag-bg: #ded7b5;
+  --tag-ink: var(--stick-ink);
+
+  align-self: flex-start;
+  transform: rotate(-1.4deg);
+}
+
+/* THE TITLE — the site's h2, which is what the .h2 class on the element says.
+   The three declarations here are not a second copy of that level and they are
+   not an override of it either: they read the very tokens .h2 reads, and they
+   exist only to settle which of two classes on one element wins.
+
+   The heading also wears .stick-headline, which is how the shared reveal finds
+   its letters (MakeItStick/reveal.ts collects .stick-headline .char). That class
+   carries the KEY VISUAL'S size — 10.069vw of display type — and it is a bare
+   class like .h2, so the two tie on specificity and the later one in this file
+   takes it. .stick-headline is later. So the level has to be re-asserted after
+   it, and this is the place; drop these three and the lead story's title comes
+   out at a hundred and forty five pixels.
+
+   The margin is this card's own and has nothing to do with the level.
+
+   AND THE TITLE OWNS THE RULING, which is what fixes where it lands. The lines
+   are drawn by ::before below; what matters here is that they are hung off THIS
+   element rather than off the card. The card cannot say where its headline's
+   first line is — the answer is its own padding plus the chip's height plus the
+   title's margin, which CSS has no way to add up — so the ruling used to carry a
+   --story-rule-top measured by eye, and it was a line out: the first rule sat
+   ABOVE the first line, ruling nothing. Hung off the title there is nothing to
+   measure. Its box top IS the first line box top. */
+.story-title {
+  /* Across: how far apart the dots in a rule are. */
+  --story-dot: 0.42vw;
+
+  /* HOW MANY RULES, and it is a count of lines rather than the number of lines
+     the headline happens to run to. The copy is six lines' worth of ruled paper
+     and the headline is written on as much of it as it needs — which is how a
+     notepad works, and it means the card does not visibly change character when
+     an editor writes a title that wraps to three lines instead of four. */
+  --story-rules: 6;
+
+  /* The air between a line of type and the rule under it. In em, so it is a
+     proportion of the headline and stays right if the level is re-set. Sitting
+     the dots hard on the line box bottom put them close enough to the capitals
+     to read as an underline rather than as paper showing through. */
+  --story-rule-gap: 0.2em;
+
+  /* Its own stacking context, so the ruling's z-index: -1 below means "behind
+     this heading's letters" and not "behind the card". Without it the negative
+     index escapes to the nearest ancestor that HAS a context and the dots go
+     under the cream, which is to say they vanish. */
+  isolation: isolate;
+
+  font-size: var(--h2-size);
+  line-height: var(--story-line);
+  letter-spacing: var(--h2-track);
+  margin: 1.5vw 0 0;
+}
+
+/* THE RULES. A notepad's dotted lines, at exactly the title's line spacing so
+   the copy is written ON them.
+
+   THE TILE. A dot in a cell --story-dot wide and --story-line tall, repeated.
+   Across, the cells make a dotted line; down, the cells ARE the line boxes —
+   --story-line is the title's line-height a few lines up, so the pitch cannot
+   drift from the leading it is meant to match. The dot sits at 50% 100%, the
+   BOTTOM of its cell, which is what puts each rule under its line rather than
+   through it. Radial dots rather than a dashed border, because a border can only
+   be on an edge and these are ruled all the way down a box.
+
+   A PSEUDO-ELEMENT AND NOT THE TITLE'S OWN BACKGROUND, and the gap is the reason.
+   An element background tiles from the box's top edge, so the dots can only ever
+   land ON the line box bottoms — push them down by --story-rule-gap with
+   background-position and the repeat brings a stray row up into the top of the
+   first line, because an infinite tiling has no first tile to offset. A box that
+   STARTS --story-rule-gap down has no row above it to bring back. The same box
+   ending at --story-rules cells is what fixes the count.
+
+   OUT OF FLOW, so none of this touches layout: six lines of ruling under a
+   four-line headline does not push the date down or change the card's height.
+   The old full-card layer had that property too and it is worth keeping.
+
+   z-index behind the letters — a positioned pseudo-element otherwise paints OVER
+   its parent's text, and dots crossing the capitals is the one thing this must
+   not do. See isolation on the title, which is what keeps -1 local.
+
+   THE COLUMN AND NOT EACH LINE, on the width. A headline wraps ragged and the
+   last line here is a third of the widest; ruling each line to its own length
+   would need one element per line and would draw a staircase down the card. A
+   notepad's rules are one length. */
+.story-title::before {
+  content: "";
+  position: absolute;
+  top: var(--story-rule-gap);
+  left: 0;
+  right: 0;
+  height: calc(var(--story-rules) * var(--story-line));
+  background-image: radial-gradient(
+    circle at 50% 100%,
+    rgba(13, 71, 12, 0.26) 0.045vw,
+    transparent 0.045vw
+  );
+  background-size: var(--story-dot) var(--story-line);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* THE WORDS, and this is the one structural difference from every other headline
+   on the site.
+
+   letters() gives a row of flex boxes, which cannot break — right for a headline
+   whose line breaks are set by design, wrong for a title of whatever length an
+   editor writes. words() puts each word in its own inline-flex box instead: the
+   letters row up inside it, the line breaks BETWEEN the boxes exactly where the
+   unsplit text would have broken, and the real spaces between them carry the word
+   spacing. The hero's cardboard copy is set the same way, off the same helper.
+
+   align-items so the letters sit on the line rather than on the box's top, which
+   an inline-flex would otherwise do the moment one .clip is taller than another. */
+.story-title .word {
+  display: inline-flex;
+  align-items: flex-end;
+}
+
+/* THE FOOT — the date at one end and the mark at the other. Shared with the nine
+   cards in the index below: it is the same rule on the same kind of object, and
+   two copies of it would be two places for the spacing to drift.
+
+   margin-top: auto rather than a fixed gap, so the foot is pinned to the bottom
+   of whatever box it is in and the title above it can be any number of lines. */
+.story-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1vw;
+  margin-top: auto;
+  padding-top: 1.6vw;
+}
+
+/* THE DATE. The day set large and the rest set small under it, which is the
+   design's rule everywhere a date appears on this page. A flex column rather than
+   two blocks so the two lines sit tight without the small one's leading pushing
+   them apart.
+
+   ONE OBJECT AT TWO SIZES, and everything below is arranged so that changing one
+   of them cannot reach the other. The lead story's date is set at 70px and the
+   nine cards' at 60px, and that used to mean the card restated `font-size` and
+   inherited everything else — which worked exactly until the day's leading and
+   tracking were given as LENGTHS. A 60px line box and 2.1px of tracking are right
+   for a 70px digit and wrong for anything else, and the card had no way to know
+   it was carrying them: it looked correct in this file and broke on the page.
+
+   So the size is the only thing stated in absolute units, and it is stated ONCE
+   per place, through the two properties below. The leading and the tracking are
+   em — the day's line-height is 60/70 and both trackings are -2.1/70 and
+   -0.475/16, which come out the same — so they follow whatever size they are
+   given and there is nothing left for a size change to leak.
+
+   Set --date-day (and --date-month if it ever differs) where the date stands.
+   Never restate font-size, line-height or letter-spacing on .story-day or
+   .story-month again; that is the seam this block exists to keep. */
+.story-date {
+  --date-day: 4.861vw; /* 70px at the design width */
+  --date-month: 1.111vw; /* 16px */
+
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-heading);
+}
+
+/* ALIGNMENT IS NOT SHARED, and it is the second half of the same lesson. Where
+   the two lines sit against each other is a layout decision belonging to the box
+   the date is standing in, not to the date — so it is stated at both ends rather
+   than declared here and undone there. The lead story centres its pair under the
+   card's own measure; the cards below range theirs left against the rule the
+   sheet is ruled with. */
+.story-card .story-date {
+  align-items: center;
+}
+
+.story-day {
+  font-size: var(--date-day);
+  font-weight: 800;
+  line-height: 0.857; /* 60/70 — the design's 85.714% */
+  letter-spacing: -0.03em;
+}
+
+.story-month {
+  font-size: var(--date-month);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+/* THE MARK — the same arrow the menu prints on its rows, on the same kind of
+   disc, and it makes the same move. See .menu-arrow above, which is where the
+   reasoning lives: the arrow swings from north-east round to due east on hover,
+   so it stops pointing away and starts pointing AT the thing it belongs to.
+
+   The disc is lime here rather than the menu's, because it is printed on paper
+   rather than on the menu's own sheet — but the ink is the card's, so the mark
+   reads as part of the card and not as a control dropped onto it. */
+.story-arrow {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 2.153vw; /* 31px at the design width */
+  height: 2.153vw;
+  border-radius: 50%;
+  background: #b6fe00;
+  color: var(--stick-ink, #013900);
+}
+
+/* On the svg and not on the disc, the menu's division exactly: the disc is what
+   a reveal would scale, and whichever of the two was written second would win.
+
+   Same overshoot curve as the menu's and as the slider's rolls, so the arrow
+   arrives with a little swing rather than sliding into place. Sized independently
+   of the disc — this is the ink on the badge, not the badge, and shrinking it
+   only widens the margin around it. */
+.story-arrow svg {
+  width: 0.76vw;
+  height: 0.76vw;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* THE WHOLE RIGHT-HAND SIDE IS THE TARGET, not the disc: the design has the card
+   respond, and an arrow that only turns when the pointer is on the arrow is a
+   thing nobody finds. Scoped to the card rather than the row, so crossing the
+   photograph on the left does not move it.
+
+   The index's cards below take the same rule against their own hover. */
+.story-card:hover .story-arrow svg,
+.story-card:focus-visible .story-arrow svg {
+  transform: rotate(45deg);
+}
+
+/* A mark spinning under the pointer is what this setting is asking about. The
+   arrow is legible standing still — it is the same glyph either way. */
+@media (prefers-reduced-motion: reduce) {
+  .story-arrow svg {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
+   News — the index
+   ==========================================================================
+   Markup in components/NewsIndex. A rule of three tabs down the left and a wall
+   of nine cards on the right, on the same dark green the lead story sits on — the
+   two are one sheet, which is why neither declares a background of its own beyond
+   this section's.
+
+   FILTERING IS DONE HERE AND NOWHERE ELSE. Picking a tab writes data-filter on
+   the section (NewsIndex/filter.ts) and the one rule at the foot of this block
+   hides every card that disagrees with it. No script keeps a list of which card
+   is in which tab, nothing re-renders, and all nine stories stay server-rendered
+   markup.
+   ========================================================================== */
+.news-index {
+  /* STRAIGHT OFF THE REDLINES. 20px of margin either side, a 376px rule column,
+     a 60px gutter to the wall, and 313px cards with 15px between them — which
+     comes back to the 1440 width exactly and is why none of these is a rounded
+     guess. */
+  --index-pad-x: 1.389vw; /* 20px */
+  --index-pad-y: 4vw;
+  --index-rule: 26.111vw; /* 376px */
+  /* Between the rule and the wall. NOT the same figure as the gap between two
+     cards, and that is the design's call rather than an oversight: the cards are
+     a grid and want to read as one block, the rule is a different thing standing
+     beside it and wants air. */
+  --index-gutter: 4.167vw; /* 60px */
+  --index-gap: 1.042vw; /* 15px */
+
+  /* --index-bg MUST EQUAL --stick-bg ON .top-story. The lead story and this are
+     one sheet with a row of cards lying on it, and the join is a hard full-width
+     line the moment they differ by a shade. They cannot share one custom property
+     — neither section contains the other — so it is two declarations of one
+     colour. */
+  --index-bg: #0b2f07;
+  --index-ink: #A7EF00;
+  /* The tabs that are NOT chosen. A colour rather than an opacity, and a dark
+     green rather than a dimmed lime: the design has them sitting just above the
+     ground, barely legible, which is the point — they are the two other things
+     you could be reading, not two things competing with the one you are. */
+  --index-tab-off: #1a5211;
+  /* The rule under a tab, and only that — the cards rule themselves in
+     --index-card-rule on .index-card-inner, because a lime line on cream is a
+     different problem from a lime line on dark green and they were never the
+     same value. */
+  --index-rule-ink: #A7EF00;
+
+  /* THE CARD'S OWN COLOURS ARE NOT HERE ANY MORE, and their going is worth a
+     line. They used to be three declarations on this section, which was right
+     while the index was the only place a card stood; a card now stands at the
+     foot of every story as well (components/RelatedNews), and a palette
+     declared on one section is a palette the other has to declare again. They
+     are on .index-card-inner instead — the element they describe — so the card
+     carries its own paint wherever it is put down and no section has to know
+     what colour a card is. */
+
+  position: relative;
+  width: 100%;
+  /* The footer rises into whatever is above it — margin-top: calc(--footer-arc *
+     -1) — so its corners would otherwise land --footer-arc above this section's
+     bottom edge, inside the last row of cards. This is that depth handed back, and
+     IT MUST EQUAL --footer-arc; the key visual pays the same toll with --stick-arc
+     and the pinning section with --giant-tail, for the same reason and with the
+     same warning. */
+  --index-arc: 9vw;
+  padding: var(--index-pad-y) var(--index-pad-x)
+    calc(var(--index-pad-y) + var(--index-arc));
+  background: var(--index-bg);
+  color: var(--index-ink);
+}
+
+/* NO PAPER GRAIN ON THE DARK GREEN, and it is the one sheet on the site without
+   it. The overlay is a photograph of creased paper — light on the creases, dark
+   in the folds — and it was written for the lime sheets, where the ground is
+   bright enough that both halves of it land as texture. On a green this dark
+   only the light half shows: the creases come through as a grey haze lying over
+   the sheet, and the folds have nowhere to go. What reads as paper at the top of
+   the page reads as a dirty screen here.
+
+   IT IS TWO SECTIONS AND THEY HAD TO GO TOGETHER. The lead story above is the
+   same colour by contract (--stick-bg on .top-story, and the note by --index-bg
+   above), so they are one sheet as far as the eye is concerned — grain on one
+   and not the other would put a hard horizontal line across the page at exactly
+   the join those two declarations exist to hide. .top-story is therefore off the
+   .make-it-stick grain rule as well; see the note there.
+
+   The `position: relative` on .index-row and its neighbours is left standing.
+   It was put there to lift the content over this layer and now lifts it over
+   nothing, which costs a stacking context and no paint — and it is what the rest
+   of the site's sections do, so taking it out would make this one the odd one
+   for a reason nobody could see. */
+
+/* Positioned, which lifts the row over the grain — a positioned pseudo-element
+   otherwise paints over ordinary content whatever the source order says. */
+.index-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--index-rule) 1fr;
+  gap: var(--index-gutter);
+  align-items: start;
+}
+
+/* --------------------------------------------------------------------------
+   The rule
+   -------------------------------------------------------------------------- */
+
+/* Three tabs stacked, set in the house voice at display size — which is what they
+   are on this page: not navigation tucked into a corner but the only thing to do
+   here besides read, and the design sets them nearly as large as a headline.
+
+   sticky, so the rule stays beside the wall as it is scrolled past. The offset
+   clears the masthead's badge, which is fixed to the top of the document and
+   would otherwise be what the first tab slid under. */
+.index-filters {
+  position: sticky;
+  top: 8vw;
+  display: flex;
+  gap: 1.042vw;
+  flex-direction: column;
+  padding-left: unset;
+}
+
+/* A bare box, full width of the column so its rule runs the whole way. The button
+   reset is not global on this site, so the type, the colour and the cursor are
+   all said here — and text-align: left because a button centres its content by
+   default and these are set against a rule.
+
+   THE RULE IS DRAWN AND NOT A BORDER, and it has to be. `border-bottom: 1px
+   dotted` was what this was, and the trouble with it is that a dotted border has
+   exactly one dial: the dots are as wide as the border and the gap between them
+   is the UA's business — Blink lays them out square and touching, Gecko does not
+   quite agree, and neither will take a number. Thicker dots therefore arrive
+   welded into a dashed line, and there is no property that says otherwise.
+
+   A repeated radial-gradient says both things instead. The tile is one pitch
+   wide and one dot tall, laid along the bottom edge; `closest-side` makes the
+   circle exactly as wide as the tile is tall, so --index-dot IS the diameter and
+   --index-dot-gap IS the distance from one dot's centre to the next. Two
+   independent numbers, which is the whole point of the change.
+
+   The stop lands at 96% rather than 100% because a hard edge on a circle this
+   small paints as a stepped octagon; the last few per cent are a feather, not a
+   fade — at 3px it is well under half a pixel and does nothing but take the
+   stairs off.
+
+   IT RULES THE COLUMN AND NOT THE WORD, which is why it is painted here on the
+   button and not on the label inside it. It was briefly the other way — as wide
+   as the letters, ragged right, an underline rather than a rule — and the rule is
+   the better read: this is a stack of three, and three lines of three different
+   lengths turn the left column into a jagged edge competing with the wall of
+   cards beside it. One length all the way down is what makes them a set.
+
+   So the width comes free from the button, which is the full width of the column
+   because it is the hit area and has to be.
+
+   IT IS A BACKGROUND, so the button's `background: none` had to go. Nothing else
+   here paints one, and the shorthand would have wiped this on the next person to
+   reset it — hence background-image, longhand and beside the properties that
+   size it. */
+.index-tab {
+  /* The dot, and the distance between dots — 3px and 10px at the 1440 design
+     width. The gap is better than three times the dot on purpose: at anything
+     under about twice, the dots close up into a dashed line and the whole reason
+     for drawing this by hand is gone. */
+  --index-dot: 0.208vw;
+  --index-dot-gap: 0.694vw;
+
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55vw;
+  width: 100%;
+  padding: 0 0 0.694vw;
+  border: 0;
+  background-image: radial-gradient(
+    circle closest-side,
+    var(--index-rule-ink) 96%,
+    transparent
+  );
+  background-size: var(--index-dot-gap) var(--index-dot);
+  background-repeat: repeat-x;
+  background-position: left bottom;
+  color: var(--index-tab-off);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+/* The last tab is not ruled off. Under the first two the rule is a separator and
+   is doing work; under the third there is nothing to separate it from, so it is
+   a line drawn across the bottom of the column for its own sake — and at this
+   weight that line is heavy enough to read as the section's floor, which is a
+   thing this section does not have.
+
+   On the list item rather than on the button, so it is a statement about
+   POSITION and not about the tab: :last-child on .index-tab would be true of
+   every one of them, since each is the only child of its own <li>. */
+.index-filters li:last-child .index-tab {
+  background-image: none;
+}
+
+.index-tab:hover,
+.index-tab:focus-visible,
+.index-tab[data-on] {
+  color: var(--index-ink);
+}
+
+li::marker {
+   font-size: 0;
+}
+
+/* The label. Flex for the reason every row of split letters on this site is:
+   .clip carries overflow: hidden, and an inline-block whose overflow is not
+   visible takes its baseline from its bottom margin edge rather than from the
+   text inside it, which would drop the whole row by the font's descent. */
+.index-tab-label {
+  display: flex;
+  align-items: flex-end;
+  font-family: var(--font-heading);
+  font-size: 6.25vw;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 0.7;
+  letter-spacing: -0.188vw;
+}
+
+/* The count, raised beside the word — a superscript in brackets, which is how the
+   design prints it. align-self at the start is what raises it: the row's items
+   are bottom-aligned for the letters' sake, and this one opts out. */
+.index-tab-count {
+  align-self: flex-start;
+  margin-top: 0.3vw;
+  font-family: var(--font-heading);
+  font-size: 1.111vw; /* 12px at the design width */
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+/* Split letters — the boxes. The same headroom every headline on this site gives
+   its masks, handed straight back by the matching negative margins so the rows
+   are the size they always were.
+
+   BOTH SECTIONS THAT STAND CARDS UP, here and at the foot of a story, because
+   the letters being masked are partly the CARDS' — every title in one is split
+   to words and to letters — and a rule scoped to one section would leave the
+   other's boxes unmasked. The heading of the related rail rides along on the
+   same declarations, which is what it wants: it is the same voice. */
+.news-index .clip,
+.related-news .clip {
+  display: block;
+  flex: 0 0 auto;
+  overflow: hidden;
+  padding: 0.2em 0.06em 0;
+  margin: -0.2em -0.06em 0;
+}
+
+/* Parked, and handed over by the attribute exactly as the hero's letters are —
+   see .whats-rolling .char above, which carries the full note. */
+.news-index .char,
+.related-news .char {
+  display: block;
+  transform: translateY(130%);
+}
+
+.news-index[data-reveal="live"] .char,
+.related-news[data-reveal="live"] .char {
+  transform: none;
+}
+
+/* --------------------------------------------------------------------------
+   The wall
+   -------------------------------------------------------------------------- */
+
+/* Three across, and the rows are sized by the cards' own aspect. auto-fill would
+   let the grid drop to two on a narrow window — which it should eventually, but
+   every length on this page is in vw and the whole composition scales rather than
+   reflowing, so a fixed three is what actually matches the rest of the site. */
+.index-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--index-gap);
+}
+
+/* PARKED AT NOTHING, AND HANDED OVER BY THE ATTRIBUTE, the same hold the title
+   card's tag takes: the blur-up's `from` is a card out of focus and a little low,
+   and a card that is visible before that lands is a page correcting itself in
+   front of the reader. autoAlpha in GSAP writes both of these, so the tween takes
+   the hold over cleanly.
+
+   The <noscript> in index.tsx lifts it for good if the script is never going to
+   run — nine invisible cards is the worst failure this page has. */
+.index-card {
+  /* 313 x 420 at the design width. An aspect rather than a height, so the row
+     heights follow the column width and the grid stays the shape the design draws
+     at any window. */
+  aspect-ratio: 313 / 420;
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Released by either of the two sections that stand cards up. The hold above is
+   unscoped — it is a fact about a card, which is parked wherever it is put down
+   — so the release has to name every root that runs the blur-up, or a card on a
+   page nobody thought about stays invisible for good. */
+.news-index[data-reveal="live"] .index-card,
+.related-news[data-reveal="live"] .index-card {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* THE FILTER, and it is one rule. data-filter is written on the section by
+   NewsIndex/filter.ts and nothing else; a card whose own data-kind disagrees with
+   it leaves the grid. display: none rather than opacity, so the remaining cards
+   actually reflow into the gaps — which is the point of filtering a wall. */
+.news-index[data-filter="event"] .index-card:not([data-kind="event"]),
+.news-index[data-filter="news"] .index-card:not([data-kind="news"]) {
+  display: none;
+}
+
+/* The card. A sheet of paper with the type at the top, the date at the foot and
+   the photograph laid into the bottom corner over both.
+
+   overflow: hidden is what makes the corner do its job: the picture is turned off
+   square and hung past the right and bottom edges, and this is what cuts it off
+   along the card's own radius rather than letting it stand out of the box.
+
+   THE VERTICAL RULES ARE THE CARD'S TWO PSEUDO-ELEMENTS, drawn a shade inside
+   each edge — the margins of a ruled sheet. They are the reason nothing else in
+   this block may claim ::before or ::after on this element. */
+.index-card-inner {
+  --index-card-pad: 1.736vw; /* 22px */
+  --index-card-margin: 1.042vw; /* 15px — where the vertical rules stand */
+
+  /* THE CARD'S OWN PAINT, declared on the card rather than on a section — see
+     the note where it used to live, up in .news-index. A card is one object with
+     one palette, and it is now put down in two places: on the index's wall and
+     on the rail at the foot of a story. Anything inside it reads these by
+     inheritance, which is why the kind's rule and the vertical margins can be
+     drawn without either knowing where the card is standing. */
+  --index-card-bg: #fdfbe8;
+  --index-card-ink: #0d470c;
+  --index-card-rule: #ded7b5;
+
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-inline: var(--index-card-pad);
+  padding-block: 0.833vw 1.667vw;
+  border-radius: 1.25vw;
+  background: var(--index-card-bg);
+  color: var(--index-card-ink);
+  /* It is an <a> — the whole card is the link to the story. Only the underline
+     is turned off; the ink above is the card's own and stays the card's. */
+  text-decoration: none;
+  /* The site's cast shadow — hard rather than blurred, see --drop-ink in :root. */
+  filter: drop-shadow(0.15vw 0.22vw var(--drop-blur) var(--drop-ink));
+}
+
+/* .index-card-inner::before,
+.index-card-inner::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dotted var(--index-card-rule);
+  pointer-events: none;
+} */
+
+.index-card-inner::before {
+  left: var(--index-card-margin);
+}
+
+.index-card-inner::after {
+  right: var(--index-card-margin);
+}
+
+/* The kind, centred at the top over its own dotted rule — the same word the tab
+   beside it reads. Small, letterspaced, and in a lighter ink than the title: it
+   is a label on the sheet, not the first line of it. */
+.index-kind {
+  position: relative;
+  z-index: 1;
+  padding-bottom: 0.7vw;
+  border-bottom: 1px dotted var(--index-card-rule);
+  font-size: 1.111vw;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.033vw;
+  color: #DED7B5;
+  text-transform: capitalize;
+  text-align: center
+}
+
+/* THE TITLE, AND IT IS THE BODY FACE — the one title on this site that is not set
+   in the condensed display voice, and not by accident. The lead story above is a
+   poster; this is a sentence at 19px that somebody reads. Set the headline face
+   at this size and it stops being a voice and starts being a caption squeezed
+   narrow.
+
+   Sentence case for the same reason, and it is the copy's own case rather than a
+   text-transform — src/data/news.ts writes it as it paints, which is the site's
+   convention everywhere. */
+.index-title {
+  position: relative;
+  z-index: 1;
+  margin: 1.042vw 0 0;
+   font-family: var(--font-body);
+   font-size: 1.667vw;
+   font-weight: 800;
+   line-height: 1;
+   letter-spacing: -0.017vw;
+}
+
+/* Each word its own inline box, so the line breaks BETWEEN words exactly where
+   the unsplit text would have broken — see words() in components/letters, and
+   .story-title .word, which is the same statement for the lead story's headline.
+   align-items so the letters sit on the line rather than on the box's top. */
+.index-title .word {
+  display: inline-flex;
+  align-items: flex-end;
+}
+
+/* The mark, under the title and set to the left — where the lead story's sits in
+   the opposite corner. It is .story-arrow as well, so the disc, the ink and the
+   swing on hover are all the shared rule; this is only its size and its place. */
+.index-arrow {
+  position: relative;
+  z-index: 1;
+  align-self: flex-start;
+  margin-top: 1vw;
+  width: 1.736vw; /* 25px at the design width */
+  height: 1.736vw;
+  color: var(--index-card-ink);
+}
+
+.index-arrow svg {
+  width: 0.6vw;
+  height: 0.6vw;
+}
+
+/* The date, pinned to the foot by its own auto margin so the row of dates is
+   level across three cards whose titles are different lengths. Its rule runs the
+   full width of the card's margins and is then covered by the picture, which is
+   exactly what the design draws — the sheet is ruled all the way across and the
+   photograph is lying on it. */
+.index-date {
+  position: relative;
+  z-index: 1;
+  /* Ranged left, where the lead story's is centred — see .story-card .story-date
+     for why alignment is stated at both ends rather than shared. */
+  align-items: flex-start;
+  align-self: flex-start;
+  margin-top: auto;
+  padding-top: 0.9vw;
+  width: calc(100% + var(--index-card-pad) - var(--index-card-margin));
+}
+
+/* THE CARD'S DATE — one number, and the small line under it is the lead story's
+   own. The day drops from 70px to 60px because the card is a fifth of the lead's
+   width; the month does not move, because a label that small stops being legible
+   before it stops being in proportion, and the design keeps it at one size
+   wherever it appears.
+
+   font-size and nothing else. The leading and the tracking come from .story-day
+   in em and follow this figure on their own — see the note there, which is the
+   whole reason this rule is one line. */
+.index-date {
+  --date-day: 4.167vw; /* 60px at the design width */
+}
+
+/* THE PICTURE, LAID INTO THE CORNER BY HAND. Anchored to the bottom-right, turned
+   off square, and hung past both edges so it is CUT by the card rather than
+   fitted to it — which is the difference between a photograph lying on a sheet
+   and a thumbnail in a slot.
+
+   The angle is the design's own. It is a `rotate` and not a `transform`, so the
+   two never contend: nothing here reads or writes either, but the tape inside
+   uses transform for its own lean and keeping them on separate properties means
+   neither has to know about the other.
+
+   THE OVERHANG IS WHY IT MAY NOT BE CLIPPED HERE. overflow is the CARD'S, so the
+   corner that cuts this is the rounded one; a clip on this box would cut a
+   straight-edged rectangle out of the middle of the card instead. */
+.index-shot {
+  --index-shot-tilt: -10.199deg;
+
+  position: absolute;
+  right: -4%;
+  bottom: -6%;
+  width: 72%;
+  aspect-ratio: 1;
+  rotate: var(--index-shot-tilt);
+  /* Over the rules ruled across the sheet, and over the date's rule where the two
+     meet — but under nothing, because it is the last thing put down. */
+  z-index: 0;
+}
+
+.index-shot-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 2.778vw;
+  display: block;
+}
+
+/* The strip that holds it down, across the picture's top edge and leaning the
+   other way from it — a piece of tape put on by hand is never square to the thing
+   it is holding. Centred with a negative margin rather than a percentage
+   translate, the same call .stick-tape makes: translate composes ahead of rotate,
+   so a percentage offset written there would be turned by the lean before it was
+   applied. */
+.index-shot-tape {
+  position: absolute;
+  top: -14%;
+  left: 50%;
+  width: 62%;
+  margin-left: -31%;
+  transform: rotate(3.4deg);
+}
+
+/* The card's own hover, the lead story's rule against a different box — the whole
+   card is the target, not the disc, because an arrow that only turns when the
+   pointer is on the arrow is a thing nobody finds. */
+.index-card-inner:hover .story-arrow svg,
+.index-card-inner:focus-visible .story-arrow svg {
+  transform: rotate(45deg);
+}
+
+/* Nine cards resolving out of a blur is what this setting is asking about. Here
+   as well as in reveal.ts, so it also covers the window before hydration, when
+   the stylesheet is holding them on its own. */
+@media (prefers-reduced-motion: reduce) {
+  .news-index .char,
+  .related-news .char {
+    transform: none;
+  }
+
+  .index-card {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* ==========================================================================
+   News — the story
+   ==========================================================================
+   Markup in components/Article; the route is (frontend)/news/[id]. The page a
+   card on the index leads to: a lime sheet with the story's headline set across
+   the left of it and its photograph running off the top-right corner of the
+   page, and a sheet of cream paper laid over the join with the article on it.
+
+   ONE POSITIONED BOX AND NOT THREE SECTIONS, which is what every figure below
+   is measured against. The paper overlaps the lime, the photograph overlaps the
+   paper, and an overlap between two sections is a negative margin plus a
+   z-index plus a note explaining the pair — inside one box it is a `top` and a
+   `right`. The section note in Article/index.tsx has the long version.
+
+   THE OBJECTS ARE THE INDEX'S, INVERTED. The lime and its ink are the title
+   card's, the paper and its ink are the index card's, the chip is the site's
+   chip, and the date is .story-date — the same object the lead story and all
+   nine cards wear, at the size that rule already sets. Nothing here is a new
+   kind of thing; what is this page's own is where they stand.
+
+   STRAIGHT OFF THE REDLINES, in vw off the 1440 design width like the rest of
+   the site: a 1076px sheet centred on the page, 107px of margin inside it, a
+   128px gutter to the share column and 62px buttons in it — which come back to
+   the sheet's width exactly and are why none of them is a rounded guess.
+   ========================================================================== */
+.news-article {
+  /* The title card's pairing, which is the hero's and the preloader's: dark
+     green written on lime. This page opens on the same sheet the page before it
+     opened on, which is what makes the two read as one route. */
+  --article-bg: #b6fe00;
+  --article-ink: #013900;
+
+  /* And the paper laid on it — the index card's cream on the index card's ink,
+     because it IS the index's card, opened out. A fourth cream nearly like the
+     other three would read as a mistake rather than as a variation. */
+  --article-paper: #fdfbe8;
+  --article-paper-ink: #0d470c;
+  /* Everything ruled on that paper: the perforation along its top edge, the
+     rule under SHARE, the share buttons' ground and the dash around the way
+     back. One beige, because they are one sheet's worth of printing. */
+  --article-rule: #ded7b5;
+
+  --article-pad-x: 1.389vw; /* 20px — the index's own margin */
+  /* Above the type, and it is measured against the two things that hang in that
+     space rather than chosen: the menu's tab at the top right and the masthead's
+     badge in the top middle. The title card's --rolling-pad-top and the product
+     page's opener clear the same pair with the same figure, and all three should
+     move together. */
+  --article-pad-top: 9.236vw;
+  /* Tight under the sheet, and the design draws it that way: the paper very
+     nearly meets the dark green of the rail below, so the lime reads as the
+     ground the sheet is lying on rather than as a margin around it. */
+  --article-pad-bottom: 3vw;
+
+  /* NO TOLL TO PAY HERE, unlike every other section that ends a page. The
+     footer rises into whatever is above it, but what is above it now is the
+     related rail — see .related-news, which pays --related-arc for exactly the
+     reason this section used to. If the rail is ever taken off the end of a
+     story, the toll comes back here. */
+
+  /* THE MEASURE THE HEADLINE IS SET TO — 630px, and it is not a taste. It is
+     what is left of the page once the photograph has taken its corner: the
+     design rules 130px of clear lime between the last letter of the longest line
+     and the picture's edge, and this is that gap subtracted. Widen the picture
+     below and this comes down with it. */
+  --article-measure: 43.75vw;
+
+  /* Positioned for the grain, for the photograph and for the note — all three
+     are placed against this box. Over the section under it, which on this route
+     is only ever the footer, and which rises into the padding above. */
+  position: relative;
+  z-index: 1;
+
+  /* THE PICTURE IS BLED PAST TWO EDGES and this is what cuts it: past the top,
+     so it runs off the head of the document, and past the right, where without
+     this it would be a horizontal scrollbar on every page of the site. Nothing
+     inside is sticky, which is the one thing overflow here would break. */
+  overflow: hidden;
+
+  width: 100%;
+  padding: var(--article-pad-top) var(--article-pad-x)
+    var(--article-pad-bottom);
+  background: var(--article-bg);
+  color: var(--article-ink);
+}
+
+/* The paper grain, the same layer every other lime sheet on this site carries —
+   it is the only way the sections read as one printed surface. Width-fitted and
+   tiled DOWN rather than stretched, for the reason the hero gives: stretching
+   one tile over a box of a different aspect turns paper into vertical streaking.
+
+   UNDER THE CARD AND NOT OVER IT, which falls out of the card being positioned
+   rather than being arranged: the cream sheet is its own printed surface and
+   carries no grain of its own, the same call the index's nine cards make. */
+.news-article::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/paper-overlay.webp");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   The head
+   -------------------------------------------------------------------------- */
+
+/* Positioned, which lifts the type over the grain — a positioned
+   pseudo-element otherwise paints over ordinary content whatever the source
+   order says. Every section on this site that carries the grain makes the same
+   call.
+
+   THE MEASURE IS ON THE BOX AND NOT ON THE HEADLINE, so the chip, the type and
+   the date are all set against one edge and one width. It is a max-width rather
+   than a width because nothing in here should stretch to fill it: the chip is
+   as wide as its own label and the date is as wide as two digits. */
+.article-head {
+  position: relative;
+  max-width: var(--article-measure);
+}
+
+/* THE CHIP IS THE SLIDER'S, inherited whole from the rule up in the Tape slider
+   block — same shape, same perforation punched down its left edge, same pair of
+   variables. Only the palette, the lean and the hold are here.
+
+   The title card's inversion, and deliberately the same one: dark ground with
+   the sheet's own lime knocked out of it. This page is the title card's page one
+   screen further in, and a chip that changed colour between them would read as a
+   different label rather than as the same one.
+
+   PARKED AT NOTHING, AND HANDED OVER BY THE ATTRIBUTE, exactly as that chip is:
+   the turn's `from` is a chip past edge-on, and a chip visible before that lands
+   is a page correcting itself in front of the reader. autoAlpha in GSAP writes
+   both of these, so the tween takes the hold over cleanly. The <noscript> in
+   Article/index.tsx lifts it for good if the script is never going to run. */
+.article-chip {
+  --tag-bg: var(--article-ink);
+  --tag-ink: var(--article-bg);
+
+  display: inline-block;
+  transform: rotate(-1.8deg);
+  font-size: 0.972vw; /* 14px at the design width */
+  opacity: 0;
+  visibility: hidden;
+}
+
+.news-article[data-reveal="live"] .article-chip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* THE HEADLINE. The house voice at the size the design draws it — 72px at the
+   1440 width, which is a fifth of the title card's WHAT'S ROLLING and right for
+   what it is: that one is a page announcing itself, this one is a sentence
+   somebody wrote.
+
+   LINE-HEIGHT UNDER 1, the same statement every display block on this site
+   makes: at 0.9 the capitals overflow their own line boxes and the rows stack
+   tight, which is what stops four lines of this reading as a list.
+
+   text-transform, and it is the one place on this page where the copy does NOT
+   read in the markup exactly as it paints. The site's convention gives way to
+   the same argument the .h2 level makes in the Tokens block: a story title is
+   editor-written in whatever case a sentence is written in — the nine on the
+   index are sentence case on purpose, because there they are read rather than
+   looked at — and this is the same string set as a poster. The level has to be
+   complete, or the page is correct only for the titles somebody remembered to
+   shout.
+
+   12px under the chip, which is the design's gap and the only margin here. */
+.article-title {
+  margin: 0.833vw 0 0;
+  font-family: var(--font-heading);
+  font-size: 5vw; /* 72px */
+  font-weight: 800;
+  line-height: 0.9;
+  letter-spacing: -0.15vw;
+  text-transform: uppercase;
+}
+
+/* Each word its own inline box, so the line breaks BETWEEN words exactly where
+   the unsplit text would have broken — see words() in components/letters, and
+   .story-title .word, which is the same statement for the lead story's headline.
+   align-items so the letters sit on the line rather than on the box's top, which
+   an inline-flex would otherwise do the moment one .clip is taller than
+   another. */
+.article-title .word,
+.article-deck .word {
+  display: inline-flex;
+  align-items: flex-end;
+}
+
+/* THE DATE, at the design's 68px under the headline — and there is no size in
+   here, which is the point of .story-date carrying one. The day is 70px and the
+   month 16px because that is what the rule sets; this only says where the two
+   lines stand against each other, which is the box's business and not the
+   date's (see .story-card .story-date, where that split is argued).
+
+   Ranged left against the headline's own margin, like the index's cards and
+   unlike the lead story's, which centres its pair under the card's measure. */
+.article-date {
+  align-items: flex-start;
+  margin-top: 4.722vw; /* 68px */
+}
+
+/* The note, in the clear stretch of lime between the headline's measure and the
+ * photograph — the site's hand, in this page's ink, saying how long the story
+ * takes to read.
+ *
+ * Placed from the top rather than from the bottom, unlike the title card's:
+ * what it has to hold is its relationship to the top of the page, where that
+ * one is beside the last row of type. It is a small drawing standing on its own
+ * in an empty corner, and everything above it — the badge's clearance, the chip,
+ * the first line box — is fixed by --article-pad-top.
+ *
+ * PARKED AT NOTHING, AND HANDED OVER BY data-note — the same bargain the chip
+ * and the headline's letters strike with data-reveal, and it is a different
+ * attribute because it is a different beat. The ruled margin is real markup and
+ * is drawn the moment it is parsed; hand.ts only parks it when it BUILDS, and on
+ * this page that build waits for the cover (Article/Stage.tsx). This covers the
+ * gap.
+ */
+.article-note {
+  --hand-w: 11vw;
+  --hand-ink: var(--article-ink);
+  /* Quicker again than the title card's 0.8 — the figure scales every duration
+     in the drawing, so a smaller one is a faster hand. Three words rather than
+     three lines, annotating a headline that is already standing, and at full
+     length a note this short spends most of it ruling the margin. See `pace` in
+     HandNote/hand.ts. */
+  --hand-draw: 0.65;
+
+  left: 55vw;
+  top: 10.7vw;
+
+  opacity: 0;
+  visibility: hidden;
+}
+
+.news-article[data-note="live"] .article-note {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* --------------------------------------------------------------------------
+   The photograph
+   -------------------------------------------------------------------------- */
+
+/* RUNNING OFF THE CORNER OF THE PAGE, which is the whole composition of the top
+   screen: the type has the left, the picture has the right, and the picture is
+   not fitted into its half but bled past two edges of it. The section's
+   overflow is what cuts it — see the note there — so the top edge is the top of
+   the document and the right edge is the edge of the window, at any width.
+
+   TURNED A LITTLE OFF SQUARE, like every photograph on this site. `rotate` and
+   not `transform`, so the lean and the strip's own lean never contend: the tape
+   inside uses transform, and keeping them on separate properties means neither
+   has to know about the other.
+
+   ONLY TWO CORNERS ARE EVER SEEN and the radius is on all four regardless — the
+   two that are bled off are cut by the section long before their curve would
+   show, and a radius written for the two that show is a figure that is wrong the
+   moment the bleed is retuned.
+
+   OVER THE SHEET, which is what the design draws: the paper is laid over the
+   lime and the picture is laid over both. z-index rather than source order,
+   because the reading order wants the headline first and the paint order wants
+   the picture last. */
+.article-shot {
+  --article-shot-tilt: -3.6deg;
+
+  /* THE HEIGHT IS THE ONE FIGURE HERE THAT IS NOT FREE, and it is worth saying
+     out loud because nothing enforces it. The picture is laid OVER the sheet and
+     comes down across the sheet's right-hand column, which is where the share
+     row stands — so its bottom edge has to finish above SHARE or it lands on
+     four buttons. At 58vw the corner nearest the copy is about forty pixels
+     clear of the label at the design width, which is the margin this
+     arrangement has. Take the picture lower, or bring --article-aside's top
+     margin up, and check the pair; they are the only two things on this page
+     that overlap by arithmetic rather than by design.
+
+     The width is free by comparison: the head's measure is subtracted from it
+     (see --article-measure), so the two cannot close on each other. */
+  position: absolute;
+  top: -6vw;
+  right: -4vw;
+  width: 52vw;
+  height: 58vw;
+  rotate: var(--article-shot-tilt);
+  border-radius: 4vw;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.article-shot-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The strip that holds it down, across the picture's top third and leaning the
+   other way from it — a piece of tape put on by hand is never square to the
+   thing it is holding. In per cent of the frame rather than in vw, so the whole
+   arrangement scales as one when the frame is resized: the index's cards tape
+   their pictures the same way. */
+.article-shot-tape {
+  position: absolute;
+  top: 21%;
+  left: 43%;
+  width: 26%;
+  transform: rotate(2.4deg);
+}
+
+/* --------------------------------------------------------------------------
+   The sheet
+   -------------------------------------------------------------------------- */
+
+/* The paper the article is written on. 1076px wide and centred on the page,
+   which is the design's own measure — the head above is ranged left against the
+   window's margin and this is not, and that is deliberate: the head is a title
+   over a picture and the sheet is a document laid down on top of them.
+
+   94px under the date, which with the date's own height is the 231px the design
+   rules between the headline and this edge. Two figures rather than one, because
+   the date stands between them and CSS gets its height for free — write the 231
+   here instead and it is a number to re-measure every time the date is re-set.
+
+   Positioned, which lifts it over the grain and gives the perforation something
+   to be placed against. */
+.article-sheet {
+  --sheet-pad-x: 7.431vw; /* 107px */
+
+  position: relative;
+  width: 74.722vw; /* 1076px */
+  margin: 6.528vw auto 0; /* 94px */
+  padding: 7.014vw var(--sheet-pad-x) 6.944vw; /* 101px top */
+  border-radius: 3.194vw; /* 46px — the lead story's radius */
+  background: var(--article-paper);
+  color: var(--article-paper-ink);
+}
+
+/* THE PERFORATION ALONG THE TOP EDGE — a page torn off a pad, which is what the
+   sheet is meant to be and the one thing that says so.
+
+   Drawn as a repeated radial-gradient and not as a dotted border, for the reason
+   the index's tabs give at length: a dotted border has exactly one dial, since
+   the dots are as wide as the border and the gap between them is the UA's
+   business. A tile one pitch wide with `closest-side` makes the dot exactly as
+   wide as the tile is tall, so the two figures below are the diameter and the
+   distance from one centre to the next — two independent numbers, which is the
+   whole point of drawing it by hand.
+
+   HELD OFF THE ROUNDED CORNERS at both ends. A perforation running the full
+   width would have its last dots sitting outside the curve, in the lime — the
+   inset is the radius, so the line starts where the edge stops turning. */
+.article-sheet::before {
+  content: "";
+  position: absolute;
+  top: 0.972vw; /* 14px in from the edge */
+  left: 3.194vw;
+  right: 3.194vw;
+  height: 0.278vw; /* 4px — the dot */
+  background-image: radial-gradient(
+    circle closest-side,
+    var(--article-rule) 96%,
+    transparent
+  );
+  background-size: 0.833vw 100%; /* 12px pitch */
+  background-repeat: repeat-x;
+  pointer-events: none;
+}
+
+/* The two columns: the article, and the things you can do with it. `auto` on
+   the second rather than a width — the column is as wide as the four buttons in
+   it, which are the only fixed thing in this block, so the copy takes what is
+   left and the 128px gutter is the one figure between them that has to be
+   stated. Written the other way round it would be three numbers that must
+   always add up.
+
+   align-items: start, so the share column is its own height and does not stretch
+   to a five-paragraph article. */
+.article-cols {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8.889vw; /* 128px */
+  align-items: start;
+}
+
+/* The deck. The site's h2 — set by the .h2 class on the element, which is the
+   whole reason that level exists — so nothing here restates a size. The margin
+   is this sheet's own and has nothing to do with the level.
+
+   NOT RULED, where the lead story's card title is. That card is a notepad with a
+   headline written on it and the ruling is what says so; this is an article, and
+   dotted lines under running copy are a form. */
+.article-deck {
+  margin: 0 0 3.125vw; /* 45px */
+}
+
+/* Split letters — the boxes, for both headings. The same headroom every headline
+   on this site gives its masks, handed straight back by the matching negative
+   margins so the rows are the size they always were. */
+.news-article .clip {
+  display: block;
+  flex: 0 0 auto;
+  overflow: hidden;
+  padding: 0.2em 0.06em 0;
+  margin: -0.2em -0.06em 0;
+}
+
+/* Parked, and handed over by the attribute exactly as the title card's letters
+   are — see .whats-rolling .char above, which carries the full note. 130 because
+   capitals overshoot their own box, so a letter moved exactly its own height
+   still leaves a hairline of tops at the mask's edge; REVEAL.HIDDEN is the same
+   figure and the two have to agree. */
+.news-article .char {
+  display: block;
+  transform: translateY(130%);
+}
+
+.news-article[data-reveal="live"] .char {
+  transform: none;
+}
+
+/* THE ARTICLE ITSELF, and it is the one block of running copy on the site that
+   is long enough to be called that. Set in the body face at 17px on a 1.6
+   leading — a measure of about 430px, which is the column the grid above leaves
+   and comes out at roughly sixty characters a line.
+
+   32px between paragraphs, which is the design's figure and is nearly two line
+   heights: at anything less a five-paragraph article reads as one block with
+   indents in it. On the bottom of each and not the top, with the last one's
+   cleared, so the sheet's own bottom padding is the only thing under the copy. */
+.article-para {
+  margin: 0 0 2.222vw; /* 32px */
+  font-family: var(--font-body);
+  font-size: 1.181vw; /* 17px */
+  font-weight: 500;
+  line-height: 1.6;
+  letter-spacing: -0.007vw;
+}
+
+.article-para:last-child {
+  margin-bottom: 0;
+}
+
+/* --------------------------------------------------------------------------
+   The share column
+   -------------------------------------------------------------------------- */
+
+/* Four ways to pass the story on and the way back off it. The column's width is
+   the row of buttons — see the grid above — so this is where the two figures
+   that decide it are stated and everything else here reads them.
+
+   DROPPED BELOW THE COPY'S FIRST LINE by a margin rather than aligned to it: the
+   design sets SHARE against the second paragraph, not against the deck, and a
+   small block that starts level with a heading five times its size reads as part
+   of the heading. */
+.article-aside {
+  --share-btn: 4.306vw; /* 62px */
+  --share-gap: 1.111vw; /* 16px */
+
+  width: calc(var(--share-btn) * 4 + var(--share-gap) * 3); /* 296px */
+  margin-top: 4vw;
+}
+
+/* The label over the row, with the design's dotted rule under it. A plain
+   border here rather than the drawn dots the sheet's perforation uses: this is a
+   hairline separator at the weight a border already gives, where the perforation
+   is a piece of artwork whose dots have a size of their own. The index's cards
+   rule themselves the same way for the same reason. */
+.article-share-label {
+  margin: 0 0 0.833vw;
+  padding-bottom: 0.556vw;
+  border-bottom: 1px dotted var(--article-rule);
+  font-family: var(--font-heading);
+  font-size: 1.111vw; /* 16px */
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+}
+
+.article-share-row {
+  display: flex;
+  gap: var(--share-gap);
+}
+
+/* The buttons. Square, softly cornered, printed in the sheet's own beige — the
+   colour everything ruled on this paper is drawn in, so the row reads as part of
+   the sheet rather than as a widget dropped onto it.
+
+   ONE RULE FOR AN <a> AND A <button>, which is why the button reset is here: the
+   three that go somewhere are links and the fourth acts on this page, and they
+   have to be one object. The site has no global button reset, so the font, the
+   border and the cursor are all said out loud.
+
+   THE HOVER INVERTS THE PAIR rather than tinting it. These are small and they
+   are the only controls on the page; a five per cent darkening on a beige square
+   is a state nobody is sure they have reached. */
+.article-share-link {
+  display: grid;
+  place-items: center;
+  width: var(--share-btn);
+  height: var(--share-btn);
+  padding: 0;
+  border: 0;
+  border-radius: 0.833vw; /* 12px */
+  background: var(--article-rule);
+  color: var(--article-paper-ink);
+  /* THE MARK'S SIZE, and that is all a font-size is doing on a button with no
+     text in it: react-icons draw at 1em square in currentColor — the footer's
+     social discs wear the same set the same way — so the glyph is sized here and
+     coloured by the pair above. font-family is inherited rather than left to the
+     UA's, which is the button reset this site has no global copy of. */
+  font-family: inherit;
+  font-size: 1.667vw; /* 24px — the mark's drawn height */
+  cursor: pointer;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+}
+
+.article-share-link:hover,
+.article-share-link:focus-visible,
+/* And while it is saying it has copied — the same state, held for a beat, so
+   the one control with no destination still reports that something happened.
+   Share.tsx writes the attribute and takes it off again. */
+.article-share-link[data-copied] {
+  background: var(--article-paper-ink);
+  color: var(--article-paper);
+}
+
+/* THE WAY BACK. The width of the share row above it, the height of one of its
+   buttons, and drawn as a dashed outline rather than filled: it is not a fifth
+   way to share the story, and giving it the buttons' ground would make it look
+   like one.
+
+   The label is centred in the box and the chevron is placed against the left
+   edge, which is the design's arrangement — so the mark is out of the flow the
+   label is centred in, rather than being a flex item that would push it off
+   centre by its own width. */
+.article-back {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--share-btn);
+  margin-top: 2.431vw; /* 35px */
+  border: 1px dashed var(--article-rule);
+  border-radius: 0.833vw;
+  color: inherit;
+  text-decoration: none;
+  font-family: var(--font-heading);
+  font-size: 1.111vw; /* 16px */
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+}
+
+.article-back svg {
+  position: absolute;
+  left: 1.9vw;
+  width: 0.9vw;
+  height: 0.9vw;
+  /* Back the way it came, on the same overshoot curve the site's other marks
+     move on — the menu's arrow, the slider's rolls, the lead story's disc. A
+     third of its own width, which is a nudge and not a slide: the box is what
+     moves under the pointer, and this is the mark leaning into it. */
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.article-back:hover,
+.article-back:focus-visible {
+  background: var(--article-rule);
+}
+
+.article-back:hover svg,
+.article-back:focus-visible svg {
+  transform: translateX(-0.3vw);
+}
+
+/* Two headings flying in from nowhere, a chip turning over, five paragraphs
+   writing themselves and a mark sliding sideways are all exactly what this
+   setting is asking about. Here as well as in the two reveals, so it also covers
+   the window before hydration, when the stylesheet is holding them on its own —
+   every other section on this site makes the same pair of statements. */
+@media (prefers-reduced-motion: reduce) {
+  .news-article .char {
+    transform: none;
+  }
+
+  .news-article .article-chip,
+  .news-article .article-note {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .article-share-link,
+  .article-back,
+  .article-back svg {
+    transition: none;
+  }
+
+  .article-back:hover svg,
+  .article-back:focus-visible svg {
+    transform: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   The related rail
+   --------------------------------------------------------------------------
+   Markup in components/RelatedNews. The name set large down the left and three
+   cards on the right, between the story and the footer.
+
+   IT IS THE INDEX'S ARRANGEMENT ONE ROW DEEP, and that is the whole design of
+   it: the same dark green, the same 376px column with the same 60px gutter
+   beside it, the same 313px cards with the same 15px between them — so the
+   cards land on the same vertical lines they stood on before the reader clicked
+   one. Nothing about a card is redrawn here; .index-card and everything under
+   it are declared above and the rail simply stands three of them up.
+
+   WHAT IS DECLARED TWICE AND WHY. The grid's three figures and the sheet's
+   colour are stated here as well as on .news-index, because the two sections
+   are on different pages and neither contains the other — the same bargain
+   --stick-bg and --index-bg strike, with the same warning: THEY MUST AGREE. A
+   card that sat 15px from its neighbour on the wall and 20px from it here would
+   be the same row of objects arriving in a different rhythm.
+   -------------------------------------------------------------------------- */
+.related-news {
+  /* MUST EQUAL --index-bg / --stick-bg. The newsroom is one sheet of dark green
+     across three pages, and a shade between them reads as a mistake. */
+  --related-bg: #0b2f07;
+  --related-ink: #a7ef00;
+
+  /* The index's two columns — MUST EQUAL --index-rule and --index-gutter. See
+     the block note. */
+  --related-rule: 26.111vw; /* 376px */
+  --related-gutter: 4.167vw; /* 60px */
+
+  /* AND THE GRID'S OWN GAP, UNDER THE GRID'S OWN NAME — not a --related-
+     synonym, because .index-grid reads this one and the grid is the shared
+     object here rather than something this section drew. Declaring it under
+     another name would mean a second rule to hand it over, which is two places
+     to state one gutter. MUST EQUAL the index's. */
+  --index-gap: 1.042vw; /* 15px */
+
+  --related-pad-x: 1.389vw; /* 20px — the index's own margin */
+  --related-pad-y: 3.5vw;
+
+  /* The footer rises into whatever is above it — margin-top: calc(--footer-arc *
+     -1) — so its corners would otherwise land --footer-arc above this section's
+     bottom edge, inside the last row of cards. This is that depth handed back,
+     and IT MUST EQUAL --footer-arc; the index pays the same toll with
+     --index-arc and the key visual with --stick-arc, for the same reason and
+     with the same warning. The story above this one used to pay it and no
+     longer does — see .news-article. */
+  --related-arc: 9vw;
+
+  position: relative;
+  width: 100%;
+  padding: var(--related-pad-y) var(--related-pad-x)
+    calc(var(--related-pad-y) + var(--related-arc));
+  background: var(--related-bg);
+  color: var(--related-ink);
+}
+
+/* NO PAPER GRAIN ON THE DARK GREEN, the same call the index makes and for the
+   reason it gives at length: the overlay is a photograph of creased paper
+   written for the lime sheets, and on a green this dark only its light half
+   shows — what reads as paper at the top of the page reads as a dirty screen
+   here. */
+
+/* The heading beside the row, on the same two lines the index's rule column
+   stacks its tabs in. align-items: start so the cards keep their own height and
+   the heading is not stretched down the column beside them. */
+.related-row {
+  display: grid;
+  grid-template-columns: var(--related-rule) 1fr;
+  gap: var(--related-gutter);
+  align-items: start;
+}
+
+/* THE HEADING'S SIZE, RE-ASSERTED — and these four declarations are not a second
+   copy of a level, they are the price of borrowing one class.
+ *
+ * The h2 wears .stick-headline, which is how the shared letter reveal finds its
+ * characters (MakeItStick/reveal.ts collects .stick-headline .char). That class
+ * carries the CLOSING KEY VISUAL'S setting — 145px of display type, centred —
+ * and it is a bare class like this one, so the two tie on specificity and the
+ * later in this file wins. This is later. Drop these and the rail's heading
+ * comes out at a hundred and forty five pixels, centred in its column.
+ *
+ * The lead story's title makes exactly the same bargain for exactly the same
+ * reason; see .story-title, which is the longer version of this note.
+ *
+ * 76px is what the design draws — a fifth of the page's own headline and a
+ * shade under the index's tabs, which is right for what it is: not a page
+ * announcing itself but a shelf label over three cards. */
+.related-title {
+  margin: 0;
+  font-size: 5.278vw; /* 76px at the design width */
+  line-height: 0.95;
+  letter-spacing: -0.12vw;
+}
+
+/* Ranged left against the section's own margin, where the key visual's rows are
+   centred in a card. The rows are flex — every row of split letters on this site
+   is, because .clip carries overflow: hidden and an inline-block whose overflow
+   is not visible takes its baseline from its bottom margin edge — so this is
+   justify-content and not text-align. */
+.related-title .line {
+  justify-content: flex-start;
 }
 
 /* ==========================================================================
@@ -3678,20 +6574,30 @@ html[data-loading] {
    box. It is small type on a dark field and a roll passing over it would take
    it out entirely. */
 .footer-legal {
-    z-index: 42;
-    font-family: var(--font-body);
-    white-space: nowrap;
-    color: var(--footer-ink);
-    font-size: .9vw;
-    font-weight: 500;
-    line-height: 1;
-    position: absolute;
-    bottom: 1.6vw;
-    left: 50%;
-    transform: translateX(-50%);
-    border-radius: 0.556vw;
-    background: #003500;
-    padding: 0.347vw;
+  /* THE MASK NEEDS ROOM HERE, where .stick-sub needs none. This is set at
+       line-height 1, so the line box is SHORTER than the font's own ascent plus
+       descent — half-leading is negative — and a mask flush to it would cut the
+       tail off every `p`, `g` and `y` in the notice and the top off the `©`.
+       The matching negative margins in .body-clip hand the room straight back,
+       so the line is the height it always was and still sits where `bottom`
+       puts it; only what the mask covers changes. */
+  --body-head: 0.14em;
+  --body-foot: 0.18em;
+
+  z-index: 42;
+  font-family: var(--font-body);
+  white-space: nowrap;
+  color: var(--footer-ink);
+  font-size: 0.9vw;
+  font-weight: 500;
+  line-height: 1;
+  position: absolute;
+  bottom: 1.6vw;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 0.556vw;
+  background: #003500;
+  padding: 0.347vw;
 }
 
 /* Thirty letters flying in from nowhere is exactly what this setting is asking
@@ -4288,18 +7194,18 @@ html[data-loading] {
 }
 
 #tape-on-note {
-    position: absolute;
-    top: 58.3vw;
-    left: 14vw;
-    z-index: 5;
-    width: 11vw;
+  position: absolute;
+  top: 58.3vw;
+  left: 14vw;
+  z-index: 5;
+  width: 11vw;
 }
 
 #tape-on-lemon {
-    position: absolute;
-    top: 99vw;
-    left: 22vw;
-    width: 19vw;
+  position: absolute;
+  top: 99vw;
+  left: 22vw;
+  width: 19vw;
 }
 
 #tape-top {
@@ -4424,6 +7330,54 @@ html[data-loading] {
   z-index: 1;
 }
 
+/* The news page's copy: in the bottom right of the lime sheet, beside the last
+ * letters of ROLLING, written in that sheet's dark green.
+ *
+ * IT SITS OVER THE TYPE, not clear of it, and that is what the design draws. The
+ * G is round and the arc lifts it, so there is an empty corner under its
+ * shoulder that a rectangular gap either side of the headline would never find —
+ * the note is tucked into it. Markup order is what puts it on top (it is after
+ * the h1 in WhatsRolling/index.tsx); no z-index, because there is nothing here
+ * for it to be above except the sheet's own grain, which the .rolling-warp rule
+ * has already dealt with by positioning the type.
+ *
+ * PLACED FROM THE BOTTOM EDGE rather than from the top, unlike the other two.
+ * What it has to hold is its relationship to the last row of type, and the top
+ * of this section is a stack of things that can each move — the badge's
+ * clearance, the chip, two line boxes of 15vw type. Measured down from the top
+ * it would drift every time one of those was retuned; measured up from the
+ * bottom it moves with the last line, which is the only thing it is beside.
+ *
+ * The writing overhangs the box (the svg is taller than the ruled artwork's
+ * 0.6875 aspect), which is why this clears the sheet's own bottom padding by
+ * more than it looks like it needs to.
+ */
+.rolling-note {
+  --hand-w: 17vw;
+  --hand-ink: var(--rolling-ink);
+
+  /* A shade quicker than the hero's pen — three short lines rather than four,
+     and this one is written on the page's opening beat, where the hero's has a
+     screen of scrolling to itself. See `pace` in HandNote/hand.ts. */
+  --hand-draw: 0.8;
+
+  left: 75.5vw;
+  bottom: 4vw;
+
+  /* PARKED AT NOTHING, AND HANDED OVER BY data-note — the same bargain the tag
+     and the headline's letters strike with data-reveal, and it is a different
+     attribute because it is a different beat. The ruled margin is real markup and
+     is drawn the moment it is parsed; hand.ts only parks it when it builds, and
+     on this page that build waits for the cover. This covers the gap. */
+  opacity: 0;
+  visibility: hidden;
+}
+
+.whats-rolling[data-note="live"] .rolling-note {
+  opacity: 1;
+  visibility: visible;
+}
+
 /* Ten units to the vw at the default width: the markup's viewBox is 0 0 320 200
    against this box, which is what lets the path data and the figures here be
    read against each other. Height is left to the aspect ratio rather than set —
@@ -4464,9 +7418,9 @@ html[data-loading] {
    It is the one place on the page where a font nobody will ever see decides how
    big something is, and that should not be an accident of inheritance. */
 .hand-note .hand-ink {
-    top: calc(var(--hand-w) * .215);
-    left: calc(var(--hand-w) * .205);
-    /* Brought down from .703, which is a hand about 3.5px smaller at the 1440
+  top: calc(var(--hand-w) * 0.215);
+  left: calc(var(--hand-w) * 0.205);
+  /* Brought down from .703, which is a hand about 3.5px smaller at the 1440
        design width — the writing measured a 24.6px x-height there, and against
        Inter Tight's 0.546 x-height per em that is the same apparent size as a
        45px font, so this is 41.5px of one. Everything else about the note is
@@ -4474,11 +7428,10 @@ html[data-loading] {
        through here, and every figure in HandNote/hand.ts is in the FONT's own
        units, so the stroke weight, the line spacing and the drift all come down
        with the letters rather than needing to be re-tuned after them. */
-    width: calc(var(--hand-w) * .648);
-    font-family: var(--font-body);
-    position: absolute;
-    transform: rotate(
-353deg);
+  width: calc(var(--hand-w) * 0.648);
+  font-family: var(--font-body);
+  position: absolute;
+  transform: rotate(353deg);
 }
 
 /* hand.ts strips Vara's px width/height and gives the svg a viewBox, so the box
@@ -4488,6 +7441,222 @@ html[data-loading] {
   width: 100%;
   height: auto;
   overflow: visible;
+}
+
+/* ==========================================================================
+   Top band — the masthead
+   ==========================================================================
+   Two set lines in the top-left corner and the badge in the middle. Markup in
+   components/TopBand; the drop they land with is TOP_BAND in TopBand/reveal.ts,
+   and the park that holds them off the top edge until the preloader clears is
+   in the Preloader section above.
+
+   IT IS NOT PINNED, and that is the whole difference between this and the menu
+   it used to live in. The menu's tab is fixed because it is the way in and has
+   to be reachable from the bottom of a long page; this is masthead, it belongs
+   to the TOP of the page, and it goes up with it. `position: absolute` in a box
+   no positioned ancestor contains resolves against the initial containing
+   block — anchored at the document's origin, not the window's — so it scrolls
+   like anything else printed on the sheet. Lenis smooths the native scroll
+   rather than transforming a wrapper, so there is nothing holding it back.
+
+   Not rendered at all on the home page; see components/TopBand.
+   ========================================================================== */
+.top-band {
+  /* The two pieces' shared inset, on the parent because BOTH read it: they are
+     one row across the top of the page, and a row is level or it is not. */
+  --top-inset: 1.2vw;
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* Over the sections, which are all z-index auto, and under the menu (100) and
+     the cursor. A masthead a section could paint over is a bug waiting for the
+     next section that declares a stacking context. */
+  z-index: 13;
+  font-family: var(--font-heading);
+  /* A box of no height stretched across the page must never be what a click on
+     the page under it lands on. The badge takes its own back. */
+  pointer-events: none;
+}
+
+/* THE BADGE, and a link back to the front.
+
+   CENTRED WITH A MARGIN rather than a percentage translate, which is not a
+   style point: `transform` is spoken for. The entrance parks and drops this
+   element with a percentage translateY, and a translateX written here would be
+   overwritten by GSAP the moment the drop started — the badge would jump half
+   its own width to the left as it began to fall. A negative margin is not a
+   transform and cannot collide with one. */
+.top-mark {
+  /* 130px at the 1440 design width — read against the hero's own copy of this
+     artwork, which is 12.7vw in the middle of a headline. This is furniture
+     rather than type, so it is smaller. */
+  --top-mark-w: 9vw;
+  /* The artwork's own aspect, 191 x 118, so the width is the only figure to
+     set. The hero's mark computes its height the same way from the same two
+     numbers. */
+  --top-mark-h: calc(var(--top-mark-w) * 118 / 191);
+
+  position: absolute;
+  top: var(--top-inset);
+  left: 50%;
+  width: var(--top-mark-w);
+  height: var(--top-mark-h);
+  margin-left: calc(var(--top-mark-w) / -2);
+  pointer-events: auto;
+}
+
+.top-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* THE CLAIM — the same face, size and tracking as the mark the hero prints into
+   its own top-left corner. This is .hero-section .corner-mark without the
+   perforation, which belongs to a label printed into a field rather than to
+   masthead sitting over one.
+
+   THE INK IS A DOCUMENT-LEVEL PROPERTY, and it is the only thing on this site
+   that reaches across a section boundary to set a colour. It has to: this
+   element lives outside every section, and the product page changes the colour
+   of the whole sheet under it when a roll is hovered
+   (PickYourPlayer/recolour.ts). Left in dark green it would be the one thing on
+   the page that had not noticed.
+
+   The fallback is what every OTHER page gets, since nothing else sets it: the
+   hero's dark green, which is the ink of every light field on this site. And
+   the transition is what turns a property being rewritten into a colour
+   crossing over — `color` is what animates, --top-ink is only what feeds it, so
+   this works without the custom property being registered.
+
+   No pointer-events: it is two lines of type with nothing to click. */
+.top-note {
+  position: absolute;
+  top: var(--top-inset);
+  left: 0.65vw;
+  /* Room for the perforation, which is placed against this element's left edge.
+     The hero's own figure. */
+  padding-left: 0.85vw;
+
+  color: var(--top-ink, #013900);
+  transition: color 0.45s ease;
+
+  font-size: 1.389vw;
+  font-weight: 700;
+  line-height: 1.25vw;
+  letter-spacing: -0.042vw;
+  text-transform: uppercase;
+}
+
+/* Two set lines, not a wrap — see NOTE in components/TopBand.
+
+   FLEX rather than block, for the reason every row of split letters on this
+   site is flex: .clip below carries overflow: hidden, and an inline-block whose
+   overflow is not visible takes its baseline from its bottom margin edge rather
+   than from the text inside it, which would drop each line by the font's whole
+   descent.
+
+   The tracking above survives the change. letter-spacing does not apply BETWEEN
+   flex items, but it inherits into each .char and is added after that
+   character — so the space is still there, it is just carried by the letter
+   rather than by the gap. */
+.top-note .line {
+  display: flex;
+  align-items: flex-end;
+}
+
+/* THE PERFORATION, ruled down the left edge before the copy is written against
+   it — the hero's corner mark exactly, drawn the same way and at the same size.
+   One repeating radial-gradient rather than a stack of elements, as the
+   slider's chips draw theirs: background-size sets the cell height, so the dot
+   COUNT follows from however tall the copy ends up and the pitch stays put if a
+   third line is ever added.
+
+   currentColor, so it follows --top-ink across when the page changes colour
+   under it and there is one ink here rather than two.
+
+   A real element rather than a ::before, because the entrance has to be able to
+   reach it and a pseudo-element cannot be handed to GSAP. It owns nothing but
+   its own paint; TopBand/reveal.ts owns its clip-path. */
+.top-perf {
+  position: absolute;
+  left: 0;
+  top: 0.12vw;
+  bottom: 0.12vw;
+  width: 0.2vw;
+  background-image: radial-gradient(
+    circle at 50% 50%,
+    currentColor 42%,
+    transparent 45%
+  );
+  background-size: 100% 0.35vw;
+  background-repeat: repeat-y;
+  opacity: 0.9;
+}
+
+/* Parked, and released by TopBand/reveal.ts along with the letters.
+
+   clip-path and not a scale, the same call the hero and the menu's rules make:
+   the dots are a repeating background, so a scaled column would start as a
+   dozen of them crushed into a sliver and spread out. Clipping leaves them at
+   their own size and uncovers them.
+
+   Inside the media query because a reader who asked for less motion gets no
+   entrance and must not get a missing line instead. The <noscript> in
+   components/TopBand covers the case where nothing can run at all. */
+@media (prefers-reduced-motion: no-preference) {
+  .top-perf {
+    clip-path: inset(0 0 100% 0);
+  }
+}
+
+/* Split letters — the hero's boxes and the hero's headroom, because this is the
+   hero's setting: line-height well under 1, so a letter's content box is
+   shorter than the capital standing in it and a mask flush to the box would
+   shave the tops off. Sideways is the negative tracking, which pulls each box
+   in narrower than the glyph it holds. The padding gives the mask room on three
+   sides and the matching negative margins hand that room straight back to the
+   layout, so the lines are the width and height they always were.
+
+   Nothing at the bottom — the mask's lower edge is what the letters slide out
+   through, and it wants to sit tight on the baseline. */
+.top-band .clip {
+  display: block;
+  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  overflow: hidden;
+  padding: 0.25em 0.06em 0;
+  margin: -0.25em -0.06em 0;
+}
+
+/* Where a letter waits before the reveal. TopBand/reveal.ts sets data-reveal on
+   the band to lift this and take the letters over; the <noscript> in
+   components/TopBand lifts it for good if that is never going to happen.
+   REVEAL.HIDDEN there is the same figure and the two have to agree.
+
+   130 rather than 100 because capitals overshoot their own box, so a letter
+   moved exactly its own height still leaves a hairline of tops at the mask's
+   edge. The excess is all behind the mask, so it is set well clear rather than
+   measured. */
+.top-band .char {
+  display: block;
+  transform: translateY(130%);
+}
+
+.top-band[data-reveal="live"] .char {
+  transform: none;
+}
+
+/* Here as well as in reveal.ts, so it also covers the window before hydration,
+   when the stylesheet is holding the letters down on its own — the hero, the
+   footer and the closing key visual all make the same pair of statements for
+   the same reason. */
+@media (prefers-reduced-motion: reduce) {
+  .top-band .char {
+    transform: none;
+  }
 }
 
 /* ==========================================================================

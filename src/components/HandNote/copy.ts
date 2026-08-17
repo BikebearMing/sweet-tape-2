@@ -21,5 +21,21 @@ export const NOTE_LINES = [
   "real life.",
 ];
 
-/* The same copy as one readable sentence, for the screen-reader text node. */
-export const NOTE_COPY = NOTE_LINES.join(" ");
+/* The readable sentence for the screen-reader text node is joined in the markup
+   now rather than exported from here as a second constant — the note takes its
+   lines as an argument, so the only place that knows which lines an instance is
+   carrying is the instance. */
+
+/* How the lines cross from the markup to the drawing.
+ *
+ * The note is server-rendered and hand.ts finds its instances by querying the
+ * DOM, so an instance's copy has to be ON the element rather than passed down a
+ * prop chain the drawing never sees — the same call every other per-instance
+ * setting already makes (--hand-ink, --hand-draw), just in an attribute rather
+ * than a custom property, because this one is a list and not a value.
+ *
+ * A pipe rather than a newline: a literal LF survives the HTML parser, but it
+ * is invisible in the source, in devtools and in a diff, and the one thing this
+ * separator must never be is something a line of copy could contain by
+ * accident. No hand-written note has a pipe in it. */
+export const LINE_SEP = "|";

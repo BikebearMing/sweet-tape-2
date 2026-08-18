@@ -5,10 +5,16 @@
  * selection swaps three things behind the same edge-on turn: the photograph,
  * the photograph beside it, and the tape across both of them.
  *
- * ONE ENTRY PER ROLL, NOT PER TAPE. Three of the six ship as a single piece of
- * artwork: stationery, OPP and low-noise OPP are all the same clear tape, and
- * the file is named for all three. A table keyed by tape id would have been the
- * same 3.9MB SVG typed out three times with three chances to mistype it.
+ * ONE ENTRY PER ROLL, NOT PER TAPE, because a strip of tape is a picture of the
+ * FILM and several tapes dispense the same film: stationery and low-noise OPP
+ * are both clear, and share one file named for both. A table keyed by tape id
+ * would have been the same 3.9MB SVG typed out twice with two chances to
+ * mistype it.
+ *
+ * Ordinary OPP used to be the third of those and is not — see ROLL_OF and the
+ * `brown` entry. It was the case that proved the indirection was worth having:
+ * one line moved it onto artwork of its own and nothing else in the codebase
+ * had to know.
  *
  * This lives here rather than in data/tapes.ts because two of the three figures
  * are facts about the FILE — its aspect and how much of it is artwork — and the
@@ -78,19 +84,44 @@ const ROLLS = {
     ink: 0.916,
     back: "peel-back-black",
   },
+  /* THE BROWN PACKING TAPE — the OPP rolls' own strip, and the reason they are
+     no longer sent to `clear`.
+   *
+   * The three see-through tapes shared one file because they ARE one tape as
+   * far as a strip of it goes: stationery and low-noise OPP both dispense
+   * clear film. Ordinary OPP does not — it is the brown carton tape, it is
+   * printed BROWN on its own label, and the roll standing beside it on the
+   * product page is brown. A clear strip there was the wrong product, and on
+   * the dark green it also composited as a pale grey slab, because the clear
+   * artwork is drawn to be SCREENED onto something light (see `blend`).
+   *
+   * The file was already in the tree, unused. `ink` is measured off its alpha
+   * channel like the rest: 416 of 428px across. No blend — this one is an
+   * opaque picture of a strip, not a set of highlights to be added to whatever
+   * is underneath. */
+  brown: {
+    src: "/assets/tape top.png",
+    box: [428, 173],
+    ink: 0.972,
+    back: "peel-back-masking",
+  },
 } as const satisfies Record<string, Roll>;
 
 type RollName = keyof typeof ROLLS;
 
-/* Which roll a tape is taped down with — its own, in every case. The three
-   clear tapes share one file; the entry is per tape anyway so a tape that later
-   gets artwork of its own is one line here and nothing else. */
+/* Which roll a tape is taped down with — its own, in every case.
+
+   TWO clear tapes share one file now, not three: ordinary OPP has moved to a
+   brown strip of its own. That is exactly the change this table was shaped to
+   allow — "a tape that later gets artwork of its own is one line here and
+   nothing else" — and it is one line. See the `brown` entry above for why the
+   clear file was the wrong product for it in the first place. */
 const ROLL_OF: Record<string, RollName> = {
   masking: "masking",
   double: "tissue",
   stationery: "clear",
   cloth: "cloth",
-  opp: "clear",
+  opp: "brown",
   "opp-quiet": "clear",
 };
 
@@ -114,6 +145,18 @@ export type Strip = {
   w: number;
   h: number;
   blend: "normal" | "screen";
+  /**
+   * The roll's own `ink` — how much of the file is artwork and how much is the
+   * transparent margin Figma exported around it, 0..1.
+   *
+   * Passed through rather than kept private because a caller that sizes a strip
+   * by its VISIBLE length, rather than by handing Peel the box above, has no
+   * other way to get from one to the other: the product page's origin section
+   * is measured that way (the design gives the tape's width on screen, not its
+   * file's), and without this it would be reverse-engineering a number this
+   * module already knows. See --strip-ink in global.css.
+   */
+  ink: number;
 };
 
 export function stripOf(tapeId: string): Strip {
@@ -128,6 +171,7 @@ export function stripOf(tapeId: string): Strip {
     w,
     h: (w * bh) / bw,
     blend: roll.blend ?? "normal",
+    ink: roll.ink,
   };
 }
 

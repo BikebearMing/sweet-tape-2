@@ -65,6 +65,11 @@ export const STRIP = {
   // colour is copied over it once the model arrives. Near-white now rather
   // than the brown it was: the low-noise roll's film is clear, and the export
   // states it as a flat 0.8 linear grey, which is this in sRGB.
+  //
+  // Reached only while FILM.CAST_STRIP is null. With a colour authored there
+  // the strip has no need of the roll's, so tune() takes it before the load as
+  // well as after and this value is never on screen. It stays because null is
+  // a supported setting and something has to hold the first frames.
   /* How many times the film's own pattern repeats per world unit of tape.
    *
    * This is what stops the strip reading as an extrusion. The maps are tiled
@@ -193,9 +198,24 @@ export const FILM = {
    * even surface again, lit only by the lights and the curl — which is worth
    * looking at before deciding what the mottle should be doing.
    *
+   * DOWN FROM 0.5, WHICH READ AS CRINKLED. At that spread the roughness map ran
+   * 0.47-0.97 — the effective roughness wandering between about 0.21 and 0.44,
+   * which is a factor of two across a few centimetres of tape. A gloss that
+   * varies that much over that short a distance is not read as an uneven
+   * surface; it is read as a CREASED one, because creasing is the only everyday
+   * thing that makes a highlight break up on that scale. The tape looked like it
+   * had been screwed up and smoothed out again.
+   *
+   * At 0.18 the map runs 0.63-0.81 and the effective roughness 0.28-0.36 — still
+   * plainly not a uniform surface, still enough for the key to travel unevenly
+   * along the strip, but a wander rather than a wrinkle. TOOTH came down with it
+   * and the reason is in its own note: the two are the same complaint measured
+   * two ways, and dropping only one leaves the relief drawing the creases the
+   * roughness stopped drawing.
+   *
    * Live-tweak in dev: hero.FILM.MOTTLE = 0.2; hero.tune() — tune() rebuilds
    * both maps, unlike the streak maps this replaced, which needed a reload. */
-  MOTTLE: 0.5,
+  MOTTLE: 0.18,
   MOTTLE_TINT: 0.07,
   /* The film's TOOTH — how deep its micro-relief reads. See toothTex.
    *
@@ -216,8 +236,20 @@ export const FILM = {
    * reading as glittery. GLAZE came down with it for the same reason: a coat is
    * a second specular over the top of all those facets.
    *
+   * DOWN FROM 0.15 WITH MOTTLE, and the pair moved together on purpose. Relief
+   * and gloss-wander are two ways of drawing the same thing — a surface that is
+   * not flat — so smoothing the roughness map on its own just hands the job to
+   * the normals: the highlight stops breaking up and the geometry starts to,
+   * and the tape still reads creased. Halving this takes the slope out with it.
+   *
+   * 0.08 is the floor worth having rather than a step on the way to 0. At 0 the
+   * strip is a mathematically flat plane and the key lies on it as one unbroken
+   * band, which is the giveaway that reads as cellophane wrapper rather than
+   * tape. This is enough to keep the band from being perfectly clean and not
+   * enough to see as texture at hero size.
+   *
    * Live-tweak in dev: hero.FILM.TOOTH = 1.4; hero.tune() */
-  TOOTH: 0.15,
+  TOOTH: 0.08,
   /* Exposure on the FILM — the wound side and the strip, never the label. The
      exact counterpart of FACE below, and it exists for the same reason that
      one does: the two surfaces are lit by one set of lights, so without a knob
@@ -245,6 +277,110 @@ export const FILM = {
 
      Live-tweak in dev: hero.FILM.TONE = 0.7; hero.tune() */
   TONE: 0.72,
+
+  /* THE FILM'S OWN COLOUR — the roll's wound side and the dispensed strip, which
+   * are one surface and take one value.
+   *
+   * WHY IT IS HERE AT ALL. This colour used to come out of the GLB and nowhere
+   * else: whatever the export stated for the wound side was taken as the film's
+   * albedo and copied onto the strip, and STRIP.COLOR was only ever a stand-in
+   * for the seconds before the model landed. That is the right default and it
+   * is still the default — set this to null and the export is back in charge.
+   *
+   * What it could not do is be ART DIRECTED. The low-noise export states its
+   * film as a flat 0.8 linear grey, which is a NEUTRAL — and a neutral film on a
+   * page of saturated lime and brown reads as grey plastic rather than as the
+   * slightly warm, slightly cloudy stuff cellophane tape actually is. There is
+   * no knob on a neutral that fixes that: TONE moves it up and down and leaves
+   * it just as grey, and SAT has nothing to pull away from luminance.
+   *
+   * IT USED TO BE 0xe7e3d4 — the export's own lightness, a few points warm of
+   * neutral, and a deliberately small move on the grounds that a large bright
+   * flat area with real chroma in it stops reading as clear tape and starts
+   * reading as tinted plastic. That was true while the side was OPAQUE, which is
+   * what it no longer is. At GLASS.WOUND the wall's own colour is about three
+   * quarters of the pixel rather than all of it, and the rest is the core and the
+   * page seen through the film — so this can carry the amber that says cellophane
+   * and land it as a tint rather than as paint.
+   *
+   * AND IT HAD TO COME DOWN, which matters more than the hue. At the old value
+   * the roll's lit half was CLIPPING: albedo 0.8 linear, TONE 0.72, then an
+   * ambient of 0.66 and a key of 3.5 on top of that puts the top of the barrel
+   * past display white with the mottle squashed flat against the ceiling. A
+   * clipped surface has no highlight, because there is nothing left to be
+   * brighter than it — and a bright even white cylinder is exactly the read the
+   * whole exercise was trying to get away from. Roughly two thirds of the old
+   * lightness keeps the mottle and GLAZE's coat in range, and the tape now reads
+   * glossy where it used to read merely pale.
+   *
+   * SO IT WANTS CHECKING AGAINST THE LABEL, which is a printed gold. Warm the
+   * side too far and the two stop being two materials.
+   *
+   * IT IS THE ALBEDO, NOT THE PIXEL. TONE is applied on top of this exactly as
+   * it was applied on top of the export's value — this sits where that sat, so
+   * every relationship above and below it is unchanged — and then the key light
+   * and GLAZE's coat are on top of that again. So the colour on screen is not
+   * this hex and is not meant to be; this is what the surface IS, and the
+   * render is what it looks like under this section's light. Sampling the
+   * screenshot and correcting the number back toward the swatch would be
+   * undoing the exposure the whole material is graded around.
+   *
+   * IT IS THE WOUND SIDE'S ALONE NOW. It used to be both surfaces', on the
+   * reasoning that the strip is the same tape as the roll it comes off and two
+   * colours would be two materials — and that note said where to split when the
+   * case arrived. It has: see FILM.CAST_STRIP, and the reason there. This value
+   * is the roll's side and nothing else, unless CAST_STRIP is null, in which case
+   * the strip follows it exactly as it always did.
+   *
+   * null restores the export's own colour completely — the rollback is the same
+   * code path as the effect, and it is honoured by tune() as well as at load.
+   *
+   * Live-tweak in dev: hero.FILM.CAST = 0xd8d2be; hero.tune()
+   *                    hero.FILM.CAST = null;     hero.tune()   (back to the GLB) */
+  CAST: 0xd8c07f as number | null,
+  /* THE DISPENSED STRIP'S OWN COLOUR — the split the note above said to make
+   * when it came, and null means "the same tape as the roll", exactly as before.
+   *
+   * WHY IT CAME. A wound roll is a hundred turns of film stacked edge-on, so
+   * whatever tint one layer has is compounded a hundred times over and the side
+   * reads as a solid, nearly opaque colour. A SINGLE layer of that same film,
+   * held over a page, is very nearly clear, and the only colour left in it is
+   * the faint amber cellophane carries. Those are two different numbers about
+   * one material, not two materials — and one hex cannot be both: give the pair
+   * a single value and either the strip is as heavy as the roll's side or the
+   * side is as pale as one layer.
+   *
+   * IT IS THE STRIP'S ALBEDO, NOT WHAT SHOWS. GLASS below decides how much of
+   * this ever reaches the frame — at CLARITY 0.75 a quarter of the pixel is the
+   * film and three quarters is the page behind it, so the tint on screen is a
+   * quarter of this hex over whatever is back there. The two are read together:
+   * raising clarity fades this, and the correction belongs here rather than at
+   * CLARITY, which is about how see-through the tape is and not about what
+   * colour it is when it gets there.
+   *
+   * SO IT IS ALLOWED REAL CHROMA, where CAST above is not. That note warns that
+   * anything much off neutral stops reading as clear tape and starts reading as
+   * tinted plastic, and it is right about the WOUND SIDE, which is opaque and
+   * large. Quartered over the page's own colour a saturated hex lands as a wash.
+   *
+   * AND IT IS DARK, which is the part that surprises. The instinct on clear tape
+   * is to reach for a pale, near-white amber, and every pale value tried here
+   * read as MILK: a lit surface's diffuse is roughly its albedo times the light
+   * on it, LIGHT.AMBIENT alone is 0.66 of that, and a quarter of a near-white
+   * albedo is still around 90/255 of veil laid over the page — enough to lift
+   * dark green most of the way to sage. Real film scatters almost nothing; what
+   * makes it visible is the highlight, which GLASS.SHEEN now carries separately.
+   * So the diffuse's whole job here is a faint warm cast, and about a third of
+   * the brightness the wound side wants is what that takes. Pale it toward
+   * 0xe8c877 and the tape fogs; darken it past about 0x8a6524 and it stops
+   * tinting and starts to soot.
+   *
+   * null hands the strip straight back to the wound side, which is the rollback
+   * and is the same code path as the effect (stripCastOf).
+   *
+   * Live-tweak in dev: hero.FILM.CAST_STRIP = 0xc99a3a; hero.tune()
+   *                    hero.FILM.CAST_STRIP = null;     hero.tune()  (one film) */
+  CAST_STRIP: 0xb2842e as number | null,
   /* Near zero, and it used to be 0.25 — the same correction the face made, a
      surface late.
    *
@@ -347,6 +483,32 @@ export const FILM = {
      1.15 the artwork's brightest parts clip, and clipped channels drift toward
      white — which costs the saturation FACE_SAT is there to add. */
   FACE: 0.6,
+  /* Exposure on the roll's INSIDE — the bore's wall and the disc behind it (see
+   * INNER), which are the same printed artwork as the label and want nothing
+   * like the same treatment.
+   *
+   * IT EXISTS BECAUSE THE WOUND SIDE WENT SEE-THROUGH. Until GLASS.WOUND these
+   * two surfaces were all but invisible: the bore is a deep, small hole and the
+   * wall in front of it was solid. Now the roll's whole barrel is a window onto
+   * them, and what came through was the export's texture at the label's own
+   * exposure — the SWEET TAPE mark, full strength, MIRRORED, because the far
+   * side of a bore faces away. Legible reversed branding across the hero's key
+   * object reads as a rendering fault, not as depth.
+   *
+   * DOWN RATHER THAN OFF, and the difference is the point. Hiding the interior
+   * would leave the wall a translucent nothing, and a window onto nothing is
+   * just a paler wall — the reason to see through it at all is that there is
+   * something behind. What is wanted is what you actually get looking into a
+   * roll: a dark, warm, structured interior where the eye reads DEPTH and never
+   * quite resolves a shape. About a fifth of the label's exposure is where the
+   * mark stops being readable and starts being shading.
+   *
+   * It is the same operation as FACE, against each material's own exported
+   * colour, so it can be moved either way without compounding. Raise it toward
+   * FACE and the branding comes back; take it to 0 and the roll is a hollow.
+   *
+   * Live-tweak in dev: hero.FILM.INNER = 0.3; hero.tune() */
+  INNER: 0.12,
   /* The face's own saturation and contrast — the same two operations as SAT
      and PUNCH above, on uniforms of their own, so the printed label can be
      graded without dragging the wound side and the strip along with it.
@@ -469,10 +631,17 @@ export const FILM = {
  * catch light while the middle stays open. That is what an edge of real tape
  * does, and it reads as one.
  *
- * THE STRIP ONLY. The wound side is not translucent here and the printed label
- * never will be — see the note where filmGlass is passed. The roll is a single
- * shell in this export with no inner wall, so a see-through wound side would be
- * a see-through hollow, which is a different job entirely.
+ * NOT THE PRINTED LABEL, EVER — see the note where filmGlass is passed, and the
+ * two independent reasons there that it cannot happen by accident.
+ *
+ * THE WOUND SIDE, THOUGH, YES — and the note that used to sit here said it could
+ * not, on the grounds that the roll was a single shell and a see-through side
+ * would be a see-through hollow. THAT WAS WRONG ABOUT THE EXPORT. Low-Noise-Tape
+ * carries six prims, and one of them (`Core`) is a second cylinder wall at r 0.399
+ * inside the wound side's 0.499, with the two end discs closing the gap between
+ * them. It is a proper annulus. So there is something BEHIND the wound side to see
+ * through it to, which is what makes WOUND below possible at all — and if a future
+ * export ever does arrive as a bare shell, that is the setting to take back to 0.
  *
  * Live-tweak in dev: hero.GLASS.CLARITY = 0.5; hero.tune() */
 export const GLASS = {
@@ -486,15 +655,91 @@ export const GLASS = {
      0..1 — so the alpha there is 1 minus this.
    *
    * It is the whole look, and both ends of it are failures. Under about 0.15 the
-   * tape reads as slightly dirty rather than as see-through; past about 0.45 the
-   * board behind starts to win and the strip stops being a thing lying ON the
-   * page and becomes a tint over it. What is wanted is the read you get holding
-   * real tape against print: you can tell what is under it, and you can tell
-   * there is tape.
+   * tape reads as slightly dirty rather than as see-through. The other end used
+   * to be near 0.45, where the note here warned that the board behind started to
+   * win and the strip stopped being a thing lying ON the page and became a tint
+   * over it. What is wanted either way is the read you get holding real tape
+   * against print: you can tell what is under it, and you can tell there is tape.
+   *
+   * THAT CEILING MOVED, and the two changes that moved it are the ones to undo
+   * before lowering this again. It was not the transparency that made 0.45 the
+   * limit; it was what the remaining opacity was made of. The film's albedo came
+   * from the roll's near-white wound side, so the half that was not the page was
+   * a bright neutral veil — a whiter tape, not a clearer one, and the eye reads
+   * a white veil as fog long before it reads it as glass. And every knob that
+   * said "tape" — the coat, the grain, the tooth — was scaled by the same alpha
+   * as that veil, so pushing the page through meant giving up the highlight in
+   * exact step. FILM.CAST_STRIP fixed the first (a dark warm albedo tints instead
+   * of fogging) and SHEEN below fixed the second (the highlight is exempt), and
+   * with both in place three quarters of the page comes through and the strip
+   * still reads as a thing in front of it. Drop either and this wants to come
+   * back down.
    *
    * Face-on is the WORST case, deliberately. This is the maximum clarity the
    * strip ever reaches; the Fresnel below only ever closes it up from here. */
-  CLARITY: 0.3,
+  CLARITY: 0.75,
+  /* THE SHEEN'S EXEMPTION — how much of the strip's REFLECTED light is held out
+   * of the fade, 0..1. It is what makes a genuinely clear tape possible at all,
+   * and without it CLARITY has a ceiling well below the one above.
+   *
+   * Alpha does not distinguish between the two things leaving a surface. The
+   * light that came back OFF the film — its specular, and GLAZE's clear coat
+   * over the top of it — and the light the film is itself putting into the room,
+   * its diffuse, are summed into one colour long before the blend gets to them.
+   * So `a` scales both, and a strip at alpha 0.38 keeps 38% of its highlight.
+   * That is why raising CLARITY on its own does not make the tape clearer so
+   * much as make it DISAPPEAR: the sheen is the only evidence a transparent
+   * object is in front of the page, and it fades in exact step with the body it
+   * is supposed to be sitting on.
+   *
+   * Real film does not spend one budget on both. A sheet of cellophane passes
+   * almost everything behind it AND throws a full-strength highlight, and it is
+   * that combination — not the transparency — that the eye reads as glass. So
+   * the reflected part is added back at full weight in proportion to what the
+   * fade took out of it: 1 restores all of it, 0 is the old behaviour to the
+   * pixel, and it goes back on the frame AFTER the encode so the addition
+   * happens in the space the compositor works in.
+   *
+   * WHAT IT COSTS is one flag, and the flag is on everything. Adding light on
+   * top of a faded surface only composes correctly against a PREMULTIPLIED
+   * blend, so every material in here now carries premultipliedAlpha — see
+   * applyFilmLook for why all of them rather than only the see-through one.
+   *
+   * Live-tweak in dev: hero.GLASS.SHEEN = 0.4; hero.tune() */
+  SHEEN: 0.15,
+  /* THE WOUND SIDE'S OWN CLARITY — the roll, not the tape coming off it, and 0
+   * puts the roll back exactly as it was.
+   *
+   * WHY IT IS A SEPARATE NUMBER AND A SMALL ONE. CLARITY above is one layer of
+   * film. This is the cut edge of a few hundred of them wound tight, and what
+   * that stack does to light is not "the same material, thicker" — every layer
+   * boundary is another place to scatter, so a clear roll's side is CLOUDY in a
+   * way its own tape is not. Set this to CLARITY and the roll reads as a glass
+   * bangle; a quarter of it is the read that says wound film.
+   *
+   * IT IS SPENT TWICE, WHICH DOES MOST OF THE WORK. The wound side is one
+   * double-sided cylinder wall, so all but the silhouette has both a near face
+   * and a far one between the camera and whatever is behind — 0.28 through each
+   * is under a tenth of the way through both. What that gives for free is the
+   * gradient a roll actually has: the CORE shows through at nearly a third
+   * (there is only the near wall over it), while past the core's edge the page
+   * behind has to cross two walls and the rim stays all but solid. Turn it up
+   * expecting the page and you will get the core instead.
+   *
+   * AND IT COSTS THE DEPTH BUFFER. A translucent wall cannot write depth — the
+   * near and far faces arrive in one draw in buffer order, so with depthWrite on
+   * whichever lands first z-rejects the other and the wall renders in patches.
+   * Off, both blend, which is also the physically right answer for a shell.
+   * The consequence to know about is that the wound side then stops occluding
+   * the DISPENSED STRIP, and the strip pays out from the roll's BACK tangent —
+   * so the tape behind the roll now shows faintly through it. That is either the
+   * best detail in the shot or a band across the roll, depending on this number.
+   * The interior (Core, the end discs, the label) is opaque and drawn in the
+   * opaque pass, so none of it is affected.
+   *
+   * Live-tweak in dev: hero.GLASS.WOUND = 0.4; hero.tune()
+   *                    hero.GLASS.WOUND = 0;   hero.tune()   (solid roll) */
+  WOUND: 0.13,
   /* How fast it closes toward grazing — the exponent on the Fresnel term.
    *
    * 1 is a linear ramp, which puts haze halfway up a surface that is barely
@@ -773,6 +1018,7 @@ function tearGeometry(vRow = 0) {
   const pos: number[] = [];
   const nor: number[] = [];
   const uvs: number[] = [];
+  const tan: number[] = [];
   const vert = (x: number, y: number) => {
     pos.push(x, y, 0);
     // The same cross-curl as the strip it ends, so the lengthwise sheen runs
@@ -790,6 +1036,38 @@ function tearGeometry(vRow = 0) {
        longer the tape got, which is the one place on the strip that must not
        look like it is being squeezed. */
     uvs.push(x + 0.5, vRow);
+    /* AND THE TANGENT, STATED RATHER THAN DERIVED — which the line above is
+     * exactly why, and without it the tear renders as a band of BLOWN WHITE.
+     *
+     * A material with a normal map or anisotropy needs a tangent frame, and if
+     * the geometry does not carry one three reconstructs it from the screen-space
+     * derivatives of the UVs (getTangentFrame): the bitangent comes out as
+     * `q1perp * st0.y + q0perp * st1.y`. Both of those terms are the derivative
+     * of V — and V is a CONSTANT here, so both are zero and the bitangent is the
+     * ZERO VECTOR. Nothing downstream checks for that. The anisotropic GGX lobe
+     * is built from T and B, and with B gone it collapses from an ellipse to a
+     * line: the denominator loses the term that was damping it and the specular
+     * goes to several times display white, which clips, which is the white band.
+     *
+     * Note what that means for the OTHER knobs. It is not a grade problem and no
+     * amount of tuning the film's colour, exposure or clarity would have touched
+     * it — the cap and the strip share one material and every uniform on it. The
+     * only two settings that hid it were FILM.STRETCH at 0 (no anisotropy, no
+     * lobe to collapse) and FILM.TOOTH at 0 with it, which is how it survived.
+     *
+     * The frame is not ambiguous, though — only underivable. u runs along the
+     * cap's +x, so the tangent is +x rotated into the curled normal's plane, and
+     * three takes the bitangent from cross( normal, tangent ) itself: that comes
+     * out (0, 1, 0), up the tape, which is the strip's own frame. Handedness is
+     * left at +1 for both caps. The cut's cap is mirrored by a negative scale.y
+     * at pose time, so strictly its bitangent wants flipping with it — but V does
+     * not vary on either cap, so the only thing riding on that is which way the
+     * tooth's relief leans across a 16px serration.
+     *
+     * `vertexTangents` is decided per GEOMETRY rather than per material, so this
+     * buys the caps their own program and leaves the strip on the derived frame,
+     * where its UVs are well conditioned and the derivation is correct. */
+    tan.push(Math.cos(a), 0, -Math.sin(a), 1);
   };
 
   for (let i = 0; i < n; i++) {
@@ -808,6 +1086,7 @@ function tearGeometry(vRow = 0) {
   geo.setAttribute("position", new Float32BufferAttribute(pos, 3));
   geo.setAttribute("normal", new Float32BufferAttribute(nor, 3));
   geo.setAttribute("uv", new Float32BufferAttribute(uvs, 2));
+  geo.setAttribute("tangent", new Float32BufferAttribute(tan, 4));
   return geo;
 }
 
@@ -942,6 +1221,22 @@ const TURN_WOUND = Math.PI / 2;
  * roll's own — which is what a mismatched name looks like on screen. */
 const WOUND = new Set(["Material", "Material.003"]);
 
+/* AND WHICH ONES ARE THE ROLL'S INSIDE — the second name test, added when the
+ * wound side became a window onto what it had been hiding. See FILM.INNER.
+ *
+ * These are artwork like every other surface that is not the film, and they take
+ * the face's grade and the face's dome; the only thing that differs is the
+ * exposure, so a name that is not in here costs nothing but brightness. That is
+ * deliberate — the register is a way to say "this is behind something", not a
+ * third material family.
+ *
+ * `Core` is the bore's wall, at r 0.399 against the wound side's 0.499, and it is
+ * what fills the barrel when the roll turns side-on. `white` is the disc closing
+ * the bore behind the label. Whole names, for the reason WOUND gives above, and
+ * these two are descriptive rather than serial — so unlike Material.003 they have
+ * a fair chance of surviving a re-export. */
+const INNER = new Set(["Core", "white"]);
+
 /* The film's finish — the part of it that needs a physical material. Kept
    apart from applyFilmLook for the same reason applyFaceLook is: that one is
    the GRADE, which every surface shares, and this is the SURFACE, which the
@@ -1011,18 +1306,39 @@ const faceLook: Look = {
  * shader text, so all three families compile once between them and share the
  * result, while the uniforms are bound per material and stay independent. A
  * third grade still costs no third program. */
-type Glass = { uClarity: { value: number }; uEdge: { value: number } };
+type Glass = {
+  uClarity: { value: number };
+  uEdge: { value: number };
+  uSheen: { value: number };
+};
 
 /* The default, and it is the safe one: clarity 0 is alpha 1 is today's look.
  * Shared by every material that is not the dispensed strip — the wound side and
  * the printed label — so both of them carry the block and neither can be moved
- * by it. Never written to. */
-const noGlass: Glass = { uClarity: { value: 0 }, uEdge: { value: 1 } };
+ * by it. uSheen is belt and braces: at clarity 0 the exemption is multiplied by
+ * 1 - alpha and so is zero whatever this says. Never written to. */
+const noGlass: Glass = {
+  uClarity: { value: 0 },
+  uEdge: { value: 1 },
+  uSheen: { value: 0 },
+};
 
 /* And the strip's own, which tune() drives off GLASS. */
 const filmGlass: Glass = {
   uClarity: { value: GLASS.CLARITY * GLASS.AMOUNT },
   uEdge: { value: GLASS.EDGE },
+  uSheen: { value: GLASS.SHEEN },
+};
+
+/* And the ROLL's, which is a third set for the same reason there was a second —
+   see GLASS.WOUND. The wound side is far cloudier than one layer of its own tape,
+   so it cannot share filmGlass's clarity; it shares the shape of the falloff and
+   the sheen's exemption, which are about how film behaves rather than about how
+   much of this film there is. Still no fourth program: the source is identical. */
+const woundGlass: Glass = {
+  uClarity: { value: GLASS.WOUND * GLASS.AMOUNT },
+  uEdge: { value: GLASS.EDGE },
+  uSheen: { value: GLASS.SHEEN },
 };
 
 function applyFilmLook(
@@ -1032,13 +1348,34 @@ function applyFilmLook(
 ) {
   mat.roughness = FILM.GLOSS;
   mat.metalness = FILM.METAL;
+  /* PREMULTIPLIED, and on all three families rather than on the see-through one
+   * — see GLASS.SHEEN for what needs it.
+   *
+   * The strip's sheen is added to the frame after its body has been faded, and
+   * an addition only survives a blend that does not scale the source: three sets
+   * (SRC_ALPHA, 1 - SRC_ALPHA) for a plain transparent material, which would
+   * multiply the highlight straight back down by the alpha it was exempted
+   * from. With this it sets (ONE, 1 - SRC_ALPHA) instead and the shader hands
+   * over colour that has already been scaled, so the exemption can simply not be
+   * scaled.
+   *
+   * The other two are opaque and need none of it. They carry it because it
+   * decides a #define, and a define only one material had would split the
+   * program these three deliberately share (see the Look and Glass notes). On a
+   * surface whose alpha is 1 the whole thing is a multiply by one. */
+  mat.premultipliedAlpha = true;
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uSat = look.uSat;
     shader.uniforms.uPunch = look.uPunch;
     shader.uniforms.uClarity = glass.uClarity;
     shader.uniforms.uEdge = glass.uEdge;
+    shader.uniforms.uSheen = glass.uSheen;
     shader.fragmentShader =
-      "uniform float uSat;\nuniform float uPunch;\nuniform float uClarity;\nuniform float uEdge;\n" +
+      /* gReflect is a global rather than a local because the two halves of the
+         exemption cannot be neighbours: it is WORKED OUT where the lighting
+         still exists as separate terms, and SPENT at the very end of the
+         fragment, after the encode. Nothing between the two can be moved. */
+      "uniform float uSat;\nuniform float uPunch;\nuniform float uClarity;\nuniform float uEdge;\nuniform float uSheen;\nvec3 gReflect;\n" +
       shader.fragmentShader
         .replace(
           "#include <map_fragment>",
@@ -1092,8 +1429,39 @@ function applyFilmLook(
              1 - uClarity, so the knob is the full range of the effect and there
              is nothing to clamp. */
           diffuseColor.a = mix( 1.0 - uClarity, 1.0, pow( 1.0 - ndv, uEdge ) );
+          /* The sheen's exemption — see GLASS.SHEEN. What the fade is about to
+             take out of the REFLECTED light only, banked to be put back at the
+             foot of the shader.
+
+             outgoingLight minus totalDiffuse is that reflection: the specular,
+             the emissive (nothing, here) and GLAZE's clear coat, which three has
+             already folded in a few lines above this. Stated as the remainder
+             rather than summed from its parts on purpose — the coat's terms sit
+             inside an ifdef on USE_CLEARCOAT, and naming them here would fail to
+             compile the moment GLAZE went to zero, which is exactly the rollback
+             that has to keep working. Clamped because that same fold scales the
+             diffuse by ( 1 - clearcoat * F ), so the subtraction can undershoot
+             by a hair at grazing angles. */
+          gReflect = max( outgoingLight - totalDiffuse, vec3( 0.0 ) )
+            * ( 1.0 - diffuseColor.a ) * uSheen;
         }
         #include <opaque_fragment>`
+        )
+        /* AND SPENT HERE, which is the last line of the fragment stage.
+         *
+         * After premultiplied_alpha_fragment rather than before it, because that
+         * chunk is the multiply this term is being exempted FROM: everything
+         * ahead of it is scaled by alpha and this must not be.
+         *
+         * And through linearToOutputTexel — the same encode colorspace_fragment
+         * put the rest of the frame through two lines earlier, injected into
+         * every fragment shader by three's program builder. Adding linear light
+         * to an already-encoded pixel would land the highlight far brighter than
+         * asked for, and brighter the darker the surface under it. */
+        .replace(
+          "#include <premultiplied_alpha_fragment>",
+          `#include <premultiplied_alpha_fragment>
+        gl_FragColor.rgb += linearToOutputTexel( vec4( gReflect, 1.0 ) ).rgb;`
         );
   };
   mat.needsUpdate = true; // patched source => recompile
@@ -1135,14 +1503,72 @@ export function createHeroTape(
      tweak can re-apply the finish to all of them at once; the roll's wound side
      joins the list when the model lands. The FACE is deliberately NOT in here:
      its finish is its own (applyFaceLook), and this list would overwrite it. */
-  const filmMats: { mat: MeshPhysicalMaterial; turn: number; base: Color }[] =
-    [];
+  /* `exported` is the colour the GLB stated, kept beside the one in use so
+     FILM.CAST can be taken back OFF again — an override that destroys what it
+     overrides is a one-way door, and setting CAST to null would otherwise leave
+     the film on the last hex it was given. Only the wound side carries one; the
+     strip has no export of its own and follows it (see castOf). */
+  const filmMats: {
+    mat: MeshPhysicalMaterial;
+    turn: number;
+    base: Color;
+    exported?: Color;
+  }[] = [];
+
+  /* The film's albedo: the authored colour if there is one, the export's own if
+     there is not. One function, called at load and again by every tune(), so
+     the two paths cannot disagree about which colour is in force. */
+  const castOf = (exported: Color) =>
+    FILM.CAST === null ? exported.clone() : new Color(FILM.CAST);
+
+  /* And the STRIP's, which is whatever the wound side resolved to unless it has
+     been given a colour of its own — see FILM.CAST_STRIP. Takes the side's
+     resolved base rather than the export's, so a null here still follows CAST:
+     "the same tape as the roll" has to mean the roll as it is now, not as it
+     shipped. Same shape as castOf, and called from the same two places, so the
+     load and the tweak cannot disagree about which colour is in force. */
+  const stripCastOf = (wound: Color) =>
+    FILM.CAST_STRIP === null ? wound.clone() : new Color(FILM.CAST_STRIP);
+
+  /* The roll's wound side, once the model has landed — held on its own because
+     it is the one surface tune() has to reach for by identity rather than by
+     grade. Everything else it does to the film it does to the whole of filmMats;
+     the transparency is per-surface (GLASS.CLARITY against GLASS.WOUND) and there
+     is no way to tell which entry is which from the grade alone. */
+  let woundMat: MeshPhysicalMaterial | null = null;
+
+  /* Turn a film surface see-through, or solid again.
+   *
+   * Both flags together and in one place, because they are one decision: three
+   * decides the OPAQUE define off `transparent` (which is what lets the shader's
+   * alpha out at all) and the blend and depth state off both, and a surface that
+   * had one without the other would either ignore the alpha it computes or eat
+   * its own far side. See GLASS.WOUND on why depth has to go.
+   *
+   * `transparent` is a plain field with no setter — three never sees it change —
+   * so the recompile is ours to ask for, and only when it actually crosses: at
+   * load this runs once with the flag already right, and a needsUpdate on every
+   * tune() would be a recompile for a knob that did not move. depthWrite has no
+   * define behind it and needs no such care. */
+  function setGlassy(mat: MeshPhysicalMaterial, glassy: boolean) {
+    mat.depthWrite = !glassy;
+    if (mat.transparent === glassy) return;
+    mat.transparent = glassy;
+    mat.needsUpdate = true;
+  }
 
   /* The roll's face materials, each with the colour it arrived from the export
      with. FILM.FACE is applied against that original rather than against the
      current value, so tuning it repeatedly sets the exposure instead of
      compounding it. */
-  const faces: { mat: MeshPhysicalMaterial; base: Color }[] = [];
+  const faces: {
+    mat: MeshPhysicalMaterial;
+    base: Color;
+    /** Behind the wound side rather than on the outside of it — see FILM.INNER.
+        A flag rather than the exposure itself, so tune() re-reads the knob and a
+        live tweak takes on the next frame. */
+    inner: boolean;
+  }[] = [];
 
   /* And their geometry, with the normals it arrived with — same reasoning, for
      the dome. Keyed by geometry rather than by mesh: one geometry is domed
@@ -1173,9 +1599,11 @@ export function createHeroTape(
      scale.y is the paid-out length; it lives in the scene, not the spinning
      group, because dispensed tape does not rotate.
 
-     COLOR is only the pre-load fallback; the roll's own side colour replaces it
-     the moment the model arrives. The near-white tint map keeps that colour
-     authority — it only adds the faint unevenness.
+     COLOR is only the pre-load fallback, and only while FILM.CAST_STRIP is null:
+     with a colour authored there tune() takes it immediately, and without one
+     the roll's own side colour replaces it the moment the model arrives. The
+     near-white tint map keeps whichever it is in authority — it only adds the
+     faint unevenness.
 
      It arrives with no maps at all: remap() below is what gives it them, and
      tune() runs before the first frame. One code path for building them, and
@@ -1384,15 +1812,40 @@ export function createHeroTape(
     const clarity = GLASS.CLARITY * GLASS.AMOUNT;
     filmGlass.uClarity.value = clarity;
     filmGlass.uEdge.value = GLASS.EDGE;
-    const glassy = clarity > 0;
-    if (stripMat.transparent !== glassy) {
-      stripMat.transparent = glassy;
-      stripMat.needsUpdate = true;
-    }
+    filmGlass.uSheen.value = GLASS.SHEEN;
+    setGlassy(stripMat, clarity > 0);
+    /* And the roll's side, on its own clarity and through the same helper — see
+       GLASS.WOUND. Before the model lands there is nothing here to flip, and
+       tune() runs again for every tweak afterwards, so the roll picks the setting
+       up the moment it exists. */
+    const woundClarity = GLASS.WOUND * GLASS.AMOUNT;
+    woundGlass.uClarity.value = woundClarity;
+    woundGlass.uEdge.value = GLASS.EDGE;
+    woundGlass.uSheen.value = GLASS.SHEEN;
+    if (woundMat) setGlassy(woundMat, woundClarity > 0);
     /* No needsUpdate here, unlike the faces below: GLAZE and STRETCH crossing
        zero adds or drops USE_CLEARCOAT / USE_ANISOTROPY, and three's own
        setters bump the material's version when they do. Tweaking either
        within its range is a uniform and lands on the next frame. */
+    /* FILM.CAST, re-resolved before the exposure is re-applied — so a tweak in
+       the console lands on this frame and so does taking it off again.
+
+       The wound side is the only entry with an export behind it, and the strip
+       follows whatever that resolves to: the two are one material and there is
+       one place that decides its colour. Before the model lands there is no
+       such entry, and the strip is left on STRIP.COLOR — which is exactly the
+       fallback's job. */
+    const wound = filmMats.find((f) => f.exported);
+    if (wound) {
+      wound.base.copy(castOf(wound.exported!));
+      stripFilm.base.copy(stripCastOf(wound.base));
+    } else if (FILM.CAST_STRIP !== null) {
+      /* No model yet, so there is no wound side to follow — but an authored
+         strip colour does not need one, and taking it now means the fallback
+         the first frames draw is the tape's colour rather than STRIP.COLOR. */
+      stripFilm.base.set(FILM.CAST_STRIP);
+    }
+
     filmMats.forEach(({ mat, turn, base }) => {
       mat.roughness = FILM.GLOSS;
       mat.metalness = FILM.METAL;
@@ -1407,7 +1860,7 @@ export function createHeroTape(
     stripRough = stripMat.roughnessMap as Texture;
     stripTooth = stripMat.normalMap as Texture;
     faces.forEach((f) => {
-      f.mat.color.copy(f.base).multiplyScalar(FILM.FACE);
+      f.mat.color.copy(f.base).multiplyScalar(f.inner ? FILM.INNER : FILM.FACE);
       applyFaceLook(f.mat);
       /* Unlike the film knobs above, COAT crossing zero adds or drops
          USE_CLEARCOAT and so needs new source. One recompile per tweak, and
@@ -1585,21 +2038,41 @@ export function createHeroTape(
             if (!film) {
               film = toPhysical(mat);
               swapped.set(mat, film);
-              applyFilmLook(film);
+              /* On woundGlass, not the default noGlass and not the strip's —
+                 the roll's side is see-through on a clarity of its own, because
+                 a wound stack scatters far more than the single layer coming off
+                 it. See GLASS.WOUND. */
+              applyFilmLook(film, filmLook, woundGlass);
               applyFilmFinish(film, TURN_WOUND);
+              woundMat = film;
+              /* And the flags to match, off the UNIFORM rather than off GLASS —
+                 tune() has already run once by here and is what set it, so
+                 reading it back is how the load and the tweak are guaranteed to
+                 agree about whether this surface is see-through. The strip needs
+                 no equivalent: it exists before tune() does. */
+              setGlassy(film, woundGlass.uClarity.value > 0);
               remap(film); // the export's own maps are replaced, never disposed
-              /* The export's colour, before FILM.TONE has touched it — that is
-                 what TONE is a fraction OF, on this surface and on the strip
-                 alike. Taken now, because the next line applies the exposure
-                 and there is no way back to it afterwards. */
-              const base = film.color.clone();
-              filmMats.push({ mat: film, turn: TURN_WOUND, base });
-              film.color.multiplyScalar(FILM.TONE);
-              /* The strip IS this tape, so it takes the roll's colour — and its
-                 stored base with it, or TONE would go on being applied against
-                 the pre-load fallback for the rest of the session. */
-              stripFilm.base.copy(base);
-              stripMat.color.copy(base).multiplyScalar(FILM.TONE);
+              /* The export's colour, before FILM.TONE has touched it. Taken
+                 now, because the next lines apply the exposure and there is no
+                 way back to it afterwards — and kept, so FILM.CAST can be set
+                 back to null and hand the export its surface back.
+
+                 What TONE is a fraction of is `base`, which is the export's
+                 colour or the authored one standing in its place. Same
+                 arrangement either way, on this surface and on the strip
+                 alike. */
+              const exported = film.color.clone();
+              const base = castOf(exported);
+              filmMats.push({ mat: film, turn: TURN_WOUND, base, exported });
+              film.color.copy(base).multiplyScalar(FILM.TONE);
+              /* The strip is this tape one layer thick, so it takes the roll's
+                 colour unless FILM.CAST_STRIP has given it one of its own — and
+                 its stored base moves with it either way, or TONE would go on
+                 being applied against the pre-load fallback for the rest of the
+                 session. */
+              const stripBase = stripCastOf(base);
+              stripFilm.base.copy(stripBase);
+              stripMat.color.copy(stripBase).multiplyScalar(FILM.TONE);
             }
             mesh.material = film;
             return;
@@ -1618,8 +2091,9 @@ export function createHeroTape(
                the tape it is wound on is not. See FILM.FACE_SAT. */
             applyFilmLook(phys, faceLook);
             applyFaceLook(phys); // after it: this overrides the shared finish
-            faces.push({ mat: phys, base: phys.color.clone() });
-            phys.color.multiplyScalar(FILM.FACE);
+            const inner = INNER.has(mat.name);
+            faces.push({ mat: phys, base: phys.color.clone(), inner });
+            phys.color.multiplyScalar(inner ? FILM.INNER : FILM.FACE);
           }
           mesh.material = phys;
 

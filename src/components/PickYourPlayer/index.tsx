@@ -151,12 +151,26 @@ export default function PickYourPlayer() {
         <div className="pick-guide" aria-hidden="true" />
 
         {/* A list, because that is what it is: six products, in a set order,
-            read across. The rolls are not links — there are no product routes
-            for them to lead to yet — and nothing is lost by that here: every
-            roll is fully legible standing still, so a reader who never moves a
-            pointer over the row has already been told everything it says. When
-            the routes land, each <li> gains an <a> around the tilt and the
-            pointer's pick wants a :focus-visible twin to go with it. */}
+            read across. THE ROUTES HAVE LANDED — /products/<id>, one page per
+            tape (see (frontend)/products/[id]/page.tsx) — so each roll is now
+            the link this note used to promise, and the <a> is inside the <li>
+            and around the tilt exactly as it said.
+
+            AROUND THE TILT AND NOT AROUND THE <li>: the <li> is where fan.ts
+            writes a z-index to lift the picked roll clear, and the tilt box
+            inside it is what carries the transforms. An anchor wrapped outside
+            would be a third box between those two with nothing to do; wrapped
+            inside, it is the tilt box itself and costs the layout nothing.
+
+            The name is on the anchor and the image's alt is empty — a picture
+            with its own alt inside a labelled link has the same thing read out
+            twice. The masthead's badge makes the same call.
+
+            :focus-visible is the twin this note also asked for, and it is a
+            RING rather than the lift the pointer gets — see the rule in
+            global.css, which says why: fan.ts owns this element's transform and
+            rewrites it on every pointer move, so a lift declared in CSS would
+            not survive the first twitch of the mouse. */}
         <ul className="pick-fan">
           {ROLLS.map((tape, i) => (
             /* --i is the roll's place in the line, and the stylesheet stacks the
@@ -180,14 +194,18 @@ export default function PickYourPlayer() {
                   tilt is the roll being put down and picked up, and the face is
                   the artwork sliding inside it as its neighbour is lifted. One
                   element cannot carry both — they are both transforms. */}
-              <span className="pick-roll-tilt">
+              <a
+                className="pick-roll-tilt"
+                href={`/products/${tape.id}`}
+                aria-label={tape.label}
+              >
                 <img
                   className="pick-roll-face"
                   src={tape.card}
-                  alt={tape.label}
+                  alt=""
                   draggable={false}
                 />
-              </span>
+              </a>
             </li>
           ))}
         </ul>

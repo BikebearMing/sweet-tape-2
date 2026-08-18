@@ -66,6 +66,41 @@ const CAMERA_Z = 2.3;
 const FACE_FORWARD = -Math.PI / 2;
 const DPR_CAP = 2;
 
+/* THE LIGHTING, and why it is an argument rather than three constants.
+ *
+ * This viewer was written for one stage — the slider's, where the roll stands
+ * on a saturated field at full brightness — and its numbers are tuned for it:
+ * ambient near pi so a camera-facing surface leaves the renderer at almost
+ * exactly the artwork's own colour, with a single directional adding just
+ * enough shape to the rim not to push the label past it. That is the right
+ * balance THERE and it is documented at the lights themselves.
+ *
+ * It was opened up for a stage that no longer exists: the product page's origin
+ * section used to build a viewer of its own with the roll turned thirty degrees
+ * on the site's DARK green, and a wound side — one broad, evenly-curved,
+ * untextured surface — lit for a bright stage comes out as a flat tan slab.
+ * There is nothing in the scene for it to be shaded AGAINST, because ambient
+ * that high leaves almost no gradient across a cylinder, and the one directional
+ * is placed to catch a face rather than a flank. That section shows the SLIDER'S
+ * roll now (see ProductIntro/roll.ts), so nothing passes a light today.
+ *
+ * The seam is kept because the next stage that wants one will want it for the
+ * same reason, and because it costs nothing: the defaults below ARE the
+ * slider's, exactly, so passing nothing gets the behaviour this file has always
+ * had. FILL in particular is only BUILT when asked for, so a scene that does not
+ * ask does not gain a light it never had.
+ */
+export type ViewerLight = {
+  /** The key. Shape on the rim and the side. */
+  key?: number;
+  /** Flat, directionless base, in units of pi — 1 leaves a surface at albedo. */
+  ambient?: number;
+  /** A second directional from the far side, to model a curved flank. 0 = off. */
+  fill?: number;
+};
+
+const LIGHT: Required<ViewerLight> = { key: 0.7, ambient: 0.82, fill: 0 };
+
 export type TapeViewer = {
   /** True once this model is resident and can be flipped to. */
   ready(url: string): boolean;
@@ -81,8 +116,10 @@ export type TapeViewer = {
 
 export function createTapeViewer(
   container: HTMLElement,
-  urls: string[]
+  urls: string[],
+  light?: ViewerLight
 ): Promise<TapeViewer> {
+  const lit = { ...LIGHT, ...light };
   const scene = new Scene();
 
   const camera = new PerspectiveCamera(FOV, 1, 0.01, 100);
@@ -101,9 +138,20 @@ export function createTapeViewer(
      camera-facing surface comes out at almost exactly its albedo, i.e. the
      artwork as authored. Held a touch under so the directional can add shape
      to the rim and side without pushing the face past the artwork. */
-  const dir = new DirectionalLight(0xffffff, 0.7);
+  const dir = new DirectionalLight(0xffffff, lit.key);
   dir.position.set(2, 3, 4);
-  scene.add(dir, new AmbientLight(0xffffff, Math.PI * 0.82));
+  scene.add(dir, new AmbientLight(0xffffff, Math.PI * lit.ambient));
+
+  /* The fill, and it is only built when it is asked for — an unused light is
+     still a light every material has to be shaded against. Placed opposite and
+     BELOW the key rather than mirroring it: what it is there to do is put a
+     gradient across the wound side's curve, and a second light at the key's own
+     height simply flattens the cylinder from the other direction. */
+  if (lit.fill > 0) {
+    const back = new DirectionalLight(0xffffff, lit.fill);
+    back.position.set(-3, -0.5, 2);
+    scene.add(back);
+  }
 
   const canvas = renderer.domElement;
   // Arrives invisible and fades up once the first real frame has been

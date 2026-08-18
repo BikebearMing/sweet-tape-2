@@ -329,53 +329,66 @@
 
 /* ------------------------------------------------------------------
    RELIABLE — 8 letters.
+
+   Set against the mock, and the word now leans through its whole length: the
+   --dr values run -7deg at the R to +7deg at the last E, passing through zero
+   at the I. That is a DELTA on the arc's own tilt and not a replacement for it
+   (--arc-tilt is left at the 8deg default here, unlike TRUSTY, which zeroes
+   it), so what is written below is the amount the drawn letters wanted ON TOP
+   of the curve they are already standing on.
+
+   THIS WORD IS ON TWO PAGES NOW and these numbers serve both: the slider's OPP
+   slide on the home page, and the whole of /products/opp, whose opening screen
+   is this mark at the same size around the roll. There is nothing to keep in
+   step — one word, one block — but it is worth knowing that a nudge here moves
+   the front page too.
    ------------------------------------------------------------------ */
-.bottom-title[data-word="reliable"] .glyph:nth-child(1) {
+.bottom-title[data-word="reliable"] .glyph:first-child {
   --l: 1;
   --dx: 0.4vw;
-  --dy: -1.7vw;
-  --dr: 0deg;
+  --dy: -0.7vw;
+  --dr: -7deg;
 } /* R */
 .bottom-title[data-word="reliable"] .glyph:nth-child(2) {
   --l: 2;
   --dx: 0vw;
   --dy: 0vw;
-  --dr: 0deg;
+  --dr: -5deg;
 } /* E */
 .bottom-title[data-word="reliable"] .glyph:nth-child(3) {
   --l: 3;
-  --dx: 0vw;
-  --dy: 1vw;
-  --dr: 0deg;
+  --dx: -1vw;
+  --dy: 0.1vw;
+  --dr: -2deg;
 } /* L */
 .bottom-title[data-word="reliable"] .glyph:nth-child(4) {
   --l: 4;
-  --dx: 1vw;
-  --dy: 1vw;
+  --dx: 0vw;
+  --dy: 0vw;
   --dr: 0deg;
 } /* I */
 .bottom-title[data-word="reliable"] .glyph:nth-child(5) {
   --l: 5;
   --dx: 1vw;
-  --dy: 1vw;
+  --dy: 0vw;
   --dr: 1deg;
 } /* A */
 .bottom-title[data-word="reliable"] .glyph:nth-child(6) {
   --l: 6;
-  --dx: 0.2vw;
-  --dy: 1vw;
+  --dx: 1.2vw;
+  --dy: 0vw;
   --dr: 3deg;
 } /* B */
 .bottom-title[data-word="reliable"] .glyph:nth-child(7) {
   --l: 7;
-  --dx: 0vw;
-  --dy: 0.8vw;
+  --dx: 1vw;
+  --dy: -0.2vw;
   --dr: 4deg;
 } /* L */
 .bottom-title[data-word="reliable"] .glyph:nth-child(8) {
   --l: 8;
-  --dx: -2vw;
-  --dy: 0.4vw;
+  --dx: -1.5vw;
+  --dy: -0.6vw;
   --dr: 7deg;
 } /* E */
 

@@ -1816,8 +1816,19 @@ html[data-loading] {
 /* --------------------------------------------------------------------------
    Left column — chips and intro copy. Sits over the stage rather than in the
    flow, so it holds position regardless of how tall the centre column gets.
-   -------------------------------------------------------------------------- */
-.left {
+   --------------------------------------------------------------------------
+   SCOPED, and it was not. `.left` is about as generic as a class name gets, and
+   this rule is pure placement on THIS stage — which is exactly the case the
+   .top-title note above sets out the rule of thumb for. Unscoped it reached a
+   product page's own left column two sections later and made it 19vw wide and
+   absolutely positioned, which presents as "the layout ignores its flex-basis"
+   and takes a while to trace back to a stylesheet a thousand lines away.
+
+   The same trap is still live on `.middle` further up, which is equally generic
+   and equally this stage's. It has not been touched because nothing collides
+   with it today — but it is one section named `.middle` away from the identical
+   afternoon, and this comment is the warning. */
+.tape-slider-parent .left {
   position: absolute;
   left: 0.764vw;
   top: 50%;
@@ -4111,10 +4122,36 @@ html[data-loading] {
    about it, which is deliberate: with no script the row is square, evenly lapped
    and in order, and that is a row the design would accept rather than a fallback
    of one. */
+/* AN ANCHOR NOW, not a span — each roll leads to that tape's page at
+   /products/<id>. display: block was already here and is what an anchor needs
+   to be the tilt box; the rest is only stopping a link from looking like one.
+   There is no text inside it to underline, but the declaration costs nothing
+   and stops a future caption from arriving underlined. */
 .pick-roll-tilt {
   display: block;
   width: 100%;
   height: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* THE KEYBOARD'S PICK. A ring rather than a lift, and that is a constraint
+   rather than a preference: fan.ts owns this element's transform and writes it
+   on every pointer move, so a transform declared here would be overwritten the
+   first time the mouse twitched. What CSS can hold on its own is an outline.
+
+   Offset outward and drawn in the roll's own rise colour (--pick-roll-rise,
+   which is that tape's green — set on .pick-roll a few rules down), so the ring
+   reads as belonging to the roll it is around rather than as the browser's
+   default blue landing on a piece of art direction. Rounded to a circle because
+   the thing inside it is one.
+
+   :focus-visible and not :focus — a mouse click on a roll must not leave a ring
+   behind on the way to the next page. */
+.pick-roll-tilt:focus-visible {
+  outline: 0.28vw solid var(--pick-roll-rise);
+  outline-offset: 0.4vw;
+  border-radius: 50%;
 }
 
 /* The artwork, and the only thing that slides when a NEIGHBOUR is picked up.
@@ -4183,6 +4220,804 @@ html[data-loading] {
 
 .pick-note--end {
   text-align: right;
+}
+
+/* ==========================================================================
+   A product — the inner page's opening screen
+   ==========================================================================
+   Markup in components/ProductIntro; the entrance is its reveal.ts.
+
+   THE SLIDER'S CENTRE COLUMN, STANDING ON ITS OWN. The tape's colour across the
+   sheet, a chip at the top, and the roll set into its own name — THE above it,
+   the tape's word below and behind it. Everything that existed on the home page
+   to serve a CHOICE is gone: no orbit, no left column, no showcase pair, no
+   colour wipe. There is one tape on this page and nothing to swap.
+
+   THE FIGURES ARE THE DESIGN'S, MEASURED. Three numbers came off the reference
+   and everything else is drawn against them: the roll is 441 x 416 and the
+   sheet is 780.69 tall, all at the 1440 design width, which is where the vw
+   below come from. The roll's two are the artwork's own pixel dimensions — so
+   at --pi-roll-w it renders at exactly its natural size on a 1440 window and is
+   never resampled at the one width the design was drawn for.
+
+   WHY THE COMPOSITION IS IN vw AND THE SECTION HAS NO VIEWPORT HEIGHT IN IT.
+   Everything here holds its position against EVERYTHING ELSE here — the word
+   sits behind the roll's lower half, the roll's top edge cuts THE's feet — and a
+   viewport height anywhere in that set makes one piece slide past the rest as
+   the window changes shape. That is the argument the slider's stage makes at
+   greater length ("Sitting the drawing where the window can see it"), and it
+   applies with more force to a drawing this interlocked. The cost is the same
+   one: on a window whose height is not a fixed fraction of its width the sheet
+   sits high or low in frame. The slider buys that back with a measured lift
+   (TapeSlider/fit.ts); this page has not needed one, because the sheet is
+   shorter than the window it is designed for and what shows under it is the
+   next section rather than a gap.
+
+   THE SHEET IS NOT THE SECTION. The section is the site's dark green and the
+   sheet is the tape's colour laid over it with its bottom corners taken off, so
+   the green shows through at the two corners and the lime dips between them.
+   The site's one convex edge, the same shape the hero's lime field, the
+   preloader's sheets and the slider's colour wipe all carry — a flat cut would
+   read as two blocks stacked where this reads as one sheet lying over another.
+   ========================================================================== */
+.product-intro {
+  /* THE ROLL, at the artwork's own size. 441 x 416 at the design width; the two
+     are declared separately rather than left to an aspect-ratio because they
+     ARE the measurement, and a height derived from a width is a number nobody
+     can check against the design. They agree with the PNG's own proportions, so
+     nothing is squashed — if a replacement is drawn at another aspect, change
+     both here and it stays honest. */
+  --pi-roll-w: 30.625vw; /* 441px at the 1440 design width */
+  --pi-roll-h: 28.889vw; /* 416px */
+
+  /* WHERE THE FOUR PIECES SIT, all measured down from the top of the sheet, all
+     off the reference. They are listed in the order they are drawn so the
+     overlaps can be read straight off the list: THE starts at 6.5 and the roll
+     cuts across it at 15.4, the roll ends at 44.3 and the word runs from 33.6
+     underneath it.
+
+     The chip clears the masthead's badge and the menu's tab, which is the same
+     pair every other page's top padding is measured against — see
+     .whats-rolling, whose figure this is deliberately close to. */
+  --pi-chip-top: 11.7vw;
+  --pi-the-top: 6.5vw;
+  --pi-roll-top: 15.4vw;
+  --pi-word-top: 33.6vw;
+
+  /* THE, at this page's size. The slider sets it at 26.32vw; here it is a shade
+     larger, because there is nothing else on the screen for it to be in
+     proportion WITH — no chips, no photographs, no orbit — and a mark drawn for
+     a busy stage reads small on an empty one. */
+  --pi-the-w: 29.5vw;
+
+  /* THE TAPE'S WORD, at this page's size — and it turns out to be the size it
+     already is everywhere else, which is worth stating rather than leaving as
+     an absent declaration.
+
+     --unit is one artwork pixel on screen and the whole bottom mark is sized
+     off it and nothing else; the base is CREATIVE at its own size and
+     letters.css scales every other word onto CREATIVE'S CAP HEIGHT, so the six
+     come out one type size and different widths (see --unit-base up in the Word
+     marks section). RELIABLE is 841px wide at that base and the reference
+     measures 840, so the multiplier is 1 and this page inherits the site's one
+     word size rather than declaring a second one.
+
+     The knob is kept because the two pages are free to differ — this drawing
+     has no chips, no photographs and no orbit to be in proportion with — and
+     because it multiplies rather than replaces, so the per-word corrections
+     measured off the artwork keep applying underneath whatever is set here. */
+  --pi-word-scale: 1;
+
+  /* THE BOTTOM EDGE'S BULGE — how far the sheet's middle hangs below its own
+     corners. Elliptical, not circular: the two radii are set independently
+     below so this depth holds while the curve's width tracks the viewport,
+     which is the same call .hero-section .top makes with its own 32vw. */
+  --pi-arc: 9.6vw;
+
+  position: relative;
+  width: 100%;
+
+  /* 780.69px at the design width, and it is measured to the DEEPEST POINT of
+     the arc — which is this box's bottom edge, since the curve is cut out of
+     the sheet inside rather than hung below it. So the next section starts
+     where the lime finishes rather than where it begins to turn. */
+  height: 54.215vw;
+
+  /* The green the whole site's dark passages are set in — the hero's ground,
+     which is what the lime is lying on there too. It shows only in the two
+     bottom corners, and that is the entire reason it is here. */
+  background: #0d470c;
+
+  /* NOT CLIPPED, AND IT USED TO BE — the roll leaves this section on purpose.
+   *
+   * The section carried `overflow: clip` as a general precaution. It cannot now:
+   * the roll rolls down out of the sheet and into the origin section below as
+   * the page is scrolled (ProductIntro/roll.ts), and a clip here would cut it in
+   * half at the arc and delete it entirely a moment later.
+   *
+   * Nothing is lost by removing it, which is worth stating rather than leaving
+   * to be checked. The sheet's shaped bottom edge is the SHEET's own
+   * border-radius and the grain inherits it, so the arc is drawn with or without
+   * this. Both word marks clip themselves — THE walks its own mask out of its
+   * box and the tape's word moves inside .glyph's overflow — so neither can spill
+   * during a dip. And with no clip there is no scroll container either, so the
+   * focus-drag the old comment guarded against has nothing to drag.
+   *
+   * z-index IS THE OTHER HALF OF THE SAME CHANGE and is not optional. Without a
+   * stacking order of its own this section paints before the one after it in
+   * source, so a roll that has left this box would slide UNDER the origin
+   * section's green and vanish at exactly the moment it is supposed to be
+   * travelling. The two sections do not overlap, so lifting this one costs
+   * nothing else.
+   *
+   * IT HAS TO CLEAR THE ORIGIN SECTION'S OWN LAYERS, NOT JUST ITS BACKGROUND —
+   * which is why that section is isolated rather than this figure being raised
+   * again. See `isolation` on .product-inner-info. */
+  z-index: 1;
+}
+
+/* The sheet — the tape's own colour, and the shaped box everything on the page
+   is placed inside. Its radius is what the grain and the arc both take. */
+.pi-sheet {
+  position: absolute;
+  inset: 0;
+  background: var(--stage-bg);
+
+  /* 50% AND NOT 100% ON THE HORIZONTAL, and it is not a matter of taste — it is
+     the difference between the arc being --pi-arc deep and being HALF that.
+     When the radii along one edge add up to more than the edge is long, CSS
+     scales every radius on the box by the same factor to make them fit, and
+     that factor applies to the VERTICAL radii too. Two 100% corners on a
+     1440px edge want 2880px of it, so everything is multiplied by 0.5 and a
+     9.6vw depth silently arrives as 4.8vw. Two 50% corners want exactly the
+     width, nothing is scaled, and the depth is the number written here.
+
+     (.hero-section .top is declared the other way and is therefore drawing half
+     of what its own comment claims. It has been tuned by eye at that value and
+     looks the way it is meant to, so it is left alone — but it is why this
+     block does not simply copy it.)
+
+     Elliptical, not circular: the two radii are independent, so the depth holds
+     while the curve's width tracks the viewport. */
+  border-radius: 0 0 50% 50% / 0 0 var(--pi-arc) var(--pi-arc);
+}
+
+/* Paper grain — the same overlay every other sheet on this site carries, at the
+   same weight, because that is the only thing making the sections read as one
+   printed surface rather than a textured one following a clean one.
+
+   border-radius: inherit, which is the whole reason this is on the sheet rather
+   than on the section: the texture has to stop at the curve, or the grain runs
+   on over the green in the corners and gives the arc a ghost.
+
+   Width-fitted and tiled DOWN rather than stretched — the hero's call, and for
+   its reason: stretching one tile over a box of a different aspect turns paper
+   into vertical streaking.
+
+   pointer-events: none, because a full-bleed decorative layer must never be
+   what a click lands on. */
+.pi-sheet::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: url("/assets/paper-overlay.webp");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   The chip, the two marks and the roll
+   --------------------------------------------------------------------------
+   SCOPED, every one of them, for the reason the slider's copy of this note
+   gives at length: .top-title, .bottom-title and .subhead are GENERIC class
+   names and this stylesheet is one file for the whole site. What a chip IS and
+   what a letter mask DOES stay unscoped and shared; where THIS page puts them
+   is this page's business and nothing else's. */
+
+/* The way back to the family. Inherits the chip's look, perforation and palette
+   from the shared rule up in the Tape slider block and adds only placement —
+   and, because this one is an <a> where every other chip on the site is a
+   label, the two declarations that stop a link looking like a link. The tilt is
+   the slider subhead's: a chip is stuck on by hand. */
+.product-intro .subhead {
+  position: absolute;
+  left: 50%;
+  top: var(--pi-chip-top);
+  transform: translateX(-50%) rotate(-2deg);
+  font-size: 1.05vw;
+  z-index: 6;
+
+  display: inline-block;
+  text-decoration: none;
+}
+
+/* The marks are flex rows of letter boxes, sitting on a common baseline. The
+   slider's block declares the same two for its own copies; they are not merged
+   into one selector because these are two stages' placement rules and merging
+   them is how a change to one silently becomes a change to the other. */
+.product-intro .top-title,
+.product-intro .bottom-title {
+  display: flex;
+  align-items: flex-end;
+}
+
+.product-intro .top-title {
+  position: absolute;
+  left: 50%;
+  top: var(--pi-the-top);
+  width: var(--pi-the-w);
+  transform: translateX(-50%);
+  /* Under the roll, over the sheet. THE's feet go behind the roll's top edge,
+     which is what sets the roll INTO the type rather than between two lines of
+     it. */
+  z-index: 3;
+}
+
+/* Shrink-to-fit, like the slider's, so it is exactly as wide as the word in it
+   and the translateX(-50%) that centres it keeps working whatever the word.
+
+   --unit is set HERE rather than on the shared .bottom-title rule so this page
+   can be resized without touching the slider — see --pi-word-scale above. */
+.product-intro .bottom-title {
+  position: absolute;
+  left: 50%;
+  top: var(--pi-word-top);
+  transform: translateX(-50%);
+  --unit: calc(var(--unit-base) * var(--pi-word-scale));
+  z-index: 3;
+}
+
+/* THE ROLL — where the page puts it, and the box that carries it away.
+ *
+ * `translate` for the centring rather than a transform, and that is
+ * load-bearing: `transform` on this box belongs to the JOURNEY down into the
+ * origin section, and they are separate properties that compose. Write the
+ * centring as a transform and the first frame of the journey drops the roll half
+ * its own width to the right.
+ *
+ * z-index above both marks — see .product-intro .top-title. */
+.product-intro .pi-roll {
+  position: absolute;
+  left: 50%;
+  top: var(--pi-roll-top);
+  width: var(--pi-roll-w);
+  height: var(--pi-roll-h);
+  translate: -50% 0;
+  z-index: 4;
+}
+
+/* AND THE BOX INSIDE IT, which is what the entrance bounces and what three draws
+   into. Two boxes because there are two moves — the bounce on arrival and the
+   journey on scroll — they overlap in time on a visitor who scrolls early, and a
+   transform is one property. See the note in ProductIntro/index.tsx. */
+.product-intro .pi-roll-in {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* contain rather than cover: the artwork is a cut-out on transparency at
+   exactly this box's proportions, so the two agree today — and if a
+   replacement ever does not, a letterboxed roll is a roll and a cropped one is
+   a mistake that looks deliberate. */
+.product-intro .pi-roll-in img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* BLEEDS PAST THE SLOT BY 15% A SIDE, and the number is not free — it is half of
+   a pair. tape3d.ts's CAMERA_Z is derived from exactly this: the face-on roll is
+   framed to span 1/1.3 of the canvas, which is the slot, so the roll comes out
+   the size the flat card was. Change one without the other and the roll is the
+   wrong size. The slider's key visual carries the identical rule.
+
+   max-width: none because the stylesheet reset caps canvas at 100%, which would
+   clamp the box to the slot's width and eat the horizontal bleed. */
+.product-intro .pi-roll-in canvas {
+  position: absolute;
+  inset: -15%;
+  width: 130%;
+  height: 130%;
+  max-width: none;
+  display: block;
+}
+
+/* ==========================================================================
+   A product — the origin section
+   ==========================================================================
+   Markup in components/ProductInfo. The roll standing in this column is NOT
+   this section's — it is the opening section's, which rolls down into the slot
+   here as the page is scrolled; see components/ProductIntro/roll.ts.
+
+   The second screen of /products/<id>, and the dark ground the opening
+   section's lime arc bulges down into. Two columns: the roll standing on a
+   photograph of itself at work with a note in the margin, and the tape's origin
+   story beside it with a strip of that tape stuck across the sentence.
+
+   THE FIGURES ARE THE DESIGN'S STENCIL, and they are gathered at the top of the
+   block rather than left inline so the drawing can be read as a set of
+   relationships: 8.772vw of block padding, a 5.379vw gutter, a 42.076vw left
+   column, the roll 30.625 x 28.889vw at 4.236 / 7.569vw. All at the 1440 design
+   width, like every other length on this site.
+
+   THE ROLL IS THE SAME BOX AS THE OPENING SECTION'S KEY VISUAL — 30.625 x
+   28.889vw, to the thousandth — and that is worth stating because it looks like
+   a coincidence and is not: it is LITERALLY the same object at the same size,
+   seen a screen further down, and the equality is what makes its journey a
+   translation with no scale in it. If one moves the other must move with it.
+
+   ONE NAME WAS CORRECTED FROM THE STENCIL. Its markup says `3d-tape` and its
+   own stylesheet says `.threed-tape`; only the second can exist, because a CSS
+   identifier may not begin with a digit and `.3d-tape` is a parse error that
+   takes the rest of the rule with it. The second spelling is used throughout.
+   ========================================================================== */
+.product-inner-info {
+  --info-pad-x: 2.823vw;
+  --info-pad-y: 8.772vw; /* 126.31px at the design width */
+  --info-gutter: 5.379vw; /* 77.46px — between the two columns */
+  --info-left: 42.076vw; /* 605.89px — the left column's width */
+
+  /* THE ROLL, in the opening section's own box. */
+  --info-roll-w: 30.625vw;
+  --info-roll-h: 28.889vw;
+  --info-roll-top: 4.236vw; /* 61.23px */
+  --info-roll-left: 7.569vw; /* 109.35px */
+
+  /* THE PHOTOGRAPH the roll stands on. Its lean is the stencil's; the corner
+     radius is the site's card radius, which every loose photograph on the page
+     already carries. */
+  --info-shot-w: 15.744vw;
+  --info-shot-h: 15.964vw;
+  --info-shot-tilt: 3.25deg;
+
+  /* THE NOTE IN THE MARGIN — the stencil's figure, measured from the top of the
+     left column like the roll's. */
+  --info-note-top: 36.111vw;
+
+  /* THE STRIP STUCK ACROSS THE SENTENCE. 163.11px at the design width. One
+     value, used by both strips on this screen — the one in the paragraph and
+     the one holding the photograph down — because they are the same piece of
+     tape off the same roll and two sizes would read as two products. */
+  --info-tape-w: 11.327vw; /* 163.11px */
+
+  position: relative;
+  width: 100%;
+  padding-inline: var(--info-pad-x);
+  padding-block: var(--info-pad-y);
+
+  /* The site's dark green — the hero's ground, and what the section above
+     bulges its lime arc down into. Declared here rather than inherited from a
+     parent so this section is a complete surface on its own: it is the second
+     of an unknown number, and the ones that follow should not have to know what
+     colour the page happened to be when they were added. */
+  background: #0d470c;
+
+  /* The absolute children in the left column resolve against THIS box — see
+     --info-note-top. clip rather than hidden for the reason every other section
+     gives: hidden leaves the box programmatically scrollable and a focused
+     element poking past an edge would drag the whole thing sideways. */
+  overflow: clip;
+
+  /* AND THE SECTION'S LAYERS STAY INSIDE THE SECTION.
+   *
+   * `position: relative` alone does not start a stacking context, so this
+   * section's children were stacking against the whole DOCUMENT rather than
+   * against each other — and the two that carry a z-index, the photograph at 1
+   * and the roll's slot at 2, were therefore competing directly with the opening
+   * section above at ITS 1. Same figure, later in source, so the photograph won:
+   * the travelling roll passed BEHIND the very picture it is supposed to come to
+   * rest on top of.
+   *
+   * Isolating fixes the class of bug rather than the instance. The two figures
+   * inside now mean what they say — the roll's slot is above the photograph,
+   * which is all they were ever written to say — and they can be retuned freely
+   * without anybody having to check them against a number in another section.
+   * `isolation` rather than a z-index of its own, because this section wants a
+   * stacking context and NOT a place in the order: it stays where the document
+   * puts it, under the opening section that is lifted over it. */
+  isolation: isolate;
+}
+
+/* Paper grain — the same sheet the rest of the site is printed on, at the same
+   weight. Width-fitted and tiled down rather than stretched, which is the
+   hero's call: stretching one tile over a box of a different aspect turns paper
+   into vertical streaking. */
+.product-inner-info::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/paper-overlay.webp");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.product-inner-info .wrapper {
+  position: relative; /* over the grain */
+  display: flex;
+  justify-content: center;
+  gap: var(--info-gutter);
+}
+
+/* THE LEFT COLUMN IS A RESERVATION AND A ORIGIN, and it has to be both.
+ *
+ * A reservation, because everything in it is placed absolutely: it holds no
+ * content in flow and its only job in the row is to take --info-left out of it
+ * so the story starts where the design puts it.
+ *
+ * An ORIGIN, because `position: relative` is what makes the stencil's four
+ * offsets mean what they say. THE STENCIL DOES NOT DECLARE IT and the mock is
+ * what proves it was meant: the roll is written at 4.236 / 7.569vw and the mock
+ * measures the same pair as 61.23 / 109.35 — which is 4.252 / 7.594vw at the
+ * design width, the same two numbers — and they are measured from the COLUMN'S
+ * top-left, not the section's. Left against the section, the same offsets put
+ * the roll a full 126px of block padding lower than drawn. The photograph's own
+ * `0.65` in the mock is the third confirmation: flush with the column, which is
+ * flush with the section's padding edge.
+ *
+ * MIN-HEIGHT because a flex item with nothing in flow is zero tall — the row
+ * would collapse to the paragraph's height and the section would close above
+ * the note in the margin. The figure is the note's top plus its own box, i.e.
+ * where the left column actually ends, so the section is as tall as its taller
+ * column whichever that turns out to be. The stencil left this implicit; its
+ * own `height: 100%` on the section has nothing to resolve against and does
+ * nothing at all. */
+.product-inner-info .left {
+  position: relative;
+  flex: 0 0 var(--info-left);
+  min-height: calc(var(--info-note-top) + 12vw);
+}
+
+/* AND THE STORY TAKES WHAT IS LEFT, which is the other half of the same
+   reading. With both columns at a fixed width the row is narrower than the
+   section and `justify-content: center` splits the difference between them —
+   which pushes the left column off the padding edge the mock measures it
+   against, and the story ~40px right of where it is drawn. Growing this closes
+   the row up so both columns start where the design starts them; .h3's own
+   max-width is what actually sets the measure the copy wraps to.
+
+   min-width: 0 because a flex item's default min-width is auto, which floors it
+   at its content's intrinsic width — a nine-line headline of unbreakable words
+   would refuse to shrink and push the row past the section. */
+.product-inner-info .right {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* THE STENCIL'S `& * { position: absolute }` IS NOT COPIED, and this is the one
+   place the stencil is departed from on purpose rather than corrected.
+
+   That rule reaches every DESCENDANT, not just the column's own children — so
+   it also lands on the note's <svg>, on the text node inside it, and on
+   whatever the 3D roll appends to its mount. The note draws itself from a
+   viewBox and a canvas the viewer sizes to its container; both need their own
+   layout, and taking them out of flow breaks the measurement each depends on.
+
+   Four children, named. It is four more lines and it cannot reach anything it
+   was not pointed at. */
+.product-inner-info .info-shot,
+.product-inner-info .threed-tape,
+.product-inner-info .info-arrow,
+.product-inner-info .info-note {
+  position: absolute;
+}
+
+/* THE PHOTOGRAPH AND THE TAPE ACROSS IT, in one leaning box.
+ *
+ * The wrapper is what is placed and what leans; the picture and the strip are
+ * both inside it, so the strip takes the photograph's own tilt — which is the
+ * tilt it should have, because it was laid on the picture and not on the page.
+ * The slider's showcase pair is built exactly this way and says so at length.
+ *
+ * A line-height of 0 because an inline box would leave a line-box's worth of
+ * space under the image and hand the wrapper a taller box than the picture it
+ * is standing in for — which is what the strip's own placement is measured
+ * against. */
+.product-inner-info .info-shot {
+  display: block;
+  line-height: 0;
+  top: 0;
+  left: 0;
+  width: var(--info-shot-w);
+  height: var(--info-shot-h);
+  transform: rotate(var(--info-shot-tilt));
+  z-index: 1;
+}
+
+/* The picture itself — the two things that are about the PHOTOGRAPH rather than
+   about the assembly. The site's hard cast shadow; see --drop-ink in :root for
+   why it is crisp rather than blurred. box-shadow rather than a filter: it
+   follows the corner radius for free, and a filter would rasterise the card. */
+.product-inner-info .info-shot > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 1.389vw;
+  box-shadow: 0.7vw 1vw 0 var(--drop-ink);
+}
+
+/* THE STRIP HOLDING IT DOWN, across the top edge. -46% rather than -50%: the
+   tape sits mostly above the picture with a little of it on, which is what
+   makes it read as holding the thing down rather than balanced on its edge.
+   The same figure the slider's showcase strips and the pinning section's tapes
+   use.
+
+   NO rotate HERE — .peel spends `rotate` on --peel-dir, which is how the fold
+   is aimed, and a tilt written here would replace it rather than add to it. It
+   needs none: it is inside the photograph's box and takes that box's lean.
+   `translate` is a separate property and composes. */
+.product-inner-info .info-shot-tape {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  translate: -50% -46%;
+  z-index: 2;
+}
+
+/* THE ROLL'S RESTING PLACE — an address, not a mount.
+ *
+ * NOTHING IS APPENDED HERE ANY MORE. This section used to build a 3D viewer of
+ * its own and draw into this box; the page has one roll now — the opening
+ * section's — and it travels down and comes to rest exactly here as the page is
+ * scrolled (ProductIntro/roll.ts measures the gap between the two boxes rather
+ * than being told it, so this rule is the only place the destination is
+ * written).
+ *
+ * WHICH IS WHY THE SIZE MATTERS MORE THAN IT LOOKS. It is the opening section's
+ * roll box to the thousandth of a vw, and that is what makes the journey a pure
+ * translation with no scale in it. Change one of the two and the roll changes
+ * size on the way down.
+ *
+ * The <img> inside is the case where three.js never arrives. Over the
+ * photograph: the roll is in front of the shot it is standing on, which is the
+ * whole reason the two overlap at all. */
+.product-inner-info .threed-tape {
+  top: var(--info-roll-top);
+  left: var(--info-roll-left);
+  width: var(--info-roll-w);
+  height: var(--info-roll-h);
+  z-index: 2;
+}
+
+.product-inner-info .threed-tape img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* The arrow, running back from the story to the roll — a short hooked stroke in
+   the gutter, not a banner across the column.
+
+   `right` IS THE COLUMN'S RIGHT EDGE, which only works because .left is
+   positioned — see the note there. Written against the section instead, as the
+   stencil's own offsets appear to be at first reading, a right offset is
+   measured off the section's far edge and lands the arrow in the opposite
+   margin, a thousand pixels from what it is pointing at. That wrong turn is
+   what showed that all four of these belong to the column.
+
+   Small on purpose. The mock draws it at about 85px — a pen mark beside the
+   type, not a graphic of its own — and at anything near a banner's width it
+   stops pointing and starts decorating.
+
+   THE HERO'S LIME, and not the tape's chip ink. Every mark on this dark ground
+   is that one colour — the story, the note in the margin, this — because that
+   is the pairing the home page opens on and closes on: #b6fe00 on #0d470c, and
+   the footer is the same two the other way round. A per-tape ink here would
+   have been a sixth of a colour scheme nothing else on the page follows. */
+.product-inner-info .info-arrow {
+  top: 3.5vw;
+  right: -1.6vw; /* the gutter — see the note above on which edge this is */
+  width: 5.9vw; /* ~85px at the design width */
+  height: 3.6vw;
+  color: #b6fe00;
+  z-index: 3;
+}
+
+.product-inner-info .info-arrow svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* The note in the margin. SIZE AND PLACEMENT ONLY — the pen is deliberately
+   not set here, so the note writes in HandNote's own default, which is #b6fe00:
+   the hero's lime, and the colour the note is on the home page. It was briefly
+   given the tape's chip ink instead, which made this the one note on the site
+   in a different hand-colour for no reason a reader could see. Everything else
+   about what a note IS lives in the Hand-written note block. */
+.product-inner-info .info-note {
+  --hand-w: 17vw;
+  top: var(--info-note-top);
+  left: 0;
+  z-index: 3;
+}
+
+/* --------------------------------------------------------------------------
+   The right column — the story
+   -------------------------------------------------------------------------- */
+.product-inner-info .right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.694vw;
+}
+
+/* The kicker chip. It inherits the chip's look, perforation and palette from
+   the shared rule up in the Tape slider block and adds nothing but a lean —
+   there is no placement to add, because unlike every other chip on the site
+   this one is in flow at the top of its own column. */
+.product-inner-info .subhead {
+  transform: rotate(-1.6deg);
+  font-size: 1.05vw;
+}
+
+/* THE STORY.
+ *
+ * SCOPED, AND .h3 IS NOT A GLOBAL RUNG. There is no .h3 in this stylesheet and
+ * this does not add one: .h2's three figures live in :root because a WORKING
+ * heading size turned up in a second place and was worth sharing, and that
+ * argument does not apply to a size used once. This is display type in one
+ * composition, sized as part of it. If a second section ever wants exactly
+ * this, it moves to :root then and not before.
+ *
+ * 76px is the size the mock sets it at — the same figure the news page's
+ * shelf label uses, which is the one other place on this site type is set
+ * between the h2's 40 and the giant headlines.
+ *
+ * LINE-HEIGHT UNDER 1 is what holds the block's top edge against the chip above
+ * it: at 0.88 the text overflows its own line box by half the difference at
+ * each end, and that overhang grows with the type — so the cap line stays put
+ * whether this figure is 70 or 90 and the gap above does not have to be
+ * re-tuned every time the size moves. The row at /products makes the same call
+ * and says so at greater length.
+ *
+ * The copy is stored in sentence case (src/data/tapes.ts) and set in caps here:
+ * the caps are the drawing, and the data file and the screen reader both keep
+ * the readable version. */
+.product-inner-info .h3 {
+  max-width: 41.667vw; /* 600px — the stencil's measure */
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 5.278vw; /* 76px at the design width */
+  font-weight: 800;
+  line-height: 0.88;
+  letter-spacing: -0.12vw;
+  text-transform: uppercase;
+  /* The hero's lime on the hero's ground — the site's one pairing for type on
+     dark green, which the footer, the news index and the closing key visual all
+     use. Written as the literal because that is how every other section on this
+     site states it; there is no token for it. */
+  color: #b6fe00;
+}
+
+/* THE STRIP ACROSS THE SENTENCE.
+ *
+ * inline-block and vertical-align, not absolute: it sits ON the line and moves
+ * with the copy when it rewraps, which is the whole reason it is inside the
+ * paragraph rather than placed over it. A strip pinned to a coordinate would
+ * come adrift from the words at the first width it was not drawn at.
+ *
+ * The box is written by the component from strips.ts's own measurement of the
+ * file, so --peel-w / --peel-h are the artwork's and this rule only says how
+ * big it is on the line — as a share of the type, in em, so it scales with the
+ * headline rather than being one size at one width.
+ *
+ * NO rotate HERE: .peel spends `rotate` on --peel-dir, which is how the fold is
+ * aimed, and a tilt written here would replace it rather than add to it.
+ * `translate` is a separate property and is free, which is what the lift off the
+ * baseline uses. */
+/* WHAT BOTH STRIPS ON THIS SCREEN SHARE — the one in the sentence and the one
+ * holding the photograph down. Look only; each is SIZED where it is placed.
+ *
+ * SIZED FROM ITS OWN BOX, exactly as the slider's showcase strips are — the
+ * component works the file's frame out from the length the design measured and
+ * hands it to Peel, which publishes it back as --peel-w / --peel-h. See
+ * stripBox in ProductInfo/index.tsx, which is where that arithmetic and the
+ * argument for doing it there rather than here both live.
+ *
+ * The short version of why not in CSS: this element is turned a quarter turn by
+ * --peel-dir and its flap bleeds outside its own box, so a width written here
+ * is neither the width on screen nor the width the fold is measured against. */
+.product-inner-info .reverse-peel-tape {
+  width: var(--peel-w);
+  height: var(--peel-h);
+
+  /* THE REST POSE IS STUCK DOWN. Peel's own default is 0, which is the `from`
+     end — and `from` here is the LIFTED one, since these strips run lifted ->
+     flat. That is the right start for the animation and the wrong thing to
+     leave on a page: with no JavaScript, or under reduced motion, or if the
+     press never runs, the photograph would be held on by a curled strip for
+     good. press.ts sets it to 0 itself, on the one path where a hand is coming
+     to put it down.
+
+     It also out-specifies the reduced-motion rule in the Peel block, which
+     parks --peel at 0 — correct for a peel that lifts, backwards for one that
+     sticks down. Two classes to that rule's one. The slider's showcase strips
+     make the identical statement for the identical reason. */
+  --peel: 1;
+
+  /* ONE SHADOW, AND IT IS THIS ELEMENT'S. Peel gives its own face one, which is
+     right for a sticker lying loose on a page and wrong here: the two would
+     stack and the strip would carry two blurs at two offsets. */
+  --peel-shadow: none;
+  filter: drop-shadow(3px 2px var(--drop-blur) rgba(0, 0, 0, 0.42));
+
+  /* How the strip meets what is under it. The clear tape's artwork is drawn as
+     a set of highlights meant to be ADDED to whatever it lies on rather than as
+     a picture of a strip, so it is screened; the three you cannot see through
+     are normal. strips.ts chooses, and the component passes it through. */
+  mix-blend-mode: var(--strip-blend, normal);
+  pointer-events: none;
+}
+
+/* THE SLOT IN THE SENTENCE — what the LINE is sized to.
+ *
+ * The strip's own box is the file's, and the file is mostly transparent margin
+ * (see above): inline, that box is what the line box has to make room for, so a
+ * 163px strip pushed the paragraph's first two lines sixty pixels apart to
+ * clear padding nobody can see. This is a small box on the line with the strip
+ * placed against it and overflowing it freely.
+ *
+ * The width IS the measured tape, so the words either side of it fall where the
+ * design puts them; only the height is a decision, and it is the smallest thing
+ * that still gives the strip a line to sit on. */
+.product-inner-info .info-tape-slot {
+  display: inline-block;
+  position: relative;
+  width: var(--info-tape-w);
+  height: 0.42em;
+  vertical-align: baseline;
+  pointer-events: none;
+}
+
+/* Centred in its slot and lifted a shade off the baseline, so it sits ON the
+   line rather than hanging from it. */
+.product-inner-info .info-story-tape {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% calc(-50% - 0.06em);
+}
+
+/* The rule under the last words. inline-block at zero height with the drawing
+   bled out of it, so it takes no room on the line it ends — an underline that
+   pushed the paragraph's last line down would be a rule with a margin, which is
+   not what a pen does. */
+.product-inner-info .info-underline {
+  display: inline-block;
+  position: relative;
+  width: 0;
+  height: 0;
+  color: #b6fe00; /* with the story it rules under, and the note and the arrow */
+}
+
+.product-inner-info .info-underline svg {
+  position: absolute;
+  right: 0;
+  top: -0.16em;
+  /* THE LAST LINE'S WIDTH, near enough, in em so it tracks the type — the mock
+     rules under NEVER AGAIN. and not under the paragraph. Anchored by `right`
+     above, so it ends under the full stop and runs back from there whatever the
+     last line turns out to say; a left anchor would need the line's own width,
+     which nothing here knows. Five and a bit ems is that phrase at this size,
+     with the overshoot past the stop a pen would give it. */
+  width: 5.4em;
+  height: 0.8em;
+  /* THE RESET CAPS EVERY EMBED AT max-width: 100%, and 100% of a deliberately
+     zero-width parent is zero — so the rule above resolved to a stroke 0px
+     across and the underline simply was not there, with nothing in the cascade
+     to point at. The height came through untouched, which is what makes it look
+     like the path is wrong rather than the box. The slider's key visual canvas
+     carries the identical line for the identical reason. */
+  max-width: none;
+  overflow: visible;
 }
 
 /* ==========================================================================

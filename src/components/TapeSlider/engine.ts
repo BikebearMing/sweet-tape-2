@@ -31,6 +31,19 @@
  * listeners or orphaned timelines.
  */
 import gsap from "gsap";
+
+/* The word marks' motion, shared with a product's inner page — which sets the
+   same two marks and arrives on the same rise. See components/wordDip.ts for
+   why the RISE moved out and the DROP below did not. */
+import {
+  WORD,
+  addRise,
+  dipTo,
+  maskAt,
+  maskDip,
+  shiftAt,
+  shiftDip,
+} from "@/components/wordDip";
 import type { TapeViewer } from "./tape3d";
 
 export function initTapeSlider(root: HTMLElement): () => void {
@@ -98,17 +111,17 @@ export function initTapeSlider(root: HTMLElement): () => void {
   const BG_REVEAL = 0.85; // colour sheet sweeping down over the stage
   const BG_EASE = "power2.out";
 
+  /* THE DROP IS THIS SECTION'S OWN — it exists to hide a swap, and nowhere else
+     on the site swaps a word. The RISE is shared (WORD, in components/wordDip.ts):
+     the inner product page arrives on the same one, and the two halves of a
+     single move must not be free to drift apart. */
   const WORD_DOWN = 0.32;
   const WORD_HOLD = 0.07; // load-bearing, see addDip
-  const WORD_UP = 0.42;
-  const WORD_STAGGER = 0.08; // between T, H and E
   const WORD_EASE_DOWN = "power2.in";
-  const WORD_EASE_UP = "power3.out";
 
-  // Tighter than THE's — eight letters at 0.08 would be 0.56s of stagger alone.
-  // These two are the constraint on the opening: CREATIVE's last letter has to
-  // be gone before the sheet reaches it, which leaves ~0.2s of slack.
-  const BOTTOM_STAGGER = 0.05;
+  /* The bottom mark's stagger is WORD.BOTTOM_STAGGER, and together with the
+     duration it is the constraint on the opening: CREATIVE's last letter has to
+     be gone before the colour sheet reaches it, which leaves ~0.2s of slack. */
   const BOTTOM_LEAD = 0.06;
 
   // Beat between the sheet clearing a word and that word rising.
@@ -407,14 +420,6 @@ export function initTapeSlider(root: HTMLElement): () => void {
     return tl.recent() as gsap.core.Tween;
   }
 
-  /* How far a letter has to travel to be clear of its own box — a shade past,
-     so no hairline is left at the edge. offsetHeight, not the bounding rect:
-     CREATIVE's letters sit in wrappers tilted up to 8deg, whose bounding box is
-     taller than the letter. Shared with the entrance, which parks the letters
-     at exactly the point the dip drops them to. */
-  const dipTo = (el: HTMLElement) =>
-    (el.offsetHeight || el.getBoundingClientRect().height || 1) + 2;
-
   /* Each letter drops out of the bottom of its own box, recolours out of sight,
      and rises back. `apply` is the only difference between the two words:
      THE moves its own mask, CREATIVE moves the image inside .glyph's overflow
@@ -499,8 +504,8 @@ export function initTapeSlider(root: HTMLElement): () => void {
         st,
         {
           y: 0,
-          duration: WORD_UP,
-          ease: WORD_EASE_UP, // no overshoot, or the tops clip at the peak
+          duration: WORD.UP,
+          ease: WORD.EASE_UP, // no overshoot, or the tops clip at the peak
           onUpdate: move,
         },
         backAt + offset
@@ -509,27 +514,6 @@ export function initTapeSlider(root: HTMLElement): () => void {
 
     tl.add(sub, at);
     return sub;
-  }
-
-  function maskDip(el: HTMLElement, y: number) {
-    const v = `0px ${y}px`;
-    el.style.setProperty("mask-position", v);
-    el.style.setProperty("-webkit-mask-position", v);
-  }
-
-  function maskAt(el: HTMLElement) {
-    const m = /([-\d.]+)px\s+([-\d.]+)px/.exec(
-      el.style.getPropertyValue("mask-position")
-    );
-    return m ? parseFloat(m[2]) : 0;
-  }
-
-  function shiftDip(el: HTMLElement, y: number) {
-    gsap.set(el, { y });
-  }
-
-  function shiftAt(el: HTMLElement) {
-    return (gsap.getProperty(el, "y") as number) || 0;
   }
 
   const cardOf = (btn: HTMLElement) => btn.dataset.card || "";
@@ -876,34 +860,6 @@ export function initTapeSlider(root: HTMLElement): () => void {
     // The key visual is deliberately absent — see the block comment above.
   }
 
-  function addRise(
-    tl: gsap.core.Timeline,
-    els: HTMLElement[],
-    at: number,
-    stagger: number,
-    apply: (el: HTMLElement, y: number) => void,
-    read: (el: HTMLElement) => number
-  ) {
-    const sub = gsap.timeline();
-
-    els.forEach((el, i) => {
-      const st = { y: read(el) };
-      sub.to(
-        st,
-        {
-          y: 0,
-          duration: WORD_UP,
-          ease: WORD_EASE_UP, // no overshoot, or the tops clip at the peak
-          onUpdate: () => apply(el, st.y),
-        },
-        i * stagger
-      );
-    });
-
-    tl.add(sub, at);
-    return sub;
-  }
-
   function addReturn(tl: gsap.core.Timeline, at: number) {
     if (!left || !chips.length) return null;
 
@@ -975,9 +931,9 @@ export function initTapeSlider(root: HTMLElement): () => void {
     );
 
     if (letters.length)
-      addRise(enter, letters, ENTER.TOP_AT, WORD_STAGGER, maskDip, maskAt);
+      addRise(enter, letters, ENTER.TOP_AT, WORD.STAGGER, maskDip, maskAt);
     if (glyphs.length)
-      addRise(enter, glyphs, ENTER.BOTTOM_AT, BOTTOM_STAGGER, shiftDip, shiftAt);
+      addRise(enter, glyphs, ENTER.BOTTOM_AT, WORD.BOTTOM_STAGGER, shiftDip, shiftAt);
 
     /* Parked in the same handles the click path uses, so an impatient visitor
        who selects a tape mid-entrance is covered by goTo's existing interrupt
@@ -1101,7 +1057,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
         letters,
         wordColour,
         0,
-        WORD_STAGGER,
+        WORD.STAGGER,
         maskDip,
         maskAt,
         atOpen + sheetClears(topWord) + WORD_AFTER_SHEET
@@ -1112,7 +1068,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
         glyphs,
         wordColour,
         BOTTOM_LEAD,
-        BOTTOM_STAGGER,
+        WORD.BOTTOM_STAGGER,
         shiftDip,
         shiftAt,
         atOpen + sheetClears(bottomWord) + WORD_AFTER_SHEET,

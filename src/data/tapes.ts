@@ -78,6 +78,36 @@ export type Tape = {
   faces?: Record<string, string>;
   /** 3D roll shown in place of the card once three.js is live. GLB path. */
   model: string;
+  /**
+   * THE INNER PAGE'S OWN EXPORT, and it exists so the two stages can be art
+   * directed apart.
+   *
+   * `model` above is the home page's: it is what the orbit of six loads and what
+   * the key visual flips between, and it is authored for that stage — small in
+   * frame, seen for a moment, one of six. The product page shows ONE roll, most
+   * of a screen tall, held still and then turned over slowly, and what reads
+   * well there is not automatically what reads well there. Metalness, gloss and
+   * the label's own finish are the obvious places the two want to differ.
+   *
+   * SO THIS IS A SECOND FILE, NOT A SECOND SETTING. Anything that can be dialled
+   * at runtime already can be — see `material` in TapeSlider/tape3d.ts, which is
+   * the cheaper answer for metalness and roughness and needs no re-export. This
+   * field is for what only Blender can say: different maps, a different finish
+   * on one part, geometry the close-up wants and the thumbnail does not.
+   *
+   * OPTIONAL, AND ONLY OPP DECLARES IT — the same shape as `hero` and `faces`
+   * above and for the same reason. The other five inner pages load the home
+   * page's export, which is a working page rather than five copies of a file
+   * nobody has edited. Drop one in, name it here, and that tape alone splits.
+   *
+   * THE BOUNDING BOX IS NOT FREE TO CHANGE. Every export on this site measures
+   * 0.999 x 0.472 x 0.997 and the flip's edge-on handoff is built on it (see the
+   * note over CAMERA_Z in tape3d.ts). A separated export is free to be a
+   * different MATERIAL; it is not free to be a different SIZE.
+   *
+   * See innerModelOf, which is the one place the fallback is decided.
+   */
+  modelInner?: string;
   /** The two tilted photographs. Exactly two — the layout places both by hand. */
   showcase: [string, string];
   /** Chips in the left column. */
@@ -112,6 +142,37 @@ export type Tape = {
    * mark it substitutes for anything it cannot draw. Use ' and -.
    */
   character: string[];
+  /**
+   * THE RUN — the product page's fourth section, and the only per-tape thing in
+   * it. See components/ProductReel: a pinned frame the page scrolls sideways
+   * through, opening on one photograph with the claim beside it and closing on
+   * three more.
+   *
+   * `headline` is THE CLAIM, and it arrives BROKEN. Four lines on the mock, each
+   * a string, because where a line of display type this size turns is a drawing
+   * decision — the same call `origin` above makes about where the tape lands in
+   * the sentence, and for the same reason: nothing should be inferring it from
+   * the copy at render time. A tape whose claim wants three lines gives three.
+   *
+   * Sentence case here and uppercase on the page — the caps are the section's
+   * setting, so the copy stays readable in the data file and in a screen reader.
+   *
+   * `note` is the aside scribbled beside the printed label. Lines, not a
+   * sentence, and ASCII only, for exactly the reasons `character` gives above —
+   * it is written by the same hand (components/HandNote). It is a SECOND note
+   * rather than a reuse of `character`: both are on this page, and the same
+   * sentence in the same handwriting twice on one page reads as a mistake.
+   *
+   * `shots` is FOUR PHOTOGRAPHS in the order the camera meets them — the opener
+   * that the section is parked on when it takes the screen, then the three that
+   * close the run. Exactly four: the arrangement places every one of them by
+   * hand, so a fifth would have nowhere to stand.
+   */
+  reel: {
+    headline: string[];
+    note: string[];
+    shots: [string, string, string, string];
+  };
   colours: TapeColours;
 };
 
@@ -140,6 +201,33 @@ export const tapes: Tape[] = [
       "in a hand, saying",
       "what this one is.",
     ], // placeholder
+    reel: {
+      /* PLACEHOLDER — the claim has not been written for this tape. The breaks
+         are the design's, not the copy's; see `reel` in the type above. */
+      headline: [
+        "Placeholder claim",
+        "for the masking",
+        "tape, in four",
+        "lines.",
+      ], // placeholder
+      /* PLACEHOLDER — three short lines in somebody's handwriting. ASCII only. */
+      note: [
+        "placeholder note",
+        "beside the label,",
+        "three lines long.",
+      ], // placeholder
+      /* PLACEHOLDER — none of the four photographs has been shot. This tape's own
+         two slider stills and the home page's key visual stand in, with the
+         first still opening AND closing the run, so the section reads today
+         rather than showing four broken images. Replace all four when the
+         artwork lands. */
+      shots: [
+        "/assets/slider/masking/shot-2.png",
+        "/assets/slider/masking/shot-1.png",
+        "/assets/make-it-stick.jpg",
+        "/assets/slider/masking/shot-2.png",
+      ], // placeholder
+    },
     colours: {
       ring: "#fff1a2",
       bg: "#fa8005",
@@ -173,6 +261,33 @@ export const tapes: Tape[] = [
       "in a hand, saying",
       "what this one is.",
     ], // placeholder
+    reel: {
+      /* PLACEHOLDER — the claim has not been written for this tape. The breaks
+         are the design's, not the copy's; see `reel` in the type above. */
+      headline: [
+        "Placeholder claim",
+        "for the double-",
+        "sided tape, in",
+        "four lines.",
+      ], // placeholder
+      /* PLACEHOLDER — three short lines in somebody's handwriting. ASCII only. */
+      note: [
+        "placeholder note",
+        "beside the label,",
+        "three lines long.",
+      ], // placeholder
+      /* PLACEHOLDER — none of the four photographs has been shot. This tape's own
+         two slider stills and the home page's key visual stand in, with the
+         first still opening AND closing the run, so the section reads today
+         rather than showing four broken images. Replace all four when the
+         artwork lands. */
+      shots: [
+        "/assets/slider/double/shot-2.png",
+        "/assets/slider/double/shot-1.png",
+        "/assets/make-it-stick.jpg",
+        "/assets/slider/double/shot-2.png",
+      ], // placeholder
+    },
     colours: {
       ring: "#a8dcf0",
       bg: "#50CBFF",
@@ -209,6 +324,33 @@ export const tapes: Tape[] = [
       "in a hand, saying",
       "what this one is.",
     ], // placeholder
+    reel: {
+      /* PLACEHOLDER — the claim has not been written for this tape. The breaks
+         are the design's, not the copy's; see `reel` in the type above. */
+      headline: [
+        "Placeholder claim",
+        "for the stationery",
+        "tape, in four",
+        "lines.",
+      ], // placeholder
+      /* PLACEHOLDER — three short lines in somebody's handwriting. ASCII only. */
+      note: [
+        "placeholder note",
+        "beside the label,",
+        "three lines long.",
+      ], // placeholder
+      /* PLACEHOLDER — none of the four photographs has been shot. This tape's own
+         two slider stills and the home page's key visual stand in, with the
+         first still opening AND closing the run, so the section reads today
+         rather than showing four broken images. Replace all four when the
+         artwork lands. */
+      shots: [
+        "/assets/slider/stationery/shot-2.png",
+        "/assets/slider/stationery/shot-1.png",
+        "/assets/make-it-stick.jpg",
+        "/assets/slider/stationery/shot-2.png",
+      ], // placeholder
+    },
     colours: {
       ring: "#ffd9c2",
       bg: "#FF7B5F",
@@ -242,6 +384,33 @@ export const tapes: Tape[] = [
       "in a hand, saying",
       "what this one is.",
     ], // placeholder
+    reel: {
+      /* PLACEHOLDER — the claim has not been written for this tape. The breaks
+         are the design's, not the copy's; see `reel` in the type above. */
+      headline: [
+        "Placeholder claim",
+        "for the cloth",
+        "tape, in four",
+        "lines.",
+      ], // placeholder
+      /* PLACEHOLDER — three short lines in somebody's handwriting. ASCII only. */
+      note: [
+        "placeholder note",
+        "beside the label,",
+        "three lines long.",
+      ], // placeholder
+      /* PLACEHOLDER — none of the four photographs has been shot. This tape's own
+         two slider stills and the home page's key visual stand in, with the
+         first still opening AND closing the run, so the section reads today
+         rather than showing four broken images. Replace all four when the
+         artwork lands. */
+      shots: [
+        "/assets/slider/cloth/shot-2.png",
+        "/assets/slider/cloth/shot-1.png",
+        "/assets/make-it-stick.jpg",
+        "/assets/slider/cloth/shot-2.png",
+      ], // placeholder
+    },
     colours: {
       ring: "#d9d2f7",
       bg: "#2E3EAC",
@@ -275,6 +444,14 @@ export const tapes: Tape[] = [
        one (Hero/engine.ts MODEL_URL), so the object the page opens with is the
        entry below rather than this one. */
     model: "/assets/tapes/header-brown.glb",
+    /* THE ONE TAPE SPLIT SO FAR, and it is split because it is the one the inner
+       page was designed around — see `modelInner` above.
+       IT IS A COPY OF THE LINE ABOVE TODAY, byte for byte, so the page looks
+       exactly as it did before the split. That is the point: the seam is open
+       and the home page is out of the way, so this file can be re-exported with
+       whatever metalness, gloss and maps the close-up wants without the orbit of
+       six changing by a pixel. Keep the bounding box. */
+    modelInner: "/assets/tapes/Header-Brown-Inner.glb",
     showcase: ["/assets/slider/opp/shot-1.png", "/assets/slider/opp/shot-2.png"],
     tags: ["CARTON SEALING", "BULK PACKING", "BROWN"], // placeholder
     copy: "Placeholder copy for the OPP tape — replace before this goes anywhere near a build.", // placeholder
@@ -307,6 +484,32 @@ export const tapes: Tape[] = [
      * every one of the six has its own tint of its own stage colour. It is
      * still a placeholder; it is just not this page's placeholder.
      */
+    reel: {
+      /* The one that is written. Straight off the design. */
+      headline: [
+        "Your parcel",
+        "arriving",
+        "exactly the way",
+        "you packed it",
+      ],
+      /* PLACEHOLDER — three short lines in somebody's handwriting. ASCII only. */
+      note: [
+        "placeholder note",
+        "beside the label,",
+        "three lines long.",
+      ], // placeholder
+      /* PLACEHOLDER — none of the four photographs has been shot. This tape's own
+         two slider stills and the home page's key visual stand in, with the
+         first still opening AND closing the run, so the section reads today
+         rather than showing four broken images. Replace all four when the
+         artwork lands. */
+      shots: [
+        "/assets/slider/opp/shot-2.png",
+        "/assets/slider/opp/shot-1.png",
+        "/assets/make-it-stick.jpg",
+        "/assets/slider/opp/shot-2.png",
+      ], // placeholder
+    },
     colours: {
       ring: "#e4f7a8", // placeholder
       bg: "#b6fe00",
@@ -352,6 +555,33 @@ export const tapes: Tape[] = [
       "in a hand, saying",
       "what this one is.",
     ], // placeholder
+    reel: {
+      /* PLACEHOLDER — the claim has not been written for this tape. The breaks
+         are the design's, not the copy's; see `reel` in the type above. */
+      headline: [
+        "Placeholder claim",
+        "for the low-noise",
+        "OPP tape, in four",
+        "lines.",
+      ], // placeholder
+      /* PLACEHOLDER — three short lines in somebody's handwriting. ASCII only. */
+      note: [
+        "placeholder note",
+        "beside the label,",
+        "three lines long.",
+      ], // placeholder
+      /* PLACEHOLDER — none of the four photographs has been shot. This tape's own
+         two slider stills and the home page's key visual stand in, with the
+         first still opening AND closing the run, so the section reads today
+         rather than showing four broken images. Replace all four when the
+         artwork lands. */
+      shots: [
+        "/assets/slider/opp-quiet/shot-2.png",
+        "/assets/slider/opp-quiet/shot-1.png",
+        "/assets/make-it-stick.jpg",
+        "/assets/slider/opp-quiet/shot-2.png",
+      ], // placeholder
+    },
     colours: {
       ring: "#fff0b0", // placeholder
       bg: "#F7D000", // placeholder
@@ -370,11 +600,41 @@ export function tapeOf(id: string): Tape | undefined {
   return tapes.find((t) => t.id === id);
 }
 
+/* THE ONE AFTER THIS ONE, and it wraps.
+ *
+ * The order is the order of `tapes` above — which is the order the row at
+ * /products stands in and the order the slider's orbit turns through — so NEXT
+ * UP at the foot of an inner page means the same "next" a reader has already
+ * been shown twice. There is no separate running order to keep in step.
+ *
+ * IT WRAPS RATHER THAN ENDING, and that is what makes the section unconditional:
+ * the last tape's next is the first, so every inner page has one and no page
+ * needs a branch for the case where it does not. A reader who follows it round
+ * arrives back where they started having seen all six, which is a better end
+ * than a panel that quietly disappears on one page out of six.
+ *
+ * Falls back to the tape itself if it is somehow not in the list — a link back
+ * to the page you are on is inert, which is the right failure for a piece of
+ * navigation that has lost its place.
+ */
+export function nextTape(tape: Tape): Tape {
+  const i = tapes.findIndex((t) => t.id === tape.id);
+  return i < 0 ? tape : tapes[(i + 1) % tapes.length];
+}
+
 /* WHICH PICTURE THE INNER PAGE SHOWS, and the whole of the fallback in one
    place. See the `hero` field above for why five tapes take the second half of
    this expression today. */
 export function heroOf(tape: Tape): string {
   return tape.hero ?? tape.card;
+}
+
+/* WHICH ROLL THE INNER PAGE LOADS. The tape's own export if it has been split
+   off for that stage, the home page's otherwise — see the `modelInner` field
+   above for why splitting is a decision per tape rather than a rule. The one
+   place this fallback is made, so ProductIntro never has to know there is one. */
+export function innerModelOf(tape: Tape): string {
+  return tape.modelInner ?? tape.model;
 }
 
 /* WHICH LABEL A SIBLING CARD SHOWS, and the whole of that fallback in one place

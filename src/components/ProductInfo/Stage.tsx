@@ -4,6 +4,7 @@ import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 
 import { initHandNote } from "@/components/HandNote/hand";
 import { initPress } from "./press";
+import { initInfoReveal } from "./reveal";
 
 /* The origin section's client boundary — a ref, and the two drivers hung off it.
  *
@@ -54,9 +55,17 @@ export default function Stage({
      * anything is wrong. */
     const stopPress = initPress(root);
 
+    /* THE STORY AND THE CHIP, on a cue of their own — a ScrollTrigger, because
+       this section is a full window below the fold and cannot be under the
+       cover. See reveal.ts, which argues that against the opening screen's
+       whenRevealed, and press.ts above, whose hand deliberately arrives after
+       the sentence has been written. */
+    const stopReveal = initInfoReveal(root);
+
     return () => {
       stopNote();
       stopPress();
+      stopReveal();
     };
   }, []);
 

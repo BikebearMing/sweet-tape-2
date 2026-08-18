@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import type { CSSProperties } from "react";
 
-import { cssVars, heroOf, type Tape } from "@/data/tapes";
+import { cssVars, heroOf, innerModelOf, type Tape } from "@/data/tapes";
 import { TopTitle, BottomTitle, wordmarkText } from "@/components/TapeSlider/WordMarks";
 import Stage from "./Stage";
 
@@ -64,8 +64,15 @@ export default function ProductIntro({ tape }: { tape: Tape }) {
     <Stage
       /* THE MODEL'S PATH ARRIVES AS AN ATTRIBUTE rather than a prop of roll.ts —
          the seam every 3D section on this site uses. roll.ts is plain DOM: it is
-         handed the section and finds everything it needs on it. */
-      model={tape.model}
+         handed the section and finds everything it needs on it.
+
+         AND IT IS THIS PAGE'S EXPORT, NOT THE HOME PAGE'S. innerModelOf hands
+         back the tape's own `modelInner` where one has been authored for this
+         stage and the slider's `model` where one has not — see the field in
+         src/data/tapes.ts. The two pages show the same OBJECT and are no longer
+         obliged to show the same FILE, which is what lets the close-up be
+         finished for a close-up. */
+      model={innerModelOf(tape)}
       style={
         {
           ...cssVars(tape.colours),

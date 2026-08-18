@@ -59,6 +59,17 @@ const SIBLINGS = [
    centre card is still the centre card. */
 const RAISED = 1;
 
+/* AND HOW FAR EACH ONE LEANS, in degrees, by position for the same reason: the
+   outer two are put down off square and the middle one stands straight, which is
+   a fact about where a card sits in the row and not about which grade is printed
+   on it. The two figures are the design's own.
+ *
+ * Here rather than in global.css because a stylesheet rule would have to count
+ * to the first and the last child of .siblings-row — and the last child of that
+ * row is THE SIBLINGS, not a card. It reaches the page as --sib-tilt, which the
+ * stylesheet rests on and reveal.ts animates into. */
+const TILT = [-4.414, 0, 3.578];
+
 export default function Siblings({ tape }: { tape: Tape }) {
   return (
     <Stage>
@@ -75,6 +86,14 @@ export default function Siblings({ tape }: { tape: Tape }) {
       </noscript>
 
       <div className="siblings-row">
+        {/* THE FAN — the three cards and nothing else, in a box of their own.
+            It is what reveal.ts turns to deal them: the row's arrangement IS an
+            arc, and swinging this box about a point far below the page brings
+            each card into the middle of the screen the way a hand of cards is
+            fanned. The name is deliberately OUTSIDE it — it belongs in the
+            middle whatever the cards are doing, and a name carried round on the
+            fan would lean with them. */}
+        <div className="siblings-fan">
         {SIBLINGS.map((sibling, i) => (
           /* One card. The grade's name is the ALT and not a caption, because on
              the page it is printed around the bottom of the label inside the
@@ -82,14 +101,19 @@ export default function Siblings({ tape }: { tape: Tape }) {
              which is what alt is for. A caption would be the same words said
              twice to anyone using a screen reader.
 
-             --sib-raised is the arrangement, set here rather than by an
-             :nth-child in the stylesheet: which card is up is a fact about this
-             list, and a selector counting to two would go quietly wrong the day
-             the list did. */
+             --sib-raised and --sib-tilt are the arrangement, set here rather
+             than by an :nth-child in the stylesheet: which card is up and which
+             way it leans are facts about this list, and a selector counting to
+             two would go quietly wrong the day the list did. */
           <div
             className="siblings-card"
             key={sibling.id}
-            style={{ "--sib-raised": i === RAISED ? 1 : 0 } as CSSProperties}
+            style={
+              {
+                "--sib-raised": i === RAISED ? 1 : 0,
+                "--sib-tilt": `${TILT[i] ?? 0}deg`,
+              } as CSSProperties
+            }
           >
             <img
               className="siblings-face"
@@ -98,6 +122,7 @@ export default function Siblings({ tape }: { tape: Tape }) {
             />
           </div>
         ))}
+        </div>
 
         {/* The name, in the gap the raised card leaves. Split to letters for the
             reveal, which is the hero's and the footer's — each waits below its

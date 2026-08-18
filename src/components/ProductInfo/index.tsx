@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 
 import HandNote from "@/components/HandNote";
 import Peel from "@/components/Peel";
+import { words } from "@/components/letters";
 import { stripOf } from "@/components/TapeSlider/strips";
 import { cssVars, heroOf, type Tape } from "@/data/tapes";
 import Stage from "./Stage";
@@ -218,6 +219,19 @@ export default function ProductInfo({ tape }: { tape: Tape }) {
         </div>
 
         <div className="right">
+          {/* WITHOUT JAVASCRIPT NEITHER THE STORY NOR THE CHIP ARRIVES. The
+              letters are parked under their masks by global.css and the chip is
+              held at nothing by the same attribute, both released by the
+              section's own script — so a page where reveal.ts never runs is a
+              column of empty green. The stylesheet's hold is lifted here
+              instead, which costs nothing when scripting is on: the contents are
+              not even parsed. Every other section on this site carries the same
+              escape. */}
+          <noscript>
+            <style>{`.product-inner-info .char { transform: none }
+              .product-inner-info .subhead { opacity: 1; visibility: visible }`}</style>
+          </noscript>
+
           <h5 className="subhead">{KICKER}</h5>
 
           {/* THE STORY. One paragraph with a strip of tape stuck across it, so
@@ -231,11 +245,19 @@ export default function ProductInfo({ tape }: { tape: Tape }) {
               aria-hidden's job to keep it out of the sentence; Peel renders a
               span of images and has nothing to announce.
 
-              The whole paragraph is a single readable text node to assistive
-              tech — the two halves are adjacent inline content, so they are
-              read as one sentence with no gap, which is what they are. */}
-          <h3 className="h3 info-story">
-            {lead}{" "}
+              SPLIT TO LETTERS FOR THE REVEAL (reveal.ts), which is the site's
+              — each waits below its own mask and slides up in a shuffled order.
+              aria-label carries the readable version rather than a second hidden
+              copy of the words: the sentence is announced whole, so the row of
+              letter boxes is never read out a fragment at a time, and the two
+              halves are read as the one sentence they are. */}
+          <h3 className="h3 info-story" aria-label={`${lead} ${rest}`}>
+            {/* SPLIT TO LETTERS BY WORD and not by the whole run: words() keeps
+                each word an inline box, so the paragraph breaks BETWEEN words
+                exactly where the unsplit copy would have broken. letters() lays
+                a row that cannot break, which is right for a headline whose
+                breaks are set by design and wrong for a measure this deep. */}
+            <span aria-hidden="true">{words(lead)}</span>{" "}
             {/* A SLOT AROUND IT, and it is not decoration.
                 The strip's own box is the FILE's, which for these exports is
                 mostly transparent margin — the clear tape's artwork sits in a
@@ -259,7 +281,7 @@ export default function ProductInfo({ tape }: { tape: Tape }) {
               style={{ "--strip-blend": strip.blend } as CSSProperties}
             />
             </span>{" "}
-            {rest}
+            <span aria-hidden="true">{words(rest)}</span>
             {/* The rule under the last words, drawn in two passes the way a
                 hand underlines something — one stroke out and a shorter one
                 back over it, neither quite straight and neither quite meeting

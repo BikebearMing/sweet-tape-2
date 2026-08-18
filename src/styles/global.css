@@ -2326,7 +2326,7 @@ html[data-loading] {
   z-index: 11;
   margin-top: calc(var(--giant-arc) * -1);
   padding-top: var(--giant-arc);
-  padding-bottom: var(--giant-tail);
+  /* padding-bottom: var(--giant-tail); */
 
   /* FLAT. The paper is a separate layer — see .wrapper::before below.
 
@@ -4850,10 +4850,28 @@ html[data-loading] {
 /* The kicker chip. It inherits the chip's look, perforation and palette from
    the shared rule up in the Tape slider block and adds nothing but a lean —
    there is no placement to add, because unlike every other chip on the site
-   this one is in flow at the top of its own column. */
+   this one is in flow at the top of its own column.
+
+   PARKED AT NOTHING, AND HANDED OVER BY THE ATTRIBUTE, exactly as the title
+   card's chip and the story page's are: it turns in on a rotateY that starts a
+   shade past edge-on, and a chip visible before that lands is a page correcting
+   itself in front of the reader. autoAlpha in GSAP writes both of these, so the
+   tween takes the hold over cleanly. The <noscript> in ProductInfo/index.tsx
+   lifts it for good if the script is never going to run.
+
+   THE LEAN IS WRITTEN OVER for the length of the turn and put back by the
+   teardown's clearProps — the transform is one property and the reveal owns it
+   while it runs (ProductInfo/reveal.ts says so at the teardown). */
 .product-inner-info .subhead {
   transform: rotate(-1.6deg);
   font-size: 1.05vw;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.product-inner-info[data-reveal="live"] .subhead {
+  opacity: 1;
+  visibility: visible;
 }
 
 /* THE STORY.
@@ -4893,6 +4911,59 @@ html[data-loading] {
      use. Written as the literal because that is how every other section on this
      site states it; there is no token for it. */
   color: #b6fe00;
+}
+
+/* Each word its own inline box, so the deep measure above breaks BETWEEN words
+   exactly where the unsplit copy would have broken — see words() in
+   components/letters, and .article-title .word, which is the same statement for
+   the story page's headline. align-items so the letters sit on the line rather
+   than on the box's top, which an inline-flex would otherwise do the moment one
+   .clip is taller than another. */
+.product-inner-info .word {
+  display: inline-flex;
+  align-items: flex-end;
+}
+
+/* Split letters — the boxes. The same headroom every headline on this site gives
+   its masks, handed straight back by the matching negative margins so the lines
+   are the size they always were: this is a line-height under 1, so a letter's
+   content box is shorter than the capital standing in it and a mask flush to the
+   box would shave the tops off. */
+.product-inner-info .clip {
+  display: block;
+  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  overflow: hidden;
+  padding: 0.2em 0.06em 0;
+  margin: -0.2em -0.06em 0;
+}
+
+/* Parked, and handed over by the attribute exactly as the story page's letters
+   are — see .news-article .char, which carries the full note. 130 because
+   capitals overshoot their own box, so a letter moved exactly its own height
+   still leaves a hairline of tops at the mask's edge; REVEAL.HIDDEN is the same
+   figure and the two have to agree. */
+.product-inner-info .char {
+  display: block;
+  transform: translateY(130%);
+}
+
+.product-inner-info[data-reveal="live"] .char {
+  transform: none;
+}
+
+/* A paragraph flying in from nowhere and a chip turning over are exactly what
+   this setting is asking about. Here as well as in reveal.ts, so it also covers
+   the window before hydration, when the stylesheet is holding them on its own —
+   every other section on this site makes the same pair of statements. */
+@media (prefers-reduced-motion: reduce) {
+  .product-inner-info .char {
+    transform: none;
+  }
+
+  .product-inner-info .subhead {
+    opacity: 1;
+    visibility: visible;
+  }
 }
 
 /* THE STRIP ACROSS THE SENTENCE.
@@ -5046,12 +5117,24 @@ html[data-loading] {
 
   /* THE THREE SIZES AND THE DROP — the whole arrangement, in four numbers.
      430px for the middle one and 402 for the two beside it, which sit 115px
-     lower. The row comes to 402 + 36 + 430 + 36 + 402 = 1306px, leaving 67px of
+     lower. The row comes to 402 + 18 + 430 + 18 + 402 = 1270px, leaving 85px of
      green either side at the design width. */
   --sib-w: 29.861vw; /* 430px — the middle card */
   --sib-w-side: 27.917vw; /* 402px — the two beside it */
   --sib-drop: 7.986vw; /* 115px — how much lower those two sit */
-  --sib-gap: 2.5vw; /* 36px between cards */
+  /* Half the design's 36 — three labels put down close enough to read as one
+     handful rather than as three things on a shelf, which is what the reference
+     effect's overlapping deal is after. It is the one figure here that is not
+     the design's own measurement.
+
+     IT IS ALSO WHAT SETS THE DEAL'S WHEEL. Siblings/reveal.ts takes its radius
+     from how far the first card stands off centre divided by the lean the
+     stylesheet gives it — so tightening this shortens the spoke and steepens the
+     swing, with nothing in that file to keep in step. The one thing to watch
+     going the other way is the name: it is placed between the two outer cards,
+     and a gap wide enough to pull their inner edges inside THE SIBLINGS' measure
+     would have them standing on it. */
+  --sib-gap: 0.2vw; /* 18px between cards */
 
   /* HOW FAR THE LABEL IS INSET IN THE CARD. The design rules 65 / 65 / 64 / 64
      from the four edges of a 430px card, which is even to within a pixel and is
@@ -5071,12 +5154,16 @@ html[data-loading] {
   --sib-title-gap: 3.472vw; /* 50px, the middle card's bottom to the name */
 
   /* Above the cards, and under the name. Both off the reference. */
-  --sib-pad-top: 9.34vw; /* 134.5px */
   --sib-pad-bottom: 4.167vw; /* 60px */
 
   position: relative;
   width: 100%;
-  padding: var(--sib-pad-top) 0 var(--sib-pad-bottom);
+  /* NO PADDING OF ITS OWN ANY MORE — the stage below is the window's height and
+     the composition is centred in it, so vertical padding here would be space
+     added to a box that is already exactly as tall as it means to be. What this
+     element's height IS, once the reveal has run, is the stage plus however much
+     scrolling the pin spends: ScrollTrigger puts a spacer around the stage and
+     this box grows to hold it. */
   background: var(--sib-bg);
   /* The row is 1306px of a 1440px page, so nothing should ever bleed — but the
      cards are placed by a flex row that does not shrink them, and clip rather
@@ -5086,12 +5173,54 @@ html[data-loading] {
   overflow-x: clip;
 }
 
+/* --------------------------------------------------------------------------
+   The stage — the box that is pinned
+   -------------------------------------------------------------------------- */
+
+/* THE WINDOW'S HEIGHT, WITH THE WHOLE COMPOSITION CENTRED IN IT. This is what
+ * Siblings/reveal.ts holds still while the range is dealt onto it, and it is a
+ * box of its own for the reason the pinning section's .wrapper is: a pin is an
+ * element held with position: fixed inside something taller, so the thing being
+ * held and the thing providing the scrolling cannot be the same box.
+ *
+ * min-height rather than height, so a window shorter than the arrangement grows
+ * to hold it rather than cropping it — the pin measures whatever this turns out
+ * to be, so a taller stage is simply a taller pin.
+ *
+ * OPAQUE, AND IT CARRIES THE PAPER — see the grain below. While the pin is
+ * engaged this box is the whole screen and the section is scrolling behind it;
+ * a transparent stage would show that motion through as a texture sliding under
+ * cards that are standing still.
+ *
+ * Grid rather than flow so the row is centred on both axes without either of
+ * them being a margin somebody has to re-tune when the type size moves. */
+.siblings-stage {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: var(--sib-bg);
+  /* A card is dealt from the middle of the screen and slides out to its place in
+     the row, and for the first of them that place is most of a card's width off
+     centre. Nothing should ever reach the edge — but clip rather than hidden for
+     the reason every other section gives: hidden on one axis makes the box a
+     scroll container on the other, which would give the page a second scroller
+     to fight the smooth scroll for the wheel. */
+  overflow: clip;
+}
+
 /* The paper grain, the same layer every other sheet on this site carries — it is
    the only way the sections read as one printed surface rather than a textured
    one following a clean one. Width-fitted and tiled DOWN rather than stretched,
    for the reason the hero gives: stretching one tile over a box of a different
-   aspect turns paper into vertical streaking. */
-.siblings-section::before {
+   aspect turns paper into vertical streaking.
+
+   ON THE STAGE AND NOT ON THE SECTION, which it was until the pin went in. The
+   section is now several screens tall and scrolls the whole time the stage is
+   held still, so a grain belonging to it would slide upward behind cards that
+   are not moving — the one thing on a pinned screen that gives the trick away.
+   Here it is part of what is pinned and the paper holds still with the rest. */
+.siblings-stage::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -5115,10 +5244,12 @@ html[data-loading] {
    gives the name something to be placed against. */
 .siblings-row {
   position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: var(--sib-gap);
+  /* THE FULL WIDTH OF THE STAGE, which it took for granted as a block in flow
+     and does not get as a grid item — place-items centres it, and a centred item
+     is as wide as its contents. It has to be the box's width for two reasons:
+     the name is placed at its 50%, which has to be the middle of the SCREEN, and
+     reveal.ts measures the deal's shifts against this element's width. */
+  width: 100%;
   /* THE ROW HAS TO BE AS DEEP AS THE NAME UNDER IT. The name is placed against
      this box rather than following it in flow — see .siblings-title — so it
      contributes no height, and without this the section's bottom padding would
@@ -5127,6 +5258,27 @@ html[data-loading] {
      the name, and it is written out rather than measured so it stays true if the
      two beside it are ever made the taller pair. */
   min-height: calc(var(--sib-w) + var(--sib-title-gap) + var(--sib-title-size));
+}
+
+/* THE THREE CARDS, and only them — the row's flex, moved off .siblings-row when
+ * the name stopped being able to travel with them.
+ *
+ * align-items: flex-start, so the drop below is a margin and not a fight with
+ * the default stretch — three cards of two heights in a stretched row would all
+ * come out the tallest one's height and the aspect-ratio would be ignored.
+ *
+ * WHAT REVEAL.TS TURNS. The deal swings this box about a point some four screen
+ * widths below the page, which is the reference effect's move and this
+ * arrangement's own logic: the row IS an arc — the middle card raised and square,
+ * the two beside it lower and leaning away — so bringing a card to the middle of
+ * the screen and standing it up are the same gesture. The pivot is set from the
+ * stylesheet's own figures at run time and there is nothing here to keep in step;
+ * see PIVOT in the reveal. */
+.siblings-fan {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: var(--sib-gap);
 }
 
 /* One label card. Square, and the size is chosen by --sib-raised — 1 for the
@@ -5148,11 +5300,23 @@ html[data-loading] {
   border-radius: var(--sib-radius);
   background: var(--sib-card-bg);
 
+  /* THE TILT — three labels put down by hand, so the outer two sit off square.
+     --sib-tilt is set per card in index.tsx next to --sib-raised, for the same
+     reason: which card leans which way is a fact about THAT list, and a rule
+     here counting to first and last would be counting the name in the row as a
+     card. Written as a whole transform rather than a `rotate` of its own,
+     because reveal.ts animates this property and a second one alongside it
+     would be silently dropped the moment GSAP writes the first.
+
+     The reveal takes the property over on data-reveal and hands it back on
+     teardown; this is the resting value it lands on and returns to. */
+  transform: rotate(var(--sib-tilt, 0deg));
+
   /* Parked at nothing until reveal.ts sets data-reveal, and parked at NOTHING
-     rather than under a mask: the entrance resolves them out of a blur, and an
-     entrance that begins by blurring something the reader can already see is a
-     page correcting itself. The index's cards are held exactly this way and its
-     note is the long version. */
+     rather than under a mask: the entrance carries each card up into place from
+     under its resting spot, and something already on the page sliding up out of
+     itself reads as a page correcting itself. The index's cards are held exactly
+     this way and its note is the long version. */
   opacity: 0;
   visibility: hidden;
 }
@@ -5169,11 +5333,15 @@ html[data-loading] {
    here is 100% of a box this rule is already sizing; object-fit: contain so an
    export drawn at a slightly different aspect is letterboxed inside the inset
    rather than cropped or stretched. */
+
 .siblings-face {
   position: absolute;
-  inset: var(--sib-face-inset);
-  width: auto;
-  height: auto;
+  /* inset: var(--sib-face-inset); */
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 20.903vw;
+  height: 20.903vw;
   max-width: none;
   object-fit: contain;
 }
@@ -5253,7 +5421,7 @@ html[data-loading] {
   transform: none;
 }
 
-/* Twelve letters flying in from nowhere and three labels resolving out of a blur
+/* Twelve letters flying in from nowhere and three labels springing up into place
    are exactly what this setting is asking about. Here as well as in reveal.ts,
    so it also covers the window before hydration, when the stylesheet is holding
    them on its own — every other section on this site makes the same pair of
@@ -5264,6 +5432,816 @@ html[data-loading] {
   }
 
   .siblings-section .siblings-card {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* ==========================================================================
+   A product — the run
+   ==========================================================================
+   Markup in components/ProductReel, camera in its pin.ts, gestures in its
+   reveal.ts. A frame the page holds still and scrolls SIDEWAYS through: one
+   photograph and the claim beside it, a strip of torn kraft, and the three
+   shots that close the run — laid out in one long row and travelled left to
+   right.
+
+   IT IS THE HOME PAGE'S PINNING SECTION WITH THE STAIRCASE TAKEN OUT. Same
+   arrangement seam — every piece placed off --rx / --ry on a canvas the camera
+   measures rather than reads a width from — and the same three-part split
+   between a stylesheet that says where things ARE, a pin that says how fast the
+   camera goes, and a reveal that says how a piece arrives. What is gone is
+   everything the staircase needed: nothing here moves vertically and nothing
+   here is wider than the window, so there are no stops, no legs and no corners.
+
+   A NEW LIME SHEET. The section above (THE SIBLINGS) closes on the dark green
+   it shares with the origin story, and this opens on the pairing the home page
+   opens and closes on — #b6fe00 with #013900 written on it. Declared here
+   rather than inherited, like every other section on this site.
+
+   THE FIGURES, AND WHICH OF THEM ARE THE DESIGN'S. Everything is in vw off the
+   1440 design width, as everywhere else. Four numbers came off the mock's own
+   annotations and are marked MEASURED below:
+
+     the opening photograph   1000 x 708px
+     the printed label        288.89px across
+     the gap between the three closing shots   15px
+     the kraft's lean         2.12 degrees
+
+   Everything else — where along the row each piece sits, the claim's type size,
+   the gutter at either end — was read off the mock's proportions rather than
+   off a dimension line, and is marked INFERRED. Those are the ones to correct
+   first if this does not sit right against the artwork; each is one figure in
+   this block and nothing outside it has to change, because the camera measures
+   whatever it finds.
+   ========================================================================== */
+
+.product-reel {
+  /* The home page's pairing exactly, not an approximation of it — two greens
+     that are nearly the same read as a mistake rather than as a variation, which
+     is the argument --giant-bg makes at length in the pinning section. */
+  --reel-bg: #b6fe00;
+  --reel-ink: #013900;
+
+  /* THE FRAME THE ARRANGEMENT IS DRAWN IN, and the reason --ry can be a plain
+   * measurement off the mock.
+   *
+   * The row is a fixed shape in vw and the WINDOW is not — a tall window and a
+   * short one at the same width show the same row at the same size with
+   * different amounts of room above and below it. So the canvas is this tall and
+   * centred in the frame, rather than starting at its top: the arrangement's own
+   * vertical centre is then the window's vertical centre at any window, and a
+   * short window loses the same band off the top as off the bottom instead of
+   * cutting the bottom off the photographs.
+   *
+   * 868px at the design width — the mock's own frame. INFERRED. */
+  --reel-h: 60.278vw;
+
+  /* THE GUTTER AT EITHER END. The row opens this far in from the left edge, and
+     the camera stops when the far end is this far in from the right — pin.ts
+     reads the first figure off the layout and uses it for both, so there is no
+     second number here saying where the travel ends. 32px. INFERRED. */
+  --reel-pad: 1.042vw;
+
+  /* THE OPENING PHOTOGRAPH. 1000 x 708px. MEASURED. */
+  --reel-open-w: 69.444vw;
+  --reel-open-h: 49.167vw;
+
+  /* THE THREE THAT CLOSE THE RUN, and the gap between them. 692 x 708px
+     INFERRED off the mock's proportions; the 15px gap is MEASURED. */
+  --reel-shot-w: 69.444vw;
+  --reel-shot-h: 49.167vw;
+  --reel-gap: 1.042vw;
+
+  /* THE PRINTED LABEL. 288.89px across. MEASURED — and it is square, so this is
+     both of its sides. */
+  --reel-badge: 20.062vw;
+
+  /* THE KRAFT, AND IT IS TWO STRIPS OF TAPE rather than a sheet. 158.317 x
+     754.013px each. MEASURED — and they are the artwork's own size: the export
+     is 159 x 755, so a strip laid out at these figures renders at 1:1 on a 1440
+     window and is never resampled.
+
+     Stated the way the file is drawn — standing up — so the only rotation on a
+     strip is its LEAN. See --sr below. */
+  --reel-tape-w: 10.994vw; /* 158.317px */
+  --reel-tape-h: 52.362vw; /* 754.013px */
+
+  /* HOW FAR ALONG THE ROW THE THREE CLOSING SHOTS BEGIN, and it is the one
+     figure here that has to clear something rather than describe it — twice
+     over, in opposite directions.
+   *
+   * The claim ends at 111.2vw (its --rx plus the 566px its own type lays out
+   * to), so this cannot come further left than that. And THE TAPE HAS TO LAND
+   * ON THIS EDGE: the two strips are the run being held down at its opening
+   * corner, not a divider standing in a gap, so the first shot's left edge sits
+   * UNDER them rather than clear of them. At 126vw that edge is 1814px, which
+   * puts it 43px inside the back strip and 134px inside the front one.
+   *
+   * MEASURED ON THE LAID-OUT PAGE rather than guessed, and the first thing to
+   * re-measure if either the claim's type or the strips' --sx changes — nothing
+   * in this row is in flow, so a piece that grows runs INTO its neighbour rather
+   * than pushing it along. */
+  --reel-run-x: 126vw;
+
+  /* THE CLAIM'S TYPE, off the design's own spec rather than back-solved off the
+     mock's proportions. MEASURED, all three.
+
+     90px on a 70px line at the 1440 design width — 0.7778, which is the tight
+     end of the display voice this site already sets (0.82 on the pinning
+     section's phrases) and tighter than any of them. That is what makes the
+     four lines read as one block rather than as four headlines, and it is why
+     .clip below carries a full 0.2em of headroom: at this line-height a capital
+     stands well outside its own content box, and the mask would shave the tops
+     off without it.
+
+     The tracking is -2.7px against the 90, which is why it is stated as an em
+     here — the type scales with the window and a px figure would loosen as it
+     grew. */
+  --reel-claim-size: 6.25vw; /* 90px */
+  --reel-claim-line: 0.7778; /* 70px */
+  --reel-claim-track: -0.03em; /* -2.7px */
+
+  /* THE CORNERS ON THE PHOTOGRAPHS. Square on the mock; here as a property so a
+     radius is one figure rather than four rules. INFERRED. */
+  --reel-radius: 6.597vw;
+
+  /* THE TAIL — bare sheet below the pinned frame, and the reason the section is
+     taller than the window it holds still.
+
+     Without it the pin lets go and whatever follows is immediately there, with
+     the last photograph still at full size on screen. Nothing follows this
+     section today (see (frontend)/products/[id]/page.tsx, which is deliberately
+     left open at the foot), so this is currently the run of empty ground the
+     page ends on — and it is the dial to reach for when a footer lands under it.
+
+     pin.ts pins .wrapper, not this element, which is what leaves the tail free
+     to scroll. */
+  --reel-tail: 8vw;
+
+  position: relative;
+  padding-bottom: 1.042vw;
+  background: var(--reel-bg);
+  color: var(--reel-ink);
+
+  /* The canvas runs three windows past the right edge and every bit of it that
+     is not in shot must be cut off. Also what stops the page scrolling
+     sideways, which an unclipped 320vw child would otherwise do. */
+  overflow: hidden;
+}
+
+/* THE FRAME — exactly one window, and what pin.ts pins. The section around it is
+   this plus --reel-tail; the two are not the same box, which is the whole reason
+   the tail scrolls while this is held. */
+.product-reel .wrapper {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* THE ONE THING THAT MOVES.
+ *
+ * width: 100% and a declared height rather than inset: 0 — the pieces inside
+ * overflow it to the right and that is fine, because nothing here is laid out by
+ * the box. The box exists to be the offsetParent the camera measures against, to
+ * be a single element to put one transform on, and to be the vertical frame the
+ * arrangement is centred by (see --reel-h).
+ *
+ * `translate` for the centring and NOT transform: GSAP owns the transform for
+ * the camera and would overwrite this on the first scrolled frame. They are
+ * separate properties and compose, with translate applied first — the same
+ * pairing the cursor's hotspot uses, and for the same reason.
+ *
+ * will-change, because this transform changes on every scrolled frame for the
+ * whole length of the section, which is the case the hint is actually for. */
+.reel-canvas {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: var(--reel-h);
+  translate: 0 -50%;
+  will-change: transform;
+}
+
+/* Everything on the canvas is placed the same way, off the same two variables,
+   so a new piece needs no rule of its own — just --rx / --ry. Same seam as
+   .giant-canvas > * on the home page. */
+.reel-canvas > * {
+  position: absolute;
+  left: var(--rx);
+  top: var(--ry);
+}
+
+/* --------------------------------------------------------------------------
+   The arrangement. THESE FIGURES ARE THE COMPOSITION — where each piece stands
+   along the row, and therefore how far the camera travels and how long the
+   section is. Move one and the section's length follows it, because pin.ts
+   measures the row rather than being told its width.
+   -------------------------------------------------------------------------- */
+
+/* THE PHOTOGRAPHS. One rule for all four: they differ in size and position and
+   in nothing else.
+
+   ONE ELEMENT, and it was briefly two. A frame with an oversized picture inside
+   it is how an inner parallax is built, and this had one — see the note over
+   the reduced-motion block in components/ProductReel/pin.ts for why every last
+   piece of parallax came back out of this section. With nothing drifting, the
+   wrapper was a box that existed to hold something still, so it went with it.
+
+   object-fit because the artwork has not been shot yet and the files standing in
+   for it are not this shape — see `reel` in src/data/tapes.ts. It stays right
+   when the real photographs land, which will be cropped to the slot rather than
+   fitted to it. */
+.reel-shot {
+  object-fit: cover;
+  border-radius: var(--reel-radius);
+  z-index: 1;
+}
+
+/* The opener, top left. Its --rx is the row's gutter, and pin.ts reads exactly
+   this value back off the layout to decide where the travel ends. */
+.reel-shot--open {
+  --rx: var(--reel-pad);
+  --ry: 5.556vw; /* 80px. INFERRED. */
+  width: var(--reel-open-w);
+  height: var(--reel-open-h);
+}
+
+/* The three that close the run, in a row with the design's own gap between
+   them. The gap is stated once and multiplied, rather than three positions each
+   carrying their own copy of it. */
+.reel-shot--1,
+.reel-shot--2,
+.reel-shot--3 {
+  --ry: 5.556vw;
+  width: var(--reel-shot-w);
+  height: var(--reel-shot-h);
+}
+
+.reel-shot--1 {
+  --rx: var(--reel-run-x);
+}
+
+.reel-shot--2 {
+  --rx: calc(var(--reel-run-x) + (var(--reel-shot-w) + var(--reel-gap)));
+}
+
+.reel-shot--3 {
+  --rx: calc(var(--reel-run-x) + (var(--reel-shot-w) + var(--reel-gap)) * 2);
+}
+
+/* THE PRINTED LABEL, over the bottom-right corner of the opener and hanging a
+   little below it. Its lean is the `rotate` PROPERTY and not a transform, so
+   reveal.ts can animate `rotation` on top of it without the resting angle
+   having to be repeated in that file — the cursor's hotspot is set up the same
+   way and says why. */
+.reel-badge {
+  --rx: 71vw;
+   --ry: 32.111vw;
+  width: var(--reel-badge);
+  height: var(--reel-badge);
+
+  z-index: 3;
+}
+
+/* The aside beside the label. Placement only: everything the note IS lives in
+   the .hand-note block near the foot of this file, and every instance overrides
+   its two dials. The pen is this section's ink, so the writing and the ruled
+   margin take one value. */
+.product-reel .reel-note {
+  --hand-w: 13vw;
+  --hand-ink: var(--reel-ink);
+  --rx: 93.5vw; /* INFERRED */
+  --ry: 41vw; /* INFERRED */
+
+  z-index: 4;
+}
+
+/* THE CLAIM, beside the opener.
+ *
+ * width: max-content, and it is load-bearing rather than tidiness. An absolutely
+ * positioned box with no width shrink-to-fits against its containing block —
+ * which is the canvas, one window wide — so at this --rx the heading would be
+ * given about 20vw to lay 60 out in. Its lines are flex rows that refuse to
+ * shrink, so it would still LOOK right while reporting a width a third of the
+ * truth, and the camera measures that width. max-content is what makes the box
+ * the size of the type. */
+.reel-claim {
+  --rx: 71.861vw; /* 1150px. INFERRED. */
+  --ry: 7.861vw; /* 70px. INFERRED. */
+  width: max-content;
+  font-family: var(--font-heading);
+  font-size: var(--reel-claim-size);
+  font-weight: 800;
+  line-height: var(--reel-claim-line);
+  letter-spacing: var(--reel-claim-track);
+  /* The copy is stored in sentence case so it stays readable in the data file
+     and in a screen reader; the caps are this section's setting. */
+  text-transform: uppercase;
+  z-index: 2;
+}
+
+/* One line of it. flex so its letters carry on a row as their own boxes, which
+   is what the mask needs them to be — and a row that cannot break, which is
+   right for a claim whose breaks are set by the design and stored as separate
+   strings. */
+.reel-line {
+  display: flex;
+}
+
+/* THE TORN KRAFT between the claim and the three closing shots. A piece of box
+   the run is laid on rather than a divider, so it is put down off square like
+   everything else here a hand placed — 2.12 degrees. MEASURED.
+
+   Its size and where it stands are INFERRED. Full height of the canvas on the
+   mock, and it is the piece the claim runs up against: widen the claim and this
+   is what has to move, along with --reel-run-x behind it. */
+/* THE KRAFT — TWO STRIPS OF TAPE LAID OVER EACH OTHER, not one sheet.
+ *
+ * This element is the GROUP and paints nothing. Its box exists for one reason:
+ * pin.ts measures .reel-canvas > * to find how far the camera has to travel,
+ * and a leaning strip still reports its UPRIGHT offsetWidth — 158 where 186 of
+ * it is on screen. The group carries the footprint the two of them actually
+ * occupy and the strips overflow it freely.
+ *
+ * The lean is on the strips and not here, because it is a fact about a piece of
+ * tape rather than about the pair. */
+.reel-kraft {
+  --rx: 115vw;
+  --ry: 0;
+  /* The two strips' own spread — see --sx below. Not a shape, a measurement of
+     one. */
+  width: 19vw;
+  height: var(--reel-h);
+  /* OVER THE SHOTS, which are at 1. The first of them opens underneath these
+     strips (see --reel-run-x), and tape that a photograph is printed on top of
+     is not tape. It also puts the strips' shadow on the picture, which is what
+     says which of the two is lying on the other. */
+  z-index: 2;
+}
+
+/* WHERE ONE STRIP IS. The tape itself is the <Peel> inside it — see the note in
+ * index.tsx for why the two cannot be one element.
+ *
+ * Placed by its CENTRE — left/top put the anchor and `translate` pulls the box
+ * back half its own size onto it — so the lean turns it about the point it was
+ * placed at rather than swinging its far end across the canvas. It also makes
+ * --sx/--sy read as "where this piece of tape is", which is the only way two
+ * overlapping strips can be nudged without re-solving both.
+ *
+ * `translate` and `rotate` are their own properties, applied in that order and
+ * before any transform, so the two compose and neither has to know about the
+ * other — the same pairing the badge uses to keep its resting lean out of
+ * reveal.ts. */
+.reel-kraft-strip {
+  position: absolute;
+  left: var(--sx);
+  top: var(--sy);
+  width: var(--reel-tape-w);
+  height: var(--reel-tape-h);
+  translate: -50% -50%;
+  rotate: var(--sr);
+
+  /* ONE SHADOW, AND IT IS THIS ELEMENT'S. Peel gives its own face one, which is
+     right for a sticker lying loose on a page and wrong here: the face's and
+     the lifted flap's would stack, and the strip would carry two blurs at two
+     offsets down the seam. Taken off the face below and thrown from the wrapper
+     instead, so face and flap cast one together. The origin section's strips
+     make the identical statement for the identical reason. */
+  filter: drop-shadow(3px 2px var(--drop-blur) rgba(0, 0, 0, 0.42));
+}
+
+/* The tape. The torn ends, the crease and the shading are IN THE FILE, which is
+   the whole reason the two strips read as two where a pair of flat swatches did
+   not — and why the underside is flooded with the roll's own brown rather than
+   the board's paper (see `back` in the markup).
+
+   RESTS STUCK DOWN. --peel is Peel's 0..1 and these strips are declared
+   from={LIFT} to={0}, so 1 is flat and 0 is the end lifted. The rest pose has to
+   be the finished one: if reveal.ts never runs — no JavaScript, a failed
+   hydration — the section would otherwise show two strips curled at the end for
+   good. reveal.ts sets it to 0 itself, on the one path where a hand is coming
+   to put them down.
+
+   It also out-specifies the reduced-motion rule in the Peel block, which parks
+   --peel at 0 — correct for a peel that lifts, backwards for one that sticks
+   down. Two classes to that rule's one. The origin section's strips and the
+   slider's showcase pair make the identical statement. */
+.product-reel .reel-kraft-tape {
+  width: 100%;
+  height: 100%;
+  --peel: 1;
+  --peel-shadow: none;
+}
+
+/* WHERE THE TWO OF THEM LIE. Both show their TOP end and run off the bottom,
+   which is what the mock does — a strip with two visible ends is a shape rather
+   than a piece of tape, and one with neither is a band of colour. The frame is
+   900 tall at the design width against a 754 strip, so there is only room for
+   one end: --sy is set so it is the top one, on both.
+
+   THE LEAN IS THE DESIGN'S 2.12 AND BOTH CARRY IT. Positive is clockwise, which
+   is the top of the strip going right — the way the mock leans them. It is
+   per strip rather than on the group because two strips need not share one, and
+   this is where a second figure goes if the design gives one.
+
+   The offsets are INFERRED off the mock: the second is laid a little to the
+   right of the first and a good way further down, overlapping it along about
+   two thirds of its width. */
+.reel-kraft-strip--1 {
+  --sx: 7.5vw;
+  --sy: 26vw;
+  --sr: 2.12deg;
+}
+
+.reel-kraft-strip--2 {
+    --sx: 12.5vw;
+    --sy: 43vw;
+    --sr: 5.12deg;
+}
+
+/* --------------------------------------------------------------------------
+   Split letters — the two boxes the reveal walks, the site's.
+   .clip holds the letter's place in the row and masks it; .char is the only
+   thing that moves. One element cannot carry both, which is why there are two.
+   -------------------------------------------------------------------------- */
+.product-reel .clip {
+  display: block;
+  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  overflow: hidden;
+
+  /* Headroom, then handed straight back. The line-height here is 0.7778 — well
+     under 1 — so a letter's content box is shorter than the capital standing in
+     it and the mask would shave the tops off. The matching negative margins take
+     the room back out of the layout, so the claim measures what it always did,
+     which matters here because the camera's travel is measured off exactly that.
+
+     The pinning section's figure, and this line-height is tighter than the 0.82
+     it was chosen against, so there is no case for less of it.
+
+     Nothing at the bottom: the mask's lower edge is what the letters slide out
+     through, and it wants to sit tight on the baseline. */
+  padding: 0.2em 0.05em 0;
+  margin: -0.2em -0.05em 0;
+}
+
+/* Where a letter waits before the reveal, and — since the reveal is JS — what
+   it falls back to. reveal.ts sets data-reveal on the section to lift this and
+   hand the letters to GSAP; the <noscript> in index.tsx lifts it for good if
+   that is never going to happen, and the reduced-motion block below lifts it on
+   the path where nothing animates at all.
+
+   130 rather than 100 for the reason the hero gives: capitals overshoot their
+   own box, so a letter moved exactly its own height still leaves a hairline of
+   tops at the mask's edge. REVEAL.HIDDEN is the same figure and the two have to
+   agree. */
+.product-reel .char {
+  display: block;
+  transform: translateY(130%);
+}
+
+.product-reel[data-reveal="live"] .char {
+  transform: none;
+}
+
+/* The label waits at nothing until reveal.ts parks it properly and stamps it
+   on. Held by the section rather than by the piece itself, so a page whose
+   script never runs shows the run standing — see the <noscript> in index.tsx,
+   which lifts this for good in that case.
+
+   THE PHOTOGRAPHS ARE NOT HELD, and used to be. They are on the page at full
+   opacity from the first paint: this section is a run the reader travels ALONG,
+   and a photograph that fades up as it enters reads as the page still loading
+   rather than as a place being passed. What moves on them is the picture inside
+   the frame, which is parallax and not an entrance. */
+.product-reel:not([data-reveal="live"]) .reel-badge {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* AN ORDINARY STACK, for a reader who has asked for less movement.
+ *
+ * Hijacking the scroll so it drives a camera is squarely what the setting is
+ * asking about, so pin.ts builds nothing on this path — which would otherwise
+ * leave a 100vh frame showing the left end of a row three windows wide, with
+ * everything past the opener clipped off for good. This lays the same pieces
+ * out down the page instead, so the section still says everything it has to
+ * say; it just says it by scrolling normally.
+ *
+ * Here as well as in pin.ts, so it also covers the window before hydration,
+ * when the stylesheet is holding the section on its own — every other section
+ * on this site makes the same pair of statements. */
+@media (prefers-reduced-motion: reduce) {
+  .product-reel .wrapper {
+    height: auto;
+  }
+
+  .reel-canvas {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4vw;
+    width: 100%;
+    height: auto;
+    padding-block: 8vw;
+    translate: none;
+  }
+
+  .reel-canvas > * {
+    position: relative;
+    left: auto;
+    top: auto;
+  }
+
+  /* The note is the one piece this does not reach: .hand-note declares
+     position: absolute itself, later in this file and at the same specificity,
+     so the rule above loses to it and the note lands on top of the first
+     photograph. Named explicitly to win. */
+  .product-reel .reel-note {
+    position: relative;
+    left: auto;
+    top: auto;
+  }
+
+  .reel-shot {
+    width: var(--reel-open-w);
+    height: auto;
+  }
+
+  .reel-claim {
+    width: auto;
+    text-align: center;
+  }
+
+  .reel-line {
+    justify-content: center;
+  }
+
+  /* A piece of box that the row is laid ON. Standing on its own in a column it
+     is a brown rectangle between two photographs, which is not what it is. */
+  .reel-kraft {
+    display: none;
+  }
+
+  .product-reel .char {
+    transform: none;
+  }
+
+  .product-reel .reel-badge {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* ==========================================================================
+   Next up — the product page's way out
+   ==========================================================================
+   Markup in components/NextUp, reveal in its reveal.ts. A yellow panel across
+   the foot of an inner page carrying the name of the next tape and its printed
+   label: the page's ending, and its only forward door.
+
+   BUILT TO THE STENCIL in giant-section.html, and its figures are the design's:
+   6.25vw of radius, 1.181vw of padding, 0.833vw between the chip and the name.
+   They are here rather than in the stencil's inline <style> because that is
+   where the rest of this site's geometry is.
+
+   TWO THINGS IN THE STENCIL COULD NOT BE TAKEN AS WRITTEN.
+
+   The first is a bug in it rather than a judgement: `padding-top: 1.042vw` is
+   followed by the `padding` shorthand, which resets all four sides — so the
+   declared top padding never applied and the panel is 1.181vw all round. Kept
+   as the shorthand, which is what the stencil actually renders.
+
+   The second is that .h1-v2 has no size anywhere. It is INFERRED below, and it
+   is the one figure in this block to check against the artwork.
+   ========================================================================== */
+
+.next-up {
+  /* THE PANEL. The design's yellow, and it is a colour of this section's own —
+     not the lime above it and not a tape's. That is the point of it: the page
+     has been one tape's colour throughout and this is the door out. */
+  --nextup-bg: #f4eb00;
+  --nextup-ink: #716D00;
+
+  /* THE GROUND THE ROUNDED CORNERS SHOW. INFERRED — the stencil draws the panel
+     and says nothing about what is behind it, and a radius needs something to be
+     a radius against. The lime the section above ends on, so the two read as one
+     sheet with a panel laid on it rather than as a notch cut out to white. */
+  --nextup-ground: var(--reel-bg, #b6fe00);
+
+  /* THE NAME, off the design's own spec. MEASURED, all three.
+
+     269.789px on a 233px line at the 1440 design width — 0.86364, which is the
+     display leading this site sets everywhere and is why .clip below carries a
+     full 0.2em of headroom: at this line-height a capital stands well outside
+     its own content box and the mask would shave the tops off.
+
+     Half again as large as the figure this was drawn to on inference, and the
+     difference is not small — the name now fills the panel rather than sitting
+     on it, which is what a closing statement should do.
+
+     The tracking is -8.094px against the 269.789, which is why it is stated as
+     an em: the type scales with the window and a px figure would loosen as it
+     grew. */
+  --nextup-size: 18.735vw; /* 269.789px */
+  --nextup-line: 0.86364; /* 233px */
+  --nextup-track: -0.03em; /* -8.094px */
+
+  /* THE LABEL, at the artwork's own size. The slider's cards are around 400px
+     square, so at this width one renders 1:1 on a 1440 window and is never
+     resampled — the same argument the run's tape strips are sized by. */
+  --nextup-roll: 27.778vw; /* 400px */
+
+ 
+  padding-inline: 0.833vw;
+  
+  color: var(--nextup-ink);
+
+  /* The chip inverts the panel, which is what every chip on a coloured sheet on
+     this site does. Set here rather than on .subhead because that rule reads
+     these two and nothing else — see the note above it. */
+  --tag-bg: var(--nextup-ink);
+  --tag-ink: var(--nextup-bg);
+
+  /* WHAT THE RADIUS IS CUT OUT OF. The panel is full bleed, so its rounded
+     corners sit at the window's edges and there is no parent painting anything
+     behind them — left alone they are four notches of whatever the document
+     happens to be.
+
+     A pseudo-element rather than a second background on this rule: the radius
+     clips this element's own painting, so a colour declared here would be
+     rounded off with the panel and show nothing at the corners. At z-index -1
+     inside a positioned parent that sets no z-index of its own, this paints
+     BEHIND the parent's background — a square of ground under a rounded panel,
+     which is exactly the layering the corners need. */
+  position: relative;
+  isolation: auto;
+}
+
+.next-up::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--nextup-ground);
+}
+
+/* THE WHOLE PANEL IS THE LINK — see the note in index.tsx. It is the flex
+   column the stencil describes; being an anchor changes nothing about that
+   except that `display` has to be said out loud, since an <a> is inline. */
+.next-up .wrapper {
+  display: flex;
+  background: var(--nextup-bg);
+   padding-top: 2.369vw;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 6.25vw;
+}
+
+.next-up .top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.833vw;
+}
+
+.next-up .subhead {
+  /* Held at nothing until reveal.ts turns it over. A chip that turns from a
+     standing chip is a chip that jumps to edge-on and then turns. */
+  opacity: 0;
+  visibility: hidden;
+}
+
+.next-up[data-reveal="live"] .subhead {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* THE NAME. Scoped, and .h1-v2 is NOT a global rung — there is no .h1 in this
+   stylesheet and this does not add one. .h2's three figures live in :root
+   because a working heading size turned up in a second place and was worth
+   sharing; this size has turned up once, on this panel, and a global class for
+   a single use is a rung nobody can safely climb. The same call the origin
+   section's .h3 makes, and it says so at length there. */
+.next-up .h1-v2 {
+  font-family: var(--font-heading);
+  font-size: var(--nextup-size);
+  font-weight: 800;
+  line-height: var(--nextup-line);
+  letter-spacing: var(--nextup-track);
+  text-transform: uppercase;
+}
+
+/* THE LABEL, AND IT HANGS OUT OF THE PANEL AT BOTH ENDS.
+ *
+ * The negative margins are the whole placement. UP into the name, so the roll
+ * sits in front of the type rather than under it — which is what makes the two
+ * one object instead of a heading with a picture below it. And DOWN out of the
+ * panel's foot, which is the half a reader never sees: .site-footer follows this
+ * section with a z-index of 100 and bites an arc up into it, so everything below
+ * the panel's bottom edge is behind dark green.
+ *
+ * IT IS CUT RATHER THAN CROPPED, and the difference matters. Nothing here clips:
+ * the roll is a whole image that simply has the footer painted over its lower
+ * half, so the edge it is cut on is the footer's own arc — a curve, not a
+ * straight line, and one that moves with --footer-arc. Give this section
+ * overflow: hidden and you get a horizontal cut across the roll instead, which
+ * is the one thing the arrangement is for.
+ *
+ * BOTH FIGURES ARE FRACTIONS OF THE ROLL, so the two overlaps hold their
+ * proportions if it is ever resized — a px or vw pair would have to be re-tuned
+ * against every new diameter. --nextup-sink at 0.45 puts the cut a little above
+ * the roll's own middle, which is where the design has it. */
+.next-up .bottom-roll {
+  --nextup-roll: 30.931vw;
+  --nextup-rise: 0.29; /* of the roll, up into the name */
+  --nextup-sink: 0.45; /* of the roll, down behind the footer */
+
+  width: var(--nextup-roll);
+  height: var(--nextup-roll);
+
+  /* THE LEAN IS THE `rotate` PROPERTY AND NOT A TRANSFORM. reveal.ts animates
+     this element's transform — a rise and a scale on one tween — and the two are
+     separate properties that compose, so the label settles at the angle the
+     design put it at without that figure being repeated in the reveal. Same
+     pairing the cursor's hotspot uses, and for the same reason. */
+  rotate: -6.484deg;
+  margin-top: calc(var(--nextup-roll) * var(--nextup-rise) * -1);
+  margin-bottom: calc(var(--nextup-roll) * var(--nextup-sink) * -1);
+}
+
+/* flex so the letters carry on a row as their own boxes, which is what the mask
+   needs them to be — and a row that cannot break, which is right for two words
+   set this large. */
+.next-up .line {
+  display: flex;
+}
+
+/* NOT HELD, and it used to be. The label's arrival is a rise and a scale with no
+   fade in it (see ROLL in reveal.ts), so there is nothing an opacity hold would
+   be covering — and the `from` pose renders in the same task as data-reveal, so
+   there is no frame of the rest pose to hide. Holding it only meant the label
+   was missing before hydration on a page that otherwise shows fine without JS.
+
+   It also starts almost entirely behind the footer, which is where half of it
+   lives anyway — so there is nothing to see even at the moment it is furthest
+   from home. */
+
+/* --------------------------------------------------------------------------
+   Split letters — the two boxes the reveal walks, the site's.
+   .clip holds the letter's place in the row and masks it; .char is the only
+   thing that moves. One element cannot carry both, which is why there are two.
+   -------------------------------------------------------------------------- */
+.next-up .clip {
+  display: block;
+  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  overflow: hidden;
+
+  /* Headroom, then handed straight back. The line-height here is under 1, so a
+     letter's content box is shorter than the capital standing in it and the mask
+     would shave the tops off. The matching negative margins take the room back
+     out of the layout, so the line measures what it always did.
+
+     Nothing at the bottom: the mask's lower edge is what the letters slide out
+     through, and it wants to sit tight on the baseline. */
+  padding: 0.2em 0.05em 0;
+  margin: -0.2em -0.05em 0;
+}
+
+/* Where a letter waits before the reveal, and — since the reveal is JS — what it
+   falls back to. reveal.ts sets data-reveal on the section to lift this and hand
+   the letters to GSAP; the <noscript> in index.tsx lifts it for good if that is
+   never going to happen, and the reduced-motion block below lifts it on the path
+   where nothing animates at all.
+
+   130 rather than 100 for the reason the hero gives: capitals overshoot their
+   own box, so a letter moved exactly its own height still leaves a hairline of
+   tops at the mask's edge. REVEAL.HIDDEN is the same figure and the two have to
+   agree. */
+.next-up .char {
+  display: block;
+  transform: translateY(130%);
+}
+
+.next-up[data-reveal="live"] .char {
+  transform: none;
+}
+
+/* A name flying in, a chip turning over and a label being set down are exactly
+   what this setting is asking about. Here as well as in reveal.ts, so it also
+   covers the window before hydration, when the stylesheet is holding them on its
+   own — every other section on this site makes the same pair of statements. */
+@media (prefers-reduced-motion: reduce) {
+  .next-up .char {
+    transform: none;
+  }
+
+  .next-up .subhead {
     opacity: 1;
     visibility: visible;
   }
@@ -7883,10 +8861,11 @@ li::marker {
    No height: the artwork is 132 x 68, and an <img> given only a width keeps its
    own proportion. Stating one would be a second place the aspect lives. */
 .contact-note-tape {
-  position: absolute;
-  top: 8.2%;
-  left: 31.7%;
-  width: 36.7%;
+    width: 12.811vw;
+    position: absolute;
+    top: 4vw;
+    left: 15vw;
+    rotate: -8deg;
 }
 
 /* Two headings flying in from nowhere and a chip fading up are exactly what
@@ -8488,7 +9467,7 @@ li::marker {
      rounded below. */
   right: 1.4vw;
   width: var(--menu-w);
-  z-index: 100; /* over the slider's stage (10) and the band (11), under the cursor */
+  z-index: 101; /* over the slider's stage (10) and the band (11), under the cursor */
   font-family: var(--font-heading);
   color: var(--menu-ink);
 
@@ -9601,10 +10580,21 @@ li::marker {
   /* How far the artwork reaches along the clip's y axis once the frame has been
      turned: the box's own diagonal shadow on that axis. max(x, -x) is abs() —
      the sign of the turn cannot matter, and abs() is younger than this needs to
-     be. At 0deg it collapses to --peel-h, which is the honest answer. */
+     be. At 0deg it collapses to --peel-h, which is the honest answer.
+
+     THE 0deg FALLBACK IS LOAD-BEARING and was missing. `rotate` above has one,
+     so a peel with no `direction` looked like it worked; this did not, and an
+     unresolvable var() in a custom property is invalid at computed-value time —
+     which takes --peel-edge, --peel-from, --peel-to and --peel-cut down with it.
+     What that leaves is clip-path: none on both halves and a flap with top:
+     auto, laid out BELOW the face: a second flat copy of the artwork under the
+     first, and nothing that moves. Every call site happened to pass a direction,
+     so it went unseen until one did not. */
   --peel-span: calc(
-    var(--peel-w) * max(sin(var(--peel-dir)), -1 * sin(var(--peel-dir))) +
-      var(--peel-h) * max(cos(var(--peel-dir)), -1 * cos(var(--peel-dir)))
+    var(--peel-w) *
+      max(sin(var(--peel-dir, 0deg)), -1 * sin(var(--peel-dir, 0deg))) +
+      var(--peel-h) *
+      max(cos(var(--peel-dir, 0deg)), -1 * cos(var(--peel-dir, 0deg)))
   );
 
   /* So the frame is bled by exactly what it swings off by, plus the shadow's

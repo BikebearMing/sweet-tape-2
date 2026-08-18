@@ -15,8 +15,10 @@
  * page's 3D budget.
  *
  * THE ANGLE AND THE LIGHTING ARE THE HOME PAGE'S, and deliberately not this
- * page's own. createTapeViewer is called with NO light argument, so it runs on
- * the slider's defaults, and the roll sits at the slider's own pose: face-on,
+ * page's own. createTapeViewer's key and ambient are left at the slider's
+ * defaults — the one thing added is a room for the label's metal to reflect,
+ * which is a missing input rather than a second opinion about the lighting; see
+ * ROOM below — and the roll sits at the slider's own pose: face-on,
  * spin(0), which is where the key visual stands and where it returns to. A
  * visitor arriving here has just been shown this exact object and should meet
  * the same one, lit and posed the same way. The old origin-section rig — key up,
@@ -105,7 +107,83 @@ import type { TapeViewer } from "@/components/TapeSlider/tape3d";
  * square-on pose. The angle holds through the whole journey and is what the roll
  * lands in, because the lean composes with the flip rather than competing with
  * it. */
-const LEAN = { x: 50, y: -0.35 };
+const LEAN = { x: 100, y: 0 };
+
+/* THE ROOM — the one thing this page asks the viewer for that the slider does
+   not, and it is a correction rather than a look.
+ *
+ * THE OPP ROLL'S LABEL IS HALF METAL. Its export, header-brown.glb, is the only
+ * one in /assets/tapes with metalness on any material: "Face Brown", the disc
+ * the artwork is printed on, at 0.55. Metal has no diffuse term — its colour is
+ * what it reflects — so in a scene of bare lights, with nothing to reflect, that
+ * half of the surface renders BLACK and the label leaves the renderer at about
+ * half the brightness of the artwork. Which is exactly what the page was
+ * showing: an olive-brown disc where the packaging is lime.
+ *
+ * IT IS NOT SOMETHING THE LIGHTS CAN FIX. key and ambient feed the diffuse term
+ * the metal has already given up; turning them up brightens the rim, the core
+ * and the wound side — the parts that were right — and leaves the face where it
+ * was. What the face needs is a surrounding, and that is what this is: three's
+ * own RoomEnvironment, the addon studio box, pre-filtered to a small cube map.
+ * See `env` in TapeSlider/tape3d.ts, which is where it is built.
+ *
+ * THE NUMBER IS SET WHERE THE ARTWORK IS THE REFERENCE, AND IT IS SMALL. It is
+ * scene.environmentIntensity, and it is turned up only as far as it takes to
+ * bring the label back to the lime of /assets/opp-tape-inner-product.png — the
+ * flat hero this section's slot was designed around and the thing the roll
+ * stands in for. Measured off a clean patch of the label field, that hero is
+ * #b3d600; unlit the face rendered #8fb804, and at this setting it renders
+ * #a7dd0b. Which is the whole distance to travel, and it is why 1 is nowhere
+ * near the right answer: at 1 the same patch comes out past #e0ff20, a yellow
+ * the packaging does not contain.
+ *
+ * THE SECOND REASON NOT TO GO HIGHER, and it is the one that decides it: the
+ * sheet behind the roll on this page IS lime, #b6fe00. Push the label past the
+ * artwork and it converges on the background it is standing against — the roll
+ * stops being an object on a colour and becomes a hole in it. There is roughly
+ * one setting where the face is bright enough to be the artwork and still dark
+ * enough to be a thing.
+ *
+ * THE OTHER FIVE TAPES DO NOT NEED IT AND ARE NOT HARMED BY IT. Every other
+ * export is fully dielectric, so they render identically with this on or off —
+ * which is why it is passed here, per page, rather than turned on in the viewer
+ * for everything including the home page's orbit of six. */
+const ROOM = 0.25;
+
+/* ===========================================================================
+   THE FINISH — WHAT THE ROLL IS MADE OF ON THIS PAGE, and the dial to turn for
+   metalness and gloss without opening Blender.
+   ===========================================================================
+ *
+ * Keyed by the export's own material names — "Tape" is the wound side, "Core"
+ * the cardboard, "Face Brown" the printed label disc, and `*` is all of them at
+ * once. See MaterialFinish in TapeSlider/tape3d.ts for the full list and what
+ * each property does.
+ *
+ * EMPTY, AND DELIBERATELY SO. What ships is whatever Header-Brown-Inner.glb was
+ * exported with, which is the one true answer — this is the override, not the
+ * setting. Uncomment a line to try a value in the browser in a second rather
+ * than in a re-export in ten minutes, and once a number is right, put it in the
+ * file and empty this again. Left populated it silently outranks the export, so
+ * a re-export that changes gloss would appear to have done nothing.
+ *
+ * THE MOST LIKELY TWO, and they are the reason this page has its own export at
+ * all (see `modelInner` in src/data/tapes.ts):
+ *
+ *   metalness  0.55 on the label today. It is what made the face render dark,
+ *              and ROOM above is what pays for it. Take it to 0 and the room
+ *              stops mattering; leave it up and the label keeps a sheen that
+ *              reads as printed film rather than paper.
+ *   roughness  0.91 on the label today — nearly matte. DOWN is glossier. This
+ *              is the "gloss" dial, and it only does anything visible while
+ *              there is a room for the surface to reflect.
+ *
+ * NOTHING HERE REACHES THE HOME PAGE. It is an argument to this page's viewer,
+ * and this page's viewer now loads this page's own file. */
+const FINISH = {
+  "Face Brown": { metalness: 0.35, roughness: 2 },
+  "Tape": { roughness: 0.4 },
+};
 
 /* THE TURN, and it is the slider's FLIP_SWEEP: how far the roll goes before
    there is nothing left of it to see. 90 is edge-on, exactly, and it is not a
@@ -277,9 +355,17 @@ export function initProductRoll(root: HTMLElement): () => void {
 
   import("@/components/TapeSlider/tape3d")
     .then(({ createTapeViewer }) =>
-      /* NO LIGHT ARGUMENT — the slider's defaults, which is the whole point. See
-         the note at the top, and ViewerLight in tape3d.ts. */
-      createTapeViewer(mount, [model])
+      /* THE SLIDER'S KEY AND AMBIENT, UNTOUCHED — the whole point of this page
+         is the home page's roll, lit the home page's way. See the note at the
+         top, and ViewerLight in tape3d.ts.
+         The room is the one addition, and it is not a second opinion about the
+         lighting: it is the input the metal label has no value without. See
+         ROOM above.
+
+         THE FOURTH ARGUMENT IS THE OBJECT RATHER THAN THE STAGE — metalness and
+         gloss, overriding this page's own export where a number is being tried
+         out. Empty by default; see FINISH. */
+      createTapeViewer(mount, [model], { env: ROOM }, FINISH)
     )
     .then((v) => {
       if (gone) return v.dispose();

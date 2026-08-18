@@ -23,8 +23,10 @@ import {
   Mesh,
   MeshStandardMaterial,
   NoToneMapping,
+  PMREMGenerator,
   PerspectiveCamera,
   Scene,
+  type Texture,
   Vector3,
   WebGLRenderer,
 } from "three";
@@ -82,13 +84,20 @@ const DPR_CAP = 2;
  * There is nothing in the scene for it to be shaded AGAINST, because ambient
  * that high leaves almost no gradient across a cylinder, and the one directional
  * is placed to catch a face rather than a flank. That section shows the SLIDER'S
- * roll now (see ProductIntro/roll.ts), so nothing passes a light today.
+ * roll now (see ProductIntro/roll.ts), so nobody passes a key, an ambient or a
+ * fill today — and that was the state of this seam for a while: an argument with
+ * no caller.
  *
- * The seam is kept because the next stage that wants one will want it for the
- * same reason, and because it costs nothing: the defaults below ARE the
- * slider's, exactly, so passing nothing gets the behaviour this file has always
- * had. FILL in particular is only BUILT when asked for, so a scene that does not
- * ask does not gain a light it never had.
+ * IT HAS ONE NOW, AND IT IS ENV. The product page takes the slider's key and
+ * ambient verbatim and asks for a room on top, because the roll it opens with
+ * has metalness on its label and no environment means no label. That is the one
+ * thing here that is not a matter of taste — see `env` below.
+ *
+ * The rest of the seam is kept because the next stage that wants one will want
+ * it for the same reason, and because it costs nothing: the defaults below ARE
+ * the slider's, exactly, so passing nothing gets the behaviour this file has
+ * always had. FILL and ENV in particular are only BUILT when asked for, so a
+ * scene that does not ask gains neither a light nor a room it never had.
  */
 export type ViewerLight = {
   /** The key. Shape on the rim and the side. */
@@ -97,9 +106,83 @@ export type ViewerLight = {
   ambient?: number;
   /** A second directional from the far side, to model a curved flank. 0 = off. */
   fill?: number;
+  /**
+   * ROOM LIGHT — an image-based environment, as scene.environmentIntensity.
+   * 0 = off, and off is the default for the reason spelled out at the renderer.
+   *
+   * WHAT IT IS FOR, and it is one thing: A MATERIAL WITH METALNESS ON IT HAS
+   * NOTHING TO REFLECT IN A SCENE OF BARE LIGHTS. Metal has no diffuse — its
+   * colour IS its reflection — so on a stage with nothing in it, the metallic
+   * share of a surface comes out BLACK and the surface renders at roughly
+   * (1 - metalness) of the artwork. That is not a look, it is a missing input,
+   * and no amount of key or ambient fixes it: those two feed the diffuse term
+   * the metal has already given up.
+   *
+   * WHICH IS NOT HYPOTHETICAL HERE. Of the exports in /assets/tapes only
+   * header-brown.glb has one — its label face, "Face Brown", at metalness 0.55
+   * — and it is the roll the OPP product page opens with. Every other tape is
+   * fully dielectric and renders the same with this on or off, which is why
+   * this is a switch rather than a change to the defaults.
+   *
+   * THE ROOM IS three's OWN RoomEnvironment — the addon studio box, a handful
+   * of emissive planes, no texture to fetch — pre-filtered once through
+   * PMREMGenerator into a small cube map. It costs one dynamic import, one
+   * render into an offscreen target at build time, and nothing per frame.
+   *
+   * AND IT IS DELIBERATELY NOT A LOOK. Turned up it does what environment maps
+   * always do to flat art — reflections and a general lift that drag saturated
+   * colour toward pastel. It is set to the level that returns the metal face to
+   * the artwork's own brightness and no further; see ROOM at the product page's
+   * call site, which is the only caller that asks for it.
+   */
+  env?: number;
 };
 
-const LIGHT: Required<ViewerLight> = { key: 0.7, ambient: 0.82, fill: 0 };
+const LIGHT: Required<ViewerLight> = { key: 0.7, ambient: 0.82, fill: 0, env: 0 };
+
+/* THE FINISH — what a surface is made of, as opposed to what is shining on it.
+ *
+ * WHY THIS IS SEPARATE FROM ViewerLight ABOVE. The lights are the STAGE and this
+ * is the OBJECT, and the two are not the same argument even though they arrive
+ * together and end up in the same picture. A page that wants a softer key is
+ * saying something about its own room; a page that wants the label less glossy
+ * is saying the export is wrong for the size it is being shown at. Mixing them
+ * into one bag makes the second look like a lighting preference, which is how
+ * you end up lighting around a material instead of fixing it.
+ *
+ * KEYED BY THE GLB'S OWN MATERIAL NAMES, which come through the loader intact
+ * and are the names in Blender: "Tape" (the wound side), "Tape Inner", "Core",
+ * "white", and the label face, which is named per export — "Face Brown" on the
+ * OPP roll, "Face Red" on the stationery one. `*` is every material in the
+ * model, applied before any name, so a whole-roll change is one line.
+ *
+ *   { "*": { roughness: 0.6 }, "Face Brown": { metalness: 0 } }
+ *
+ * A name that is not in the model is silently ignored, on purpose: the six
+ * exports do not share a label-material name, and a viewer handed all six should
+ * not fall over because five of them have no "Face Brown".
+ *
+ * WHEN TO USE THIS AND WHEN TO RE-EXPORT. This is for the numbers — metalness,
+ * roughness, the base tint — which are one line here and a Blender round trip
+ * otherwise, and which are exactly what wants trying at four different values
+ * before one of them is right. Anything structural — different maps, a finish
+ * that varies across a surface, geometry — belongs in the file. See `modelInner`
+ * in src/data/tapes.ts, which is the seam for that.
+ *
+ * AND IT IS APPLIED ONCE, AT LOAD, not per frame: these are properties of the
+ * material, and the material is built when the model lands.
+ */
+export type MaterialFinish = {
+  /** 0 = plastic, 1 = metal. Metal has no diffuse — see `env` above. */
+  metalness?: number;
+  /** 0 = mirror, 1 = fully matte. The "gloss" dial, inverted. */
+  roughness?: number;
+  /** Multiplied INTO the artwork, so anything but white darkens or tints it. */
+  colour?: string;
+};
+
+/** Per-material overrides, keyed by the GLB's material name. `*` = all of them. */
+export type MaterialFinishes = Record<string, MaterialFinish>;
 
 export type TapeViewer = {
   /** True once this model is resident and can be flipped to. */
@@ -117,7 +200,8 @@ export type TapeViewer = {
 export function createTapeViewer(
   container: HTMLElement,
   urls: string[],
-  light?: ViewerLight
+  light?: ViewerLight,
+  finish?: MaterialFinishes
 ): Promise<TapeViewer> {
   const lit = { ...LIGHT, ...light };
   const scene = new Scene();
@@ -127,10 +211,13 @@ export function createTapeViewer(
 
   // alpha: the canvas sits over the colour sheet, which stays the background.
   const renderer = new WebGLRenderer({ antialias: true, alpha: true });
-  // No tone mapping and no environment map, deliberately: both exist to make
-  // photoreal scenes filmic, and both drag saturated flat artwork toward
-  // pastel. This page is flat art — the label must leave the renderer at the
-  // texture's own colour.
+  // No tone mapping, deliberately: it exists to make photoreal scenes filmic
+  // and it drags saturated flat artwork toward pastel. This page is flat art —
+  // the label must leave the renderer at the texture's own colour. The
+  // environment map used to be refused on the same line and for the same
+  // reason; it is now off BY DEFAULT and available on request, because a model
+  // with metalness on it does not render at all without one. See `env` in
+  // ViewerLight, and the block below.
   renderer.toneMapping = NoToneMapping;
   renderer.setClearColor(0x000000, 0);
 
@@ -152,6 +239,45 @@ export function createTapeViewer(
     back.position.set(-3, -0.5, 2);
     scene.add(back);
   }
+
+  /* THE ROOM, and like the fill it is only built when it is asked for — see
+     `env` in ViewerLight for what it is there to do.
+     DYNAMICALLY IMPORTED, so the addon and the room's own geometry stay out of
+     the three chunk for every caller that does not ask: the slider mounts this
+     viewer six models at a time and wants none of it. It resolves alongside the
+     first model rather than before it (see the return below), which costs the
+     first frame nothing — the room is a few emissive planes and the fetch is
+     already in the same chunk graph as the loader.
+     Held so teardown can release it: a PMREM target is a cube render target and
+     it does not go away with the renderer. */
+  let envTex: Texture | null = null;
+  const room =
+    lit.env > 0
+      ? import("three/addons/environments/RoomEnvironment.js")
+          .then(({ RoomEnvironment }) => {
+            /* gone: an import that lands after dispose has a renderer whose
+               context is already released, and generating into it throws. */
+            if (gone) return;
+            const pmrem = new PMREMGenerator(renderer);
+            const tex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+            /* The blur is 0.04 rather than 0 for the same reason the wound side
+               gets full anisotropy: a sharp room puts the studio's own panel
+               edges on the label as reflections. Blurred, it is a light source
+               instead of a scene. */
+            pmrem.dispose();
+            scene.environment = tex;
+            /* Intensity rather than a brighter room: it is the one number that
+               says how much of the metal face's colour comes from here, and it
+               is set at the call site. */
+            scene.environmentIntensity = lit.env;
+            envTex = tex;
+            dirty = true;
+          })
+          /* A room that will not load must not take the roll down with it. The
+             metal face comes out dark, which is exactly what it was before this
+             existed, and every other tape is unaffected. */
+          .catch(() => {})
+      : null;
 
   const canvas = renderer.domElement;
   // Arrives invisible and fades up once the first real frame has been
@@ -240,6 +366,11 @@ export function createTapeViewer(
         m.dispose();
       });
     });
+    /* The room's cube target, which the traverse above cannot reach — it hangs
+       off the scene rather than off a mesh, and it outlives the renderer. */
+    envTex?.dispose();
+    envTex = null;
+    scene.environment = null;
     renderer.dispose();
     canvas.remove();
   }
@@ -272,6 +403,34 @@ export function createTapeViewer(
                   mat.map.anisotropy = maxAniso;
                   mat.map.needsUpdate = true;
                 }
+                /* THE FINISH, BEFORE THE ROOM, and the order is the point: an
+                   override that sets metalness to 0 must be seen by the line
+                   below, or the material would keep an environment it no longer
+                   has any use for. Every knob a caller can turn is turned here,
+                   and everything after it reads the result rather than the
+                   export. `*` first so a named material can contradict it. */
+                for (const key of ["*", mat.name]) {
+                  const f = finish?.[key];
+                  if (!f) continue;
+                  if (f.metalness !== undefined) mat.metalness = f.metalness;
+                  if (f.roughness !== undefined) mat.roughness = f.roughness;
+                  if (f.colour !== undefined) mat.color.set(f.colour);
+                }
+
+                /* THE ROOM IS FOR THE METAL AND NOTHING ELSE.
+                   scene.environment lights every material in the scene, and on
+                   this model that is the wrong answer for five of the six: the
+                   rim, the wound side, the core and the two flat colours are
+                   fully dielectric, already render at the artwork's own colour
+                   off key and ambient, and only get washed out by a second
+                   source. Only the face has metalness — see `env` above — and
+                   only the face has a hole the room is filling.
+                   So the room is switched off per material rather than dialled
+                   down globally: a dial low enough to leave the flank alone is
+                   too low to bring the face back, and the two cannot be
+                   traded off against each other. Anything metal takes it in
+                   full and the intensity is set once, at the scene. */
+                if (lit.env > 0) mat.envMapIntensity = mat.metalness > 0 ? 1 : 0;
               }
             });
             // Centre on the geometry, not the export's origin — the flip has
@@ -323,7 +482,11 @@ export function createTapeViewer(
    * unlike the first, whose failure means there is nothing to show at all. */
   const [lead, ...rest] = urls;
 
-  return add(lead).then(
+  /* The room joins the wait, so a viewer that asked for one is not handed back
+     before it has it — the alternative is the roll fading up unlit and
+     brightening a frame later, which is the pop the fade exists to prevent. It
+     cannot fail the viewer: `room` has already swallowed its own errors. */
+  return Promise.all([add(lead), room]).then(
     () => {
       let queue = Promise.resolve();
       for (const url of rest) {

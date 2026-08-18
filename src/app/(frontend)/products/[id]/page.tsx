@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import Footer from "@/components/Footer";
+import NextUp from "@/components/NextUp";
 import ProductInfo from "@/components/ProductInfo";
 import ProductIntro from "@/components/ProductIntro";
+import ProductReel from "@/components/ProductReel";
 import Siblings from "@/components/Siblings";
 import { tapeOf, tapes } from "@/data/tapes";
 
@@ -81,17 +84,22 @@ export default async function TapePage({
      rendered with notFound() is a 404. */
   if (!tape) notFound();
 
-  /* NO FOOTER YET, AND THAT IS A DECISION RATHER THAN AN OMISSION. The sections
-     that go under these two are still being designed, and the footer is the
-     thing that ENDS a page — dropping it in now would mean every section added
-     later having to be threaded in above it.
+  /* AND NOW IT HAS A FOOTER. It did not for a long time, and that was a
+     decision rather than an omission: the footer is the thing that ENDS a page,
+     so dropping it in while the sections under the opening screen were still
+     being drawn would have meant threading every one of them in above it.
 
-     THE JOIN IS ALREADY DRAWN. The opening section's lime sheet has a convex
-     bottom edge and the origin section under it is the site's dark green, so
-     the two meet on a curve rather than a straight cut — and the origin section
-     declares that green itself rather than inheriting it, so whatever lands
-     next needs to know nothing about what came before it. Add sections in the
-     order the design gives them; nothing here has to change to receive them. */
+     The condition that held it back is met. NEXT UP is the page's ending — the
+     way out of one tape and into the next — so there is now something for the
+     footer to come after, and every route in this group carries the same one.
+
+     THE JOINS ARE ALL DRAWN AND NONE OF THEM IS THIS FILE'S BUSINESS. The
+     opening section's lime sheet has a convex bottom edge and the origin section
+     under it is the site's dark green; the run opens a fresh lime sheet; NEXT UP
+     lays a yellow panel on it; and the footer bites its own arc up into whatever
+     it lands on. Every one of those sections declares its own ground rather than
+     inheriting one, so sections can be added, moved or removed here without any
+     of them having to know what came before. */
   return (
     <>
       <ProductIntro tape={tape} />
@@ -101,6 +109,18 @@ export default async function TapePage({
           continuous surface, which is why this section declares that green
           again rather than inheriting it. See components/Siblings. */}
       <Siblings tape={tape} />
+      {/* THE RUN — the tape at work, on a fresh lime sheet the page scrolls
+          sideways through. It is the last section drawn so far and the one the
+          page currently ends on, which is why it carries a tail of bare sheet
+          at its foot; see --reel-tail in global.css, and components/ProductReel
+          for the camera. */}
+      <ProductReel tape={tape} />
+      {/* AND THE WAY OUT. The next tape in the family, on a yellow panel across
+          the foot of the page — the page's ending and its only forward link.
+          Which tape is next, and the wrap that means every page has one, is
+          nextTape in src/data/tapes.ts. See components/NextUp. */}
+      <NextUp tape={tape} />
+      <Footer />
     </>
   );
 }

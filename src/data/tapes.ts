@@ -58,6 +58,24 @@ export type Tape = {
    * the one place that decision is made.
    */
   hero?: string;
+  /**
+   * THE SIBLINGS' LABEL ARTWORK, keyed by the variant's id — see SIBLINGS in
+   * components/Siblings, which is where the three of them are named. One printed
+   * circular label per variant of THIS tape, so the middle of the card reads
+   * "OPP TAPE" on /products/opp and "MASKING TAPE" on /products/masking.
+   *
+   * OPTIONAL, AND NO TAPE DECLARES IT YET, which is not an oversight: none of
+   * the six has been exported. Every card falls back to the slider `card` above
+   * — the same object photographed for the orbit — so the section is a working
+   * row today rather than three broken images. Drop the files in, add them here,
+   * and the fallback stops applying for that tape alone.
+   *
+   * Keyed rather than a tuple, so a tape whose artwork lands one variant at a
+   * time takes what exists and falls back on the rest. See siblingFaceOf, which
+   * is the one place that decision is made — heroOf above is the same shape for
+   * the same reason.
+   */
+  faces?: Record<string, string>;
   /** 3D roll shown in place of the card once three.js is live. GLB path. */
   model: string;
   /** The two tilted photographs. Exactly two — the layout places both by hand. */
@@ -357,6 +375,14 @@ export function tapeOf(id: string): Tape | undefined {
    this expression today. */
 export function heroOf(tape: Tape): string {
   return tape.hero ?? tape.card;
+}
+
+/* WHICH LABEL A SIBLING CARD SHOWS, and the whole of that fallback in one place
+   as well. See the `faces` field above for why all six tapes take the second
+   half of this expression today, and SIBLINGS in components/Siblings for where
+   the variant ids come from. */
+export function siblingFaceOf(tape: Tape, variant: string): string {
+  return tape.faces?.[variant] ?? tape.card;
 }
 
 /* Custom properties rather than props threaded through the tree: the animation

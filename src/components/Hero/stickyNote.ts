@@ -34,6 +34,15 @@ import {
   WebGLRenderer,
 } from "three";
 
+/* The face seam, in its own file so that a page supplying one never has to
+   static-import THIS file and drag three into its bundle — see noteFace.ts,
+   which argues it. Re-exported here so the module's surface is unchanged for
+   anything that already reads it off the note. */
+import { SHEET, noteCanvas, type NoteFace } from "./noteFace";
+
+export { noteCanvas };
+export type { NoteFace };
+
 const FOV = 35;
 const DPR_CAP = 2;
 
@@ -43,10 +52,12 @@ const DPR_CAP = 2;
 export const NOTE_URL = "/assets/sticky-note.png";
 
 export const NOTE = {
-  /* The sheet, in world units. Square-ish, a touch wide. Mirrored by the
-     slot's aspect-ratio in global.css — change the two together. */
-  W: 1,
-  H: 0.94,
+  /* The sheet, in world units — read off noteFace.ts rather than typed here,
+     because a face's canvas has to be cut to the same proportion and one of the
+     two would otherwise go stale. Mirrored by the slot's aspect-ratio in
+     global.css wherever a note is placed; change those with it. */
+  W: SHEET.W,
+  H: SHEET.H,
   /* Subdivisions per side. The wind can only bend where there are vertices;
      at 44 a segment is ~7px at the design size, under what a curl shows. */
   SEGS: 44,
@@ -141,11 +152,9 @@ const smooth = (t: number) => {
    ruled dotted lines. Close enough to the mock to design the motion against;
    the real artwork replaces it wholesale via NOTE_URL. */
 function placeholderFace(): HTMLCanvasElement {
-  const W = 512;
-  const H = Math.round(W * (NOTE.H / NOTE.W));
-  const c = document.createElement("canvas");
-  c.width = W;
-  c.height = H;
+  const c = noteCanvas();
+  const W = c.width;
+  const H = c.height;
   const g = c.getContext("2d")!;
 
   const paper = g.createLinearGradient(0, 0, 0, H);
@@ -179,7 +188,14 @@ function placeholderFace(): HTMLCanvasElement {
   return c;
 }
 
-export function createStickyNote(mount: HTMLElement): StickyNote {
+/** The hero's own face — the default, so nothing that already calls this
+    function has to say anything about faces. */
+const PINBOARD_FACE: NoteFace = { draw: placeholderFace, url: NOTE_URL };
+
+export function createStickyNote(
+  mount: HTMLElement,
+  face: NoteFace = PINBOARD_FACE,
+): StickyNote {
   const scene = new Scene();
   const camera = new PerspectiveCamera(FOV, 1, 0.01, 100);
   /* Distance from span: the sheet's height fills SPAN of the canvas height.
@@ -215,21 +231,21 @@ export function createStickyNote(mount: HTMLElement): StickyNote {
   dir.shadow.camera.far = 10;
   scene.add(dir, new AmbientLight(0xffffff, Math.PI * LIGHT.AMBIENT));
 
-  const face = new CanvasTexture(placeholderFace());
-  face.colorSpace = SRGBColorSpace;
-  face.anisotropy = renderer.capabilities.getMaxAnisotropy();
-  // The Adobe kit may land after the placeholder is drawn; one redraw picks
-  // the real heading font up. Irrelevant once the PNG replaces the canvas.
+  const drawn = new CanvasTexture(face.draw());
+  drawn.colorSpace = SRGBColorSpace;
+  drawn.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  // The Adobe kit may land after the face is first drawn; one redraw picks the
+  // real heading font up. Irrelevant once artwork replaces the canvas.
   document.fonts?.ready.then(() => {
-    if (mat.map === face) {
-      face.image = placeholderFace();
-      face.needsUpdate = true;
+    if (mat.map === drawn) {
+      drawn.image = face.draw();
+      drawn.needsUpdate = true;
       dirty = true;
     }
   });
 
   const mat = new MeshStandardMaterial({
-    map: face,
+    map: drawn,
     /* Paper: matte, and both-sided because a gust shows the sheet's underside
        at the curl. The artwork mirrored on the back is what real thin stock
        does with strong artwork anyway (and it is on screen for frames). */
@@ -237,17 +253,19 @@ export function createStickyNote(mount: HTMLElement): StickyNote {
     side: DoubleSide,
   });
 
-  new TextureLoader().load(NOTE_URL, (tex) => {
-    if (disposed) return tex.dispose();
-    tex.colorSpace = SRGBColorSpace;
-    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-    mat.map = tex;
-    mat.needsUpdate = true;
-    face.dispose();
-    dirty = true;
-  });
-  // No error handler: absent PNG (it does not exist yet) means the placeholder
-  // stays, which is the designed fallback rather than a failure.
+  if (face.url) {
+    new TextureLoader().load(face.url, (tex) => {
+      if (disposed) return tex.dispose();
+      tex.colorSpace = SRGBColorSpace;
+      tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      mat.map = tex;
+      mat.needsUpdate = true;
+      drawn.dispose();
+      dirty = true;
+    });
+  }
+  // No error handler: an absent PNG means the drawing stays, which is the
+  // designed fallback rather than a failure. A face with no url never asks.
 
   const geo = new PlaneGeometry(NOTE.W, NOTE.H, NOTE.SEGS, NOTE.SEGS);
   const base = (geo.attributes.position.array as Float32Array).slice();

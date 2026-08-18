@@ -3,7 +3,6 @@ import type { CSSProperties } from "react";
 import { FaFacebookF, FaInstagram, FaTiktok } from "react-icons/fa6";
 
 import Stage from "./Stage";
-import { bodyCopy } from "@/components/body";
 import { letters } from "@/components/letters";
 import { footerBalls, type SocialIcon } from "@/data/footerBalls";
 
@@ -72,7 +71,7 @@ export default function Footer() {
           hold is lifted here instead. Costs nothing when scripting is on: the
           contents are not even parsed. The hero carries the same escape. */}
       <noscript>
-        <style>{`.site-footer .char, .site-footer .body-rise { transform: none }`}</style>
+        <style>{`.site-footer .char { transform: none }`}</style>
       </noscript>
 
       <nav className="footer-nav" aria-label="Footer">
@@ -194,21 +193,24 @@ export default function Footer() {
           })}
         </div>
 
-        {/* The one piece of body copy in the footer, so it takes the BODY
-            entrance and not the letter-by-letter one the row and the headline
-            above it take — split to words and revealed a measured line at a
-            time (components/bodyReveal.ts). One line as it is set, which is
-            what that reveal resolves it to; it is written this way so a longer
-            notice, or a narrower window, is still handled.
+        {/* The one piece of body copy in the footer, and the only thing in the
+            section that does NOT arrive — it is simply there.
 
-            aria-label is not honoured on a paragraph, so the readable copy is a
-            real (hidden) text node and the split version is taken out of the
-            tree — a row of inline boxes is otherwise liable to be announced a
-            fragment at a time. */}
-        <p className="footer-legal body-copy">
-          <span className="sr-only">{LEGAL}</span>
-          <span aria-hidden="true">{bodyCopy(LEGAL)}</span>
-        </p>
+            It used to take the site's BODY entrance (components/bodyReveal.ts),
+            and that entrance could not fire here: the notice is pinned 1.6vw
+            above the end of the document, so the scroll offset at which its top
+            would sit 88% down the window is past the end of the scrollable
+            range. clamp() pulls that start back to the very last scroll pixel,
+            which means a reveal that waits for the page to be bottomed out
+            exactly — and behind Lenis's smoothing that pixel is usually never
+            landed on, so the words stayed parked under their masks. A line of
+            small print at the foot of the page is not worth a reveal that has
+            to be chased, so it is plain text now: no split, no masks, no cue.
+
+            Plain text also means no hidden second copy — there are no boxes to
+            be announced a fragment at a time any more, so the notice is just
+            the notice. */}
+        <p className="footer-legal">{LEGAL}</p>
       </div>
     </Stage>
   );

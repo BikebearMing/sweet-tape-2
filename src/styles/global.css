@@ -191,7 +191,7 @@ h6 {
    * a mask flush to it clips neither. Copy set at line-height 1 or under has no
    * such room: half-leading goes negative, the tail of a `g` hangs below the
    * box, and a mask flush to it shaves it off. Those blocks say so themselves;
-   * see .footer-legal.
+   * see .pick-note.
    *
    * The matching negative margins hand the room straight back to the layout, so
    * a block that asks for it is still the size it always was and still sits
@@ -4203,9 +4203,7 @@ html[data-loading] {
      sits where the layout puts it; only what the mask covers changes.
 
      In em, so they follow the type rather than the window: it is the FONT's
-     overshoot being allowed for, and that is a proportion of the size. The
-     footer's legal line is set solid for the same reason and asks for very
-     nearly the same pair. */
+     overshoot being allowed for, and that is a proportion of the size. */
   --body-head: 0.16em;
   --body-foot: 0.2em;
 
@@ -5018,6 +5016,257 @@ html[data-loading] {
      carries the identical line for the identical reason. */
   max-width: none;
   overflow: visible;
+}
+
+/* ==========================================================================
+   The siblings — the product page's third section
+   ==========================================================================
+   Markup in components/Siblings. The same tape in its three grades, laid out as
+   three printed labels with the name in the gap between them.
+
+   NO GROUND OF ITS OWN, AND THAT IS THE POINT. The background is #0d470c again
+   — the origin section's, immediately above — so the two read as one continuous
+   dark green surface with no seam between them. Declared rather than inherited,
+   like every other section on this site, so whatever lands next needs to know
+   nothing about what came before it.
+
+   THE ARRANGEMENT IS THREE OBJECTS PUT DOWN BY HAND and not a row of equals: the
+   middle label is bigger and sits higher, the two beside it are smaller and drop
+   below it. Every figure that says so is named below, because they are the
+   design's measurements off the 1440 reference and not decisions this file made.
+   ========================================================================== */
+
+.siblings-section {
+  /* The origin section's ground, restated. See the note above. */
+  --sib-bg: #0d470c;
+
+  /* The label card: lime, and cornered at the design's own 100px. */
+  --sib-card-bg: #c6fd00;
+  --sib-radius: 6.944vw; /* 100px */
+
+  /* THE THREE SIZES AND THE DROP — the whole arrangement, in four numbers.
+     430px for the middle one and 402 for the two beside it, which sit 115px
+     lower. The row comes to 402 + 36 + 430 + 36 + 402 = 1306px, leaving 67px of
+     green either side at the design width. */
+  --sib-w: 29.861vw; /* 430px — the middle card */
+  --sib-w-side: 27.917vw; /* 402px — the two beside it */
+  --sib-drop: 7.986vw; /* 115px — how much lower those two sit */
+  --sib-gap: 2.5vw; /* 36px between cards */
+
+  /* HOW FAR THE LABEL IS INSET IN THE CARD. The design rules 65 / 65 / 64 / 64
+     from the four edges of a 430px card, which is even to within a pixel and is
+     taken as even here — four figures that differ by one are one figure that was
+     measured four times. As a PER CENT of the card and not in vw, so the two
+     sizes above wear their labels in proportion rather than the smaller card
+     carrying a fatter margin. */
+  --sib-face-inset: 15%; /* 64.5 / 430 */
+
+  /* The name, straight off the design: 70px, 60px of leading, -2.1px of
+     tracking, and a lime a shade under the cards' own. It is deliberately not
+     --sib-card-bg — the label reads as the brighter object and the word behind
+     it as the quieter one, which is the whole reason the design specifies two
+     limes rather than one. */
+  --sib-title-ink: #a8f000;
+  --sib-title-size: 4.861vw; /* 70px */
+  --sib-title-gap: 3.472vw; /* 50px, the middle card's bottom to the name */
+
+  /* Above the cards, and under the name. Both off the reference. */
+  --sib-pad-top: 9.34vw; /* 134.5px */
+  --sib-pad-bottom: 4.167vw; /* 60px */
+
+  position: relative;
+  width: 100%;
+  padding: var(--sib-pad-top) 0 var(--sib-pad-bottom);
+  background: var(--sib-bg);
+  /* The row is 1306px of a 1440px page, so nothing should ever bleed — but the
+     cards are placed by a flex row that does not shrink them, and clip rather
+     than hidden for the reason every other section gives: hidden on one axis
+     makes the box a scroll container on the other, which would give the page a
+     second scroller to fight the smooth scroll for the wheel. */
+  overflow-x: clip;
+}
+
+/* The paper grain, the same layer every other sheet on this site carries — it is
+   the only way the sections read as one printed surface rather than a textured
+   one following a clean one. Width-fitted and tiled DOWN rather than stretched,
+   for the reason the hero gives: stretching one tile over a box of a different
+   aspect turns paper into vertical streaking. */
+.siblings-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/paper-overlay.webp");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   The row
+   -------------------------------------------------------------------------- */
+
+/* align-items: flex-start, so the drop below is a margin and not a fight with
+   the default stretch — three cards of two heights in a stretched row would all
+   come out the tallest one's height and the aspect-ratio would be ignored.
+
+   Positioned, which lifts the row over the grain (a positioned pseudo-element
+   otherwise paints over ordinary content whatever the source order says) and
+   gives the name something to be placed against. */
+.siblings-row {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: var(--sib-gap);
+  /* THE ROW HAS TO BE AS DEEP AS THE NAME UNDER IT. The name is placed against
+     this box rather than following it in flow — see .siblings-title — so it
+     contributes no height, and without this the section's bottom padding would
+     be measured from the cards and the name would hang past it into the footer's
+     business. The sum is the middle card plus the gap under it plus one line of
+     the name, and it is written out rather than measured so it stays true if the
+     two beside it are ever made the taller pair. */
+  min-height: calc(var(--sib-w) + var(--sib-title-gap) + var(--sib-title-size));
+}
+
+/* One label card. Square, and the size is chosen by --sib-raised — 1 for the
+   middle one, 0 for the two beside it, set per card in index.tsx because which
+   card is up is a fact about that list rather than about this stylesheet.
+
+   THE TWO STATES ARE ONE EXPRESSION and not two rules, which is what keeps them
+   in step: --sib-raised switches the width and cancels the drop in the same
+   breath, so a card cannot end up big and low or small and high. */
+.siblings-card {
+  /* Positioned, so the label inside is inset against the card. */
+  position: relative;
+  flex: none;
+  width: calc(
+    var(--sib-w-side) + (var(--sib-w) - var(--sib-w-side)) * var(--sib-raised)
+  );
+  aspect-ratio: 1;
+  margin-top: calc(var(--sib-drop) * (1 - var(--sib-raised)));
+  border-radius: var(--sib-radius);
+  background: var(--sib-card-bg);
+
+  /* Parked at nothing until reveal.ts sets data-reveal, and parked at NOTHING
+     rather than under a mask: the entrance resolves them out of a blur, and an
+     entrance that begins by blurring something the reader can already see is a
+     page correcting itself. The index's cards are held exactly this way and its
+     note is the long version. */
+  opacity: 0;
+  visibility: hidden;
+}
+
+.siblings-section[data-reveal="live"] .siblings-card {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* The printed label inside it. Inset evenly and sized in per cent so it scales
+   with whichever card it is in — see --sib-face-inset.
+
+   max-width: none because the stylesheet reset caps every image at 100%, which
+   here is 100% of a box this rule is already sizing; object-fit: contain so an
+   export drawn at a slightly different aspect is letterboxed inside the inset
+   rather than cropped or stretched. */
+.siblings-face {
+  position: absolute;
+  inset: var(--sib-face-inset);
+  width: auto;
+  height: auto;
+  max-width: none;
+  object-fit: contain;
+}
+
+/* --------------------------------------------------------------------------
+   The name
+   -------------------------------------------------------------------------- */
+
+/* THE SIBLINGS, in the gap the raised card leaves under it.
+
+   PLACED AGAINST THE ROW AND NOT FOLLOWING IT IN FLOW, because what it is
+   aligned to is the MIDDLE card's bottom edge — and in flow it would be pushed
+   below the tallest thing in the row, which is one of the other two. The middle
+   card starts at the row's top and is --sib-w tall, so its bottom is exactly
+   --sib-w down; the name sits --sib-title-gap under that.
+
+   Centred by left: 50% and a translate rather than by inset: 0 and text-align,
+   so the box is as wide as the word and nothing about the row's width can move
+   it. */
+.siblings-title {
+  position: absolute;
+  top: calc(var(--sib-w) + var(--sib-title-gap));
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  color: var(--sib-title-ink);
+  font-family: var(--font-heading);
+  font-size: var(--sib-title-size);
+  font-weight: 800;
+  /* 60px against a 70px setting — the design's own figure, as a ratio so it
+     follows the size. */
+  line-height: 0.857;
+  letter-spacing: -0.146vw; /* -2.1px */
+  white-space: nowrap;
+}
+
+/* The row of letter boxes. Flex rather than plain inline text, for the reason
+   every row of split letters on this site is: .clip carries overflow: hidden,
+   and an inline-block whose overflow is not visible takes its baseline from its
+   bottom margin edge rather than from the text inside it — which would hang
+   every letter above the baseline and grow the line box by the font's whole
+   descent. Flex items have no baseline to get wrong. */
+.siblings-title .line {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* Split letters — the closing key visual's boxes and its headroom, because this
+   is that setting: line-height under 1, so a letter's content box is shorter
+   than the capital standing in it and a mask flush to the box would shave the
+   tops off. The padding gives it room and the matching negative margins hand
+   that room straight back to the layout. */
+.siblings-title .clip {
+  display: block;
+  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  overflow: hidden;
+  padding: 0.2em 0.06em 0;
+  margin: -0.2em -0.06em 0;
+}
+
+/* Parked, and handed over exactly as the hero's and the footer's are: the
+   stylesheet holds the letters under their masks until reveal.ts sets
+   data-reveal, which lifts this and lets GSAP own the whole transform. A
+   percentage translate coming from CSS is reported as resolved px, and GSAP
+   would ADD its yPercent to it and leave every letter a full height low.
+
+   130 for the reason the hero gives: capitals overshoot their own box, so a
+   letter moved exactly its own height still leaves a hairline of tops at the
+   mask's edge. REVEAL.HIDDEN is the same figure and the two have to agree. */
+.siblings-section .char {
+  display: block;
+  transform: translateY(130%);
+}
+
+.siblings-section[data-reveal="live"] .char {
+  transform: none;
+}
+
+/* Twelve letters flying in from nowhere and three labels resolving out of a blur
+   are exactly what this setting is asking about. Here as well as in reveal.ts,
+   so it also covers the window before hydration, when the stylesheet is holding
+   them on its own — every other section on this site makes the same pair of
+   statements. */
+@media (prefers-reduced-motion: reduce) {
+  .siblings-section .char {
+    transform: none;
+  }
+
+  .siblings-section .siblings-card {
+    opacity: 1;
+    visibility: visible;
+  }
 }
 
 /* ==========================================================================
@@ -6309,10 +6558,22 @@ li::marker {
      other three would read as a mistake rather than as a variation. */
   --article-paper: #fdfbe8;
   --article-paper-ink: #0d470c;
-  /* Everything ruled on that paper: the perforation along its top edge, the
-     rule under SHARE, the share buttons' ground and the dash around the way
-     back. One beige, because they are one sheet's worth of printing. */
+  /* What is RULED on that paper: the hairline under SHARE and the dash around
+     the way back. One beige, because they are one sheet's worth of printing.
+
+     The perforation along the sheet's top edge used to be the third, and is now
+     a lime named in place on .article-sheet::before — so this is two things,
+     not three, whatever the token's name suggests. */
   --article-rule: #ded7b5;
+
+  /* And the share buttons' GROUND, which is a lighter beige and no longer this
+     one. The two were a single token until the design separated them, and the
+     separation is the point rather than a shade: a ruled line and a filled
+     square are different weights of the same ink, so the square is printed
+     lighter to stop four of them out-reading the copy they sit beside. Change
+     one without the other from here on — the way back is ruled, not filled, so
+     it stays with --article-rule above. */
+  --article-btn: #f1ebcd;
 
   --article-pad-x: 1.389vw; /* 20px — the index's own margin */
   /* Above the type, and it is measured against the two things that hang in that
@@ -6324,7 +6585,7 @@ li::marker {
   /* Tight under the sheet, and the design draws it that way: the paper very
      nearly meets the dark green of the rail below, so the lime reads as the
      ground the sheet is lying on rather than as a margin around it. */
-  --article-pad-bottom: 3vw;
+  --article-pad-bottom: 0;
 
   /* NO TOLL TO PAY HERE, unlike every other section that ends a page. The
      footer rises into whatever is above it, but what is above it now is the
@@ -6543,36 +6804,20 @@ li::marker {
    because the reading order wants the headline first and the paint order wants
    the picture last. */
 .article-shot {
-  --article-shot-tilt: -3.6deg;
-
-  /* THE HEIGHT IS THE ONE FIGURE HERE THAT IS NOT FREE, and it is worth saying
-     out loud because nothing enforces it. The picture is laid OVER the sheet and
-     comes down across the sheet's right-hand column, which is where the share
-     row stands — so its bottom edge has to finish above SHARE or it lands on
-     four buttons. At 58vw the corner nearest the copy is about forty pixels
-     clear of the label at the design width, which is the margin this
-     arrangement has. Take the picture lower, or bring --article-aside's top
-     margin up, and check the pair; they are the only two things on this page
-     that overlap by arithmetic rather than by design.
-
-     The width is free by comparison: the head's measure is subtracted from it
-     (see --article-measure), so the two cannot close on each other. */
-  position: absolute;
-  top: -6vw;
-  right: -4vw;
-  width: 52vw;
-  height: 58vw;
-  rotate: var(--article-shot-tilt);
-  border-radius: 4vw;
-  overflow: hidden;
-  z-index: 2;
+    --article-shot-tilt: -10.199deg;
+    rotate: var(--article-shot-tilt);
+    z-index: 2;
+    position: absolute;
+    top: 10vw;
+    right: -5vw;
 }
 
 .article-shot-img {
   display: block;
-  width: 100%;
-  height: 100%;
+  width: 47.063vw;
+   height: 47.063vw;
   object-fit: cover;
+  border-radius: 4vw;
 }
 
 /* The strip that holds it down, across the picture's top third and leaning the
@@ -6581,11 +6826,10 @@ li::marker {
    arrangement scales as one when the frame is resized: the index's cards tape
    their pictures the same way. */
 .article-shot-tape {
-  position: absolute;
-  top: 21%;
-  left: 43%;
-  width: 26%;
-  transform: rotate(2.4deg);
+    width: 19.588vw;
+    position: absolute;
+    top: -9%;
+    left: 31%;
 }
 
 /* --------------------------------------------------------------------------
@@ -6611,7 +6855,7 @@ li::marker {
   width: 74.722vw; /* 1076px */
   margin: 6.528vw auto 0; /* 94px */
   padding: 7.014vw var(--sheet-pad-x) 6.944vw; /* 101px top */
-  border-radius: 3.194vw; /* 46px — the lead story's radius */
+  border-radius: 2.083vw 2.083vw 0 0 ; /* 46px — the lead story's radius */
   background: var(--article-paper);
   color: var(--article-paper-ink);
 }
@@ -6634,15 +6878,15 @@ li::marker {
   content: "";
   position: absolute;
   top: 0.972vw; /* 14px in from the edge */
-  left: 3.194vw;
-  right: 3.194vw;
-  height: 0.278vw; /* 4px — the dot */
+  left: 1.944vw;
+  right: 1.944vw;
+  height: 0.556vw;
   background-image: radial-gradient(
     circle closest-side,
-    var(--article-rule) 96%,
+    #BDF400 96%,
     transparent
   );
-  background-size: 0.833vw 100%; /* 12px pitch */
+  background-size: 1.327vw 100%; /* 12px pitch */
   background-repeat: repeat-x;
   pointer-events: none;
 }
@@ -6738,7 +6982,7 @@ li::marker {
   --share-gap: 1.111vw; /* 16px */
 
   width: calc(var(--share-btn) * 4 + var(--share-gap) * 3); /* 296px */
-  margin-top: 4vw;
+  margin-top: 14.028vw;
 }
 
 /* The label over the row, with the design's dotted rule under it. A plain
@@ -6762,9 +7006,12 @@ li::marker {
   gap: var(--share-gap);
 }
 
-/* The buttons. Square, softly cornered, printed in the sheet's own beige — the
-   colour everything ruled on this paper is drawn in, so the row reads as part of
-   the sheet rather than as a widget dropped onto it.
+/* The buttons. Square, softly cornered, printed in the sheet's own lighter
+   beige (--article-btn) — near enough the paper that the row reads as part of
+   the sheet rather than as a widget dropped onto it, and deliberately a shade
+   off the beige the rules are drawn in: a filled square carries far more of a
+   colour than a hairline does, so four of them at the rules' weight would
+   out-read the copy beside them.
 
    ONE RULE FOR AN <a> AND A <button>, which is why the button reset is here: the
    three that go somewhere are links and the fourth acts on this page, and they
@@ -6782,7 +7029,7 @@ li::marker {
   padding: 0;
   border: 0;
   border-radius: 0.833vw; /* 12px */
-  background: var(--article-rule);
+  background: var(--article-btn);
   color: var(--article-paper-ink);
   /* THE MARK'S SIZE, and that is all a font-size is doing on a button with no
      text in it: react-icons draw at 1em square in currentColor — the footer's
@@ -6810,18 +7057,26 @@ li::marker {
 /* THE WAY BACK. The width of the share row above it, the height of one of its
    buttons, and drawn as a dashed outline rather than filled: it is not a fifth
    way to share the story, and giving it the buttons' ground would make it look
-   like one.
+   like one. The dash is --article-rule and the buttons above are --article-btn,
+   which is the whole distinction said in colour as well as in shape.
 
-   The label is centred in the box and the chevron is placed against the left
-   edge, which is the design's arrangement — so the mark is out of the flow the
-   label is centred in, rather than being a flex item that would push it off
-   centre by its own width. */
+   RANGED LEFT AND NOT CENTRED, which is the design's arrangement: the mark and
+   the label are one phrase read left to right — a chevron pinned to the left
+   edge with the words centred independently of it reads as two things in one
+   box. So both are ordinary flex items and the three figures the design gives
+   are the three the layout is built from, in order across the box: 24px of
+   padding to the mark, the mark's own 23px, then a 24px gap to the B.
+
+   It was the other way round — label centred, chevron absolutely positioned so
+   it could not push the centring off — and none of that is needed once the
+   label stops being centred. */
 .article-back {
-  position: relative;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
+  gap: 1.667vw; /* 24px — the mark to the label */
   height: var(--share-btn);
+  padding-left: 1.667vw; /* 24px — the edge to the mark */
   margin-top: 2.431vw; /* 35px */
   border: 1px dashed var(--article-rule);
   border-radius: 0.833vw;
@@ -6836,11 +7091,14 @@ li::marker {
     color 0.3s ease;
 }
 
+/* The chevron, at the design's 23px. flex: none because a flex item's default
+   is to shrink, and this one is a drawn mark with a size rather than a box with
+   room to give — the label is what should take the slack, and it has none to
+   take at this width anyway. */
 .article-back svg {
-  position: absolute;
-  left: 1.9vw;
-  width: 0.9vw;
-  height: 0.9vw;
+  flex: none;
+  width: 1.597vw; /* 23px */
+  height: 1.597vw;
   /* Back the way it came, on the same overshoot curve the site's other marks
      move on — the menu's arrow, the slider's rolls, the lead story's disc. A
      third of its own width, which is a nudge and not a slide: the box is what
@@ -6993,6 +7251,666 @@ li::marker {
 }
 
 /* ==========================================================================
+   Contact — LET'S STICK TOGETHER
+   ==========================================================================
+   Markup in components/Contact. The page's lime sheet with the line set across
+   the top of it, a piece of cream paper laid over the bottom half carrying the
+   form, and the sticky note pinned across the join between them.
+
+   THE PAPER IS THE ARTICLE'S PAPER, and that is reuse rather than resemblance.
+   The design rules 182px of lime either side of the sheet at the 1440 width,
+   which leaves 1076px — and 1076px is exactly the sheet /news/[id] is written
+   on, padded by the same 107px and cornered at the same 46px radius. Where
+   those figures came from is argued on .article-sheet; what is different here
+   is only what is laid on the paper.
+
+   EVERY FIGURE THE DESIGN GAVE IS NAMED AND EVERY ONE IT DID NOT IS TOO, which
+   is the one thing to know before tuning this block. The six the design
+   measured are marked DESIGN FIGURE; the rest were taken off the reference by
+   eye and are the ones to reach for first when something looks a pixel out.
+   ========================================================================== */
+
+.contact-section {
+  /* The hero's pairing: dark green written on lime. The page opens on the same
+     sheet every other page opens on, which is what makes them one site. */
+  --contact-bg: #b6fe00;
+  --contact-ink: #013900;
+
+  /* And the paper laid on it — the article's cream on the article's ink,
+     because it IS the article's sheet. A fourth cream nearly like the other
+     three would read as a mistake rather than as a variation. */
+  --contact-paper: #fdfbe8;
+  --contact-paper-ink: #0d470c;
+
+  /* The fields' ground. A shade off the paper rather than a box drawn on it:
+     five outlined rectangles on a cream sheet read as a table, where five
+     filled ones read as five places to write. Deliberately close to the
+     article's --article-btn, which is the same idea one page over. */
+  --contact-field-bg: #ebe4c6;
+
+  /* And what is written in them — the note's brown rather than the sheet's
+     green, so the fields read as pencilled in rather than printed.
+
+     ONE TOKEN FOR BOTH THE TYPING AND THE PLACEHOLDER, which is the thing to
+     keep. The placeholder here is the field's NAME and not a hint, so it has to
+     be the same ink as what replaces it; setting the two separately is how the
+     colour was changed once and only half of it moved. .contact-input::placeholder
+     reads it back off currentColor rather than naming it again. */
+  --contact-field-ink: #7b5406;
+
+  /* The perforation punched along the sheet's top edge — the article sheet's
+     own. Named here because it is the one colour on this page that is neither
+     the ink nor the paper. */
+  --contact-perf: #bdf400;
+
+  /* DESIGN FIGURE — 160px, the section's top edge to the chip. It clears the
+     masthead's badge and the menu's tab, which is the same pair every other
+     page's top padding is measured against. */
+  --contact-pad-top: 11.111vw;
+
+  /* DESIGN FIGURE — 46px, the headline's last line to the sheet's top edge. */
+  --contact-gap: 3.194vw;
+
+  /* DESIGN FIGURE — 1076px of sheet, which is 1440 less 182 either side. Stated
+     as the width rather than as the margin so the sum is checkable against the
+     design in one line. */
+  --contact-sheet-w: 74.722vw;
+  /* DESIGN FIGURE — 107px. The article sheet's --sheet-pad-x exactly. */
+  --contact-sheet-pad-x: 7.431vw;
+  /* DESIGN FIGURE — 85.08px, the sheet's top edge to DROP US A MESSAGE. */
+  --contact-sheet-pad-top: 5.908vw;
+  /* DESIGN FIGURE — 33.84px, the heading to the first row of fields. */
+  --contact-head-gap: 2.35vw;
+
+  /* Off the reference rather than measured: a field is 85px tall with 16px
+     between rows and 18px between the two columns. */
+  --contact-field-h: 5.903vw;
+  --contact-row-gap: 1.111vw;
+  --contact-col-gap: 1.25vw;
+  --contact-msg-h: 10.833vw;
+
+  /* And SEND, 217px wide standing 37px clear of the fields. The two have to
+     agree with the columns above: 608px of fields plus 37 of gap plus 217 of
+     button is the 862px the sheet's padding leaves.
+
+     NO HEIGHT, because it is not a figure — the button is stretched to the
+     fields' own height, which is the two rows and the message box added up. */
+  --contact-send-w: 15.069vw;
+  --contact-send-gap: 2.569vw;
+
+  /* THE HEADLINE, at this page's size. Larger than any other on the site — the
+     closing key visual sets its own at 10.069vw — because there is nothing else
+     on this screen for it to be in proportion WITH: no photographs, no orbit,
+     no row of rolls. A line drawn for a busy stage reads small on an empty one,
+     which is the argument .product-intro makes about THE. */
+  --contact-title-size: 13.194vw;
+
+  /* THE ARC — the site's mechanism, at this page's own depth.
+     ----------------------------------------------------------------------
+     The rule below is the hero's, the footer's and the news title card's,
+     unchanged: --letters on the row, --i per letter, drop on 1-u² and tilt
+     linear in u. What is set here is how far it bends.
+
+     --arc-tilt is an ANGLE and carries over untouched at the hero's 7deg, so
+     the letters lean by exactly what they lean by everywhere else.
+
+     --arc-drop IS DELIBERATELY DEEPER THAN THE SHARED FIGURE, and that is the
+     one thing to know before "correcting" it. The other three headlines all
+     work out to 0.059em — the hero's 1.2vw at 20.361vw of type, the footer's
+     0.85vw at 14.4vw — and scaling that onto this page's 13.194vw would give
+     0.778vw. This is 1.778vw, which is 0.135em: about two and a third times
+     the curvature the rest of the site uses.
+
+     It is the design's, not a drift. This headline is the only thing on its
+     screen — no photographs, no orbit, no row of rolls — and the same argument
+     that makes the type larger here than anywhere else makes the curve deeper:
+     a bend drawn to survive a busy stage barely reads on an empty one.
+
+     THE HERO'S WARNING STILL APPLIES and is worth repeating rather than
+     rediscovering: a deep curve drops the MIDDLE letters of a line toward the
+     line beneath it. Both lines here arc over their own widths and both are
+     centred, so they dip together at the centre and the clearance mostly holds
+     — but the lines are different lengths (11 and 8), so they do not move in
+     step off-centre. Deepen this further and check LET'S STICK's middle
+     letters against TOGETHER's tops. */
+  --arc-drop: 1.778vw;
+  --arc-tilt: 7deg;
+
+  /* THE TOLL FOR THE FOOTER'S ARC. The footer rises into whatever is above it —
+     margin-top: calc(--footer-arc * -1) — so the sheet would otherwise be sat
+     on by the curve. This is that depth handed back as padding, which puts the
+     arc's deepest point exactly on the sheet's bottom edge and lets its corners
+     cut across the last of the paper, as the design draws it.
+
+     IT MUST EQUAL --footer-arc, and the two cannot be one custom property
+     because that one lives on .site-footer and this element is not inside it.
+     Change one and change the other; the row at /products pays the same toll
+     with --pick-arc and the closing key visual with --stick-arc. */
+  --contact-arc: 9vw;
+
+  /* HOW FAR THE SHEET RUNS DOWN INTO THE FOOTER, measured from the footer's own
+   * top edge — so this figure IS the overlap, not a margin that produces one.
+   *
+   * The two numbers it has to be read against, both off the bite's geometry
+   * (--edge-bite is a half-ellipse, 0 deep at the corners and --contact-arc
+   * deep at the centre):
+   *
+   *   5.98vw — the green's top edge where the SHEET'S corners are. Under this
+   *            the sheet hangs in lime and never meets the green at all.
+   *   9.00vw — the deepest point of the bite. Over this the sheet's whole
+   *            bottom edge is on solid green.
+   *
+   * 12vw clears both, so the paper sits on the green by 3vw at the centre and
+   * about 6 at its corners, and the curve still reads in the 12.6vw of lime
+   * either side of the sheet. Take it under 6 and the overlap disappears; take
+   * it much further and the bite is hidden behind the paper across three
+   * quarters of the window, which is most of the reason the curve exists. */
+  --contact-overlap: 12vw;
+
+  position: relative;
+  /* NO z-index, AND THAT IS WHAT LETS THE SHEET OVERLAP THE FOOTER.
+   *
+   * A z-index here makes this section a stacking context, and a stacking
+   * context is a ceiling: everything inside it paints within the section's own
+   * layer, so .contact-sheet could ask for any z-index it liked and still never
+   * get above the footer's 12. This carried z-index: 1 and that is exactly what
+   * it did.
+   *
+   * With it gone the section is z-index auto and its positioned children take
+   * part in the root stacking context, which is what lets the paper go over the
+   * green while the LIME stays under it — and the lime has to stay under, or
+   * there is nothing for the bite to be seen through. The row at /products and
+   * the closing key visual are both z-index auto for their own reasons and this
+   * is a third. */
+  width: 100%;
+  padding: var(--contact-pad-top) 0 var(--contact-arc);
+  background: var(--contact-bg);
+  color: var(--contact-ink);
+  /* The note hangs off the right of the sheet and past the window's edge. Clip
+     rather than hidden: hidden on a horizontal axis makes the box a scroll
+     container on the vertical one too, which would give the page a second
+     scroller to fight the smooth scroll for the wheel. The hero and the footer
+     clip the same way for the same reason.
+
+     AND IT IS NOW LOAD-BEARING TWICE OVER. `clip` is the one overflow value
+     that can be set on a single axis and leave the other genuinely `visible` —
+     `hidden` forces the other axis to `auto`. The sheet hangs --contact-overlap
+     below this box on purpose, so swapping this for hidden would not merely add
+     a scroller: it would cut the overlap off flush at the section's edge and
+     the paper would stop dead where the green begins. */
+  overflow-x: clip;
+}
+
+/* The paper grain, the same layer every other lime sheet on this site carries —
+   it is the only way the sections read as one printed surface. Width-fitted and
+   tiled DOWN rather than stretched, for the reason the hero gives: stretching
+   one tile over a box of a different aspect turns paper into vertical
+   streaking. */
+.contact-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/paper-overlay.webp");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   The head
+   -------------------------------------------------------------------------- */
+
+/* Positioned, which lifts the type over the grain — a positioned pseudo-element
+   otherwise paints over ordinary content whatever the source order says. Every
+   section on this site that carries the grain makes the same call. */
+.contact-head {
+  position: relative;
+  text-align: center;
+}
+
+/* The chip, in the page's own pair. Held out of sight until reveal.ts sets
+   data-reveal, like the story page's — it is a small solid object and fading it
+   in is the whole of its entrance. A plain transform for the tilt, because
+   nothing tweens this chip's transform; the slider's --rot exists because
+   something tweens its. */
+.contact-chip {
+  --tag-bg: var(--contact-ink);
+  --tag-ink: var(--contact-bg);
+
+  display: inline-block;
+  margin: 0;
+  transform: rotate(-1.8deg);
+  font-size: 0.972vw; /* 14px at the design width */
+  opacity: 0;
+  visibility: hidden;
+}
+
+.contact-section[data-reveal="live"] .contact-chip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.contact-title {
+  margin: 0.7vw 0 0;
+  font-family: var(--font-heading);
+  font-size: var(--contact-title-size);
+  font-weight: 800;
+  /* Under 1, like every display line on this site — and the reason .clip below
+     needs headroom. */
+  line-height: 0.87;
+  letter-spacing: -0.24vw;
+}
+
+/* The curve itself, the hero's rule with the hero's reasoning.
+   --------------------------------------------------------------------------
+   Each letter keeps the x its row gives it and is only dropped and tilted, so
+   the setting above is untouched. The usual curved-text approach — rotating
+   each letter about a far-off origin — would drag them sideways as well,
+   opening gaps that were never in the type.
+
+   --u runs -1 at the first letter of a line to +1 at the last (--i comes off
+   letters(), --letters off the row in Contact/index.tsx), so the two lines
+   curve over their own widths rather than sharing one curve. The drop follows
+   1-u², a parabola deepest in the middle; the tilt runs linearly with u, so
+   each letter leans with the slope it is standing on. To arc the other way,
+   negate BOTH values.
+
+   On .clip, not .char: the arc and the reveal both want the transform property
+   and one element cannot carry both. Same division of labour as the hero's, the
+   footer's and the title card's. */
+.contact-title .line .clip {
+  --u: calc(2 * var(--i) / (var(--letters) - 1) - 1);
+  transform-origin: 50% 100%; /* pivot on the baseline, not the letter centre */
+  transform: translateY(calc(var(--arc-drop) * (1 - var(--u) * var(--u))))
+    rotate(calc(var(--arc-tilt) * var(--u) * -1));
+}
+
+/* Each line is a row of letter boxes. Flex rather than plain inline text,
+   because .clip carries overflow: hidden and an inline-block whose overflow is
+   not visible takes its baseline from its bottom margin edge — so a row of
+   masked letters would hang above the line and the block would grow by the
+   font's whole descent. Every row of split letters on this site is flex for
+   exactly this reason, and it is why centring here is justify-content and not
+   text-align. */
+.contact-title .line,
+.contact-sheet-head .line {
+  display: flex;
+  align-items: flex-end;
+}
+
+.contact-title .line {
+  justify-content: center;
+}
+
+/* Split letters — the closing key visual's boxes and its headroom, because this
+   is its setting: line-height well under 1, so a letter's content box is
+   shorter than the capital standing in it and a mask flush to the box would
+   shave the tops off. The padding gives it room and the matching negative
+   margins hand that room straight back to the layout, so the rows are the width
+   and height they always were. */
+.contact-section .clip {
+  display: block;
+  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  overflow: hidden;
+  padding: 0.2em 0.06em 0;
+  margin: -0.2em -0.06em 0;
+}
+
+/* Parked, and handed over exactly as the hero's and the footer's are: the
+   stylesheet holds the letters under their masks until reveal.ts sets
+   data-reveal, which lifts this and lets GSAP own the whole transform. A
+   percentage translate coming from CSS is reported as resolved px, and GSAP
+   would ADD its yPercent to it and leave every letter a full height low.
+
+   130 for the reason the hero gives: capitals overshoot their own box, so a
+   letter moved exactly its own height still leaves a hairline of tops at the
+   mask's edge. REVEAL.HIDDEN is the same figure and the two have to agree. */
+.contact-section .char {
+  display: block;
+  transform: translateY(130%);
+}
+
+.contact-section[data-reveal="live"] .char {
+  transform: none;
+}
+
+/* AND THE TWO BLOCKS THAT ARE NOT TYPE — the paper and the note. Held at
+   nothing by the same attribute that holds the letters, and released by the same
+   line in reveal.ts.
+
+   PARKED AT NOTHING RATHER THAN UNDER A MASK, which is the index's cards'
+   reasoning and applies here word for word: their entrance begins by blurring
+   them, and an entrance that begins by blurring something the reader can
+   already see is a page correcting itself. It is also what covers the window
+   before hydration, when the stylesheet is holding them on its own.
+
+   visibility as well as opacity, because that is what GSAP's autoAlpha writes
+   and the two have to describe the same state — a box at opacity 0 is still in
+   the way of a pointer, and a third of the note's slot is transparent bleed
+   hanging over the sheet. */
+.contact-sheet,
+.contact-note {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.contact-section[data-reveal="live"] .contact-sheet,
+.contact-section[data-reveal="live"] .contact-note {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* --------------------------------------------------------------------------
+   The sheet
+   -------------------------------------------------------------------------- */
+
+/* The paper the form is written on. Centred on the page rather than ranged
+   against the window's margin like the head above it, and that is deliberate:
+   the head is a title over a field and the sheet is a document laid down on top
+   of it.
+
+   ROUNDED ON ALL FOUR CORNERS though only three are ever seen — the footer's
+   arc rises over the fourth. A radius written for the corners that show is a
+   figure that is wrong the moment the arc is retuned; the story page's
+   photograph is cut on all four for the same reason.
+
+   Positioned, which lifts it over the grain and gives the perforation something
+   to be placed against. */
+.contact-sheet {
+  position: relative;
+  /* Over the footer, which is the thing that rises into the section — see the
+     note on .contact-section about why there is no z-index there. Any figure
+     above the footer's 12 does; 20 leaves room under the menu's 100. */
+  z-index: 20;
+  width: var(--contact-sheet-w);
+  /* THE NEGATIVE MARGIN IS THE OVERLAP. It shortens the section by that much,
+     which pulls the footer up by the same — the footer is margined onto the end
+     of whatever is above it — while the paper itself stays where it was drawn.
+     So the sheet does not move down; the green comes up behind it. Nothing
+     above the sheet shifts by a pixel. */
+  margin: var(--contact-gap) auto calc(var(--contact-overlap) * -1);
+  padding: var(--contact-sheet-pad-top) var(--contact-sheet-pad-x) 7.014vw;
+  border-radius: 3.194vw; /* 46px — the article sheet's radius */
+  background: var(--contact-paper);
+  color: var(--contact-paper-ink);
+}
+
+/* The perforation along the top edge — the article sheet's exactly, down to the
+   12px pitch.
+
+   A REPEATED RADIAL-GRADIENT AND NOT A DOTTED BORDER, and it has to be: a
+   dotted border has one dial — the dots are as wide as the border and the gap
+   between them is the UA's business. A tile one pitch wide with `closest-side`
+   makes the dot exactly as wide as the tile is tall, so the two figures below
+   are the diameter and the distance from one centre to the next.
+
+   HELD OFF THE ROUNDED CORNERS at both ends. A perforation running the full
+   width would have its last dots sitting outside the curve, in the lime — the
+   inset is the radius, so the line starts where the edge stops turning. */
+.contact-sheet::before {
+  content: "";
+  position: absolute;
+  top: 0.972vw; /* 14px in from the edge */
+  left: 1.944vw;
+  right: 1.944vw;
+  height: 0.556vw;
+  background-image: radial-gradient(
+    circle closest-side,
+    var(--contact-perf) 96%,
+    transparent
+  );
+  background-size: 1.327vw 100%; /* 12px pitch */
+  background-repeat: repeat-x;
+  pointer-events: none;
+}
+
+/* The sheet's heading. Two lines as the design breaks them, ranged left against
+   the sheet's own padding — see .contact-title .line for why that is
+   justify-content and not text-align. */
+.contact-sheet-head {
+  margin: 0 0 var(--contact-head-gap);
+  font-family: var(--font-heading);
+  font-size: 2.5vw; /* 36px */
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.05vw;
+}
+
+.contact-sheet-head .line {
+  justify-content: flex-start;
+}
+
+/* --------------------------------------------------------------------------
+   The form
+   -------------------------------------------------------------------------- */
+
+/* TWO BOXES AND ONE GAP, which is why the fields are nested rather than being
+   five items in one grid beside the button. The design puts 18px between the
+   two columns of fields and 37px between them and SEND — three different gaps
+   in one grid is one column-gap that cannot be two numbers, and faking the
+   second with a margin makes the button's width a sum rather than a figure. */
+.contact-form {
+  display: flex;
+  /* SEND is as tall as the fields beside it, which is what stretch gives for
+     free — the button's height is the block's height and neither is a figure
+     anyone has to keep in step with the other. Retune a field, a row gap or the
+     message box and the button follows. */
+  align-items: stretch;
+  gap: var(--contact-send-gap);
+}
+
+.contact-fields {
+  flex: 1;
+  /* min-width: 0 because a flex item's default is auto, which floors it at its
+     content's own width — five inputs would refuse to narrow and would push
+     SEND off the sheet. */
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--contact-row-gap) var(--contact-col-gap);
+}
+
+.contact-field {
+  margin: 0;
+}
+
+.contact-field--message {
+  grid-column: 1 / -1;
+}
+
+/* The fields themselves. THE RESET IS HERE because this site has no global
+   input reset and nothing else on it takes typed input — so the font, the
+   colour, the border and the box are all said out loud, the same call
+   .article-share-link makes about buttons.
+
+   The family is named rather than inherited: form controls do not inherit it by
+   default, and an input left to the UA's font is the one element on the page
+   set in the system's sans. */
+.contact-input {
+  display: block;
+  width: 100%;
+  height: var(--contact-field-h);
+  padding: 0 1.667vw; /* 24px */
+  border: 0;
+  border-radius: 1.528vw; /* 22px */
+  background: var(--contact-field-bg);
+  color: var(--contact-field-ink);
+  font-family: var(--font-heading);
+  font-size: 1.111vw; /* 16px */
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* The placeholder carries the field's name, and it is set at the same weight as
+   what gets typed rather than being greyed away: this is a label that happens
+   to sit inside the box, not a hint. The real <label> is in the markup and
+   hidden — see the note there about placeholders disappearing.
+
+   currentColor, AND NOT A COLOUR OF ITS OWN. ::placeholder does not inherit the
+   input's `color` once that is set explicitly — it takes the UA's grey, or
+   whatever is written here — so a colour named here is a second place the
+   field's ink lives, and changing .contact-input alone moves the typing and
+   leaves every label behind. Which is exactly what it looks like: nothing on
+   screen changes, because until somebody types, the placeholder IS the field.
+
+   The opacity is what separates a name from an answer. It is the only thing
+   this rule adds now. */
+.contact-input::placeholder {
+  color: currentColor;
+  opacity: 0.55;
+}
+
+/* The message. A height rather than rows, so the box is the design's figure and
+   not the font's; resize: vertical because a textarea that can be dragged
+   sideways can be dragged out of the sheet. */
+.contact-textarea {
+  height: var(--contact-msg-h);
+  padding: 1.667vw;
+  resize: vertical;
+  line-height: 1.4;
+}
+
+/* SEND. One tall block down the right of the fields rather than a button under
+   them, which is the design's arrangement and reads as the thing the whole
+   sheet is pointed at.
+
+   NO HEIGHT HERE, and that is the whole of it: the button is stretched to the
+   fields' own height by the row above, so what it measures is the two field
+   rows and the message box added up — 358px at the design width — rather than a
+   figure of its own that would have to be re-derived every time one of them
+   moved. The width is still declared, because nothing else decides that. */
+.contact-send {
+  flex: none;
+  width: var(--contact-send-w);
+  border: 0;
+  border-radius: 2.778vw; /* 40px */
+  background: var(--contact-bg);
+  color: var(--contact-ink);
+  font-family: var(--font-heading);
+  font-size: 1.944vw; /* 28px */
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+}
+
+/* THE HOVER INVERTS THE PAIR rather than tinting it, which is the call the
+   story page's share buttons make and for the same reason: a five per cent
+   darkening on a lime block is a state nobody is sure they have reached. */
+.contact-send:hover,
+.contact-send:focus-visible {
+  background: var(--contact-ink);
+  color: var(--contact-bg);
+}
+
+.contact-input:focus-visible,
+.contact-send:focus-visible {
+  outline: 0.14vw solid var(--contact-paper-ink);
+  outline-offset: 0.2vw;
+}
+
+/* --------------------------------------------------------------------------
+   The note
+   -------------------------------------------------------------------------- */
+
+/* THE SLOT IS BIGGER THAN THE NOTE, and that is the one thing to know before
+   moving it. The sheet rests at NOTE.SPAN (0.62) of this box and the rest is
+   drawing room the wind lifts its corners into — so to put the note where the
+   design has it, aim its CENTRE and not its edges. The hero's slot carries the
+   same warning.
+
+   Pinned across the join between the lime and the paper, which is what makes it
+   read as put there afterwards rather than as belonging to either sheet.
+
+   The taped run across the note's top never moves (WIND.PIN_HALF), so the tape
+   graphic laid over this box stays registered with the sheet however hard it
+   flutters — and inherits the lean for free, which is why the rotate is on the
+   wrapper rather than in the scene. */
+.contact-note {
+  position: absolute;
+  top: 21.9vw;
+  left: 60.1vw;
+  width: 43.5vw;
+  /* Above the sheet, which is now at 20 — this was 3, which was above the sheet
+     only while the section was a stacking context and everything inside it was
+     ordered against everything else inside it. It is not any more, so the two
+     are ordered against the page and the note has to out-rank the paper it is
+     lying on rather than merely out-rank it locally. */
+  z-index: 21;
+  rotate: -4deg;
+  /* A third of this box is transparent bleed — don't let it eat clicks meant
+     for the sheet underneath. */
+  pointer-events: none;
+}
+
+.contact-note .sticky-note {
+  aspect-ratio: 1 / 0.94; /* matches the sheet, NOTE.W : NOTE.H */
+}
+
+.contact-note .sticky-note canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* The strip holding it up. Placed in per cent of the SLOT rather than in vw, so
+   the tape and the note stay registered when the slot is resized — the story
+   page's photograph tapes itself the same way for the same reason.
+
+   ALL THREE FIGURES ARE THE HERO'S, RE-SCALED, and none of them is an eye
+   measurement any more — which is what they were, and what was wrong with them.
+   The arithmetic, once, so it can be checked rather than trusted:
+
+     the sheet rests at NOTE.SPAN (0.62) of the slot and is centred in it, so the
+     note occupies 19% to 81% of this box on both axes. Its top edge is at 19%
+     of the slot's height and it is 0.62 x 43.5 = 26.97vw wide.
+
+     the hero puts an 11vw strip on an 18.6vw note — 59% of the note's width —
+     and starts it 3.06vw above the note's top edge, which is 16.5% of that
+     note's width. Both are ratios of the note, so both carry over.
+
+     59% of 26.97 = 15.95vw = 36.7% of this slot.
+     16.5% of 26.97 = 4.43vw above a top edge at 7.77vw, so 3.34vw = 8.2%.
+     centred: (100 - 36.7) / 2 = 31.7%.
+
+   The old 32% / 15% made the strip half the note's width and left only a
+   quarter of it above the edge, so it read as a label lying on the paper rather
+   than as the thing holding the paper up. Over half of it is meant to be on the
+   surface behind — that is what taping something up looks like.
+
+   No height: the artwork is 132 x 68, and an <img> given only a width keeps its
+   own proportion. Stating one would be a second place the aspect lives. */
+.contact-note-tape {
+  position: absolute;
+  top: 8.2%;
+  left: 31.7%;
+  width: 36.7%;
+}
+
+/* Two headings flying in from nowhere and a chip fading up are exactly what
+   this setting is asking about. Here as well as in reveal.ts, so it also covers
+   the window before hydration, when the stylesheet is holding them on its own —
+   every other section on this site makes the same pair of statements. */
+@media (prefers-reduced-motion: reduce) {
+  .contact-section .char {
+    transform: none;
+  }
+
+  .contact-section .contact-chip,
+  .contact-section .contact-sheet,
+  .contact-section .contact-note {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .contact-send {
+    transition: none;
+  }
+}
+
+/* ==========================================================================
    Footer
    ==========================================================================
    Markup in components/Footer. The hero's dark green and the hero's lime, the
@@ -7049,7 +7967,7 @@ li::marker {
   /* Over the slider (10) and the wave band (11), which is what the arc rises
      into — without this the section above would simply paint on top of it and
      the curve would never be seen. Under the menu (100) and the cursor. */
-  z-index: 12;
+  z-index: 100;
   width: 100%;
 
   /* The band the curve is drawn in, and the two lines that pay for it. The
@@ -7407,18 +8325,15 @@ li::marker {
 
    z-index above the rolls, which will be laid in over everything else in this
    box. It is small type on a dark field and a roll passing over it would take
-   it out entirely. */
-.footer-legal {
-  /* THE MASK NEEDS ROOM HERE, where .stick-sub needs none. This is set at
-       line-height 1, so the line box is SHORTER than the font's own ascent plus
-       descent — half-leading is negative — and a mask flush to it would cut the
-       tail off every `p`, `g` and `y` in the notice and the top off the `©`.
-       The matching negative margins in .body-clip hand the room straight back,
-       so the line is the height it always was and still sits where `bottom`
-       puts it; only what the mask covers changes. */
-  --body-head: 0.14em;
-  --body-foot: 0.18em;
+   it out entirely.
 
+   NOT SPLIT AND NOT REVEALED, unlike every other piece of type in this section.
+   It took the site's body entrance until that entrance turned out to be
+   unreachable here — pinned this close to the end of the document, its cue
+   clamps to the last scroll pixel — so it is a plain text node now and asks for
+   none of the mask machinery .pick-note does. See the note on it in
+   Footer/index.tsx. */
+.footer-legal {
   z-index: 42;
   font-family: var(--font-body);
   white-space: nowrap;
@@ -7498,11 +8413,24 @@ li::marker {
   --menu-thumb-rot: -5deg;
   --menu-thumb-radius: 1.736vw; /* 25px at the 1440 design width */
 
-  /* The dashed rules, as a dash and the gap after it. The period is the two
-     added together, so shortening either puts more dashes on the line. */
-  --menu-dash: 0.17vw;
-  --menu-dash-gap: 0.13vw;
-  --menu-dash-h: 0.12vw;
+  /* THE PERFORATION, AND IT IS ONE PERFORATION. The rules between the rows and
+     the tear line across the tab are the same line drawn twice — the menu is a
+     sheet of perforated paper and the tab is the piece of it you pull — so the
+     mark and the pitch are stated here, on the element that contains both, and
+     neither end keeps a copy.
+
+     3px square on a 6px pitch at the design width. THE GAP IS THE WHOLE MARK
+     and not less: the rules were a 2.45px dash on a 4.32px pitch, which leaves
+     1.87px of air, and at under about twice the mark a drawn perforation closes
+     up into a solid-looking bar and stops being worth drawing by hand. The tab
+     was got wrong the same way first time round; .index-tab's note is the long
+     version of the argument.
+
+     Square, so the mark is one figure and not two — the rules used to carry a
+     --menu-dash-h of their own that was neither the dash's width nor anything
+     else. A perforation is punched, and a punch has one size. */
+  --perf-mark: 0.208vw; /* 3px */
+  --perf-pitch: 0.417vw; /* 6px */
 
   /* The hover preview, in two beats: the slot opens and shoves the label aside,
      and the image scales up into it. OPEN is how long the shove takes; how long
@@ -7546,7 +8474,11 @@ li::marker {
      to the slider's per-tape palette, same call the wave band makes. */
   --menu-ink: #013900;
   --menu-paper: #f4f3ef;
-  --menu-rule: rgba(1, 57, 0, 0.55); /* the dashed separators */
+  /* The separators have no colour of their own. They were rgba(1, 57, 0, 0.55)
+     — the ink at 55%, so four rules would not out-weigh four labels — and they
+     are drawn at full strength now, which is what makes them and the tab's tear
+     line one perforation rather than two that merely line up. currentColor off
+     --menu-ink above, exactly as the tab draws its own. */
   --menu-dot: #b6fe00; /* the disc behind each arrow — the hero's lime */
 
   position: fixed;
@@ -7676,17 +8608,33 @@ li::marker {
    are the browser's business in a border and are set here instead; the same
    reason the slider's chips draw their perforation as a gradient.
 
+   THE MARK, THE PITCH AND THE INK ARE THE TAB'S — the first two read off
+   .site-menu, the third off currentColor, which .site-menu sets to --menu-ink
+   and nothing between here and it resets. So this declaration and the tab's are
+   the same declaration, which is the point: one sheet, one perforation.
+
+   Full width, where the tab's is held off its ends by 8px. A rule between two
+   rows is bounded by the panel and wants to meet it; the tab's is a tear across
+   a loose piece of paper and would run into its sides.
+
+   One tile plus background-size rather than a repeating gradient carrying the
+   pitch itself, which is the idiom the article sheet's perforation and the
+   index's tabs already use: the tile IS the pitch, so the two figures stay one
+   dial each.
+
    An element rather than a ::before on the row, because the reveal has to be
    able to reach it — a pseudo-element cannot be handed to GSAP. It owns nothing
    but its own paint here; Menu/reveal.ts owns its clip-path. */
 .menu-rule {
   display: block;
-  height: var(--menu-dash-h);
-  background-image: repeating-linear-gradient(
+  height: var(--perf-mark);
+  background-image: linear-gradient(
     to right,
-    var(--menu-rule) 0 var(--menu-dash),
-    transparent var(--menu-dash) calc(var(--menu-dash) + var(--menu-dash-gap))
+    currentColor 0 var(--perf-mark),
+    transparent var(--perf-mark)
   );
+  background-size: var(--perf-pitch) 100%;
+  background-repeat: repeat-x;
 }
 
 .menu-link {
@@ -7962,17 +8910,59 @@ li::marker {
    and the rounding stays circular rather than smearing sideways. Change the
    tab's width or --tooth-h far and the viewBox wants re-proportioning with it. */
 .menu-tab-sheet {
+  /* THE FLAT BODY — the top edge down to where the teeth start, 53px at the
+     design width. Named rather than typed three times, because three things
+     measure against it now: the box's own height, the tear line's place in it
+     and the word's. */
+  --tab-body: 4.681vw;
+
+  /* THE TEAR LINE, 24px down from the top edge. It is the one figure here that
+     is placed by the design rather than derived — everything else about the
+     perforation is how it is drawn, and this is where it goes. */
+  --perf-y: 1.667vw;
+
+  /* Held off both ends by 8px, so the line stops short of the sides rather than
+     running into them. */
+  --perf-x: 0.556vw;
+
+  /* --perf-mark and --perf-pitch are NOT set here. They are the menu's, stated
+     once on .site-menu, because the rules between the rows and this tear line
+     are the same perforation punched through one sheet of paper — see the note
+     there. Only where the line SITS is the tab's own business, which is the two
+     figures above.
+
+     The run is 9.3vw of tab less 2 x --perf-x, which over the shared 0.417vw
+     pitch is 19.6 cells: the last mark lands whole with a little to spare
+     rather than being clipped mid-dash at the inset. Every figure involved is
+     in vw, so that count is the same at every window width. */
+
   --tooth-h: 1.4vw;
   --tooth: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 15' preserveAspectRatio='none'%3E%3Cpath d='M0 0L0 11Q0 15 4.29 12.43L20.71 2.57Q25 0 29.29 2.57L45.71 12.43Q50 15 54.29 12.43L70.71 2.57Q75 0 79.29 2.57L95.71 12.43Q100 15 100 11L100 0Z' fill='%23000'/%3E%3C/svg%3E");
 
   display: block;
-  height: calc(2.4vw + var(--tooth-h));
-  /* Centres the word in the flat body, ignoring the teeth below it. */
-  line-height: 2.4vw;
+  /* Positioned, so the tear line below has this box to be placed against and
+     not the bare tab around it. The two are very nearly the same rectangle, but
+     the perforation belongs to the paper and the tab is not the paper. */
+  position: relative;
+  height: calc(var(--tab-body) + var(--tooth-h));
+  /* Sets the line box the word sits in, and the sum below reads it back as
+     0.8em. Ignores the teeth, which are not part of the flat body. */
+  line-height: 0.8;
   background: var(--menu-paper);
-  font-size: 1.05vw;
+  font-size: 1.389vw;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: -0.042vw;
+  /* UNDER THE TEAR LINE, and centred in what is left of the flat body rather
+     than measured down from the top of it: the word reads as the half of the
+     tab you keep hold of, so it is that half it should be centred in. This was
+     a flat 1.667vw, which is the same 24px the perforation now occupies — the
+     word was sitting exactly where the line was going to be ruled.
+
+     0.8em IS the line box (the line-height above times this font size), so the
+     three terms stay true if any of them is re-set. */
+  padding-top: calc(
+    var(--perf-y) + (var(--tab-body) - var(--perf-y) - 0.8em) / 2
+  );
   /* The tracking is added to the right of the last letter too, which shifts the
      word left of centre; half of it back squares the word up in the box. */
   text-indent: 0.1em;
@@ -7986,25 +8976,87 @@ li::marker {
   mask-size:
     100% calc(100% - var(--tooth-h)),
     100% var(--tooth-h);
-  /* The torn edge is parked at 93%, not at the bottom. Percentage positioning
-     is a proportion of the SLACK, not of the box — the strip is --tooth-h tall
-     in a box that is 2.4vw taller, so 93% leaves the last 7% of that slack
-     (0.168vw) below it uncovered. Nothing paints there, which blunts the three
-     points by that much: a torn edge with the very tips worn off it, rather
-     than three needles. The two layers overlap by the same amount higher up,
-     which is harmless — mask layers add.
+  /* The torn edge is lifted off the bottom of the box, not parked on it — the
+     tips are worn off rather than left as three needles, and the two layers
+     overlap by the same amount higher up, which is what mask layers adding is
+     for.
 
-     100% would put the points back and --tooth-h alone would shorten the teeth
-     without taking the tips off. This is the third thing, and the only one that
-     rounds the ends. */
+     A LENGTH AND NOT A PERCENTAGE, and this is the one thing in here that will
+     bite again if it is put back. Percentage positioning is a proportion of the
+     SLACK, and the slack IS the flat body — so `0 93%` was never a figure about
+     the teeth at all, it was seven per cent of whatever --tab-body happened to
+     be. It read as 0.168vw while the body was 2.4vw. Raising the body to 3.681
+     for the tear line above silently took it to 0.2577vw, and that is not a
+     seven per cent difference in the shape:
+
+     the rounded valleys in --tooth run from viewBox y 0 to y 2.57. An overlap
+     of 0.168vw covers to y 1.80, so the last 0.77 units of each curve show and
+     the valleys read round. An overlap of 0.2577vw covers to y 2.76 — past the
+     whole curve — so every valley is flattened into a straight edge meeting a
+     straight diagonal, and the torn edge goes sharp. Nothing about the artwork
+     changed; the mask just ate the rounding.
+
+     So the lift is stated once, in vw, and the body can be re-set above without
+     touching the shape down here. 0 would put the full points back and --tooth-h
+     alone would shorten the teeth without taking the tips off; this is the third
+     thing, and the only one that rounds the ends. */
+  --tooth-lift: 0.168vw;
+
   -webkit-mask-position:
     0 0,
-    0 93%;
+    0 calc(100% - var(--tooth-lift));
   mask-position:
     0 0,
-    0 93%;
+    0 calc(100% - var(--tooth-lift));
   -webkit-mask-repeat: no-repeat, no-repeat;
   mask-repeat: no-repeat, no-repeat;
+}
+
+/* THE TEAR LINE — the perforation ruled across the tab above the word.
+   --------------------------------------------------------------------------
+   What it says is what the teeth at the other end already said: this is a
+   ticket stub, and it comes off. The teeth are the edge that has been torn and
+   this is the edge that has not been yet, so the two belong to one object and
+   the tab is the piece between them.
+
+   HELD OFF BOTH ENDS by --perf-x, the same call the article sheet's perforation
+   makes and for a plainer reason than that one's: there is no radius here to
+   clear, the line simply should not run into the sides.
+
+   ONE TILE AND A background-size, rather than a repeating gradient carrying the
+   pitch itself. It is the idiom the sheet's perforation and the index's tabs
+   already use — the tile IS the pitch, so the two figures stay one dial each —
+   and it is the reason the marks land whole at both ends: the tile is laid from
+   the left edge of an inset box and repeats into it, so the inset is where the
+   first mark starts rather than where a half-drawn one is cut off.
+
+   currentColor, like every other perforation on the site. The tab takes
+   --menu-ink from .menu-tab above and this follows it without naming it, so the
+   line cannot be left behind the day that pair is re-set.
+
+   IT IS MASKED ALONG WITH THE PAPER, which is free and worth knowing: the sheet
+   carries the torn-edge mask, a pseudo-element is masked with its parent, and
+   this line sits at 24px in a flat body of 53px — well inside the solid layer
+   that covers everything above the teeth. Nothing to do, but it is why moving
+   --perf-y down past --tab-body would not just look wrong, it would disappear.
+
+   Out of flow and pointer-events: none, so it neither takes part in the layout
+   above it nor eats a click meant for the button underneath. */
+.menu-tab-sheet::before {
+  content: "";
+  position: absolute;
+  top: var(--perf-y);
+  left: var(--perf-x);
+  right: var(--perf-x);
+  height: var(--perf-mark);
+  background-image: linear-gradient(
+    to right,
+    currentColor 0 var(--perf-mark),
+    transparent var(--perf-mark)
+  );
+  background-size: var(--perf-pitch) 100%;
+  background-repeat: repeat-x;
+  pointer-events: none;
 }
 
 .menu-link:focus-visible,

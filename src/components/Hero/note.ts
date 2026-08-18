@@ -10,13 +10,22 @@
  * both on it already: one clock for the section, not three.
  */
 import gsap from "gsap";
+import type { NoteFace } from "./noteFace";
 import type { StickyNote } from "./stickyNote";
 
 /* How far outside the viewport the note keeps animating. Enough that it is
    already mid-flutter when it scrolls on, never caught starting up. */
 const NEAR_VIEW = "25% 0px";
 
-export function initNote(root: HTMLElement): () => void {
+/**
+ * Mounts the 3D note into the `.sticky-note` inside `root`.
+ *
+ * @param root the section the slot lives in
+ * @param face what is printed on the sheet. Omitted, it is the hero's pinboard
+ *   note — everything about the paper, the wind and the light is the same
+ *   object either way, and only the printing is a page's own business.
+ */
+export function initNote(root: HTMLElement, face?: NoteFace): () => void {
   const mount = root.querySelector<HTMLElement>(".sticky-note");
   if (!mount) return () => {};
 
@@ -128,7 +137,7 @@ export function initNote(root: HTMLElement): () => void {
   import("./stickyNote")
     .then((mod) => {
       if (gone) return;
-      note = mod.createStickyNote(mount);
+      note = mod.createStickyNote(mount, face);
       if (reduced) {
         // One pose, one render: the resting curl, standing still.
         note.frame(0);

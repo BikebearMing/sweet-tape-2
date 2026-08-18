@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import ProductInfo from "@/components/ProductInfo";
 import ProductIntro from "@/components/ProductIntro";
+import Siblings from "@/components/Siblings";
 import { tapeOf, tapes } from "@/data/tapes";
 
 /* A TAPE — /products/[id], the family's inner page.
@@ -95,6 +96,11 @@ export default async function TapePage({
     <>
       <ProductIntro tape={tape} />
       <ProductInfo tape={tape} />
+      {/* The same tape in its three grades. Directly under the origin story and
+          on the same dark green, with no seam between them: the two are one
+          continuous surface, which is why this section declares that green
+          again rather than inheriting it. See components/Siblings. */}
+      <Siblings tape={tape} />
     </>
   );
 }

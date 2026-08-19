@@ -1,8 +1,9 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
+import type { CSSProperties } from "react";
 
 import { letters } from "@/components/letters";
-import { nextTape, type Tape } from "@/data/tapes";
+import { cssVars, nextTape, type Tape } from "@/data/tapes";
 import Stage from "./Stage";
 
 /* NEXT UP — the last thing on a product page, and the way out of it.
@@ -24,6 +25,22 @@ import Stage from "./Stage";
  * the wrap; see nextTape, which is why this section exists on all six pages
  * including the last.
  *
+ * AND IT IS PAINTED IN THAT TAPE'S COLOURS, NOT IN THIS ONE'S. The panel used
+ * to be one fixed yellow on every page — a colour of the section's own, argued
+ * as "the page has been one tape's colour throughout and this is the door out".
+ * The door is now the colour of the room it opens into: cssVars(next.colours)
+ * puts the NEXT tape's palette on the section root and the stylesheet reads it,
+ * so /products/cloth ends on OPP's lime and /products/masking ends on the
+ * double-sided tape's blue. It is the same swatch the reader is about to land
+ * on — the opening screen of the page this panel links to is the same --bg with
+ * the same --word on it — so the click is continuous rather than a jump through
+ * an unrelated yellow.
+ *
+ * THE MECHANISM IS THE SLIDER'S, unchanged. cssVars() is the one place a tape's
+ * palette becomes custom properties; the orbit's buttons, the row at /products
+ * and the two sections above this one all carry it the same way, and nothing
+ * here knows what any of the six colours actually are.
+ *
  * Server-rendered like every other section. Stage is the hair-thin client
  * wrapper that owns the ref and hands the section to reveal.ts.
  */
@@ -38,7 +55,7 @@ export default function NextUp({ tape }: { tape: Tape }) {
   const next = nextTape(tape);
 
   return (
-    <Stage>
+    <Stage style={cssVars(next.colours) as CSSProperties}>
       {/* WITHOUT JAVASCRIPT NOTHING IN HERE ARRIVES. The letters are parked
           under their masks by global.css and the chip is held at nothing by the
           same attribute, both released by the section's own script — so a page where reveal.ts never runs is an empty yellow band

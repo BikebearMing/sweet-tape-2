@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 
 import HandNote from "@/components/HandNote";
 import Peel from "@/components/Peel";
-import { words } from "@/components/letters";
+import { letters, words } from "@/components/letters";
 import { stripOf } from "@/components/TapeSlider/strips";
 import { cssVars, heroOf, type Tape } from "@/data/tapes";
 import Stage from "./Stage";
@@ -100,9 +100,32 @@ function stripBox(s: ReturnType<typeof stripOf>, vw: number): string {
   return `${w.toFixed(3)}vw ${((w * s.h) / s.w).toFixed(3)}vw`;
 }
 
+/* THE STORY'S LAST WORD, SPLIT OFF THE REST OF IT — everything up to the final
+ * run of whitespace, and everything after it.
+ *
+ * The hand-drawn rule at the foot of the paragraph is drawn ACROSS this word, so
+ * it needs to be a box of its own rather than one of the boxes words() makes.
+ * See the markup, which is where the whole of that argument is.
+ *
+ * Whitespace only, and deliberately not the comma-and-hyphen chunking words()
+ * does on top of it: a rule that stopped at a hyphen inside the closing word
+ * would underline half of it. Trailing whitespace is trimmed first so a copy
+ * string that ends with a space does not hand back an empty tail and rule under
+ * nothing.
+ *
+ * A one-word paragraph gives an empty head, which the markup checks for — the
+ * space it would otherwise print between the two halves would open the line.
+ */
+function splitLastWord(text: string): [string, string] {
+  const t = text.trimEnd();
+  const i = t.search(/\s\S*$/);
+  return i < 0 ? ["", t] : [t.slice(0, i), t.slice(i + 1)];
+}
+
 export default function ProductInfo({ tape }: { tape: Tape }) {
   const strip = stripOf(tape.id);
   const [lead, rest] = tape.origin;
+  const [restHead, restTail] = splitLastWord(rest);
 
   return (
     <Stage style={cssVars(tape.colours) as CSSProperties}>
@@ -281,27 +304,60 @@ export default function ProductInfo({ tape }: { tape: Tape }) {
               style={{ "--strip-blend": strip.blend } as CSSProperties}
             />
             </span>{" "}
-            <span aria-hidden="true">{words(rest)}</span>
-            {/* The rule under the last words, drawn in two passes the way a
-                hand underlines something — one stroke out and a shorter one
-                back over it, neither quite straight and neither quite meeting
-                the other's ends. A border-bottom would be a printed rule, and
-                this section is written on rather than set. */}
-            <span className="info-underline" aria-hidden="true">
-              <svg viewBox="0 0 320 22" fill="none" focusable="false">
-                <path
-                  d="M4 9C74 3 168 5 314 8"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-                <path
-                  d="M22 17C96 12 190 14 292 15"
-                  stroke="currentColor"
-                  strokeWidth="2.4"
-                  strokeLinecap="round"
-                />
-              </svg>
+            <span aria-hidden="true">{words(restHead)}</span>
+            {restHead ? " " : null}
+            {/* THE LAST WORD, AND THE RULE UNDER IT — one box, which is the
+                whole of why the word is split off the run above.
+                The rule used to be a zero-width marker dropped after the
+                paragraph with a width of 5.4em: right-anchored so it ended
+                under the full stop, and five and a bit ems long because that is
+                what NEVER AGAIN. measures at this size. That figure was the
+                OPP tape's copy written into the stylesheet. Every other tape
+                ends on a different word, so the rule ran back past the start of
+                the line and out under the one above it — most visibly on the
+                low-noise tape, whose last line is one short word.
+                So the rule is sized by the thing it rules under instead of by a
+                measurement of one tape's sentence: this box is the last word,
+                the rule is absolutely positioned across it, and it is right for
+                whatever any of the six ends on.
+                IT IS THE LAST WORD AND NOT THE LAST PHRASE, which is the one
+                place this reads shorter than the mock — that rules under NEVER
+                AGAIN., two words. Two words can be split by a line break and
+                this box cannot, and a rule drawn across a group that has
+                wrapped is a stroke running from the end of one line to the
+                middle of the next. A single word is the largest run that is
+                safe at every measure.
+                inline-flex like words()' own boxes, for the same reason: the
+                letters are flex items and this is the row they stand in. */}
+            <span className="word info-last" aria-hidden="true">
+              {letters(restTail)}
+
+              {/* Drawn in two passes the way a hand underlines something — one
+                  stroke out and a shorter one back over it, neither quite
+                  straight and neither quite meeting the other's ends. A
+                  border-bottom would be a printed rule, and this section is
+                  written on rather than set. */}
+              <span className="info-underline">
+                <svg
+                  viewBox="0 0 320 22"
+                  fill="none"
+                  focusable="false"
+                  preserveAspectRatio="none"
+                >
+                  <path
+                    d="M4 9C74 3 168 5 314 8"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d="M22 17C96 12 190 14 292 15"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
             </span>
           </h3>
         </div>

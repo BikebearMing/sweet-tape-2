@@ -70,13 +70,23 @@ function Rule() {
       aria-hidden="true"
       focusable="false"
     >
-      {/* Across the top, rising to the right, starting well left of the
-          down-stroke and sagging through the middle. */}
-      <path className="hand-stroke" d="M 10 68 C 105 63 210 49 305 30" />
+      {/* Across the top, rising to the right, starting left of the down-stroke
+          and sagging through the middle. It began at x = 10, which put 36 units
+          of tail past the crossing; the overhang is what makes the corner read
+          as drawn rather than mitred, but that much of it read as a mistake. */}
+      <path className="hand-stroke" d="M 22 67 C 105 63 210 49 305 30" />
       {/* And down the margin, starting above the crossing and leaning right as
           it falls, the way a hand pulling toward itself does — away from the
-          margin at first, then back across it. */}
-      <path className="hand-stroke" d="M 46 32 C 43 86 50 142 59 196" />
+          margin at first, then back across it.
+
+          IT USED TO RUN TO 196 and it now stops at 172. The end of a margin
+          rule wants to finish a little under the last line of writing, not a
+          third of the box below it — the copy ends around y = 142 on a
+          three-line note and 153 on a four-line one, and this clears both
+          without leaving the stroke dangling into empty board. Its head is
+          trimmed by the same hand as the top stroke's tail, for the same
+          reason. */}
+      <path className="hand-stroke" d="M 45 44 C 43 86 49 138 55 172" />
     </svg>
   );
 }
@@ -108,8 +118,9 @@ export default function HandNote({
 
       <Rule />
 
-      {/* hand.ts appends Vara's SVG here. Empty by design, and it stays empty
-          without JS: the note is decoration and the copy above it is not. */}
+      {/* hand.ts sets the copy into here as one svg. Empty by design, and it
+          stays empty without JS: the note is decoration and the copy above it is
+          not. */}
       <div className="hand-ink" aria-hidden="true" />
     </div>
   );

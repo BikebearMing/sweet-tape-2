@@ -13,10 +13,12 @@ import Stage from "./Stage";
  * THE TABS ARE TYPE AND THE CARDS ARE NOT, which is the one thing to hold on to
  * about how this section arrives. The rule takes the site's headline voice —
  * every letter under its own mask, sliding up in a shuffled order — because it is
- * a headline set sideways. The cards resolve out of a blur in reading order
- * instead: nine rectangles doing the letter reveal would be nine arrivals
- * competing with each other, and shuffling anything about a grid destroys the one
- * thing a grid is for. NewsIndex/reveal.ts has the long version.
+ * a headline set sideways, and it arrives ROW BY ROW the way the menu's does,
+ * each word followed by the perforated line drawn under it. The cards bounce up
+ * in reading order instead: nine rectangles doing the letter reveal would be nine
+ * arrivals competing with each other, and shuffling anything about a grid
+ * destroys the one thing a grid is for. NewsIndex/reveal.ts has the long
+ * version.
  *
  * FILTERING IS AN ATTRIBUTE, NOT A RE-RENDER. Picking a tab writes data-filter on
  * the section and the stylesheet hides every card that disagrees with it — so all
@@ -41,9 +43,10 @@ export default function NewsIndex() {
   return (
     <Stage>
       {/* WITHOUT JAVASCRIPT NOTHING HERE ARRIVES. The tabs' letters are parked
-          under their masks by global.css and the cards are parked at nothing, and
-          both are released by the section's own script — so a page where it never
-          runs is an empty green sheet where the newsroom should be. The
+          under their masks by global.css, the rules between them are clipped to
+          nothing and the cards are parked at nothing, and all three are released
+          by the section's own script — so a page where it never runs is an empty
+          green sheet where the newsroom should be. The
           stylesheet's hold is lifted here instead, which costs nothing when
           scripting is on: the contents are not even parsed.
 
@@ -53,6 +56,7 @@ export default function NewsIndex() {
           cannot filter. Nothing is hidden and nothing is lost. */}
       <noscript>
         <style>{`.news-index .char { transform: none }
+          .news-index .index-rule { clip-path: none }
           .news-index .index-card { opacity: 1; visibility: visible }`}</style>
       </noscript>
 
@@ -71,7 +75,7 @@ export default function NewsIndex() {
             liable to be announced a fragment at a time. The menu's rows are
             marked up the same way. */}
         <ul className="index-filters">
-          {KINDS.map(({ id, label }) => (
+          {KINDS.map(({ id, label }, i) => (
             <li key={label}>
               <button
                 className="index-tab"
@@ -91,6 +95,23 @@ export default function NewsIndex() {
                   ({countOf(id)})
                 </span>
               </button>
+
+              {/* THE PERFORATION UNDER THE TAB — the menu's rule, in lime, and a
+                  real element for the same reason the menu's is one: the reveal
+                  draws it in from the left and a pseudo-element is not
+                  addressable. It used to be a background on the button above,
+                  which could be painted but never animated.
+
+                  NOT UNDER THE LAST TAB. Under the first two it is a separator
+                  and is doing work; under the third there is nothing to separate
+                  it from, so it would be a line drawn across the bottom of the
+                  column for its own sake — heavy enough at this weight to read as
+                  a floor this section does not have. It used to be a
+                  :last-child rule turning the background off; not rendering it is
+                  the same statement made once. */}
+              {i < KINDS.length - 1 && (
+                <span className="index-rule" aria-hidden="true" />
+              )}
             </li>
           ))}
         </ul>

@@ -178,7 +178,7 @@ export default function Preloader() {
           letters. Costs nothing when scripting is on: the contents are not even
           parsed. */}
       <noscript>
-        <style>{`.site-preloader { display: none } html[data-loading] { overflow: visible } html[data-loading] .menu-tab { transform: none }`}</style>
+        <style>{`.site-preloader, .site-haze { display: none } html[data-loading] { overflow: visible } html[data-loading] .menu-tab { transform: none }`}</style>
       </noscript>
 
       {/* aria-hidden because it is a held curtain, not content: the page behind
@@ -187,6 +187,32 @@ export default function Preloader() {
 
           The box itself paints nothing — every colour here is on a sheet
           inside it, and they all leave. */}
+      {/* THE HAZE. A box of its own, OUTSIDE the cover, and every word of that
+          is load-bearing — it was inside .site-preloader first and it blurred
+          nothing at all.
+
+          A backdrop-filter only ever blurs what paints BENEATH the element.
+          Inside the cover, beneath it means the cover's own sheets and nothing
+          else: the whole preloader is one stacking context painting above the
+          site, so the page is not in this element's backdrop at any z-index it
+          could take in there. Out here it is a plain fixed box at 499 — over
+          the page, over the menu, under the cover at 500 — and the page is
+          exactly what is beneath it.
+
+          Which is also why it is not a filter on the page itself. A page here
+          is several screens tall and a filter makes the browser rasterise all
+          of it, on the frame a route change is already the busiest of the
+          page's life; and a filtered element becomes the containing block for
+          every `position: fixed` inside it, which on this site is every pinned
+          section — each would jump by the whole scroll offset on the frame the
+          blur went on. This box is one viewport, and the page never learns
+          about it.
+
+          Off until it is wanted: the radius is a variable the transition
+          writes, and the filter is only declared while data-leaving is on it
+          (see .site-haze in global.css). The overture never pays for it. */}
+      <div className="site-haze" aria-hidden="true" />
+
       <div className="site-preloader" ref={ref} aria-hidden="true">
         {/* The stack, deepest last. All four sit exactly under the lime sheet
             and are invisible until it moves; z-index is what decides which one

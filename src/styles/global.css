@@ -498,6 +498,73 @@ html[data-loading] {
   z-index: 500;
 }
 
+/* THE PAGE GOING OUT OF FOCUS, which is the half-second before the cover falls.
+ *
+ * One thing happens to the route being left that is not a sheet: it goes soft,
+ * hard, over the beat before the first colour arrives and on into the fall. The
+ * radius is driven from Preloader/transition.ts (TRANSITION.LEAVE_BLUR); the
+ * declaration is here, and nothing about either touches the page.
+ *
+ * A BACKDROP FILTER, NOT A FILTER, and that is the whole design of this
+ * element. Blurring the page directly would be the obvious way and it is wrong
+ * twice over. A page here is several screens tall and a filter makes the
+ * browser rasterise all of it, on the frame a route change is already the
+ * busiest of the page's life; and a filtered element becomes the containing
+ * block for every `position: fixed` inside it, which on this site is every
+ * ScrollTrigger pin — a section being held on screen would leap by the whole
+ * scroll offset the moment the blur went on, which a reader clicking a menu
+ * row halfway through the giant or the powers would see. This box is one
+ * viewport, it filters what is painted behind it, and the page keeps its own
+ * boxes, its own scroll position and its own pins.
+ *
+ * 499, WHICH IS THE ONLY NUMBER THAT WORKS. A backdrop-filter blurs what paints
+ * BENEATH the element and nothing else, so this has to sit above everything it
+ * is meant to soften and below the one thing it is not. Above the page and its
+ * sections (10, 11) and above the menu (101), which shuts on the same signal
+ * and would look odd left sharp over a soft page; below the cover at 500, whose
+ * sheets are flat colour cut by one arc each and would lose that edge to it.
+ *
+ * It also has to be OUT HERE. This lived inside .site-preloader first, at a
+ * z-index below the sheets, and it blurred nothing: the cover is one stacking
+ * context painting above the whole site, so from in there the page is not
+ * beneath this element at any z-index it could have taken. The fix is not a
+ * number, it is the box being a sibling of the cover rather than a child.
+ *
+ * DECLARED ONLY WHILE IT IS WANTED. backdrop-filter is not free even at zero
+ * radius — it forces a backdrop root and a second pass every frame — and the
+ * overture is the one moment on the site that cannot spare either, since it
+ * runs against hydration and the hero's three. So the property arrives with
+ * data-leaving, which the transition sets as the cover starts down and takes
+ * off once the screen is opaque, and the cold load never sees it.
+ *
+ * NO -webkit- COPY, and its absence is deliberate. It had one, written the way
+ * a prefixed property is normally written, and the rule shipped EMPTY — both
+ * declarations gone, backdrop-filter computing to `none` while every other part
+ * of the transition ran perfectly. Next's CSS pipeline (Lightning CSS) treats
+ * `-webkit-backdrop-filter` as the same property and merges the pair into one
+ * declaration carrying whichever prefix came LAST; emitting for targets that do
+ * not need the WebKit prefix, it then has nothing left to write. Standard first
+ * and prefixed second — the order every other prefixed property wants — is the
+ * one order that deletes the rule. The copy is not needed in any case: the same
+ * pipeline ADDS the prefix where the browser targets call for it. */
+.site-haze {
+  /* The radius, written by Preloader/transition.ts. Zero here so the property
+     always resolves and the declaration below is a no-op until it is driven. */
+  --pre-haze: 0px;
+
+  position: fixed;
+  inset: 0;
+  z-index: 499;
+
+  /* It is over the whole site for the life of the document, so it must never be
+     what a click lands on. */
+  pointer-events: none;
+}
+
+.site-haze[data-leaving] {
+  backdrop-filter: blur(var(--pre-haze));
+}
+
 /* Every sheet, the lime one and the four behind it. They are identical boxes in
    identical places; the only thing that separates them is colour, the z-index
    the markup sets, and the tenth of a second between their exits. */
@@ -645,7 +712,8 @@ html[data-loading] {
    page. The scroll lock goes with it: nothing is left to unlock it, since
    Preloader/reveal.ts releases the gate on mount and never builds a timeline. */
 @media (prefers-reduced-motion: reduce) {
-  .site-preloader {
+  .site-preloader,
+  .site-haze {
     display: none;
   }
 
@@ -4280,7 +4348,7 @@ html[data-loading] {
   --pi-chip-top: 11.7vw;
   --pi-the-top: 6.5vw;
   --pi-roll-top: 15.4vw;
-  --pi-word-top: 33.6vw;
+  --pi-word-top: 29.6vw;
 
   /* THE, at this page's size. The slider sets it at 26.32vw; here it is a shade
      larger, because there is nothing else on the screen for it to be in
@@ -5055,35 +5123,61 @@ html[data-loading] {
   translate: -50% calc(-50% - 0.06em);
 }
 
-/* The rule under the last words. inline-block at zero height with the drawing
-   bled out of it, so it takes no room on the line it ends — an underline that
-   pushed the paragraph's last line down would be a rule with a margin, which is
-   not what a pen does. */
-.product-inner-info .info-underline {
-  display: inline-block;
+/* THE STORY'S LAST WORD, and the only thing this adds to a words() box is
+   something for the rule to be measured against. It is a .word as well, so the
+   letters row up and the box cannot break exactly as every other one does. */
+.product-inner-info .info-last {
   position: relative;
-  width: 0;
-  height: 0;
+}
+
+/* The rule under it. Absolutely positioned, so it takes no room on the line it
+   ends — an underline that pushed the paragraph's last line down would be a rule
+   with a margin, which is not what a pen does.
+
+   IT IS SIZED BY THE WORD RATHER THAN BY A FIGURE, which is the whole of this
+   block. It used to be a zero-width marker after the paragraph with an explicit
+   width: 5.4em — right-anchored so it ended under the full stop, and five and a
+   bit ems because that is what OPP's NEVER AGAIN. measures at this size. That
+   was one tape's sentence written into the stylesheet, and every tape that ends
+   on something shorter got a rule running back off the start of its line and out
+   under the line above. Pinned to both edges of the word instead, there is
+   nothing left to keep in step with the copy.
+
+   The overshoot is the pen's, and it is the reason for the negative insets: a
+   hand ruling under a word starts a shade before it and carries a shade past —
+   a stroke that stops dead on both letters reads as a printed rule. In em so it
+   tracks the type. */
+.product-inner-info .info-underline {
+  position: absolute;
+  left: -0.12em;
+  right: -0.18em;
+
+  /* Just under the word's box, which at this line-height sits a shade under the
+     baseline — the 0.06em back up is what puts the stroke where it was when it
+     was placed against the baseline directly.
+
+     The height is not a look, it is the STROKE WEIGHT. preserveAspectRatio is
+     none on the drawing so it spans whatever the word measures, which means the
+     two scales are independent and a near-horizontal stroke's thickness is
+     decided by the vertical one alone: 3 units in a 22-unit viewBox over this
+     height is the same 0.05em the rule was drawn at before. Change it and the
+     pen gets thicker. */
+  top: calc(100% - 0.06em);
+  height: 0.37em;
   color: #b6fe00; /* with the story it rules under, and the note and the arrow */
+  pointer-events: none;
 }
 
 .product-inner-info .info-underline svg {
-  position: absolute;
-  right: 0;
-  top: -0.16em;
-  /* THE LAST LINE'S WIDTH, near enough, in em so it tracks the type — the mock
-     rules under NEVER AGAIN. and not under the paragraph. Anchored by `right`
-     above, so it ends under the full stop and runs back from there whatever the
-     last line turns out to say; a left anchor would need the line's own width,
-     which nothing here knows. Five and a bit ems is that phrase at this size,
-     with the overshoot past the stop a pen would give it. */
-  width: 5.4em;
-  height: 0.8em;
-  /* THE RESET CAPS EVERY EMBED AT max-width: 100%, and 100% of a deliberately
-     zero-width parent is zero — so the rule above resolved to a stroke 0px
-     across and the underline simply was not there, with nothing in the cascade
-     to point at. The height came through untouched, which is what makes it look
-     like the path is wrong rather than the box. The slider's key visual canvas
+  display: block;
+  width: 100%;
+  height: 100%;
+
+  /* THE RESET CAPS EVERY EMBED AT max-width: 100%, which is right here and was
+     not before: the box this fills used to be deliberately zero-width, so the
+     drawing resolved to a stroke 0px across and the underline simply was not
+     there. Stated anyway — the width above is the one that should decide this,
+     not a rule several thousand lines up. The slider's key visual canvas
      carries the identical line for the identical reason. */
   max-width: none;
   overflow: visible;
@@ -5438,6 +5532,861 @@ html[data-loading] {
 }
 
 /* ==========================================================================
+   A product — super powers
+   ==========================================================================
+   Markup in components/SuperPowers, the moves in its reveal.ts, the mark itself
+   in its Mark.tsx. Three cards stacked one above another in the middle of a held
+   screen, with the section's name split around them — SUPER on the left, POWERS
+   on the right, and the stack standing in the gap between the two words.
+
+   A FRESH LIME SHEET, and it is the one THE RUN below opens on rather than a
+   third green: #b6fe00 with #013900 written on it, which is the pairing the home
+   page opens and closes on. THE SIBLINGS above closes on the dark green it
+   shares with the origin story, so the change of ground happens here — declared
+   rather than inherited, like every other section on this site.
+
+   THE CARDS ARE THAT DARK GREEN AGAIN, which is the whole reason the section
+   reads as one thing rather than as three objects on a field: what was the
+   ground a screen ago is now the figure, and the sheet the reader has just come
+   out of is what the claims are printed on.
+
+   THE ARRANGEMENT IS ONE NUMBER PER CARD. --pow-open, nought to one, is how far
+   a card is open, and everything below is derived from it: the card's height,
+   the size of everything printed on it, the weight of its shadow. reveal.ts
+   tweens that one property and touches nothing else in this block, which is why
+   the stack can be re-proportioned here with nothing in that file to keep in
+   step.
+
+   THE HEIGHTS ARE IN vh AND THE WIDTH FOLLOWS THEM, which is the one place this
+   section departs from the site's vw-everywhere rule and has to. The stack has
+   to fit inside a PINNED window whatever shape that window is; a column measured
+   off the page's width would run off the bottom of a short screen and float in
+   the middle of a tall one. So the two card heights are the measurements, and
+   the card's width, its corner radius and every type size on it are struck off
+   the open height — which keeps a card the same shape at any window instead of
+   stretching into a letterbox on a short one. The reference effect this is built
+   on (the vertical accordion) sizes its slides the same way and for the same
+   reason.
+
+   THE FIGURES, AND WHICH OF THEM ARE THE DESIGN'S. Nothing in the mock carries a
+   dimension line, so every number here is INFERRED off its proportions: the card
+   is very slightly wider than it is tall, its corner is about a seventh of its
+   height, the claim is about a fifth of it and the sentence sits on the floor of
+   the card rather than under the mark. Those are the ones to correct first if
+   this does not sit right against the artwork, and each is one figure in this
+   block.
+   ========================================================================== */
+
+.super-powers {
+  /* THE RUN'S pairing exactly, not an approximation of it — see --reel-bg
+     below, and the argument --giant-bg makes at length in the pinning section
+     about two greens that are nearly the same reading as a mistake. */
+  --pow-bg: #b6fe00;
+  --pow-ink: #013900;
+
+  /* And the card: the origin story's green and THE SIBLINGS', restated. Also not
+     an approximation — it is the same surface, seen again. */
+  --pow-card-bg: #0d470c;
+  --pow-card-ink: #b6fe00;
+
+  /* THE TWO CARD HEIGHTS, WHICH ARE THE WHOLE ARRANGEMENT.
+   *
+   * One card is open and two are settled back, always — so the column comes to
+   * 50 + 30 + 30 + three margins = 113.6vh whichever card's turn it is, and it
+   * neither grows nor shifts as the reader moves through the run. That is not a
+   * coincidence to be grateful for, it is why the cards are given heights at all
+   * rather than shares of a fixed column: shares would have to be divided by
+   * their own total, and dividing by a computed number in calc() is not
+   * something every browser will do.
+   *
+   * AND 113.6 IS DELIBERATELY MORE THAN THE WINDOW HOLDS. The window is the
+   * screen's height and the run is taller than it, so the top and bottom cards
+   * are cut by the edges of the screen rather than sitting inside them — the
+   * stack reads as a run passing THROUGH the section rather than as three cards
+   * arranged in it, which is the whole difference between a conveyor and a row.
+   * The overflow is constant, so both ends are cut by the same 6.8vh at every
+   * step; see .powers-stack, which is where the cutting happens.
+   *
+   * 50vh open is about half the screen, which is what the mock gives the card it
+   * draws. 30 is three fifths of that: large enough that a settled card is a
+   * card with readable words on it and that the run bleeds off both edges, small
+   * enough that the open one is still unmistakably the one being read. INFERRED,
+   * both. */
+  --pow-open-h: 50vh;
+  --pow-shut-h: 30vh;
+
+  /* HOW FAR A SETTLED CARD'S CONTENTS ARE SHRUNK, and it is the two heights
+   * above divided into each other — 30 / 50. THE THREE FIGURES HAVE TO AGREE:
+   * this is what scales a card's face to fit the card, so a height changed
+   * without this changing with it is a face that overhangs its own card or
+   * rattles around inside it.
+   *
+   * It is written out rather than calculated for the reason the heights give —
+   * calc() cannot reliably divide by a computed number, and the two lengths
+   * carry units besides. */
+  --pow-shut: 0.6;
+
+  /* Between the cards. Small: three claims about one tape read as one handful
+     rather than as three things on a shelf, which is the same call THE SIBLINGS'
+     --sib-gap makes. INFERRED. */
+  --pow-gap: 1.2vh;
+
+  /* THE CARD'S SHAPE AND ITS CORNER, struck off the open height rather than
+     measured, so a card is the same object at any window. A shade wider than it
+     is tall, and cornered at about a seventh — the mock's proportions. */
+  --pow-card-w: calc(var(--pow-open-h) * 1.02);
+  --pow-radius: calc(var(--pow-open-h) * 0.145);
+
+  /* THE NAME, either side of the stack. 160px at the 1440 design width, which is
+     the largest type on the page and is meant to be — it is the only thing here
+     competing with the stack for the screen, and at anything less the two words
+     read as labels stuck to the sides. INFERRED. */
+  --pow-name-size: 11.111vw;
+
+  /* WHAT IS PRINTED ON A CARD, all of it off the open height for the reason the
+   * shape is: these are parts of the card, not parts of the page, and a claim
+   * measured in vw would grow while the card it is printed on shrank.
+   *
+   * The inset is the margin the mock leaves around the whole face. INFERRED. */
+  --pow-pad: calc(var(--pow-open-h) * 0.085);
+  --pow-title-size: calc(var(--pow-open-h) * 0.19);
+  --pow-mark-h: calc(var(--pow-open-h) * 0.22);
+  /* How long the mark takes to fade when its card stops being the open one.
+     Shorter than the card's own move, so the box is gone before the card it was
+     on has finished shrinking — a mark still fading on a card halfway to shut
+     reads as two things leaving at different speeds. */
+  --pow-mark-out: 0.28s;
+  --pow-copy-size: calc(var(--pow-open-h) * 0.043);
+
+  position: relative;
+  width: 100%;
+  /* NO PADDING OF ITS OWN. The stage below is the window's height with the whole
+     composition centred in it, so vertical padding here would be space added to
+     a box that is already exactly as tall as it means to be. What this element's
+     height IS, once the reveal has run, is the stage plus however much scrolling
+     the pin spends: ScrollTrigger puts a spacer around the stage and this box
+     grows to hold it. THE SIBLINGS above is built the same way. */
+  background: var(--pow-bg);
+  /* The name is set enormous and set not to wrap, so a narrow window can push it
+     past the edge. Clip rather than hidden, for the reason every other section
+     gives: hidden on one axis makes the box a scroll container on the other,
+     which would give the page a second scroller to fight the smooth scroll for
+     the wheel. */
+  overflow-x: clip;
+}
+
+/* --------------------------------------------------------------------------
+   The stage — the box that is pinned
+   -------------------------------------------------------------------------- */
+
+/* THE WINDOW'S HEIGHT, WITH THE WHOLE COMPOSITION CENTRED IN IT. This is what
+   SuperPowers/reveal.ts holds still while the stack is scrolled through, and it
+   is a box of its own for the reason THE SIBLINGS' stage is: a pin is an element
+   held with position: fixed inside something taller, so the thing being held and
+   the thing providing the scrolling cannot be the same box.
+
+   space-between and not a gap, because what the design fixes is the two words'
+   distance from the EDGES of the screen and not their distance from the stack —
+   the stack is a fixed width in the middle and the room either side of it is
+   whatever the window has left. */
+.powers-stage {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2.5vw;
+}
+
+/* --------------------------------------------------------------------------
+   The name, in two halves
+   -------------------------------------------------------------------------- */
+
+/* SUPER and POWERS. One rule for both, because they are one name — the h2 and
+   the p that follows it differ only in what a screen reader is told about them
+   (see components/SuperPowers/index.tsx), and nothing about how they are set. */
+.powers-name {
+  margin: 0;
+  color: var(--pow-ink);
+  font-family: var(--font-heading);
+  font-size: var(--pow-name-size);
+  font-weight: 800;
+  /* Under 1, so the two words sit at the height of their own capitals rather
+     than in a line box with the font's leading around them. It is what lets them
+     line up with the middle of the stack instead of floating above it. */
+  line-height: 0.8;
+  letter-spacing: -0.35vw;
+  white-space: nowrap;
+  /* The words are the two ends of the composition, so each is pulled to its own
+     side of the screen and neither is centred on anything. */
+  flex: 0 0 auto;
+}
+
+/* The row of letter boxes. Flex rather than plain inline text, for the reason
+   every row of split letters on this site is: .clip carries overflow: hidden,
+   and an inline-block whose overflow is not visible takes its baseline from its
+   bottom margin edge rather than from the text inside it — which would hang
+   every letter above the baseline and grow the line box by the font's whole
+   descent. Flex items have no baseline to get wrong. */
+.powers-name .line {
+  display: flex;
+  align-items: flex-end;
+}
+
+/* The letter's mask, with headroom. line-height under 1 means a letter's content
+   box is shorter than the capital standing in it, so a mask flush to the box
+   would shave the tops off; the padding gives it room and the matching negative
+   margins hand that room straight back to the layout. THE SIBLINGS' title and
+   the closing key visual make the same pair of statements. */
+.powers-name .clip,
+.powers-card-title .clip {
+  display: block;
+  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  overflow: hidden;
+  padding: 0.22em 0.06em 0;
+  margin: -0.22em -0.06em 0;
+}
+
+/* --------------------------------------------------------------------------
+   The stack
+   -------------------------------------------------------------------------- */
+
+/* THE WINDOW. Exactly three slots and their margins tall, and the run inside it
+ * is longer than that — six cards and two pads — so what the reader sees is a
+ * card being read with one either side and the rest nowhere.
+ *
+ * THE WINDOW IS THE SCREEN AND THE RUN IS TALLER THAN IT. The three slots add
+ * up to 113.6vh (see --pow-open-h) against a window of 100, so the top and
+ * bottom cards are cut by the edges of the screen — the run reads as passing
+ * THROUGH the section rather than as three cards arranged inside it.
+ *
+ * The overflow is the same at every step, because there is always exactly one
+ * open slot and two shut ones, so the column is a constant height and both ends
+ * lose the same 6.8vh. That is what makes centring it safe: a column whose
+ * height moved would see the cut wander from end to end as the reader scrolled.
+ *
+ * justify-content: center is doing the cutting, together with the overflow
+ * below. It is the one thing here that would matter if this box could ever
+ * scroll — a centred flex column overflowing its box puts part of itself out of
+ * reach at the start edge — and it cannot: it is a fixed height with no
+ * scrollable axis, and nothing ever scrolls it.
+ *
+ * POWERS_REVEAL.VISIBLE is the same three and the two have to agree; that
+ * constant says so where it is declared.
+ *
+ * NOTHING IS EVER TRANSLATED, which is the whole trick and the reference
+ * effect's own. The run climbs because the slots above it shut, not because
+ * anything slides — so there is no accumulated offset to keep in step, no
+ * container to re-measure on resize, and a slot's position is simply wherever
+ * the slots above it leave it.
+ *
+ * overflow: hidden IS the mechanism now rather than belt and braces: it is what
+ * trims the run to the screen at both ends. clip would do as well; hidden is
+ * safe here because this box is a fixed height in the middle of a flex row and
+ * has no scrollable axis to give away. */
+.powers-stack {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  overflow: hidden;
+  /* The middle of the composition, and the only part of it with a width of its
+     own. It does not grow: the room either side is the name's. */
+  flex: 0 0 auto;
+}
+
+/* ONE CARD, and --pow-open is the only thing about it that ever moves.
+ *
+ * The height is the two measurements above interpolated by it, which is the
+ * whole mechanic: reveal.ts tweens the number from 0 to 1 on the card taking its
+ * turn and from 1 to 0 on the two settling back, all on the same tween at the
+ * same pace, and the column adds up on every frame because the three heights are
+ * read off one arithmetic.
+ *
+ * DEFAULTED TO 0 HERE AND NOT LEFT UNSET. An unset custom property makes every
+ * calc() that reads it invalid at computed-value time, which would leave a card
+ * with no height at all in the frame before the first script runs — and with no
+ * script at all it would stay that way. At 0 the stack rests as three equal shut
+ * cards, which is a drawing rather than a fault, and is exactly what the
+ * noscript escape in index.tsx leaves behind. */
+.powers-slot {
+  /* NEVER SHRINK ONE. The run is deliberately taller than the window it is in,
+     and a flex item defaults to flex-shrink: 1 — so without this the browser
+     resolves the overflow the tidy way, by squeezing every slot until the column
+     fits, and the bleed the section is built on silently becomes a stack that is
+     merely a bit smaller than it asked for. The heights below are measurements,
+     not requests. */
+  flex: 0 0 auto;
+
+  --pow-open: 0;
+  /* AND WHETHER THE SLOT IS IN THE WINDOW AT ALL. Nought by default, so the run
+     rests shut and reveal.ts opens the three it wants — the same hand-off the
+     letters make, and the reason the noscript escape in index.tsx has a line
+     about it. */
+  --pow-shown: 0;
+
+  position: relative;
+  /* THE WIDTH IS STRUCK OFF THE HEIGHT so the card is the same shape at any
+     window — see --pow-card-w — and the cap is what stops that going wrong at
+     the far end. On a very tall screen the derived width grows past a third of
+     the page and starts shouldering SUPER and POWERS off their own edges; at
+     that point the card stops getting wider and goes portrait instead, which is
+     a card that is the wrong shape rather than a name that is off the screen. */
+  width: min(var(--pow-card-w), 32vw);
+  /* THE TWO MEASUREMENTS INTERPOLATED BY --pow-open, THEN GATED BY --pow-shown.
+     A slot outside the window multiplies out to nothing at all, which is what
+     collapses it; one inside is somewhere between shut and open. The whole
+     mechanic is this line. */
+  height: calc(
+    var(--pow-shown) *
+      (
+        var(--pow-shut-h) + (var(--pow-open-h) - var(--pow-shut-h)) *
+          var(--pow-open)
+      )
+  );
+  /* THE GAP IS A MARGIN AND NOT THE STACK'S `gap`, and that is what keeps the
+     window's height honest. A flex `gap` is drawn between every pair of
+     children, collapsed ones included — so eight slots would contribute seven
+     gaps whatever their heights, the run would stand seven gaps tall with
+     nothing in it, and the whole thing would need a compensating translate to
+     put right. That is the correction the reference effect spends a y-shift on
+     and this does not need: a margin scaled by --pow-shown disappears with the
+     slot it belongs to, so three visible slots contribute exactly three. */
+  margin-top: calc(var(--pow-gap) * var(--pow-shown));
+  border-radius: var(--pow-radius);
+  /* The face inside is laid out at the OPEN height whatever the slot is doing —
+     see below — so a shut slot has more face than slot, and one on its way out
+     of the window has none at all. This is what trims it, and the corner is what
+     it is trimmed to. It is also what makes a card leaving read as being squeezed
+     out of the window rather than as shrinking on the spot. */
+  overflow: hidden;
+}
+
+/* AND THE CARD ON TOP OF THE SLOT. Everything above is geometry and belongs to
+   every slot in the run; this is the printed object, and the two pads at the
+   ends deliberately do not get it — they are slots that take up room and draw
+   nothing, which is the whole of what a pad is. */
+.powers-card {
+  background: var(--pow-card-bg);
+  /* The site's one shadow recipe, leant on by how open the card is: a card that
+     has come forward casts more than one that has settled back. The offset and
+     the blur are the page's; --pow-open moves the opacity, and --pow-shown takes
+     it away entirely so a collapsing card does not leave a shadow behind on the
+     one climbing into its place. */
+  box-shadow: 0 0.6vh 0
+    rgba(1, 57, 0, calc((0.18 + 0.22 * var(--pow-open)) * var(--pow-shown)));
+}
+
+/* EVERYTHING PRINTED ON THE CARD, AND IT IS ALWAYS THE SAME SIZE.
+ *
+ * The face is laid out at --pow-open-h — the height of an OPEN card — no matter
+ * how open the card actually is, and is then SCALED to whatever the card
+ * currently measures. That is the point of it: the sentence is broken into lines
+ * once, at one measure, and never again. A face that took the card's live height
+ * would re-flow on every frame of every tween, and the reader would watch the
+ * copy re-break underneath them mid-move — which is also the one thing that
+ * would defeat bodyReveal.ts, whose whole method is to measure which words
+ * landed on a line and move those together.
+ *
+ * THE SCALE IS EXACTLY THE HEIGHT RATIO, which is what --pow-shut is: at
+ * --pow-open 0 the face is scaled to --pow-shut and the card is --pow-shut of
+ * its open height, so the face fits the card precisely at both ends of the move
+ * and everywhere in between. The three figures have to agree; --pow-shut says so
+ * where it is declared.
+ *
+ * Absolutely positioned so that none of this reaches the card's own height —
+ * the card is sized by the rule above and nothing inside it gets a say. */
+.powers-card-face {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: var(--pow-open-h);
+  transform: translateY(-50%)
+    scale(calc(var(--pow-shut) + (1 - var(--pow-shut)) * var(--pow-open)));
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--pow-pad);
+}
+
+/* THE CLAIM, on the two lines the design breaks it on. */
+.powers-card-title {
+  margin: 0;
+  color: var(--pow-card-ink);
+  font-family: var(--font-heading);
+  font-size: var(--pow-title-size);
+  font-weight: 800;
+  /* Tight, and tighter than the name's: two lines of one word each, stacked, and
+     the mock sets them close enough to read as one block of type. */
+  line-height: 0.82;
+  letter-spacing: -0.012em;
+  text-align: center;
+}
+
+.powers-card-title .line {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* THE MARK. Sized by height and left to find its own width, because it is a
+   drawing with a fixed aspect and the card's is not quite the same one. */
+.powers-mark {
+  display: block;
+  height: var(--pow-mark-h);
+  width: auto;
+  /* PULLED UP UNDER THE CLAIM, and this is the one measurement on the card that
+     is not struck off --pow-open-h. It is negative — the box tucks back under
+     the second line of the claim rather than clearing it — and it came off the
+     drawing rather than off the arithmetic, so it is left in the units it was
+     measured in. It has room to be this tight because the mark's own frame
+     carries a good deal of air above the box; see the viewBox in Mark.tsx. */
+  margin-top: -1.176vw;
+  /* Over the claim rather than under it, which is what the tuck above needs: the
+     box crosses the bottom of the second line on its way down and has to pass in
+     front of it. */
+  z-index: 3;
+  /* The export's own setting, and it is load-bearing. The mark starts its drop
+     nearly a hundred user units above the frame, which is outside the viewBox —
+     clipped, the bounce would begin halfway down. */
+  overflow: visible;
+}
+
+/* The plate the mark lands on: the box's own dark silhouette, holding still. It
+ * is a shade off the card and meant to be nearly invisible — what it does is
+ * give the thing falling somewhere to arrive. See Mark.tsx.
+ *
+ * IT WAITS WITH THE MARK, and it did not at first. Left showing, the plate is
+ * the only thing on a card whose turn has not come yet — the lime is still up on
+ * the ceiling — so the card below the open one carried a small dark blob in the
+ * middle of it that reads as a smudge on the artwork rather than as a surface.
+ * Gated on the same attribute, the card is simply empty where the box will land,
+ * and the plate arrives underneath it in the frame it starts falling. */
+.powers-mark-plate {
+  fill: #033d02;
+  opacity: 0;
+  transition: opacity var(--pow-mark-out) linear;
+}
+
+.powers-slot[data-mark="go"] .powers-mark-plate {
+  opacity: 1;
+}
+
+/* And the mark itself. */
+.powers-mark-jump path {
+  fill: var(--pow-card-ink);
+}
+
+/* THE SENTENCE, on the floor of the card. margin-top: auto rather than a gap
+   under the mark — the mock hangs it off the bottom edge, so what is fixed is
+   its distance from the floor and not its distance from the drawing above it. */
+.powers-card-copy {
+  margin: auto 0 0;
+  color: var(--pow-card-ink);
+  font-family: var(--font-body);
+  font-size: var(--pow-copy-size);
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* --------------------------------------------------------------------------
+   The bounce
+   -------------------------------------------------------------------------- */
+
+/* THE MARK FALLS ONCE, LANDS, AND STAYS LANDED.
+ *
+ * The animation is DECLARED ONLY UNDER THE ATTRIBUTE, which is not a stylistic
+ * choice — it is what makes the drop restartable. reveal.ts takes the attribute
+ * off the SLOT and puts it straight back to play the bounce again on a card the reader
+ * has returned to; with the animation declared unconditionally and merely paused
+ * there would be nothing to restart, because a paused animation resumes from
+ * where it stopped and a mark that has already landed has no frames left. See
+ * dropMark in that file, which explains the reflow between the two writes.
+ *
+ * `1` AND `both`, WHICH IS THE WHOLE OF WHAT WAS ASKED FOR. The export loops for
+ * ever; it runs once here and holds. `both` does the holding at both ends —
+ * backwards, so the mark waits at its first keyframe (a hundred units up and
+ * fully transparent) instead of flashing in place for a frame before it falls;
+ * forwards, so it stays exactly where it landed. The last twelve per cent of the
+ * timeline is already a dead hold at the resting pose, so the frozen frame and
+ * the settled frame are the same frame.
+ *
+ * TWO ANIMATIONS AND NOT ONE, because they are the export's two: the fall and
+ * the fade-in are different curves over different parts of the same two seconds,
+ * and CSS cannot put two timing functions on one property in one animation. */
+.powers-slot[data-mark="go"] .powers-mark-jump {
+  animation:
+    powers-mark-drop 2s linear 1 both,
+    powers-mark-fade 2s linear 1 both;
+}
+
+/* THE WAY OUT, AND IT HAS TO BE AN ANIMATION TOO — which is the whole of the
+ * bug this rule was added to fix, and it is worth writing down because the
+ * thing that did not work looks like it should.
+ *
+ * A transition on .powers-mark-jump used to carry the mark out: undeclare the
+ * drop, and opacity falls from the animation's held 1 back to the base rule's
+ * 0 with a transition on it to smooth the fall. It never once ran. A transition
+ * fires on a change between the BEFORE-CHANGE and AFTER-CHANGE styles, and the
+ * before-change style is defined to exclude values derived from declarative
+ * animations — so at the moment the attribute comes off, the browser compares
+ * the base rule's 0 against the base rule's 0, sees no change, and has nothing
+ * to transition. The mark was at opacity 1 on the frame before and 0 on the
+ * frame after, and that gap is invisible to transitions by design.
+ *
+ * So the exit is declared the same way the entrance is. `both` holds it at
+ * opacity 0, which is where the base rule has it anyway — the attribute can sit
+ * at "out" indefinitely and mean exactly what no attribute means.
+ *
+ * IT HOLDS THE LANDED POSE while it fades. The drop's last keyframe is four
+ * units above the origin and the base rule has no transform at all, so a fade
+ * that did not restate the pose would drop the mark those four units on its way
+ * out — small, and precisely the kind of small that reads as a twitch.
+ *
+ * reveal.ts sets "out" only on a slot that was at "go", which is what keeps a
+ * card whose mark never fell from flashing one in and out on its way past. */
+.powers-slot[data-mark="out"] .powers-mark-jump {
+  animation: powers-mark-leave var(--pow-mark-out) linear 1 both;
+}
+
+/* Where it waits. Not a keyframe: with the animation undeclared until the
+   attribute lands, something has to hold the mark off the card before its first
+   turn and after the reader has scrolled back above the section. */
+.powers-mark-jump {
+  /* The export's own origin. The keyframes carry their own translate pair around
+     each scale, so this must stay at the corner or the squash pivots twice. */
+  transform-origin: 0 0;
+  opacity: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Parking
+   -------------------------------------------------------------------------- */
+
+/* Parked, and handed over exactly as the hero's and THE SIBLINGS' are: the
+   stylesheet holds the letters under their masks until reveal.ts sets
+   data-reveal, which lifts this and lets GSAP own the whole transform. A
+   percentage translate coming from CSS is reported as resolved px, and GSAP
+   would ADD its yPercent to it and leave every letter a full height low.
+
+   130 for the reason the hero gives: capitals overshoot their own box, so a
+   letter moved exactly its own height still leaves a hairline of tops at the
+   mask's edge. REVEAL.HIDDEN is the same figure and the two have to agree.
+
+   The sentences are NOT parked here. They carry .body-copy and are held and
+   released by the global rule under Body copy near the top of this file, which
+   is the contract that class already has — this section just honours it. */
+.super-powers .char {
+  display: block;
+  transform: translateY(130%);
+}
+
+.super-powers[data-reveal="live"] .char {
+  transform: none;
+}
+
+/* Eleven letters flying in from nowhere, a box falling out of the ceiling and
+   three cards trading places are exactly what this setting is asking about. Here
+   as well as in reveal.ts, so it also covers the window before hydration, when
+   the stylesheet is holding them on its own — every other section on this site
+   makes the same pair of statements.
+
+   The mark is called off HERE and not there, because it is a CSS animation and
+   there is nothing in that file holding it: the attribute would still be set and
+   the bounce would still run. Undeclaring it and showing the mark outright is
+   what a reader who has asked for no motion should get — the drawing, already
+   landed. */
+@media (prefers-reduced-motion: reduce) {
+  .super-powers .char {
+    transform: none;
+  }
+
+  .powers-mark-jump,
+  .powers-slot[data-mark="go"] .powers-mark-jump,
+  .powers-slot[data-mark="out"] .powers-mark-jump {
+    animation: none;
+    opacity: 1;
+  }
+
+  .powers-mark-plate {
+    opacity: 1;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   The bounce, keyframe by keyframe
+   --------------------------------------------------------------------------
+   LIFTED VERBATIM FROM THE DESIGN'S OWN EXPORT — public/assets/svgviewer-output
+   .svg — and renamed, and that is the only thing done to them. Sixty-seven stops
+   on the fall and three on the fade: it is a bake of a spring, not a curve
+   anybody wrote, so there is nothing in here to tune and nothing to read. The
+   shape of the move is a drawing decision that was made in the tool the mark was
+   drawn in, and the honest thing to do with it is carry it across untouched.
+
+   HERE AND NOT IN THE SVG, because three cards carry three copies of that markup
+   — the same mark until the truck and the roll are drawn — and the file's own
+   <style> block inlined three times is one animation defined three times. It
+   would also start on page load, in all three at once, which is the one
+   behaviour the section exists to avoid.
+
+   THE RESTING POSE IS translateY(-4px), NOT ZERO. The mark settles four units
+   proud of where it started and holds there from 88% to the end, so the frozen
+   last frame and the settled frame are the same frame — which is what makes
+   `both` a freeze rather than a jump. Do not "correct" it to 0.
+
+   The pair of translates around each scale is the export's way of squashing
+   about the mark's own centre while transform-origin stays at the corner; see
+   .powers-mark-jump above, which must not be changed without changing these.
+   -------------------------------------------------------------------------- */
+
+@keyframes powers-mark-drop {
+  0% {
+    transform: translateX(0px) translateY(-96px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  1.67% {
+    transform: translateX(0px) translateY(-89.112px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  3.33% {
+    transform: translateX(0px) translateY(-80.404px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  5% {
+    transform: translateX(0px) translateY(-69.793px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  6.67% {
+    transform: translateX(0px) translateY(-57.32px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  8.33% {
+    transform: translateX(0px) translateY(-43.034px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  10% {
+    transform: translateX(0px) translateY(-26.648px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  11.67% {
+    transform: translateX(0px) translateY(-7.947px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  12.61% {
+    transform: translateX(0px) translateY(4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  13.33% {
+    transform: translateX(0px) translateY(0.313px) translate(197.938px, 182.651px) scaleX(1.089) scaleY(0.911) translate(-197.938px, -182.651px);
+  }
+  14.23% {
+    transform: translateX(0px) translateY(0px) translate(197.938px, 182.651px) scaleX(1.2) scaleY(0.8) translate(-197.938px, -182.651px);
+  }
+  15% {
+    transform: translateX(0px) translateY(-0.152px) translate(197.938px, 182.651px) scaleX(1.194) scaleY(0.806) translate(-197.938px, -182.651px);
+  }
+  16.67% {
+    transform: translateX(0px) translateY(-1.264px) translate(197.938px, 182.651px) scaleX(1.18) scaleY(0.82) translate(-197.938px, -182.651px);
+  }
+  18.33% {
+    transform: translateX(0px) translateY(-2.822px) translate(197.938px, 182.651px) scaleX(1.166) scaleY(0.834) translate(-197.938px, -182.651px);
+  }
+  20% {
+    transform: translateX(0px) translateY(-4.217px) translate(197.938px, 182.651px) scaleX(1.153) scaleY(0.847) translate(-197.938px, -182.651px);
+  }
+  21.67% {
+    transform: translateX(0px) translateY(-5.075px) translate(197.938px, 182.651px) scaleX(1.139) scaleY(0.861) translate(-197.938px, -182.651px);
+  }
+  23.33% {
+    transform: translateX(0px) translateY(-5.316px) translate(197.938px, 182.651px) scaleX(1.125) scaleY(0.875) translate(-197.938px, -182.651px);
+  }
+  25% {
+    transform: translateX(0px) translateY(-5.078px) translate(197.938px, 182.651px) scaleX(1.112) scaleY(0.888) translate(-197.938px, -182.651px);
+  }
+  26.67% {
+    transform: translateX(0px) translateY(-4.593px) translate(197.938px, 182.651px) scaleX(1.098) scaleY(0.902) translate(-197.938px, -182.651px);
+  }
+  28.33% {
+    transform: translateX(0px) translateY(-4.095px) translate(197.938px, 182.651px) scaleX(1.084) scaleY(0.916) translate(-197.938px, -182.651px);
+  }
+  30% {
+    transform: translateX(0px) translateY(-3.734px) translate(197.938px, 182.651px) scaleX(1.071) scaleY(0.929) translate(-197.938px, -182.651px);
+  }
+  31.67% {
+    transform: translateX(0px) translateY(-3.576px) translate(197.938px, 182.651px) scaleX(1.057) scaleY(0.943) translate(-197.938px, -182.651px);
+  }
+  33.33% {
+    transform: translateX(0px) translateY(-3.599px) translate(197.938px, 182.651px) scaleX(1.043) scaleY(0.957) translate(-197.938px, -182.651px);
+  }
+  35% {
+    transform: translateX(0px) translateY(-3.737px) translate(197.938px, 182.651px) scaleX(1.03) scaleY(0.97) translate(-197.938px, -182.651px);
+  }
+  36.67% {
+    transform: translateX(0px) translateY(-3.907px) translate(197.938px, 182.651px) scaleX(1.016) scaleY(0.984) translate(-197.938px, -182.651px);
+  }
+  38.33% {
+    transform: translateX(0px) translateY(-4.048px) translate(197.938px, 182.651px) scaleX(1.002) scaleY(0.998) translate(-197.938px, -182.651px);
+  }
+  39.23% {
+    transform: translateX(0px) translateY(-4.099px) translate(197.938px, 182.651px) scaleX(0.995) scaleY(1.005) translate(-197.938px, -182.651px);
+  }
+  40% {
+    transform: translateX(0px) translateY(-4.127px) translate(197.938px, 182.651px) scaleX(0.995) scaleY(1.005) translate(-197.938px, -182.651px);
+  }
+  41.67% {
+    transform: translateX(0px) translateY(-4.141px) translate(197.938px, 182.651px) scaleX(0.995) scaleY(1.005) translate(-197.938px, -182.651px);
+  }
+  43.33% {
+    transform: translateX(0px) translateY(-4.107px) translate(197.938px, 182.651px) scaleX(0.996) scaleY(1.004) translate(-197.938px, -182.651px);
+  }
+  45% {
+    transform: translateX(0px) translateY(-4.053px) translate(197.938px, 182.651px) scaleX(0.996) scaleY(1.004) translate(-197.938px, -182.651px);
+  }
+  46.67% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(0.996) scaleY(1.004) translate(-197.938px, -182.651px);
+  }
+  48.33% {
+    transform: translateX(0px) translateY(-3.966px) translate(197.938px, 182.651px) scaleX(0.997) scaleY(1.003) translate(-197.938px, -182.651px);
+  }
+  50% {
+    transform: translateX(0px) translateY(-3.953px) translate(197.938px, 182.651px) scaleX(0.997) scaleY(1.003) translate(-197.938px, -182.651px);
+  }
+  51.67% {
+    transform: translateX(0px) translateY(-3.959px) translate(197.938px, 182.651px) scaleX(0.997) scaleY(1.003) translate(-197.938px, -182.651px);
+  }
+  53.33% {
+    transform: translateX(0px) translateY(-3.975px) translate(197.938px, 182.651px) scaleX(0.998) scaleY(1.002) translate(-197.938px, -182.651px);
+  }
+  55% {
+    transform: translateX(0px) translateY(-3.994px) translate(197.938px, 182.651px) scaleX(0.998) scaleY(1.002) translate(-197.938px, -182.651px);
+  }
+  56.67% {
+    transform: translateX(0px) translateY(-4.008px) translate(197.938px, 182.651px) scaleX(0.998) scaleY(1.002) translate(-197.938px, -182.651px);
+  }
+  58.33% {
+    transform: translateX(0px) translateY(-4.015px) translate(197.938px, 182.651px) scaleX(0.999) scaleY(1.001) translate(-197.938px, -182.651px);
+  }
+  60% {
+    transform: translateX(0px) translateY(-4.015px) translate(197.938px, 182.651px) scaleX(0.999) scaleY(1.001) translate(-197.938px, -182.651px);
+  }
+  61.67% {
+    transform: translateX(0px) translateY(-4.011px) translate(197.938px, 182.651px) scaleX(0.999) scaleY(1.001) translate(-197.938px, -182.651px);
+  }
+  63.33% {
+    transform: translateX(0px) translateY(-4.004px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  64.23% {
+    transform: translateX(0px) translateY(-4.001px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  65% {
+    transform: translateX(0px) translateY(-3.999px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  66.67% {
+    transform: translateX(0px) translateY(-3.996px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  68.33% {
+    transform: translateX(0px) translateY(-3.995px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  70% {
+    transform: translateX(0px) translateY(-3.996px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  71.67% {
+    transform: translateX(0px) translateY(-3.998px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  72.62% {
+    transform: translateX(0px) translateY(-3.999px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  73.33% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  75% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  76.67% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  78.33% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  80% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  81.67% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  83.33% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  85% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  86.67% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  88.33% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  90% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  91.67% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  93.33% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  95% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  96.67% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  97.62% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  98.33% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+  100% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+  }
+}
+
+@keyframes powers-mark-fade {
+  0% {
+    animation-timing-function: cubic-bezier(0.5, 0, 0.5, 1);
+    opacity: 0;
+  }
+  4.33% {
+    animation-timing-function: linear;
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* AND THE ONE THAT IS NOT THE EXPORT'S. Everything above was lifted out of the
+   drawing tool; this is the two frames that carry the mark back off, and it is
+   here rather than in the block above so the line between what was drawn and
+   what was written stays visible.
+
+   Both stops restate the drop's LAST keyframe verbatim rather than saying
+   `transform: none` or leaving it out. Left out, the animation would not touch
+   transform at all and the base rule's `none` would take over the moment the
+   drop's declaration went — which is the four-unit drop the rule above warns
+   about. Stated, the mark holds exactly where it landed and only its opacity
+   moves, which is what makes this read as the box being taken off the card
+   rather than as one last small fall. */
+@keyframes powers-mark-leave {
+  0% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
    A product — the run
    ==========================================================================
    Markup in components/ProductReel, camera in its pin.ts, gestures in its
@@ -5454,10 +6403,14 @@ html[data-loading] {
    everything the staircase needed: nothing here moves vertically and nothing
    here is wider than the window, so there are no stops, no legs and no corners.
 
-   A NEW LIME SHEET. The section above (THE SIBLINGS) closes on the dark green
-   it shares with the origin story, and this opens on the pairing the home page
-   opens and closes on — #b6fe00 with #013900 written on it. Declared here
-   rather than inherited, like every other section on this site.
+   A NEW LIME SHEET — AND NO LONGER THE ONE THAT OPENS IT. SUPER POWERS now sits
+   between this and THE SIBLINGS, and it is the section that changes the ground:
+   THE SIBLINGS closes on the dark green it shares with the origin story, SUPER
+   POWERS opens the lime, and this carries the same lime on. The pairing is the
+   one the home page opens and closes on — #b6fe00 with #013900 written on it —
+   and both sections declare it rather than inherit it, like every other section
+   on this site. The two are one continuous sheet with no seam between them,
+   which is the same arrangement THE SIBLINGS has with the origin story above.
 
    THE FIGURES, AND WHICH OF THEM ARE THE DESIGN'S. Everything is in vw off the
    1440 design width, as everywhere else. Four numbers came off the mock's own
@@ -5505,12 +6458,12 @@ html[data-loading] {
 
   /* THE OPENING PHOTOGRAPH. 1000 x 708px. MEASURED. */
   --reel-open-w: 69.444vw;
-  --reel-open-h: 49.167vw;
+  --reel-open-h: 46.167vw;
 
   /* THE THREE THAT CLOSE THE RUN, and the gap between them. 692 x 708px
      INFERRED off the mock's proportions; the 15px gap is MEASURED. */
   --reel-shot-w: 69.444vw;
-  --reel-shot-h: 49.167vw;
+  --reel-shot-h: 46.167vw;
   --reel-gap: 1.042vw;
 
   /* THE PRINTED LABEL. 288.89px across. MEASURED — and it is square, so this is
@@ -5663,7 +6616,7 @@ html[data-loading] {
    this value back off the layout to decide where the travel ends. */
 .reel-shot--open {
   --rx: var(--reel-pad);
-  --ry: 5.556vw; /* 80px. INFERRED. */
+  --ry: 7.556vw; /* 80px. INFERRED. */
   width: var(--reel-open-w);
   height: var(--reel-open-h);
 }
@@ -5674,7 +6627,7 @@ html[data-loading] {
 .reel-shot--1,
 .reel-shot--2,
 .reel-shot--3 {
-  --ry: 5.556vw;
+  --ry: 7.556vw;
   width: var(--reel-shot-w);
   height: var(--reel-shot-h);
 }
@@ -6019,11 +6972,31 @@ html[data-loading] {
    ========================================================================== */
 
 .next-up {
-  /* THE PANEL. The design's yellow, and it is a colour of this section's own —
-     not the lime above it and not a tape's. That is the point of it: the page
-     has been one tape's colour throughout and this is the door out. */
-  --nextup-bg: #f4eb00;
-  --nextup-ink: #716D00;
+  /* THE PANEL, AND IT IS THE NEXT TAPE'S — the same pair of swatches the page
+   * this panel links to opens on. components/NextUp puts the whole palette here
+   * as custom properties with cssVars(), exactly as the slider's orbit buttons
+   * and the two sections above this one carry it, so this block never names a
+   * colour: it names which of the six roles it wants.
+   *
+   * --bg is the sheet the tape's own stage floods with, and --word is the
+   * colour that tape's display type is printed in ON that sheet. That pairing is
+   * already resolved per tape in src/data/tapes.ts and already tuned to read —
+   * the note by OPP's --word is the long version of why it is neither the sheet
+   * nor the ink but the step between them — so the name on this panel inherits
+   * a relationship that has been argued once rather than a contrast this section
+   * has to guess at.
+   *
+   * THE FALLBACKS ARE THE DESIGN'S ORIGINAL YELLOW, and they are not dead code:
+   * they are what the panel is if it is ever rendered outside a product page,
+   * where there is no next tape and nothing sets these.
+   *
+   * ONE COLLISION IS KNOWN AND LEFT ALONE. OPP's --bg is #b6fe00, which is
+   * exactly --nextup-ground below — so on /products/cloth, the one page whose
+   * next tape is OPP, the panel is the same lime as the sheet it lies on and its
+   * corners do not read. That is the palette being honest rather than a bug to
+   * paper over: the fix is a value in tapes.ts, not a rule here. */
+  --nextup-bg: var(--bg, #f4eb00);
+  --nextup-ink: var(--word, #716D00);
 
   /* THE GROUND THE ROUNDED CORNERS SHOW. INFERRED — the stencil draws the panel
      and says nothing about what is behind it, and a radius needs something to be
@@ -6059,11 +7032,19 @@ html[data-loading] {
   
   color: var(--nextup-ink);
 
-  /* The chip inverts the panel, which is what every chip on a coloured sheet on
-     this site does. Set here rather than on .subhead because that rule reads
-     these two and nothing else — see the note above it. */
-  --tag-bg: var(--nextup-ink);
-  --tag-ink: var(--nextup-bg);
+  /* THE CHIP IS NOT INVERTED HERE ANY MORE, and the two lines that used to do it
+     are gone rather than moved. It was --tag-bg: var(--nextup-ink) and its
+     mirror — a local inversion of the one fixed yellow, which was the right
+     answer while the panel was a colour of this section's own and there was
+     nothing else to reach for.
+
+     There is now: cssVars() writes --tag-bg and --tag-ink onto this element with
+     the rest of the next tape's palette, and those are the chip colours THAT
+     TAPE is set in everywhere else on the site — the slider's left column, the
+     row at /products, the origin section. Inverting the panel again would throw
+     them away and re-derive a pairing that has already been decided per tape.
+     They land on .subhead through the same two names the inversion used, so the
+     chip's own rule is untouched. */
 
   /* WHAT THE RADIUS IS CUT OUT OF. The panel is full bleed, so its rounded
      corners sit at the window's edges and there is no parent painting anything
@@ -7075,65 +8056,25 @@ html[data-loading] {
   padding-left: unset;
 }
 
-/* A bare box, full width of the column so its rule runs the whole way. The button
-   reset is not global on this site, so the type, the colour and the cursor are
-   all said here — and text-align: left because a button centres its content by
-   default and these are set against a rule.
+/* A bare box, full width of the column. The button reset is not global on this
+   site, so the type, the colour and the cursor are all said here — and
+   text-align: left because a button centres its content by default and these are
+   set against a rule.
 
-   THE RULE IS DRAWN AND NOT A BORDER, and it has to be. `border-bottom: 1px
-   dotted` was what this was, and the trouble with it is that a dotted border has
-   exactly one dial: the dots are as wide as the border and the gap between them
-   is the UA's business — Blink lays them out square and touching, Gecko does not
-   quite agree, and neither will take a number. Thicker dots therefore arrive
-   welded into a dashed line, and there is no property that says otherwise.
-
-   A repeated radial-gradient says both things instead. The tile is one pitch
-   wide and one dot tall, laid along the bottom edge; `closest-side` makes the
-   circle exactly as wide as the tile is tall, so --index-dot IS the diameter and
-   --index-dot-gap IS the distance from one dot's centre to the next. Two
-   independent numbers, which is the whole point of the change.
-
-   The stop lands at 96% rather than 100% because a hard edge on a circle this
-   small paints as a stepped octagon; the last few per cent are a feather, not a
-   fade — at 3px it is well under half a pixel and does nothing but take the
-   stairs off.
-
-   IT RULES THE COLUMN AND NOT THE WORD, which is why it is painted here on the
-   button and not on the label inside it. It was briefly the other way — as wide
-   as the letters, ragged right, an underline rather than a rule — and the rule is
-   the better read: this is a stack of three, and three lines of three different
-   lengths turn the left column into a jagged edge competing with the wall of
-   cards beside it. One length all the way down is what makes them a set.
-
-   So the width comes free from the button, which is the full width of the column
-   because it is the hit area and has to be.
-
-   IT IS A BACKGROUND, so the button's `background: none` had to go. Nothing else
-   here paints one, and the shorthand would have wiped this on the next person to
-   reset it — hence background-image, longhand and beside the properties that
-   size it. */
+   THE RULE IS NOT PAINTED HERE ANY MORE. It was a repeating gradient on this
+   element's background, which is a fine way to draw a line and a hopeless way to
+   animate one: the entrance draws each rule in from the left ahead of its word,
+   and a background on the button would have had to be clipped by clipping the
+   button — letters and all. It is .index-rule below, a real element in the row,
+   exactly as the menu's is and for the same reason. */
 .index-tab {
-  /* The dot, and the distance between dots — 3px and 10px at the 1440 design
-     width. The gap is better than three times the dot on purpose: at anything
-     under about twice, the dots close up into a dashed line and the whole reason
-     for drawing this by hand is gone. */
-  --index-dot: 0.208vw;
-  --index-dot-gap: 0.694vw;
-
   display: flex;
   align-items: flex-start;
   gap: 0.55vw;
   width: 100%;
   padding: 0 0 0.694vw;
   border: 0;
-  background-image: radial-gradient(
-    circle closest-side,
-    var(--index-rule-ink) 96%,
-    transparent
-  );
-  background-size: var(--index-dot-gap) var(--index-dot);
-  background-repeat: repeat-x;
-  background-position: left bottom;
+  background: none;
   color: var(--index-tab-off);
   font: inherit;
   text-align: left;
@@ -7141,17 +8082,65 @@ html[data-loading] {
   transition: color 0.3s ease;
 }
 
-/* The last tab is not ruled off. Under the first two the rule is a separator and
-   is doing work; under the third there is nothing to separate it from, so it is
-   a line drawn across the bottom of the column for its own sake — and at this
-   weight that line is heavy enough to read as the section's floor, which is a
-   thing this section does not have.
+/* THE RULE UNDER A TAB — the menu's perforation, drawn in lime on the dark green
+   instead of ink on paper. It is deliberately the same line: the menu is a sheet
+   of perforated paper and this column is the same sheet turned over, so the mark
+   and the pitch are the menu's figures rather than a second set that happens to
+   look similar.
 
-   On the list item rather than on the button, so it is a statement about
-   POSITION and not about the tab: :last-child on .index-tab would be true of
-   every one of them, since each is the only child of its own <li>. */
-.index-filters li:last-child .index-tab {
-  background-image: none;
+   THEY ARE RE-STATED AND NOT SHARED, which is the bargain --index-bg makes with
+   --stick-bg a few hundred lines up. Neither section contains the other, so a
+   custom property cannot reach from one to the other; two declarations of one
+   perforation is the honest cost of that, and they have to be kept in step by
+   hand.
+
+   IT IS A DRAWN LINE AND NOT A DOTTED BORDER, and it has to be. `border-bottom:
+   1px dotted` was what this was long ago, and the trouble with it is that a
+   dotted border has exactly one dial: the dots are as wide as the border and the
+   gap between them is the UA's business — Blink lays them out square and
+   touching, Gecko does not quite agree, and neither will take a number. A
+   repeating linear-gradient says both things instead: --index-mark is the mark
+   and --index-pitch is the distance from one mark to the next, two independent
+   numbers, which is the whole point.
+
+   IT RULES THE COLUMN AND NOT THE WORD, which is why it is a block at the full
+   width of the row rather than something as wide as the letters. It was briefly
+   the other way — ragged right, an underline rather than a rule — and the rule is
+   the better read: this is a stack of three, and three lines of three different
+   lengths turn the left column into a jagged edge competing with the wall of
+   cards beside it. One length all the way down is what makes them a set.
+
+   Only two of the three rows carry one; see the note in NewsIndex/index.tsx,
+   which is where that is now decided. */
+.index-rule {
+  /* 3px on a 6px pitch at the 1440 design width. THE GAP IS THE WHOLE MARK and
+     not less: under about twice the mark a drawn perforation closes up into a
+     solid-looking bar and stops being worth drawing by hand. Same pair as
+     --perf-mark and --perf-pitch on .site-menu. */
+  --index-mark: 0.208vw;
+  --index-pitch: 0.417vw;
+
+  display: block;
+  height: var(--index-mark);
+  background-image: linear-gradient(
+    to right,
+    var(--index-rule-ink) 0 var(--index-mark),
+    transparent var(--index-mark)
+  );
+  background-size: var(--index-pitch) 100%;
+  background-repeat: repeat-x;
+
+  /* Parked undrawn, and handed over by the attribute exactly as the letters
+     beside it are. The entrance uncovers it from the left, so it starts clipped
+     to nothing rather than at zero width — the marks stay their own size and are
+     revealed, instead of a hundred of them being crushed into a sliver and
+     spreading out, which is what a scaleX would do. The menu's rule makes the
+     same choice; see MENU_REVEAL.RULE_AT. */
+  clip-path: inset(0% 100% 0% 0%);
+}
+
+.news-index[data-reveal="live"] .index-rule {
+  clip-path: none;
 }
 
 .index-tab:hover,
@@ -7238,10 +8227,10 @@ li::marker {
 }
 
 /* PARKED AT NOTHING, AND HANDED OVER BY THE ATTRIBUTE, the same hold the title
-   card's tag takes: the blur-up's `from` is a card out of focus and a little low,
-   and a card that is visible before that lands is a page correcting itself in
-   front of the reader. autoAlpha in GSAP writes both of these, so the tween takes
-   the hold over cleanly.
+   card's tag takes: the entrance's `from` is a card a shade small and a little
+   low, and a card that is visible before that lands is a page correcting itself
+   in front of the reader. autoAlpha in GSAP writes both of these, so the tween
+   takes the hold over cleanly.
 
    The <noscript> in index.tsx lifts it for good if the script is never going to
    run — nine invisible cards is the worst failure this page has. */
@@ -7256,8 +8245,8 @@ li::marker {
 
 /* Released by either of the two sections that stand cards up. The hold above is
    unscoped — it is a fact about a card, which is parked wherever it is put down
-   — so the release has to name every root that runs the blur-up, or a card on a
-   page nobody thought about stays invisible for good. */
+   — so the release has to name every root that runs the card entrance, or a
+   card on a page nobody thought about stays invisible for good. */
 .news-index[data-reveal="live"] .index-card,
 .related-news[data-reveal="live"] .index-card {
   opacity: 1;
@@ -7484,13 +8473,18 @@ li::marker {
   transform: rotate(45deg);
 }
 
-/* Nine cards resolving out of a blur is what this setting is asking about. Here
-   as well as in reveal.ts, so it also covers the window before hydration, when
-   the stylesheet is holding them on its own. */
+/* Twelve letters flying in, two rules drawing themselves and nine cards bouncing
+   up is exactly what this setting is asking about. Here as well as in reveal.ts,
+   so it also covers the window before hydration, when the stylesheet is holding
+   all three on its own. */
 @media (prefers-reduced-motion: reduce) {
   .news-index .char,
   .related-news .char {
     transform: none;
+  }
+
+  .news-index .index-rule {
+    clip-path: none;
   }
 
   .index-card {
@@ -10091,8 +11085,9 @@ li::marker {
 
    Markup in components/HandNote, drawn by HandNote/hand.ts. Two boxes: the
    ruled margin, which is in the markup as two cubics and therefore has a viewBox
-   this stylesheet has to agree with, and the copy, which Vara builds at runtime
-   and hand.ts re-fits to a viewBox of its own.
+   this stylesheet has to agree with, and the copy, which hand.ts sets at runtime
+   from the drawn alphabet in HandNote/glyphs.ts and fits to a viewBox of its
+   own.
 
    NO PARALLAX, deliberately. The note is written ON the board; the props that
    drift (the gift, the painting) are things lying on it. A drifting note would
@@ -10275,14 +11270,20 @@ li::marker {
 }
 
 /* Where the writing sits: clear of the down-stroke (x = 46..59) and a little
-   below the top rule. Its WIDTH is what sets the size of the hand — hand.ts
-   fits the finished artwork to this box, so the longest line is exactly this
-   long and every other figure in the note follows from it.
+   below the top rule. Its WIDTH is what sets the size of the hand — hand.ts fits
+   the finished artwork to this box, so the longest line is exactly this long and
+   every other figure in the note follows from it.
 
-   font-family is set rather than inherited because Vara MEASURES IT: the scale
-   it draws at comes from a reference glyph rendered in this element's CSS font.
-   It is the one place on the page where a font nobody will ever see decides how
-   big something is, and that should not be an accident of inheritance. */
+   IT IS ALSO WHERE THE LAB'S `size` WENT. The setting in HandNote/hand.ts is all
+   in em and says nothing about how big the note is; this box is what decides
+   that, and at the hero's 25vw it comes out at almost exactly the 1.7vw the lab
+   was tuned at. Which is what lets the pinning section's copy be a third the
+   size and still be the same hand.
+
+   NO font-family any more. It was here because Vara MEASURED it — the scale it
+   drew at came from a reference glyph rendered in this element's CSS font, which
+   made a font nobody would ever see decide how big something was. The glyphs are
+   artwork with their own units now and nothing consults a font at any point. */
 .hand-note .hand-ink {
   top: calc(var(--hand-w) * 0.215);
   left: calc(var(--hand-w) * 0.205);
@@ -10295,12 +11296,11 @@ li::marker {
        units, so the stroke weight, the line spacing and the drift all come down
        with the letters rather than needing to be re-tuned after them. */
   width: calc(var(--hand-w) * 0.648);
-  font-family: var(--font-body);
   position: absolute;
   transform: rotate(353deg);
 }
 
-/* hand.ts strips Vara's px width/height and gives the svg a viewBox, so the box
+/* hand.ts gives the svg a viewBox and no width or height of its own, so the box
    above is the only thing that decides the size. */
 .hand-note .hand-ink svg {
   display: block;
@@ -10805,3 +11805,4 @@ html.has-cursor textarea {
      arrow readable over all of them without tinting it. */
   filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.45));
 }
+

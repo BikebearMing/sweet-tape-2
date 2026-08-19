@@ -69,10 +69,26 @@ export const PICK_FAN = {
   SCATTER_Y: 9,
   SCATTER_R: 11,
 
-  /* The pick: square on, and up off the sheet. 1.12 rather than the reference's
+  /* The pick: square on, and up off the sheet. 1.18 rather than the reference's
      1.1 because a circle has no corners to announce a size change with — the
      same ratio reads as less on a disc than on a card. */
-  LIFT: 1.12,
+  LIFT: 1.18,
+
+  /* And OFF THE LINE as well as bigger — the picked roll rises out of the row
+     rather than only swelling in place. A percentage of the roll's own box, so
+     it holds at every width like the scatter does; negative is up.
+
+     7 of an 18.7vw roll is a little over a vw, which is deliberately less than
+     the eye first wants: the row stands on a drawn rise with a dashed guide
+     ruled through it (see .pick-guide in global.css), and a roll that clears
+     that line altogether stops reading as one of six on a shelf and starts
+     reading as a thing floating above them.
+
+     It rides the same tween as the scale, so the elastic below carries BOTH —
+     the roll overshoots its height and its size together and rocks back as one
+     movement. Splitting them into two tweens would give a lift that arrives and
+     a swell that arrives after it, which is two things happening to one roll. */
+  RISE: -7,
 
   /* How far the roll NEXT to the picked one slides away, as a percentage of its
      own width; the one beyond it gets half of that, and so on out to the ends
@@ -180,10 +196,14 @@ export function initPickFan(
     onPick(rolls[i].card);
 
     gsap.to(rolls[i].tilt, {
-      /* Square on. The scatter is undone rather than added to — this is the one
-         roll in the row that is being looked at straight. */
+      /* Square on, and up. The scatter is undone rather than added to — this is
+         the one roll in the row that is being looked at straight — and the rise
+         then replaces its random y outright rather than being added to it, so
+         every picked roll comes up to the SAME height whatever it was scattered
+         to. A roll that rose by a fixed amount from wherever it happened to lie
+         would leave the six picks at six different heights. */
       xPercent: 0,
-      yPercent: 0,
+      yPercent: PICK_FAN.RISE,
       rotation: 0,
       scale: PICK_FAN.LIFT,
       duration: PICK_FAN.DURATION,

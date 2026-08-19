@@ -31,6 +31,54 @@ export type TapeColours = {
   ink: string;
 };
 
+/**
+ * ONE SUPERPOWER — a claim about what this tape does, printed on a card of its
+ * own.
+ *
+ * Three of them per tape, and together they are the product page's fifth
+ * section: a stack the reader scrolls through a card at a time, each card
+ * growing as its turn comes and settling back when the next one takes over. See
+ * components/SuperPowers.
+ *
+ * PER TAPE AND NOT PER RANGE, which is the one thing about this shape worth
+ * arguing. THE SIBLINGS above it is three GRADES of one tape and is therefore a
+ * fact about the range — it lives in the component. What a tape is GOOD AT is
+ * not: a masking tape and a cloth tape do not have the same three powers, and a
+ * shape that could not say so would have to be unpicked the first time somebody
+ * wrote the real copy.
+ *
+ * `title` arrives BROKEN, as two lines, for the reason `reel.headline` gives:
+ * where display type this size turns is a drawing decision, and nothing should
+ * be inferring it from the string at render time. Exactly two — the card is a
+ * fixed shape and a third line would either overflow it or shrink the other two
+ * to fit a line only one card asked for.
+ *
+ * `copy` is one SENTENCE and deliberately not an array of lines. It is set in
+ * the body voice and arrives a line at a time (components/bodyReveal.ts), so it
+ * does wrap on the page — but where it wraps is settled by the font, the measure
+ * and the window, which is exactly the thing bodyReveal.ts exists to measure
+ * rather than mark up.
+ *
+ * Sentence case here and uppercase on the page for the titles: the caps are the
+ * section's setting (text-transform in global.css), so the copy stays readable
+ * in this file and in a screen reader. The sentence under the mark is set as
+ * written.
+ *
+ * NO ARTWORK FIELD, AND THAT IS DELIBERATE. Every card is currently drawn with
+ * the same mark — the box in components/SuperPowers/Mark.tsx — because it is the
+ * only one of the three that has been drawn. The moment a second exists this
+ * type grows an `icon` and the section reads it; adding the field today would be
+ * eighteen copies of one path, which is a worse lie than one honest placeholder.
+ */
+export type Power = {
+  /** Stable key, and the React key the stack is rendered on. */
+  id: string;
+  /** The claim, broken where the design breaks it. */
+  title: [string, string];
+  /** The line under the mark. One sentence. */
+  copy: string;
+};
+
 export type Tape = {
   /** Stable key. Was data-index, and is also the artwork folder. */
   id: string;
@@ -173,8 +221,48 @@ export type Tape = {
     note: string[];
     shots: [string, string, string, string];
   };
+  /**
+   * THE THREE SUPERPOWERS — the product page's fifth section, between THE
+   * SIBLINGS and THE RUN. Exactly three: the stack is an arrangement rather than
+   * a list, and a fourth card would have nowhere to stand. See the Power type
+   * above for what one is, and components/SuperPowers for the stack.
+   */
+  powers: [Power, Power, Power];
   colours: TapeColours;
 };
+
+/* THE THREE SUPERPOWERS, PLACEHOLDER, AND SHARED BY EVERY TAPE UNTIL THEY ARE
+ * NOT.
+ *
+ * `powers` is per tape and the type says so at length. What is written here is
+ * the MOCK's three — drawn for the OPP tape — standing in for all six until the
+ * real copy is written.
+ *
+ * ONE CONST RATHER THAN THE SAME THREE CARDS SIX TIMES, and that is the whole
+ * point of it: six identical blocks read as six decisions that happened to
+ * agree, which is the one thing this is not. Give a tape its own array and it
+ * stops sharing — nothing else in the codebase has to change — and the day the
+ * last one is written this const has no references left and goes with them.
+ *
+ * The unfinished tape's colours below carry `// placeholder` for the same
+ * reason and say the same thing. */
+const PENDING_POWERS: [Power, Power, Power] = [
+  {
+    id: "heavy-duty",
+    title: ["HEAVY", "DUTY"],
+    copy: "Built for heavy loads and long hauls", // placeholder
+  },
+  {
+    id: "box-sealer",
+    title: ["BOX", "SEALER"],
+    copy: "Seals boxes so well, they arrive looking like you personally escorted them.", // placeholder
+  },
+  {
+    id: "neat-seal",
+    title: ["NEAT", "SEAL"],
+    copy: "Seals so clean it looks professional", // placeholder
+  },
+];
 
 export const tapes: Tape[] = [
   {
@@ -228,6 +316,7 @@ export const tapes: Tape[] = [
         "/assets/slider/masking/shot-2.png",
       ], // placeholder
     },
+    powers: PENDING_POWERS, // placeholder — see PENDING_POWERS above
     colours: {
       ring: "#fff1a2",
       bg: "#fa8005",
@@ -288,6 +377,7 @@ export const tapes: Tape[] = [
         "/assets/slider/double/shot-2.png",
       ], // placeholder
     },
+    powers: PENDING_POWERS, // placeholder — see PENDING_POWERS above
     colours: {
       ring: "#a8dcf0",
       bg: "#50CBFF",
@@ -351,6 +441,7 @@ export const tapes: Tape[] = [
         "/assets/slider/stationery/shot-2.png",
       ], // placeholder
     },
+    powers: PENDING_POWERS, // placeholder — see PENDING_POWERS above
     colours: {
       ring: "#ffd9c2",
       bg: "#FF7B5F",
@@ -411,6 +502,7 @@ export const tapes: Tape[] = [
         "/assets/slider/cloth/shot-2.png",
       ], // placeholder
     },
+    powers: PENDING_POWERS, // placeholder — see PENDING_POWERS above
     colours: {
       ring: "#d9d2f7",
       bg: "#2E3EAC",
@@ -510,6 +602,7 @@ export const tapes: Tape[] = [
         "/assets/slider/opp/shot-2.png",
       ], // placeholder
     },
+    powers: PENDING_POWERS, // placeholder — see PENDING_POWERS above
     colours: {
       ring: "#e4f7a8", // placeholder
       bg: "#b6fe00",
@@ -582,6 +675,7 @@ export const tapes: Tape[] = [
         "/assets/slider/opp-quiet/shot-2.png",
       ], // placeholder
     },
+    powers: PENDING_POWERS, // placeholder — see PENDING_POWERS above
     colours: {
       ring: "#fff0b0", // placeholder
       bg: "#F7D000", // placeholder

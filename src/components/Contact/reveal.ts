@@ -16,13 +16,21 @@
  * the instant it was built and the heading spent its entrance under the cover.
  * Nothing about it looked broken; the words were simply always already there.
  *
- * NOTHING HERE IS NEW. The letters are the hero's — same duration, same ease,
- * same hidden figure, same shuffle. The chip's turn is the news index's title
- * card's, imported whole. The paper and the note arrive on the news index's
- * card entrance, also imported whole: parked at nothing, a little low and out
- * of focus, resolving in place. They are rectangles rather than type, and that
- * file argues at length why rectangles do not get the letter treatment. What is
- * this page's is the ORDER, which is below.
+ * ALMOST NOTHING HERE IS NEW. The letters are the hero's — same duration, same
+ * ease, same hidden figure, same shuffle. The chip's turn is the news index's
+ * title card's, imported whole. The paper and the note resolve out of a blur:
+ * parked at nothing, a little low and out of focus, arriving in place. They are
+ * rectangles rather than type, and rectangles do not get the letter treatment —
+ * nine of them doing it at once is nine arrivals competing, which is the
+ * argument NewsIndex/reveal.ts makes about its wall.
+ *
+ * THAT BLUR-UP WAS THE INDEX'S AND IS NOW THIS PAGE'S. It was imported from
+ * NewsIndex/reveal.ts while the two were one entrance; the index's cards have
+ * since gone over to a bounce, and a back ease is the one curve a blur cannot
+ * take — it overshoots, and a blur past its target is a negative radius. So the
+ * numbers moved here, to the only file still using them. See BLOCK_BLUR below.
+ *
+ * What is this page's besides is the ORDER, which is below.
  *
  * THE ORDER IS THE ORDER THE THING WAS MADE IN. The label goes on, the line is
  * written, the paper is laid over it, and the note is stuck to the paper last —
@@ -38,7 +46,6 @@
 import gsap from "gsap";
 
 import { whenRevealed } from "@/components/Preloader/gate";
-import { INDEX_REVEAL } from "../NewsIndex/reveal";
 import { REVEAL } from "../Hero/reveal";
 import { NOTE, TAG } from "../WhatsRolling/reveal";
 
@@ -71,6 +78,32 @@ export const CONTACT_REVEAL = {
      both pause for — not because this is the same gesture, but because it is
      the same PAUSE, and a site with two ideas of how long a beat is stutters. */
   NOTE_GAP: NOTE.GAP,
+
+  /* THE PAPER AND THE NOTE ARRIVING — parked at nothing, a little low and out of
+     focus, resolving in place. It is the entrance the news index's cards used to
+     wear, and these four numbers were imported from that file rather than
+     written here.
+
+     THEY MOVED HERE WHEN THE CARDS STOPPED USING THEM. The wall now bounces up on
+     a back ease instead, and a back ease is the one curve this entrance cannot
+     take: it overshoots whatever it is given, and a blur carried past its target
+     is a negative radius, which is not a value. So the two entrances parted
+     company and this one kept the numbers it was built on.
+
+     The blur is small, and not only for the frame rate: past about 14 the sheet
+     stops being an out-of-focus sheet and becomes a coloured smudge, which has
+     nothing to resolve INTO. What sells it is the last third of the move, where
+     the type on the paper comes back. The rise is a percentage of the block's
+     own height — a tenth is enough to give the focus somewhere to arrive from;
+     more and it is a slide with a blur on it, which is the entrance every other
+     section on this site already has. */
+  BLOCK_BLUR: 10,
+  BLOCK_RISE: 6,
+  BLOCK_DURATION: 0.62,
+  /* .out and not .inOut, the site's arrival curve: the move is quickest at the
+     start, so most of its length is spent on the part worth watching — the last
+     of the blur coming off. */
+  BLOCK_EASE: "power2.out",
 };
 
 /* Fisher–Yates, the hero's. The shuffle IS the effect: reveal the same letters
@@ -152,27 +185,27 @@ export function initContactReveal(root: HTMLElement): () => void {
         )
       : null;
 
-  /* The index's card entrance, imported whole rather than re-chosen — parked at
-     nothing, a tenth of its own height low and out of focus, resolving in
-     place. Its file argues every one of these numbers, including why the blur
-     is small and why the filter is cleared at the end rather than left at
-     blur(0px): a declared filter keeps the element on its own compositor layer
-     for the rest of the page's life, and one of these two is a 1076px sheet. */
+  /* The paper and the note arriving — parked at nothing, a tenth of their own
+     height low and out of focus, resolving in place. CONTACT_REVEAL above argues
+     every one of these numbers, including why the filter is cleared at the end
+     rather than left at blur(0px): a declared filter keeps the element on its own
+     compositor layer for the rest of the page's life, and one of these two is a
+     1076px sheet. */
   const block = (el: HTMLElement | null) =>
     el
       ? gsap.fromTo(
           el,
           {
             autoAlpha: 0,
-            yPercent: INDEX_REVEAL.RISE,
-            filter: `blur(${INDEX_REVEAL.BLUR}px)`,
+            yPercent: CONTACT_REVEAL.BLOCK_RISE,
+            filter: `blur(${CONTACT_REVEAL.BLOCK_BLUR}px)`,
           },
           {
             autoAlpha: 1,
             yPercent: 0,
             filter: "blur(0px)",
-            duration: INDEX_REVEAL.DURATION,
-            ease: INDEX_REVEAL.CARD_EASE,
+            duration: CONTACT_REVEAL.BLOCK_DURATION,
+            ease: CONTACT_REVEAL.BLOCK_EASE,
             paused: true,
             onComplete: () => gsap.set(el, { clearProps: "filter" }),
           },
@@ -215,7 +248,7 @@ export function initContactReveal(root: HTMLElement): () => void {
   /* The paper is down, so what is written on it may be written and what is
      stuck to it may be stuck on. The heading needs the blur off before its
      letters start, or they slide up through a sheet that is still resolving. */
-  const landed = sheetAt + INDEX_REVEAL.DURATION;
+  const landed = sheetAt + CONTACT_REVEAL.BLOCK_DURATION;
 
   /* delayedCalls rather than the tweens' own delays, for the reason the hero
      gives: these are measured from the REVEAL, and a paused tween's `delay` is

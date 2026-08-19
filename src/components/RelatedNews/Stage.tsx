@@ -8,9 +8,9 @@ import { initIndexReveal } from "@/components/NewsIndex/reveal";
 /* The only client component in the section — and it writes no animation at all.
  * Both of the things that arrive here are imported whole.
  *
- * initIndexReveal is the newsroom's own wall coming into focus: each card starts
- * blurred, a little low and at nothing, and resolves in place, read across the
- * row. It is the same engine the index runs because this is the same object —
+ * initIndexReveal is the newsroom's own wall arriving: each card starts at
+ * nothing, a shade small and a little low, and bounces up into place, read across
+ * the row. It is the same engine the index runs because this is the same object —
  * three of the index's cards instead of nine — and it needs nothing said to it:
  * it finds .index-card under whatever root it is given, and the filter half of
  * it simply finds no tabs here and builds nothing. Its `replay` is for a wall

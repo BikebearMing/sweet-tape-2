@@ -183,8 +183,15 @@ export const FILM = {
      roughness went up with it, for the same reason and by the same feel: they
      are one surface and want to move together.
 
+     UP AGAIN WITH THE SMUDGE, and the two are one change. A fingerprint is a
+     film of grease left on an otherwise slick surface, so the read is a base
+     that is slightly HAZY under a coat that is not — the light comes back off
+     the skin sharp and off the body soft. Raising this and GLAZE together is
+     what buys that; raising the coat alone over a tight base is a wet surface,
+     which is the trap COAT_GLOSS's note describes.
+
      Live-tweak in dev: hero.FILM.GLOSS = 0.6; hero.tune() */
-  GLOSS: 0.44,
+  GLOSS: 0.5,
   /* How uneven the film is, and it is the one knob to reach for if the surface
      is reading as PATTERNED rather than as material.
    *
@@ -206,17 +213,48 @@ export const FILM = {
    * thing that makes a highlight break up on that scale. The tape looked like it
    * had been screwed up and smoothed out again.
    *
-   * At 0.18 the map runs 0.63-0.81 and the effective roughness 0.28-0.36 — still
-   * plainly not a uniform surface, still enough for the key to travel unevenly
-   * along the strip, but a wander rather than a wrinkle. TOOTH came down with it
-   * and the reason is in its own note: the two are the same complaint measured
-   * two ways, and dropping only one leaves the relief drawing the creases the
-   * roughness stopped drawing.
+   * At 0.18 the map ran 0.63-0.81 and the effective roughness 0.28-0.36 — still
+   * plainly not a uniform surface, but a wander rather than a wrinkle. TOOTH
+   * came down with it and the reason is in its own note: the two are the same
+   * complaint measured two ways, and dropping only one leaves the relief drawing
+   * the creases the roughness stopped drawing.
+   *
+   * BACK UP TO 0.22, AND IT IS NOT A REVERSAL — what the spread is spread ACROSS
+   * changed underneath it. The map used to carry a 41-cell octave, which at this
+   * tape's tiling is a mark every couple of dozen pixels: gloss breaking up on
+   * that scale is a CREASE, because creasing is the only everyday thing that
+   * does that. The map's finest band is now 23 cells and most of its weight is
+   * in two and five, so the same spread is paid out over marks the size of a
+   * thumb rather than the size of a wrinkle. See SMUDGE below and the bands in
+   * mottleTex: broad and skewed is a fingerprint, fine and even is a crease, and
+   * the amplitude was never what told them apart.
    *
    * Live-tweak in dev: hero.FILM.MOTTLE = 0.2; hero.tune() — tune() rebuilds
    * both maps, unlike the streak maps this replaced, which needed a reload. */
-  MOTTLE: 0.18,
-  MOTTLE_TINT: 0.07,
+  MOTTLE: 0.22,
+  MOTTLE_TINT: 0.05,
+  /* THE SMUDGE — how skewed the unevenness is, and the knob that separates a
+   * dirty piece of tape from a textured one.
+   *
+   * It is an exponent on the noise field before the spread is applied, so it
+   * changes the SHAPE of the distribution and not its width. At 1 the field is
+   * symmetric: half the surface glossier than average, half duller, evenly
+   * mixed — which is a material with a texture, and is what this was. Above 1
+   * the field is pushed toward its low end, so most of the tile sits clean and
+   * slick with occasional blooms of dull rising out of it. That is what a
+   * fingerprint IS: clear film that is clear nearly everywhere and greasy in a
+   * few places somebody touched.
+   *
+   * The mean is measured off the shaped field rather than assumed, so `base`
+   * still means the map's average whatever this is set to and MOTTLE still means
+   * its spread. Changing this therefore moves the character without moving the
+   * grade — which is the whole reason it is a separate number.
+   *
+   * Past about 3 the clean majority goes so flat that the few smudges read as
+   * stains rather than as prints. 1 is the old behaviour exactly.
+   *
+   * Live-tweak in dev: hero.FILM.SMUDGE = 1; hero.tune() */
+  SMUDGE: 2.1,
   /* The film's TOOTH — how deep its micro-relief reads. See toothTex.
    *
    * The knob to reach for when the surface wants to be ROUGHER rather than
@@ -242,14 +280,19 @@ export const FILM = {
    * the normals: the highlight stops breaking up and the geometry starts to,
    * and the tape still reads creased. Halving this takes the slope out with it.
    *
-   * 0.08 is the floor worth having rather than a step on the way to 0. At 0 the
-   * strip is a mathematically flat plane and the key lies on it as one unbroken
-   * band, which is the giveaway that reads as cellophane wrapper rather than
-   * tape. This is enough to keep the band from being perfectly clean and not
-   * enough to see as texture at hero size.
+   * DOWN AGAIN TO 0.05, and this time the argument for a floor got weaker rather
+   * than the relief getting cheaper. The old note said 0 was wrong because a
+   * mathematically flat plane takes the key as one unbroken band, and that a
+   * little tooth was the only thing keeping that band honest. The smudge map now
+   * does that job and does it better: it breaks the band up in PATCHES the size
+   * of a thumb, which is a surface that has been handled, where this breaks it
+   * up at the size of a weave, which is a surface that is woven. Cellophane is
+   * not woven. So the relief is down to about the least that still keeps the
+   * geometry from reading as glass, and what is left of the unevenness comes
+   * from the roughness map instead.
    *
    * Live-tweak in dev: hero.FILM.TOOTH = 1.4; hero.tune() */
-  TOOTH: 0.08,
+  TOOTH: 0.05,
   /* Exposure on the FILM — the wound side and the strip, never the label. The
      exact counterpart of FACE below, and it exists for the same reason that
      one does: the two surfaces are lit by one set of lights, so without a knob
@@ -335,9 +378,31 @@ export const FILM = {
    * null restores the export's own colour completely — the rollback is the same
    * code path as the effect, and it is honoured by tune() as well as at load.
    *
+   * AND THE AMBER CAME BACK OUT, which is the current value and the second time
+   * this number has crossed the middle. It went to 0xd8c07f — a properly warm
+   * tan — on the reasoning above: the side is see-through now, so it can carry
+   * the colour that says cellophane as a tint rather than as paint. What that
+   * missed is that the side is see-through onto ITSELF. The wall is crossed
+   * twice and the core sits behind it, so the tint is not laid once over the
+   * page, it is laid two and three times over its own material, and a hue that
+   * is a whisper on one layer is a colour on three. The roll read as amber
+   * plastic and the strip coming off it read yellow.
+   *
+   * 0xd2ccbe was the same LIGHTNESS with about a quarter of the chroma, and it
+   * overshot: at a quarter there is nothing left to count three times either, so
+   * the roll went from amber plastic to bare white plastic — which is the read
+   * the FILM.CAST note at the top of this section warns about from the other
+   * direction, a neutral on a page of lime and brown looking like grey goods.
+   *
+   * 0xd5c69e IS THE MIDDLE OF THOSE TWO, and the middle is where this belongs:
+   * about half the tan's chroma, which is enough to survive the stack as a warm
+   * cast and not enough to arrive as a colour. The lightness is unchanged
+   * throughout — all three of these values sit at the same luma, because
+   * lightness is TONE's business and this number has only ever been about hue.
+   *
    * Live-tweak in dev: hero.FILM.CAST = 0xd8d2be; hero.tune()
    *                    hero.FILM.CAST = null;     hero.tune()   (back to the GLB) */
-  CAST: 0xd8c07f as number | null,
+  CAST: 0xd5c69e as number | null,
   /* THE DISPENSED STRIP'S OWN COLOUR — the split the note above said to make
    * when it came, and null means "the same tape as the roll", exactly as before.
    *
@@ -378,9 +443,36 @@ export const FILM = {
    * null hands the strip straight back to the wound side, which is the rollback
    * and is the same code path as the effect (stripCastOf).
    *
+   * IT IS STILL DARK, AND IT IS NO LONGER AMBER. 0xb2842e was a saturated tan
+   * chosen when the strip was passing three quarters of the page — a quarter of
+   * a strong colour is a wash, and the note above is right that the alternative
+   * was milk. But the strip does not pass three quarters any more (see
+   * GLASS.CLARITY, which came down), and at that alpha a tan albedo stops being
+   * a wash and starts being a yellow film laid over the lime.
+   *
+   * 0xbdb09a was the first correction and it went too far in one step: paler,
+   * because there is more of the albedo on screen at the new alpha and a dark one
+   * behind a thicker veil reads as smoke, and near-neutral, because the tint is
+   * no longer diluted to a quarter strength before anybody sees it. Both of those
+   * are true and both were overdone — a near-neutral albedo at 0.38 alpha is a
+   * white veil, which is exactly the fog failure GLASS.CLARITY's note describes,
+   * arrived at from the albedo instead of from the alpha.
+   *
+   * 0xb79a64 IS BETWEEN THE TWO, and it is where the tape stops being either a
+   * yellow film or a white one. Roughly half the tan's chroma and most of the
+   * way back down in lightness: enough warmth that the strip is plainly a
+   * material with a colour, little enough that what it does to the lime under it
+   * is a cast rather than a coat of paint.
+   *
+   * The brackets from both attempts still hold and this now sits in the middle
+   * of them: pale it much past 0xd0c8b8 and the tape fogs the page white, darken
+   * it back toward 0x8a6524 and it soots. Every step of chroma added here is
+   * multiplied by however much of the strip is on screen, so this is a small
+   * knob with a large reach.
+   *
    * Live-tweak in dev: hero.FILM.CAST_STRIP = 0xc99a3a; hero.tune()
    *                    hero.FILM.CAST_STRIP = null;     hero.tune()  (one film) */
-  CAST_STRIP: 0xb2842e as number | null,
+  CAST_STRIP: 0xb79a64 as number | null,
   /* Near zero, and it used to be 0.25 — the same correction the face made, a
      surface late.
    *
@@ -416,8 +508,22 @@ export const FILM = {
    * the compensation — more coat at the same roughness, rather than a tighter
    * coat, which is the change that would take the roughness back out.
    *
+   * UP FROM 0.18, AND THIS IS THE "LIGHT REFLECTING" HALF OF CELLOPHANE. What
+   * makes a clear film legible against a page is not its colour — it barely has
+   * one — it is that the skin over it throws a proper highlight. The film was
+   * carrying a coat weak enough that the sheen read as a sheen ON something
+   * rather than as a reflection IN something, which left the tape looking like
+   * pale matte plastic. At 0.3 the coat is half again as present and the strip
+   * catches the key the way a smooth transparent skin does.
+   *
+   * The roughness is deliberately NOT tightened to go with it — see the fourth
+   * power above. More coat at the same roughness is a brighter reflection; a
+   * tighter coat is a smaller, harder one, which on a surface this large clips
+   * to a white blob before it reads as glass. Raising GLOSS underneath it at the
+   * same time is what keeps the pair reading as a slick skin over a hazy body.
+   *
    * Live-tweak in dev: hero.FILM.GLAZE = 0.7; hero.tune() */
-  GLAZE: 0.18,
+  GLAZE: 0.3,
   GLAZE_GLOSS: 0.18,
   /* The extrusion grain, 0..1 — the film's specular stretched along one axis.
    *
@@ -675,9 +781,30 @@ export const GLASS = {
    * still reads as a thing in front of it. Drop either and this wants to come
    * back down.
    *
+   * AND IT CAME BACK DOWN TO 0.68. Everything the paragraph above says about
+   * what raised the ceiling is still true — it is what makes this a choice
+   * rather than a limit — but 0.75 spent the whole of that headroom on
+   * transparency and none of it on the tape. Three quarters through is not what
+   * a strip of cellophane laid over print looks like; it is what a tinted pane
+   * of glass looks like. Real tape veils what is under it slightly: you read the
+   * page through it, and you also read that the page has gone a shade flat and
+   * warm where the tape crosses it, which is the SAME evidence as the highlight
+   * and half of what says a physical object is there.
+   *
+   * IT WENT TO 0.62 FIRST AND THAT WAS A THIRD TOO FAR — with FILM.CAST_STRIP
+   * paling in the same move, the two compounded and the strip fogged the page
+   * white. The two are read together and always were: this decides HOW MUCH of
+   * the albedo lands and that decides WHAT lands, so a correction made at both
+   * ends at once is a correction made twice. 0.68 is the half of it that belongs
+   * here, and the other half went back into the colour.
+   *
+   * The page still plainly comes through — the headline is legible under the
+   * strip, which was the whole test — and the tape now has a body for the sheen
+   * to sit on.
+   *
    * Face-on is the WORST case, deliberately. This is the maximum clarity the
    * strip ever reaches; the Fresnel below only ever closes it up from here. */
-  CLARITY: 0.75,
+  CLARITY: 0.68,
   /* THE SHEEN'S EXEMPTION — how much of the strip's REFLECTED light is held out
    * of the fade, 0..1. It is what makes a genuinely clear tape possible at all,
    * and without it CLARITY has a ceiling well below the one above.
@@ -705,8 +832,28 @@ export const GLASS = {
    * blend, so every material in here now carries premultipliedAlpha — see
    * applyFilmLook for why all of them rather than only the see-through one.
    *
+   * UP FROM 0.15 WITH THE CLARITY COMING DOWN, which sounds backwards and is
+   * not. The two are not both "how much tape you see" — this one is how much of
+   * the tape's LIGHT survives, and the clearer the reading of cellophane wanted,
+   * the more of it has to. The strip is denser now, so a bigger share of the
+   * frame is film; if the highlight is not restored in step, that extra density
+   * arrives as a dull warm band rather than as something shiny lying on the
+   * page, which is the fog failure with more of it.
+   *
+   * At 0.22 the reflected half is held out of the fade half again as strongly as
+   * before, so the key and GLAZE's coat land near their full strength wherever
+   * they land at all. That is the combination the note above describes as the
+   * thing the eye actually reads as glass — a surface passing most of what is
+   * behind it while throwing an undiminished highlight.
+   *
+   * It tracks CLARITY rather than standing on its own, which is why it moved
+   * back down with it: this exists to keep the highlight from fading in step
+   * with the body, so the amount of it wanted is set by how much fading there
+   * is. It was briefly 0.3 against a clarity of 0.62 and the extra was landing
+   * as a white bloom on a strip that was already too pale.
+   *
    * Live-tweak in dev: hero.GLASS.SHEEN = 0.4; hero.tune() */
-  SHEEN: 0.15,
+  SHEEN: 0.22,
   /* THE WOUND SIDE'S OWN CLARITY — the roll, not the tape coming off it, and 0
    * puts the roll back exactly as it was.
    *
@@ -737,9 +884,18 @@ export const GLASS = {
    * The interior (Core, the end discs, the label) is opaque and drawn in the
    * opaque pass, so none of it is affected.
    *
+   * DOWN FROM 0.13. The roll was reading as see-through before it read as tape,
+   * and the reason is in the paragraph above: this is spent twice on all but the
+   * silhouette, and what shows through the two walls is mostly the CORE — so
+   * raising it does not make the roll look like clear film over the page, it
+   * makes it look hollow. 0.11 is enough that the core is sensed behind the
+   * wall and the rim stays solid, which is the gradient a wound roll has. The
+   * clarity that says "this material is clear" is the STRIP's job, where there
+   * is one layer and a real page behind it.
+   *
    * Live-tweak in dev: hero.GLASS.WOUND = 0.4; hero.tune()
    *                    hero.GLASS.WOUND = 0;   hero.tune()   (solid roll) */
-  WOUND: 0.13,
+  WOUND: 0.11,
   /* How fast it closes toward grazing — the exponent on the Fresnel term.
    *
    * 1 is a linear ramp, which puts haze halfway up a surface that is barely
@@ -781,6 +937,15 @@ export type HeroTape = {
  * roughnessMap that varies the gloss across the surface, so the key lands as
  * patches of sheen rather than one even wash. The same map goes on the wound
  * side and the strip, so the two read as one continuous film.
+ *
+ * WHAT THE PATCHES ARE MEANT TO BE IS FINGERPRINTS, which is a narrower brief
+ * than "unevenness" and is what the bands and the skew below are both answering.
+ * Cellophane tape has no texture of its own worth drawing — it is clear, smooth,
+ * extruded film — so anything legible on it got there by being handled: grease
+ * off a thumb, a drag mark, a dull patch where somebody pressed it down. Those
+ * are BROAD and they are OCCASIONAL. Noise that is fine and even is neither, and
+ * the surface it describes is a creased one; see FILM.MOTTLE, which is the
+ * complaint this pair of changes came out of.
  *
  * This used to draw hundreds of soft-ended RUNS, which is what a drawn film
  * really carries and which read on screen as ruled lines — the map's marks
@@ -832,19 +997,29 @@ function fieldOf(bands: readonly (readonly [number, number])[]) {
 
 function mottleTex(base: number, amp: number, srgb: boolean, aniso: number) {
   /* Small, unlike the 1024 the runs needed. The finest octave here has a
-     41-cell grid, so a 256px map is already six pixels per cell — past that
-     the canvas is storing an interpolation it could have computed. */
+     23-cell grid, so a 256px map is eleven pixels per cell — past that the
+     canvas is storing an interpolation it could have computed. */
   const S = 256;
 
   /* Falling amplitude over rising frequency — the broad unevenness of the
-     coating, then the grain within it. The coarsest is deliberately very
-     coarse: three cells across the map is one slow swell over the whole tile,
-     which is what keeps the tile from announcing itself. */
+     coating, then the marks within it. The coarsest is deliberately very
+     coarse: two cells across the map is one slow swell over the whole tile,
+     which is what keeps the tile from announcing itself.
+   *
+   * COARSER THAN IT WAS, AND THAT IS THE WHOLE FINGERPRINT. These were 3, 7, 17
+   * and 41, and the two fine ones were what made the tape read as crinkled:
+   * against the strip's own tiling a 41-cell octave puts a mark every couple of
+   * dozen screen pixels, and gloss that changes on that scale is a CREASE —
+   * creasing being the only everyday thing that breaks a highlight up that
+   * finely. A fingerprint is the opposite end of the same axis: a soft patch a
+   * thumb across, with nothing inside it. So the weight moved down to 2 and 5,
+   * the fine octaves came off, and what is left is blotches at roughly the size
+   * of the marks a hand leaves on tape rather than the size of a weave. */
   const at = fieldOf([
-    [3, 1],
-    [7, 0.5],
-    [17, 0.26],
-    [41, 0.13],
+    [2, 1],
+    [5, 0.6],
+    [11, 0.28],
+    [23, 0.1],
   ]);
 
   const c = document.createElement("canvas");
@@ -853,10 +1028,41 @@ function mottleTex(base: number, amp: number, srgb: boolean, aniso: number) {
   const g = c.getContext("2d")!;
   const img = g.createImageData(S, S);
 
+  /* THE FIELD, SHAPED AND THEN MEASURED — see FILM.SMUDGE, which is the
+   * exponent.
+   *
+   * Raising a 0..1 field to a power above 1 pushes it toward its low end, so
+   * most of the tile ends up clean and slick and the marks are occasional blooms
+   * rising out of it, rather than an even mix of glossier and duller everywhere.
+   * That skew is what separates a surface somebody has touched from a surface
+   * with a texture, and no amount of amplitude gets it: amplitude is how far the
+   * unevenness goes, this is how much of the tile is uneven at all.
+   *
+   * The mean has to be MEASURED rather than assumed once it is shaped. The raw
+   * field sits near 0.5 by construction, which is what let the old line subtract
+   * a constant; the shaped one does not, and subtracting 0.5 from it would slide
+   * the whole map darker as SMUDGE rose — so the character knob would quietly be
+   * a brightness knob as well, and `base` would stop meaning the map's average.
+   * One extra pass over 65k texels, once per surface per tweak.
+   *
+   * At SMUDGE = 1 this is the old field to the texel: nothing is shaped and the
+   * measured mean lands back on 0.5. */
+  const f = new Float32Array(S * S);
+  let sum = 0;
   for (let y = 0; y < S; y++) {
     for (let x = 0; x < S; x++) {
-      // The field has a mean near 0.5, so `amp` is the full spread about `base`.
-      const v = base + (at(x / S, y / S) - 0.5) * amp;
+      const v = at(x / S, y / S) ** FILM.SMUDGE;
+      f[y * S + x] = v;
+      sum += v;
+    }
+  }
+  const mean = sum / (S * S);
+
+  for (let y = 0; y < S; y++) {
+    for (let x = 0; x < S; x++) {
+      // `amp` is the full spread about `base`, which the mean above is what
+      // makes true whatever the field has been shaped into.
+      const v = base + (f[y * S + x] - mean) * amp;
       const n = Math.max(0, Math.min(255, Math.round(v * 255)));
       const i = (y * S + x) * 4;
       img.data[i] = n;
@@ -1344,7 +1550,7 @@ const woundGlass: Glass = {
 function applyFilmLook(
   mat: MeshStandardMaterial,
   look: Look = filmLook,
-  glass: Glass = noGlass
+  glass: Glass = noGlass,
 ) {
   mat.roughness = FILM.GLOSS;
   mat.metalness = FILM.METAL;
@@ -1387,7 +1593,7 @@ function applyFilmLook(
           float l = dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );
           diffuseColor.rgb = mix( vec3( l ), diffuseColor.rgb, uSat );
           diffuseColor.rgb = clamp( mix( vec3( 0.21 ), diffuseColor.rgb, uPunch ), 0.0, 1.0 );
-        }`
+        }`,
         )
         /* THE SECOND PATCH, and it is composed into this same callback rather
            than being a second onBeforeCompile — assigning that property again
@@ -1445,7 +1651,7 @@ function applyFilmLook(
           gReflect = max( outgoingLight - totalDiffuse, vec3( 0.0 ) )
             * ( 1.0 - diffuseColor.a ) * uSheen;
         }
-        #include <opaque_fragment>`
+        #include <opaque_fragment>`,
         )
         /* AND SPENT HERE, which is the last line of the fragment stage.
          *
@@ -1461,7 +1667,7 @@ function applyFilmLook(
         .replace(
           "#include <premultiplied_alpha_fragment>",
           `#include <premultiplied_alpha_fragment>
-        gl_FragColor.rgb += linearToOutputTexel( vec4( gReflect, 1.0 ) ).rgb;`
+        gl_FragColor.rgb += linearToOutputTexel( vec4( gReflect, 1.0 ) ).rgb;`,
         );
   };
   mat.needsUpdate = true; // patched source => recompile
@@ -1469,7 +1675,7 @@ function applyFilmLook(
 
 export function createHeroTape(
   mount: HTMLElement,
-  url: string
+  url: string,
 ): Promise<HeroTape> {
   const scene = new Scene();
   const camera = new PerspectiveCamera(FOV, 1, 0.01, 100);
@@ -1701,7 +1907,7 @@ export function createHeroTape(
     group.rotation.set(
       (CONFIG.rotX + lean.tiltX) * DEG,
       (lastYaw + lean.yaw) * DEG,
-      (CONFIG.rotZ + lean.tiltZ) * DEG
+      (CONFIG.rotZ + lean.tiltZ) * DEG,
     );
     spinner.rotation.y = poseSpin + lean.spin * DEG;
   }
@@ -1725,7 +1931,9 @@ export function createHeroTape(
   function resize() {
     const w = mount.clientWidth || 1; // the roll's square framing box
     const h = mount.clientHeight || 1; // square + strip room to the section end
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, DPR_CAP, MAX_BUFFER / h));
+    renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio || 1, DPR_CAP, MAX_BUFFER / h),
+    );
     // updateStyle false: the stylesheet owns the canvas box; three only sizes
     // the drawing buffer.
     renderer.setSize(w, h, false);
@@ -1737,7 +1945,8 @@ export function createHeroTape(
 
     // px per world unit at the STRIP's depth — it sits RADIUS beyond the roll's
     // centre, so it projects slightly smaller than the roll does.
-    pxPerWorld = w / (2 * (CONFIG.camZ + STRIP.RADIUS) * Math.tan((FOV / 2) * DEG));
+    pxPerWorld =
+      w / (2 * (CONFIG.camZ + STRIP.RADIUS) * Math.tan((FOV / 2) * DEG));
 
     /* Flush with the roll's on-screen silhouette, whose width is set by its
        NEAR rim (camZ - R) while the strip hangs at the far side (camZ + R);
@@ -2125,7 +2334,7 @@ export function createHeroTape(
         // A failed load must not leak the context it was going to draw into.
         teardown();
         reject(e);
-      }
+      },
     );
   });
 }

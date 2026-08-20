@@ -30,6 +30,8 @@ import gsap from "gsap";
 import type { HeroTape } from "./heroTape";
 import { createRollIdle, IDLE, type RollIdle } from "./idle";
 
+import { onViewportChange, screenH } from "@/components/viewport";
+
 /** Served straight from /public. Preloaded in index.tsx — see the note there.
  *
  * The low-noise OPP roll. Same export rig as the brown one it replaced —
@@ -69,14 +71,21 @@ export const SCROLL = {
  * never reverses it), the finale plays on its own clock, and only a refresh
  * starts the story over.
  *
- * TOP_ON / BOTTOM_OVER are in px at the cardboard's edges: where the cut sits
- * relative to the board's top (negative = above it, overhanging the green),
- * and how far PAST its bottom the end sticks out — the piece left behind
- * reads as taped across the cardboard, not cut to fit it.
- * Live-tweak in dev (before the cut fires): hero.CUT.TOP_ON = 80 */
+ * TOP_ON / BOTTOM_OVER say where the cut sits relative to the board's top
+ * (negative = above it, overhanging the green) and how far PAST its bottom the
+ * end sticks out — the piece left behind reads as taped across the cardboard,
+ * not cut to fit it.
+ *
+ * IN vw, NOT px, and that is the whole difference between this working on a
+ * phone and not. These are placements ON the cardboard, and the cardboard is
+ * drawn in vw like everything else here — so a fixed 90px is 6% of the board's
+ * height at 1440 and 22% of it at 390, which is a tail hanging most of a card's
+ * length past the card. -4.167 and 6.25 are the -60 and 90 they replace, at the
+ * design width exactly, so nothing about the desktop moved.
+ * Live-tweak in dev (before the cut fires): hero.CUT.TOP_ON = 5 */
 export const CUT = {
-  TOP_ON: -60,
-  BOTTOM_OVER: 90,
+  TOP_ON: -4.167,
+  BOTTOM_OVER: 6.25,
   /** The finale's timing, seconds: the cut+rewind, and the roll's turn home
       (overlapping — the roll starts turning while the tail is still going). */
   REWIND: 0.7,
@@ -158,7 +167,7 @@ export function initHero(root: HTMLElement): () => void {
     // `!` because measure is a hoisted declaration: TS keeps the narrowing from
     // the guard above for arrow functions, but not for these.
     const rollCentre = docTop(mount!) + mount!.clientWidth / 2;
-    seqStart = rollCentre - window.innerHeight / 2 - SCROLL.LEAD;
+    seqStart = rollCentre - screenH() / 2 - SCROLL.LEAD;
     stripTopDoc = rollCentre;
     // The canvas's own floor. offsetHeight already carries however far the CSS
     // hangs the box below the section, so this needs no knob of its own — it is
@@ -176,12 +185,13 @@ export function initHero(root: HTMLElement): () => void {
 
   /* The strip's final measurements, from the measure()d document. Functions
      rather than cached px so a mid-finale resize stays honest. */
+  const vw = () => window.innerWidth / 100;
   const stopPx = () =>
     Math.min(
-      cardBottomDoc + CUT.BOTTOM_OVER - stripTopDoc,
+      cardBottomDoc + CUT.BOTTOM_OVER * vw() - stripTopDoc,
       tapeFloorDoc - stripTopDoc
     );
-  const cutPx = () => Math.max(cardTopDoc + CUT.TOP_ON - stripTopDoc, 0);
+  const cutPx = () => Math.max(cardTopDoc + CUT.TOP_ON * vw() - stripTopDoc, 0);
 
   /* The finale — the one animation. From here the scroll is a spectator:
      `phase` gates frame() out, the ratchet already holds the length, and the
@@ -263,7 +273,7 @@ export function initHero(root: HTMLElement): () => void {
     // The chase reads the LIVE scroll, not the ratchet — it exists to keep
     // the end from outrunning the viewport on the way down, and the ratchet
     // on lenPx below is what keeps scrolling back up from retracting it.
-    const chase = y + window.innerHeight - stripTopDoc - SCROLL.END_GAP;
+    const chase = y + screenH() - stripTopDoc - SCROLL.END_GAP;
     // Where the tape finally stops: a little past the cardboard's bottom —
     // the finale's trigger line — bounded by the canvas floor as ever.
     const stop = stopPx();
@@ -303,10 +313,15 @@ export function initHero(root: HTMLElement): () => void {
   ro.observe(root);
 
   const ac = new AbortController();
-  // A height-only change (a mobile URL bar retracting) leaves the vw-sized box
-  // alone, so the observer never fires — but seqStart is measured off
-  // innerHeight and has moved.
-  window.addEventListener("resize", measure, { signal: ac.signal, passive: true });
+  /* The observer above only sees the vw-sized box, which a height change does
+     not move — but seqStart is measured off the screen's height as well, so a
+     real change of viewport has to reach measure() by its own route.
+
+     A mobile URL bar retracting is NOT one of those: it used to arrive here as
+     a plain `resize` and shift the whole hero sequence mid-flick. screenH()
+     holds still and onViewportChange only fires on a rotation, so what is left
+     is the case this was always for. See components/viewport.ts. */
+  const stopVp = onViewportChange(measure);
 
   measure();
   gsap.ticker.add(frame);
@@ -363,6 +378,7 @@ export function initHero(root: HTMLElement): () => void {
     });
 
   return () => {
+    stopVp();
     ac.abort();
     io.disconnect();
     ro.disconnect();

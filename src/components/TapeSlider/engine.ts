@@ -46,6 +46,8 @@ import {
 } from "@/components/wordDip";
 import type { TapeViewer } from "./tape3d";
 
+import { screenH } from "@/components/viewport";
+
 export function initTapeSlider(root: HTMLElement): () => void {
   const q = <T extends Element>(sel: string) => root.querySelector<T>(sel);
   const qa = <T extends Element>(sel: string) =>
@@ -286,7 +288,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
 
   function aimRoll(e: PointerEvent) {
     if (!viewer || !inView) return;
-    const reach = Math.min(window.innerWidth, window.innerHeight) * 0.5 * TILT_REACH;
+    const reach = Math.min(window.innerWidth, screenH()) * 0.5 * TILT_REACH;
     viewer.point((e.clientX - rollX) / reach, (e.clientY - rollY) / reach);
   }
 

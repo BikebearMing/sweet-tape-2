@@ -6,6 +6,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { whenRevealed } from "@/components/Preloader/gate";
+import { initViewport } from "@/components/viewport";
 
 /* Smooth scrolling, mounted once at the layout so it covers the whole document.
  *
@@ -47,10 +48,30 @@ export function resetScroll(): void {
 
 export default function SmoothScroll() {
   useEffect(() => {
+    /* THE VIEWPORT FIRST, and outside the reduced-motion guard below, because
+       it is not motion — it is what the whole site believes a screen is. A
+       reader who has asked for less motion still gets a retracting address bar,
+       and the sections that measure themselves off the window still have to not
+       move when it retracts. See components/viewport.ts. */
+    const stopViewport = initViewport();
+
+    /* AND SCROLLTRIGGER IS TOLD THE SAME THING. Its default is to refresh every
+       trigger on `resize`, which on a phone means recomputing every pin and
+       every scrub range several times during a single downward flick — each one
+       a chance for a pinned section to jump. ignoreMobileResize makes it skip
+       the refresh when only the HEIGHT changed on a touch device, which is
+       exactly the toolbar and nothing else: a rotation changes the width and
+       still refreshes.
+
+       Set before any trigger is built. It is global config rather than a
+       per-trigger option, so it has to be in place by the time the sections
+       mount, and this component is above all of them in the layout. */
+    ScrollTrigger.config({ ignoreMobileResize: true });
+
     // Hijacked scrolling is one of the things "reduce motion" is actually
     // asking about, so leave the native behaviour alone.
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return;
+      return stopViewport;
     }
 
     /* duration is how long Lenis takes to run out the distance a wheel notch
@@ -103,6 +124,7 @@ export default function SmoothScroll() {
     const stopGate = whenRevealed(() => gsap.ticker.lagSmoothing(0));
 
     return () => {
+      stopViewport();
       stopGate();
       gsap.ticker.remove(raf);
       gsap.ticker.lagSmoothing(500, 33); // GSAP's own defaults

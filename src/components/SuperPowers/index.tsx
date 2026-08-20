@@ -111,6 +111,13 @@ export default function SuperPowers({ tape }: { tape: Tape }) {
           stack's own resting arrangement: no card is the active one, and without
           a script none of them can be.
 
+          THE FILL IS THE FOURTH AND IT IS A COLOUR, NOT A MOTION. A card is
+          lime until the section decides it is the one being read, at which point
+          it turns dark green — so with no script every card would be a lime
+          shape with lime writing on it, which is a card with nothing on it at
+          all. Filled outright here, exactly as the reduced-motion path in
+          SuperPowers/reveal.ts fills the open one.
+
           THE MARK IS HELD OFF A DIFFERENT WAY and needs its own line. The type is
           held down by a transform; the mark is held off by opacity, because the
           bounce is a CSS animation that is only declared once reveal.ts sets an
@@ -121,6 +128,7 @@ export default function SuperPowers({ tape }: { tape: Tape }) {
         <style>{`.super-powers .char { transform: none }
           .super-powers .body-rise { transform: none }
           .super-powers .powers-slot { --pow-shown: 1 }
+          .super-powers .powers-card { --pow-fill: 1 }
           .super-powers .powers-mark-jump,
           .super-powers .powers-mark-plate { opacity: 1 }`}</style>
       </noscript>
@@ -159,12 +167,14 @@ export default function SuperPowers({ tape }: { tape: Tape }) {
         <div className="powers-slot" aria-hidden="true" />
 
         {tape.powers.map((power) => (
-          /* ONE CARD, and two custom properties are all that ever move on it:
-             --pow-shown, whether the slot is in the window at all, and
-             --pow-open, whether it is the one being read. The stylesheet derives
-             the slot's height, the size of everything printed on it and the
-             weight of its shadow from those two, and reveal.ts tweens them.
-             Nothing else in the stack is animated at all. */
+          /* ONE CARD, and three custom properties are all that ever move on it:
+             --pow-shown, whether the slot is in the window at all, --pow-open,
+             whether it is the one being read, and --pow-fill, how far it has
+             turned from lime to dark green. The stylesheet derives the slot's
+             height and the size of everything printed on it from the first two
+             and its colour from the third. The first two are a function of
+             scroll position and the third is a tween; nothing else in the stack
+             moves at all. */
           <div className="powers-slot powers-card" key={power.id}>
             {/* EVERYTHING PRINTED ON THE CARD, IN A BOX OF ITS OWN, and the box
                 is the size of an OPEN card whatever the card is currently doing

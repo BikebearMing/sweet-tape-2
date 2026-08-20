@@ -39,6 +39,8 @@
  */
 import gsap from "gsap";
 
+import { onViewportChange } from "@/components/viewport";
+
 export const BALLS = {
   /* Downward pull, in vw per second squared — the same unit the cursor's push
      is quoted in, and for the same reason: expressed in vw rather than in
@@ -958,13 +960,19 @@ function run(
   window.addEventListener("pointerdown", onDown, opts);
   window.addEventListener("pointerup", onUp, { ...opts, passive: true });
   window.addEventListener("pointercancel", onUp, { ...opts, passive: true });
-  window.addEventListener("resize", onResize, { ...opts, passive: true });
+  /* Not a raw resize: a rebuild is the most expensive thing in this file — a
+     whole physics world thrown away and re-derived — and on a phone a raw
+     resize would order one every time the address bar moved, mid-scroll,
+     while the reader is watching the balls. onViewportChange only fires on a
+     rotation, which genuinely does change every radius. */
+  const stopVp = onViewportChange(onResize);
   bed.addEventListener("click", onClick, { ...opts, capture: true });
 
   build();
   gsap.ticker.add(tick);
 
   return () => {
+    stopVp();
     ac.abort();
     window.clearTimeout(resizeTimer);
     io.disconnect();

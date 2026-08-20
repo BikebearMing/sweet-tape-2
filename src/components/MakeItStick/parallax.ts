@@ -40,6 +40,8 @@
  */
 import gsap from "gsap";
 
+import { onViewportChange, screenH } from "@/components/viewport";
+
 export const STICK_PARALLAX = {
   /* Kept animating this far outside the viewport, so the picture is never
      caught sitting still at an edge it is about to come back through. */
@@ -90,12 +92,12 @@ export function initStickParallax(root: HTMLElement): () => void {
     const frameH = frame!.offsetHeight;
     slack = Math.max((img!.offsetHeight - frameH) / 2, 0);
     centre = docTop(frame!) + frameH / 2;
-    range = Math.max((window.innerHeight + frameH) / 2, 1);
+    range = Math.max((screenH() + frameH) / 2, 1);
   }
 
   function frameTick() {
     if (!onScreen || slack <= 0) return;
-    const viewCentre = window.scrollY + window.innerHeight / 2;
+    const viewCentre = window.scrollY + screenH() / 2;
     /* Positive once the frame's centre is above the middle of the window, which
        is to say once the section is on its way out. Clamped, so a fast flick
        past the section cannot throw the crop past its overhang. */
@@ -133,12 +135,13 @@ export function initStickParallax(root: HTMLElement): () => void {
   const ro = new ResizeObserver(measure);
   ro.observe(root);
   const ac = new AbortController();
-  window.addEventListener("resize", measure, { signal: ac.signal, passive: true });
+  const stopVp = onViewportChange(measure);
 
   measure();
   gsap.ticker.add(frameTick);
 
   return () => {
+    stopVp();
     ac.abort();
     io.disconnect();
     ro.disconnect();

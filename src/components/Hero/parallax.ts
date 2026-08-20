@@ -28,6 +28,8 @@
  */
 import gsap from "gsap";
 
+import { onViewportChange, screenH } from "@/components/viewport";
+
 /* Kept animating this far outside the viewport, so a prop straddling the edge
    never sits still while its neighbours move. */
 const NEAR_VIEW = "20% 0px";
@@ -78,7 +80,7 @@ export function initParallax(root: HTMLElement): () => void {
   function frame(_time: number, deltaMs: number) {
     if (!onScreen) return;
     const dt = Math.min(deltaMs / 1000, 0.1); // a hung tab must not teleport
-    const viewCentre = window.scrollY + window.innerHeight / 2;
+    const viewCentre = window.scrollY + screenH() / 2;
     for (const p of props) {
       const target = (viewCentre - p.centre) * p.factor;
       /* Exponential chase, frame-rate independent: the same fraction of the
@@ -111,12 +113,13 @@ export function initParallax(root: HTMLElement): () => void {
   const ro = new ResizeObserver(measure);
   ro.observe(root);
   const ac = new AbortController();
-  window.addEventListener("resize", measure, { signal: ac.signal, passive: true });
+  const stopVp = onViewportChange(measure);
 
   measure();
   gsap.ticker.add(frame);
 
   return () => {
+    stopVp();
     ac.abort();
     io.disconnect();
     ro.disconnect();

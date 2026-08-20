@@ -63,28 +63,43 @@ const ALPHA_MASKS =
  *
  * All three were arrived at in the lab (/lab/lottie-note) against the note's own
  * copy, and they are the values that came out of it. The lab's fourth dial —
- * size, at 1.7vw — is deliberately NOT here: on the page the size comes from the
- * box .hand-ink gives the writing, and at the hero's 25vw that box works out at
- * almost exactly the 1.7vw the lab was set to. It falls out rather than being
- * declared, which is why the note can be a third the size in the pinning section
- * without any of this changing. */
+ * size — is deliberately NOT here and never will be: on the page the size comes
+ * from the box .hand-ink gives the writing, which is --hand-w times --hand-ink-w
+ * and is therefore a per-instance decision made in the stylesheet. It falls out
+ * rather than being declared, which is why the note can be a third the size in
+ * the pinning section without any of this changing, and why re-tuning the
+ * figures below never sets the size of anything.
+ *
+ * A RE-TUNE DOES MOVE THE SIZE, though, and it is worth knowing which way. The
+ * artwork is fitted to the WIDTH of that box, so widening the setting — which
+ * is what the word gap and the tracking below have just done — makes the same
+ * copy longer and therefore SMALLER on the page, and opening the leading makes
+ * the block taller under it. Every instance's --hand-ink-w is the dial for
+ * that, and they are set section by section in global.css. */
 const SET = {
-  /* Taken out of every LETTER gap. Negative: the exports stand well apart and
-     the hand wants closing up. Word gaps are not touched — they have their own
-     figure below, because closing the spaces at the same rate as the letters
-     runs the words together long before the letters look written. */
-  TRACK: -0.04,
+  /* Taken out of every LETTER gap, or added to it — it is signed, and it is now
+     a hair POSITIVE. It was -0.04 against the old alphabet, which stood well
+     apart and wanted closing up; the hand these figures were tuned against
+     wants the opposite by a fraction of a fraction. Word gaps are not touched
+     by it — they have their own figure below, because moving the spaces at the
+     same rate as the letters runs the words together long before the letters
+     look written. */
+  TRACK: 0.01,
 
   /* What a space costs the pen. Its own number rather than a multiple of the
-     tracking, for the reason above. */
-  WORD_GAP: 0.2,
+     tracking, for the reason above, and nearly three times what it was: a hand
+     writing at this tracking leaves a real gap between words rather than the
+     hairline a proportional space would give it. DRAW.SPACE below is the same
+     figure again in time rather than in room, and the two move together. */
+  WORD_GAP: 0.58,
 
-  /* Between writing lines, baseline to baseline. Under one em because an em here
-     is the whole comp box — ascender room, descender room and all — and setting
-     lines a full box apart leaves the note looking double-spaced. This is close
-     enough that four lines read as one note and open enough that the y of
-     "everyday" lands beside the t of "not" rather than in it. */
-  LEADING: 0.86,
+  /* Between writing lines, baseline to baseline. Just over one em now, where it
+     used to sit under one — an em here is the whole comp box, ascender room and
+     descender room and all, so this is a note set a shade open rather than a
+     double-spaced one. What it buys is the descenders: at 0.86 the y of
+     "everyday" was landing beside the t of "not" only just, and the wider word
+     gaps above make the lines longer and therefore worth separating. */
+  LEADING: 1.02,
 };
 
 /* The drawing, in seconds.
@@ -101,18 +116,29 @@ const DRAW = {
 
   /* One glyph, start to finish. A glyph made of two passes (a couple in the
      folder are) shares this between them by length, so it still takes one
-     letter's worth of time. */
-  PER: 0.15,
+     letter's worth of time.
+
+     A THIRD OF WHAT IT WAS, which makes every note on the site about three
+     times quicker to write. That is the figure the lab settled on and it is the
+     one number here a reader actually feels — at 0.15 the hand was drawing each
+     letter rather than writing it. The per-instance paces (--hand-draw, read
+     below) are MULTIPLES of this and were tuned against the old figure, so they
+     have all come down with it; see the note by `pace`. */
+  PER: 0.05,
 
   /* How much of the next letter starts before the last one finishes. 0 is a
      typewriter and 1 is every letter at once; this is the dial that decides
-     whether a row of separate files reads as writing, and 0.45 is where it
-     stopped looking like a stagger. */
-  OVERLAP: 0.45,
+     whether a row of separate files reads as writing. */
+  OVERLAP: 0.4,
 
-  /* And what a space costs, as a fraction of a letter. Long enough to read as
-     the pen crossing a gap, short enough that it is not a pause. */
-  SPACE: 0.4,
+  /* And what a space costs, as a fraction of a letter.
+     
+     TIED TO SET.WORD_GAP, which is the lab's own model: a space is a distance
+     the pen crosses, so what it costs in time follows what it costs in room.
+     The lab spends `per * wordGap * 2` on one, and this is that same figure —
+     0.58 x 2 — written where the rest of the timing is. Change the word gap and
+     this should change with it. */
+  SPACE: 1.16,
 };
 
 /* Where the note starts writing: its top at this fraction down the viewport.
@@ -451,6 +477,14 @@ function initOne(note: HTMLElement): () => void {
   /* How fast the pen moves, as a MULTIPLE of the durations in DRAW — read off
    * the note for the same reason the pen's colour is, because the instances are
    * given wildly different amounts of time to write in.
+   *
+   * THESE ARE RELATIVE FIGURES AND DRAW.PER MOVED UNDER THEM. Every one of them
+   * says "slower than the hero's", and the hero's is now a third of what it
+   * was — so they all came down together and the ratios between the notes are
+   * exactly as they were tuned. What changed is the absolute length: the note
+   * under TO CREATE writes in about 0.8s where it used to take 1.8. If one of
+   * them now reads as hurried, its own --hand-draw is the place to put that
+   * right; the base pace belongs to the lab.
    *
    * The hero's note has the whole page scroll to itself: it comes up the screen
    * at the reader's own pace and can take the several seconds the gesture is

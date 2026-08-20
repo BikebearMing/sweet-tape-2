@@ -30,7 +30,15 @@
  *
  * The cap binds on tall-and-narrow windows, and there it is a partial fix by
  * design — the honest ceiling on what moving a rigid drawing can do.
+ *
+ * AND IT READS screenH(), NOT innerHeight. This file turns the window's height
+ * into a translation of the entire centre column, which makes it the single
+ * place on the site where a retracting iOS address bar would be most visible:
+ * the roll, the word mark and the chip would all slide up together, mid-flick,
+ * every time the toolbar moved. components/viewport.ts holds the height still
+ * for the session so the lift is decided once and stays decided.
  */
+import { onViewportChange, observeWidth, screenH } from "@/components/viewport";
 
 /* All three read off the design at 1440 x 900, which is the frame the
    composition is right on and therefore the frame where the lift is 0. In
@@ -59,7 +67,7 @@ export function initSliderFit(root: HTMLElement): () => void {
 
   function fit() {
     const w = window.innerWidth;
-    const h = window.innerHeight;
+    const h = screenH();
     if (!w || !h) return;
 
     /* How far the roll has sunk below its seat, capped at the room the band
@@ -74,19 +82,19 @@ export function initSliderFit(root: HTMLElement): () => void {
     root.style.setProperty("--slide-lift", `${-Math.round(lift * 10) / 10}px`);
   }
 
-  /* On the element rather than on window resize alone: a phone rotating, a
-     devtools pane opening and a zoom change all move these numbers, and only
-     some of them fire resize. The listener stays as the cheap path. */
-  const ro = new ResizeObserver(fit);
-  ro.observe(document.documentElement);
-  const ac = new AbortController();
-  window.addEventListener("resize", fit, { signal: ac.signal, passive: true });
+  /* On the element as well as on the window: a devtools pane opening and a zoom
+     change both move these numbers and neither reliably fires resize. WIDTH
+     only, though — see observeWidth. Observing the document's height here is
+     how the address bar used to reach this function in the first place, since
+     the document grows by exactly the toolbar when it retracts. */
+  const stopRo = observeWidth(document.documentElement, fit);
+  const stopVp = onViewportChange(fit);
 
   fit();
 
   return () => {
-    ac.abort();
-    ro.disconnect();
+    stopVp();
+    stopRo();
     /* Back to the stylesheet's registered initial value of 0, so a StrictMode
        remount starts from the designed drawing rather than from the last thing
        this wrote. */

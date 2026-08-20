@@ -16,6 +16,8 @@ import {
   type MenuTimelines,
 } from "./reveal";
 
+import { onViewportChange } from "@/components/viewport";
+
 /* The nav itself. Labels are set in caps here rather than by text-transform so
    the copy reads in the markup exactly as it paints — the same call the hero
    makes with its headline.
@@ -105,14 +107,15 @@ export default function Menu() {
       built.drop.progress(built.drop.progress(), true);
     };
 
-    const ac = new AbortController();
-    window.addEventListener("resize", remeasure, {
-      signal: ac.signal,
-      passive: true,
-    });
+    /* Not a raw resize. This throws the panel's recorded geometry away and
+       takes it again, which is right for a rotation and wrong for an address
+       bar retracting — the panel is a fixed overlay whose height does not
+       depend on the window's, so a toolbar move would have been a rebuild that
+       changed nothing except the frame it landed on. */
+    const stopVp = onViewportChange(remeasure);
 
     return () => {
-      ac.abort();
+      stopVp();
       tlRef.current = null;
       closeRef.current?.kill();
       closeRef.current = null;

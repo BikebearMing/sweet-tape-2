@@ -68,6 +68,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { REVEAL } from "../Hero/reveal";
 
+import { screenH } from "@/components/viewport";
+
 export const SIBLINGS_REVEAL = {
   /* WHERE THE FIRST CARD ARRIVES, on the way in and before the pin. The stage's
      top edge a quarter of the way down the window — and the stage is the
@@ -413,7 +415,7 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
        is going back toward the hub, and how far along the spoke it is IS its
        size. See `entrance`. */
     const from = card.getBoundingClientRect();
-    const floor = stage?.getBoundingClientRect().bottom ?? window.innerHeight;
+    const floor = stage?.getBoundingClientRect().bottom ?? screenH();
     const drop =
       Math.max(0, floor - from.top) +
       card.offsetWidth * SIBLINGS_REVEAL.LEAVE_CLEAR;
@@ -520,7 +522,7 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
         end: () =>
           "+=" +
           Math.round(
-            window.innerHeight * SIBLINGS_REVEAL.BEAT * SIBLINGS_REVEAL.STEPS,
+            screenH() * SIBLINGS_REVEAL.BEAT * SIBLINGS_REVEAL.STEPS,
           ),
         pin: stage,
         /* True pinning, not fake: the stage is the window's height in ordinary

@@ -36,6 +36,8 @@ import gsap from "gsap";
 
 import { whenRevealed } from "@/components/Preloader/gate";
 
+import { observeWidth, onViewportChange, screenH } from "@/components/viewport";
+
 /* The loop's beat, in seconds. Live-tweakable in dev via `peel.BEAT` in the
    console — the timelines are built on mount, so a change lands on the next
    reload rather than mid-loop; these are for tuning, not for driving. */
@@ -204,7 +206,7 @@ function initScrub(els: HTMLElement[]): () => void {
   const byEl = new Map<Element, Scrub>(items.map((it) => [it.el, it]));
 
   function measure() {
-    const vh = window.innerHeight;
+    const vh = screenH();
     for (const it of items) {
       const top = docTop(it.el);
       const centre = top + it.el.offsetHeight / 2;
@@ -251,19 +253,20 @@ function initScrub(els: HTMLElement[]): () => void {
   );
   items.forEach((it) => io.observe(it.el));
 
-  // The hero is sized in vw, so a width change moves every window's ends.
-  const ro = new ResizeObserver(measure);
-  ro.observe(document.documentElement);
-  const ac = new AbortController();
-  window.addEventListener("resize", measure, { signal: ac.signal, passive: true });
+  /* The hero is sized in vw, so a WIDTH change moves every window's ends — and
+     only a width change does. Observing the document's height instead caught
+     the mobile address bar, which grows the document by exactly the toolbar and
+     re-measured every peel on the page in the middle of a scroll. */
+  const stopRo = observeWidth(document.documentElement, measure);
+  const stopVp = onViewportChange(measure);
 
   measure();
   gsap.ticker.add(frame);
 
   return () => {
-    ac.abort();
+    stopVp();
+    stopRo();
     io.disconnect();
-    ro.disconnect();
     gsap.ticker.remove(frame);
     for (const it of items) it.el.style.removeProperty("--peel");
   };

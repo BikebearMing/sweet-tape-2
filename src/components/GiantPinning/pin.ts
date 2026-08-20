@@ -39,6 +39,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { initGiantParallax } from "./parallax";
 import { initGiantReveal } from "./reveal";
 
+import { screenH } from "@/components/viewport";
+
 export const GIANT = {
   /** Where the FRAME takes the screen — .wrapper, not the section around it.
       Full bleed, so its top at the top. See the trigger below for why the
@@ -253,7 +255,7 @@ export function initGiantPinning(root: HTMLElement): () => void {
    */
   function readPath(): { stops: Stop[]; ends: boolean[]; opens: number[] } {
     const vw = window.innerWidth;
-    const vh = window.innerHeight;
+    const vh = screenH();
     const inset = vw * insetFraction();
     const stops: Stop[] = [];
     const ends: boolean[] = [];

@@ -36,6 +36,8 @@
  */
 import type { HeroTape } from "./heroTape";
 
+import { onViewportChange, screenH } from "@/components/viewport";
+
 /* Live-tweak in dev: hero.IDLE.LEAN_YAW = 12 */
 export const IDLE = {
   /* THE FLOAT — amplitudes in degrees. Small on purpose: this is meant to be
@@ -148,7 +150,7 @@ export function createRollIdle(mount: HTMLElement, tape: HeroTape): RollIdle {
      or swallow a touch scroll. */
   const ac = new AbortController();
   window.addEventListener("pointermove", onMove, { signal: ac.signal, passive: true });
-  window.addEventListener("resize", measure, { signal: ac.signal, passive: true });
+  const stopVp = onViewportChange(measure);
 
   // The section is sized in vw, so a width change moves the roll's centre.
   const ro = new ResizeObserver(measure);
@@ -164,7 +166,7 @@ export function createRollIdle(mount: HTMLElement, tape: HeroTape): RollIdle {
        where the pointer happens to be on the page. */
     const toX = seen ? clamp((px - centreX) / (window.innerWidth / 2), -1, 1) : 0;
     const toY = seen
-      ? clamp((py - (centreDocY - window.scrollY)) / (window.innerHeight / 2), -1, 1)
+      ? clamp((py - (centreDocY - window.scrollY)) / (screenH() / 2), -1, 1)
       : 0;
 
     const k = 1 - Math.exp(-IDLE.EASE * dt);
@@ -191,7 +193,8 @@ export function createRollIdle(mount: HTMLElement, tape: HeroTape): RollIdle {
   return {
     frame,
     stop() {
-      ac.abort();
+      stopVp();
+    ac.abort();
       ro.disconnect();
       // Hand the roll back exactly as the finale left it.
       tape.drift(0, 0, 0, 0);

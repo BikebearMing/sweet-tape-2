@@ -43,6 +43,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { REVEAL } from "../Hero/reveal";
+import { TAG } from "../WhatsRolling/reveal";
 
 export const GIANT_REVEAL = {
   /* Slower per letter than the hero's 0.025 because there are so few of them —
@@ -105,10 +106,26 @@ export const GIANT_REVEAL = {
      than assembling one enormous stagger that outlives the leg it belongs to. */
   BATCH_MAX: 5,
 
-  /* The heading, on the footer's cue — its top three quarters of the way down
-     the window. Late enough that the reader is looking at the section, early
-     enough that it is standing before the pin takes the screen. */
+  /* The heading, on the footer's cue — ITS OWN top three quarters of the way
+     down the window, measured off the heading block rather than off the section.
+     That distinction is the whole of it: the heading is placed on the canvas at
+     --gy 16vw, which puts it around 450px inside a section whose top is what a
+     section-level trigger watches. Fired off the section, this played out with
+     the block still a screen and a half below the fold and the reader arrived at
+     type that had been standing for a thousand pixels — the exact failure the
+     head of this file describes for the phrases, on the one element that was
+     supposed to be the ordinary case.
+
+     Still comfortably before the pin engages: the block clears the fold long
+     before the section's top reaches the top of the screen. */
   HEADING_START: "top 75%",
+
+  /* The chip's beat behind the heading, and it is not a figure of this
+     section's. It is the gap the title card and NEXT UP already put between
+     these two gestures (TAG.DELAY against REVEAL.DELAY), read rather than
+     re-typed so all of them stay in step. The chip is a tenth of the type's size
+     and opening on it would be the section introducing its own label. */
+  CHIP_GAP: TAG.DELAY - REVEAL.DELAY,
 
   /* Tighter than the phrases': this is three lines of small type, around forty
      letters, and at the phrases' pace the last of them would still be arriving
@@ -487,26 +504,63 @@ export function initGiantReveal(root: HTMLElement, rows: HTMLElement[]): Reveals
     draw(i);
   };
 
-  /* The heading, on its own trigger and its own beat. */
+  /* The heading, on its own trigger and its own beat — and the trigger is the
+     HEADING, not the section. See HEADING_START for why that is the whole fix. */
   const heading = root.querySelector<HTMLElement>(".top-title");
   const headChars = heading ? charsIn(heading) : [];
+  /* WHY WE EXIST. The site's title card, NEXT UP and the origin section all put
+     the same turn on this chip, and this one was the only heading of the four
+     whose chip simply stood there. TAG, imported whole rather than re-derived. */
+  const headChip = heading?.querySelector<HTMLElement>(".subhead") ?? null;
   let st: ScrollTrigger | undefined;
 
-  if (headChars.length) {
-    gsap.set(headChars, { yPercent: REVEAL.HIDDEN });
+  if (heading && (headChars.length || headChip)) {
+    /* Parked HERE rather than in the stylesheet, on mount, which is early enough
+       — the section is most of a page below the fold, so neither the letters nor
+       the chip is ever painted in its rest pose before this runs. Doing it in
+       CSS would mean a second gate on data-reveal for the chip and a rule the
+       reduced-motion path has to undo; pin.ts returns before this file is even
+       called on that path, so what the stylesheet says is what a reader with
+       motion turned off gets. */
+    if (headChars.length) gsap.set(headChars, { yPercent: REVEAL.HIDDEN });
+    if (headChip) gsap.set(headChip, { autoAlpha: 0 });
+
     st = ScrollTrigger.create({
-      trigger: root,
+      trigger: heading,
       start: GIANT_REVEAL.HEADING_START,
       once: true,
       onEnter: () => {
-        tweens.push(
-          gsap.to(shuffle(headChars), {
-            yPercent: 0,
-            duration: REVEAL.DURATION,
-            stagger: GIANT_REVEAL.HEADING_STAGGER,
-            ease: REVEAL.EASE,
-          }),
-        );
+        if (headChars.length) {
+          tweens.push(
+            gsap.to(shuffle(headChars), {
+              yPercent: 0,
+              duration: REVEAL.DURATION,
+              stagger: GIANT_REVEAL.HEADING_STAGGER,
+              ease: REVEAL.EASE,
+            }),
+          );
+        }
+        if (headChip) {
+          tweens.push(
+            gsap.to(headChip, {
+              autoAlpha: 1,
+              rotateY: 0,
+              /* The `from` half of the turn, set on the same call rather than as
+                 a fromTo, because the chip has already been parked at nothing
+                 above and this is the one place its starting angle is wanted —
+                 GSAP reads these as the tween's start when they are given as a
+                 startAt. */
+              startAt: {
+                rotateY: TAG.FROM,
+                transformPerspective: TAG.PERSPECTIVE,
+                transformOrigin: TAG.ORIGIN,
+              },
+              duration: TAG.DURATION,
+              ease: TAG.EASE,
+              delay: GIANT_REVEAL.CHIP_GAP,
+            }),
+          );
+        }
       },
     });
   }
@@ -527,6 +581,12 @@ export function initGiantReveal(root: HTMLElement, rows: HTMLElement[]): Reveals
          them is where they belong rather than where they started. */
       const all = [...parked.flat(), ...headChars];
       if (all.length) gsap.set(all, { clearProps: "transform" });
+      /* And the chip VISIBLE — same reason, one property further: a teardown
+         mid-turn must not leave WHY WE EXIST at autoAlpha 0 with nothing left
+         running to bring it back. */
+      if (headChip) {
+        gsap.set(headChip, { clearProps: "transform,opacity,visibility" });
+      }
       /* And the lines DRAWN, for the same reason — a teardown must not leave a
          mark half-inked with nothing running to finish it. */
       const paths = arrowPaths.flatMap((a) => [a.line, a.head]).filter(Boolean);

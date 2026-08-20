@@ -19,7 +19,7 @@
  * a blank green shape; the claim, the mark and the sentence all arrive when a
  * card reaches the middle and all go back out when it leaves. That is what makes
  * the middle of the window the one place anything can be read, which is what a
- * run scrolled through a card at a time is for — see openTo, which records the
+ * run scrolled through a card at a time is for — see `focus`, which records the
  * arrangement this replaced and why it was worse.
  *
  * A PAD AT EACH END, and it is what makes a run of three work in a window of
@@ -46,14 +46,33 @@
  *      and writes itself, and the run climbs by a slot.
  *   5. A beat with the last card standing, and the pin lets go into THE RUN.
  *
- * WHAT IS SCRUBBED AND WHAT IS NOT. Scroll position picks WHICH CARD is open;
- * everything else then plays at its own pace. That is the one thing that cannot
- * be done the other way round, and THE SIBLINGS' note gives the long version of
- * why: a letter reveal scrubbed off a scrollbar is not a reveal, it is a row of
- * boxes being dragged, and it stops dead the moment the wheel does. The mark's
- * bounce settles the argument on its own — it is a CSS animation with sixty-odd
- * baked keyframes and a squash in the middle of it, and there is no sense in
- * which a reader's wheel is its clock.
+ * WHAT IS SCRUBBED AND WHAT IS NOT, WHICH IS THE WHOLE ARGUMENT OF THIS FILE.
+ *
+ * THE ARRANGEMENT IS SCRUBBED. Where the run stands is a function of scroll
+ * progress and nothing else — see `place` and `travel` — so every frame of the
+ * wheel moves the stack and the reader is never holding a page that has stopped
+ * answering. It also cannot fall out of step: the shape is recomputed from
+ * progress rather than tweened towards a target, so a wheel thrown through the
+ * whole section lands exactly where a slow one would.
+ *
+ * IT WAS TIMED AND THAT WAS THE PROBLEM. A beat boundary went past, a 0.8s tween
+ * fired, and the stack rearranged itself at its own pace whatever the reader was
+ * doing — which inside a pin means a page that has stopped moving AND stopped
+ * responding, for eight tenths of a second, four times. That reads as a wall,
+ * and it is the one thing a pinned section must not do.
+ *
+ * EVERYTHING PRINTED IS NOT SCRUBBED. The card turning dark green, the claim,
+ * the mark and the sentence all play at their own pace once the card takes its
+ * turn. THE SIBLINGS' note gives the long version of why: a letter
+ * reveal scrubbed off a scrollbar is not a reveal, it is a row of boxes being
+ * dragged, and it stops dead the moment the wheel does. The mark's bounce
+ * settles the argument on its own — it is a CSS animation with sixty-odd baked
+ * keyframes and a squash in the middle of it, and there is no sense in which a
+ * reader's wheel is its clock.
+ *
+ * SO THE READER MOVES THE STACK AND THE SECTION ANSWERS. A beat is a hold and
+ * then a move (see HOLD): stillness to read the card in, then the climb, under
+ * their own hand.
  *
  * IT RUNS BACKWARDS, AND IT UNDOES THE WRITING TOO. Scroll back up through the
  * pin and the run climbs back down, each card emptying as it leaves the middle
@@ -75,20 +94,23 @@
  * and the three then create in document order, which is the one thing
  * ScrollTrigger asks of a page with more than one pin on it.
  *
- * NOTHING IS MEASURED IN THIS FILE, and a slot's whole state is two custom
- * properties. --pow-shown says whether it is in the window at all and --pow-open
- * says whether it is the one being read; global.css derives the slot's height,
- * the size of everything printed on it and the weight of its shadow from those
- * two numbers, and all this file does is tween them. Re-proportion the stack in
- * the stylesheet and the moves follow with nothing here to keep in step — the
- * same bargain Siblings/reveal.ts strikes with its wheel and GiantPinning/pin.ts
- * with its camera.
+ * NOTHING IS MEASURED IN THIS FILE, and a slot's whole state is three custom
+ * properties. --pow-shown says whether it is in the window at all, --pow-open
+ * says whether it is the one being read, and --pow-fill says how far it has
+ * turned from lime to dark green; global.css derives the slot's height, the size
+ * of everything printed on it and its colour from those three numbers, and all
+ * this file does is write them. Re-proportion the stack in the stylesheet
+ * and the moves follow with nothing here to keep in step — the same bargain
+ * Siblings/reveal.ts strikes with its wheel and GiantPinning/pin.ts with its
+ * camera.
  */
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { BODY_REVEAL, bodyLines } from "@/components/bodyReveal";
 import { REVEAL } from "../Hero/reveal";
+
+import { screenH } from "@/components/viewport";
 
 export const POWERS_REVEAL = {
   /* HOW MANY SLOTS ARE OPEN AT ONCE — the card being read and one either side.
@@ -151,18 +173,78 @@ export const POWERS_REVEAL = {
    * there is dead scrolling between two cards with nothing happening in it. */
   BEAT: 0.8,
 
-  /* THE MOVE ITSELF: the card taking its turn opening, the one above it shutting
-   * to nothing, and the run climbing a slot. One duration and one ease for all
-   * of it, because they are one move — the stack is sharing out a fixed window
-   * and any daylight between the parts is the arrangement visibly not adding up.
+  /* HOW MUCH OF A BEAT THE OPEN CARD IS SIMPLY STILL FOR, as a fraction of it.
    *
-   * inOut rather than the site's usual out. An `out` ease starts at full tilt,
-   * which is right for something ARRIVING — a letter coming up from under a mask
-   * has no earlier state to be continuous with. This is a rearrangement of things
-   * already on screen and already still, so it has to leave from rest as well as
-   * come to it. */
-  OPEN_DURATION: 0.8,
-  OPEN_EASE: "power3.inOut",
+   * THIS IS WHAT MAKES THE PIN SCROLLABLE, and it replaces a tween. The stack
+   * used to rearrange itself on a TIMED move — a beat boundary went past, a
+   * 0.8s tween fired, and the section played it at its own pace whatever the
+   * reader was doing. Held still by a pin and then ignored for eight tenths of
+   * a second at every step, the wheel does nothing the reader can see, and that
+   * is exactly what "the scroll lock is harsh" is: a page that has stopped
+   * moving and is not answering.
+   *
+   * So the arrangement is SCRUBBED now — the run's position is a function of
+   * scroll progress and nothing else, and every frame of the wheel moves it. A
+   * beat is a hold and then a move: nothing happens for the first `HOLD` of it,
+   * which is the reader's time to look at the card, and the rest of the beat is
+   * the stack climbing a slot under their own hand.
+   *
+   * IT IS ALSO WHY IT CANNOT DESYNC. A scrubbed arrangement is idempotent — the
+   * stack's shape is recomputed from scratch on every update, so a wheel thrown
+   * through four beats lands correctly for the same reason a slow one does, and
+   * there is no queue of half-finished tweens to arrive late and fight the next
+   * one. The old version leant on `overwrite: auto` to survive that; there is
+   * now nothing to overwrite.
+   *
+   * Under half, so most of a beat is motion. Higher and the section goes back to
+   * feeling locked; much lower and there is nowhere in the run that is still
+   * enough to read a card in. */
+  HOLD: 0.45,
+
+  /* THE SHAPE OF THE MOVE, applied to the part of the beat that is not the hold.
+   * Smoothstep — flat at both ends — for the reason the tween's ease was inOut:
+   * this is a rearrangement of things already on screen and already still, so it
+   * has to leave from rest as well as come to it. A linear scrub would start the
+   * stack moving at full tilt the instant the hold ran out, which reads as the
+   * run being kicked rather than carried. */
+  MOVE_EASE: (t: number) => t * t * (3 - 2 * t),
+
+  /* HOW FAR INTO THE MOVE THE CARD BEING READ CHANGES HANDS.
+   *
+   * HALFWAY, WHICH IS THE FRAME THE TWO CARDS ARE THE SAME SIZE. The move
+   * trades one card's height for another's, so before the halfway point the card
+   * the reader is leaving is still the bigger of the two and after it the card
+   * they are arriving at is — and the green belongs to whichever that is. Turn
+   * it over at the START of the move instead and there is a long moment with the
+   * dark green on the SMALLER card and a large blank lime one above it, which
+   * reads as the section having changed its mind.
+   *
+   * It is also the honest answer to a reader who stops mid-move, which a
+   * scrubbed arrangement makes easy to do: wherever they stop, the card with
+   * something printed on it is the card taking up the most room. */
+  TURN: 0.5,
+
+  /* AND THE ONE MOVE THAT IS STILL TIMED: the card turning dark green when it
+   * takes its turn. See --pow-fill in global.css.
+   *
+   * TIMED AND NOT SCRUBBED, deliberately, and it is the one thing on the section
+   * that should not answer the wheel. The arrangement is the reader moving
+   * through a run and belongs to them; the fill is the card ANSWERING — it is
+   * the section saying "this one, now", and a colour arriving at whatever pace
+   * somebody happens to be scrolling is not an answer, it is a smear. It is also
+   * what the writing waits for, and the writing was never scrubbed either.
+   *
+   * Quick, and quicker than the card's own arrival: the colour should have
+   * settled before the card has finished growing, so the reader sees one thing
+   * arriving rather than a card and then a colour. */
+  FILL_DURATION: 0.5,
+  FILL_EASE: "power2.inOut",
+
+  /* HOW LONG THE WRITING WAITS FOR IT. Not the whole fill — the two overlap by
+     design, because a card that turns green, stops, and then writes itself is
+     two events with a silence between them. This is far enough in that the pen
+     is always on a card that has plainly turned and never on a lime one. */
+  FILL_AT: 0.34,
 
   /* THE NAME, either side of the stack. Written once as the section arrives and
    * never again — it is the section's title, not a card's.
@@ -181,7 +263,7 @@ export const POWERS_REVEAL = {
   TITLE_STAGGER: 0.055,
 
   /* HOW LONG AFTER A CARD TAKES ITS TURN THE MARK IS DROPPED. Not zero: the card
-   * is growing into the middle of the window over OPEN_DURATION, and a box that
+   * is growing into the middle of the window as the reader scrolls, and a box that
    * falls onto it while it is still on its way is a box falling onto a moving
    * target — it lands, and then the thing it landed on carries on getting
    * bigger. A fifth of the move is enough that the card reads as having arrived
@@ -302,6 +384,10 @@ export function initSuperPowersReveal(root: HTMLElement): () => void {
       gsap.set(slot, {
         "--pow-shown": Math.abs(j - first) <= 1 ? 1 : 0,
         "--pow-open": j === first ? 1 : 0,
+        /* AND THE GREEN ALREADY ON the card that is open. It is a colour, not a
+           motion — a reader who has asked for no motion should still get the
+           card the section is about, printed as the design draws it. */
+        "--pow-fill": j === first ? 1 : 0,
       });
     });
     return () => {};
@@ -422,12 +508,22 @@ export function initSuperPowersReveal(root: HTMLElement): () => void {
     const copy = gsap.timeline({ paused: true });
 
     if (titleChars[j].length) {
-      title.to(shuffle(titleChars[j]), {
-        yPercent: 0,
-        duration: REVEAL.DURATION,
-        stagger: POWERS_REVEAL.TITLE_STAGGER,
-        ease: REVEAL.EASE,
-      });
+      title.to(
+        shuffle(titleChars[j]),
+        {
+          yPercent: 0,
+          duration: REVEAL.DURATION,
+          stagger: POWERS_REVEAL.TITLE_STAGGER,
+          ease: REVEAL.EASE,
+        },
+        /* HELD OFF THE START OF ITS OWN TIMELINE by the fill, exactly as the
+           sentence is held off by COPY_AT below and for the reason given there:
+           a hold that is IN the timeline runs backwards with it, where a delay
+           on the tween would sit outside the reverse and leave the letters
+           hanging on a card that has already gone lime again. The green comes
+           down first and the pen follows it — see FILL_AT. */
+        POWERS_REVEAL.FILL_AT,
+      );
     }
 
     /* THE SENTENCE, grouped into the lines it actually landed on, right now. */
@@ -463,8 +559,10 @@ export function initSuperPowersReveal(root: HTMLElement): () => void {
           /* Held off the start of its OWN timeline rather than given a delay, so
              that reversing it runs the whole block back out in the order it came
              in — a delay would sit outside the reverse and leave the last line
-             hanging. */
-          POWERS_REVEAL.COPY_AT + n * BODY_REVEAL.STAGGER,
+             hanging. FILL_AT is the same wait the claim takes: both are measured
+             from the card taking its turn, and COPY_AT is what the sentence adds
+             on top of it. */
+          POWERS_REVEAL.FILL_AT + POWERS_REVEAL.COPY_AT + n * BODY_REVEAL.STAGGER,
         );
       });
     }
@@ -512,42 +610,114 @@ export function initSuperPowersReveal(root: HTMLElement): () => void {
    * writing is actually thrown away. */
   let written = false;
 
-  /* Open one slot, shut its two neighbours and collapse everything else, on one
-   * tween each so the window always adds up.
+  /* THE DARK GREEN, ON THE CARD TAKING ITS TURN AND BACK OFF THE ONE LEAVING —
+   * one property, tweened, and the drawing of it is in global.css
+   * (.powers-card::before, an opacity over the resting lime).
    *
-   * EVERY SLOT IS WRITTEN ON EVERY MOVE, not just the three that changed. It is
-   * the same cost — a tween to a value a slot already holds resolves on the
-   * first frame — and it is what makes a jump of any size land correctly: a
-   * restored scroll position can move the run four slots at once, and a loop that
-   * only touched the neighbourhood would leave the slots it skipped standing
-   * open behind it.
+   * A TWEEN AND NOT A CSS TRANSITION, for the reason the mark's exit gives at
+   * length in that file: this file writes the property as an inline style, and
+   * a transition between two inline writes in the same task is coalesced into no
+   * change at all. A tween owns the value on both sides of the move.
    *
-   * `animated` is false for exactly those jumps: landing mid-section should look
-   * like a stack that was always this way rather than like one rearranging
-   * itself the moment it is looked at. */
-  const openTo = (want: number, animated: boolean) => {
+   * `overwrite` so a reader throwing the wheel through three cards leaves each
+   * one with exactly one thing writing its fill — the card they land on going
+   * down, and the ones they passed coming back up.
+   *
+   * NOT ANIMATED FROM THE SHAPE TRIGGER OR THE RESET. Both of those happen where
+   * the section cannot be seen, and a colour change spent below the fold is one
+   * nobody gets — the same call every other un-animated path in this file
+   * makes. */
+  const fillTo = (slot: HTMLElement, to: number, animated: boolean) => {
+    /* KILLED OUTRIGHT RATHER THAN OVERWRITTEN, and the difference is a real bug.
+       `overwrite: "auto"` resolves on the new tween's FIRST RENDER, not when it
+       is created — so a fill created and then immediately countermanded in the
+       same tick (which is exactly what a reader throwing the wheel off the top
+       of the section does: the pin plays a card, the shape trigger shuts the run
+       a moment later) leaves the un-rendered fill alive to overwrite the shut
+       and put the green back on a card nobody is looking at. Killing first is
+       ordering-independent. Nothing else tweens a slot — the arrangement is
+       written straight to the element — so this cannot take anything with it. */
+    gsap.killTweensOf(slot);
+    tweens.push(
+      gsap.to(slot, {
+        "--pow-fill": to,
+        duration: animated ? POWERS_REVEAL.FILL_DURATION : 0,
+        ease: POWERS_REVEAL.FILL_EASE,
+      }),
+    );
+  };
+  const unfill = (slot: HTMLElement, animated: boolean) =>
+    fillTo(slot, 0, animated);
+
+  /* WHERE THE RUN IS STANDING, as a slot index that does not have to be a whole
+   * number — and this one function is the whole of the arrangement.
+   *
+   * A SLOT'S TWO NUMBERS ARE A FUNCTION OF THE DISTANCE FROM `pos` and nothing
+   * else. --pow-open is 1 on the slot the position is sitting on and falls
+   * linearly to 0 a slot away; --pow-shown is 1 out to `reach` and falls
+   * linearly to 0 a slot beyond it. At a whole number that is exactly the
+   * arrangement this section has always had — one open, one either side settled
+   * back, the rest collapsed — and BETWEEN two whole numbers it is the run
+   * halfway to its next step.
+   *
+   * THE COLUMN ADDS UP AT EVERY POSITION AND NOT ONLY AT THE WHOLE ONES, which
+   * is what makes a scrub legal here at all. Both figures are linear in the
+   * distance, and every slot's height and margin in global.css are linear in the
+   * figures — so what one slot gives up another takes, exactly, on every frame.
+   * Half a step between cards: two slots at half open (40vh each, against 50 and
+   * 30) and two at half shown (15vh each, against 30 and 0), which is the same
+   * 110vh and the same three margins as any whole step. The stack is centred by
+   * the window and never has to be corrected for.
+   *
+   * WRITTEN STRAIGHT TO THE ELEMENT rather than through gsap.set, because this
+   * runs on every scroll update and there is nothing to interpolate: the tween
+   * IS the scroll. Every slot is written on every call, not just the three that
+   * changed — it is what makes a jump of any size land correctly, and a
+   * restored scroll position can move the run four slots at once.
+   *
+   * A NEGATIVE `pos` IS THE RUN SHUT — the state before the section is reached
+   * and the one it is put back into above its top edge. */
+  const place = (pos: number) => {
+    for (let j = 0; j < slots.length; j++) {
+      const d = Math.abs(j - pos);
+      const shown = pos < 0 ? 0 : Math.min(Math.max(reach + 1 - d, 0), 1);
+      const open_ = pos < 0 ? 0 : Math.min(Math.max(1 - d, 0), 1);
+      slots[j].style.setProperty("--pow-shown", String(shown));
+      slots[j].style.setProperty("--pow-open", String(open_));
+    }
+  };
+
+  /* WHICH CARD IS THE ONE BEING READ — and this is the discrete half, the half
+   * the geometry above deliberately is not.
+   *
+   * Everything PRINTED belongs here: the dark green coming down over the card,
+   * the claim, the mark and the sentence. None of it is scrubbed and none of it
+   * ever was — the long note at the top of this file makes that argument, and
+   * the mark settles it on its own. What changed is that this no longer moves
+   * the stack; it only says which card the stack is moving towards, which is
+   * what the writing has always actually been keyed to.
+   *
+   * `animated` is false for the shape trigger, which opens the first card below
+   * the fold where an entrance would be spent on nobody. */
+  const focus = (want: number, animated: boolean) => {
     if (want === open) return;
     const leaving = open;
     open = want;
+
+    /* THE PENDING DROP, CANCELLED THE MOMENT THE CARD CHANGES — before anything
+       else happens, and whatever the card is changing TO. play() cancels it too,
+       but play() is not reached when the run is being SHUT: a reader who throws
+       the wheel back off the top of the section within MARK_AT of a card taking
+       its turn used to leave a delayedCall in flight that dropped a mark onto a
+       card that had already been collapsed, and it sat there at "go" waiting to
+       be found on the way back down. */
+    markCall?.kill();
     /* A different card is open, so nothing on it is written yet — whatever the
        card before it had on it is being reversed off a few lines down. The
        `animated` branch at the foot of this function puts it back to true if it
        plays; the un-animated branch deliberately leaves it false, which is what
        the pin's onEnter is waiting for. */
     written = false;
-
-    slots.forEach((slot, j) => {
-      const shown = want >= 0 && Math.abs(j - want) <= reach ? 1 : 0;
-      tweens.push(
-        gsap.to(slot, {
-          "--pow-shown": shown,
-          "--pow-open": j === want ? 1 : 0,
-          duration: animated ? POWERS_REVEAL.OPEN_DURATION : 0,
-          ease: POWERS_REVEAL.OPEN_EASE,
-          overwrite: "auto",
-        }),
-      );
-    });
 
     /* EVERYTHING PRINTED ON A CARD BELONGS TO THE MIDDLE OF THE WINDOW.
      *
@@ -574,6 +744,11 @@ export function initSuperPowersReveal(root: HTMLElement): () => void {
       gone?.title.reverse();
       gone?.copy.reverse();
       liftMark(slots[leaving]);
+      /* AND THE GREEN BACK OFF IT, the way it came. The card is lime again by
+         the time it settles back, which is what makes the run read as one
+         colour being carried from card to card rather than three cards that
+         happen to be dark. */
+      unfill(slots[leaving], animated);
     }
 
     if (want < 0) return;
@@ -604,12 +779,20 @@ export function initSuperPowersReveal(root: HTMLElement): () => void {
        write itself has, by definition, written it. */
     written = true;
 
+    /* THE COLOUR FIRST. Both timelines below open with FILL_AT of nothing and
+       the mark's drop is held by the same figure, so the order on the card is
+       green, then pen, then box — see FILL_AT. */
+    fillTo(slots[j], 1, true);
+
     const contents = contentsOf(j);
     contents.title.play(0);
     contents.copy.play(0);
 
     markCall?.kill();
-    markCall = gsap.delayedCall(POWERS_REVEAL.MARK_AT, () => dropMark(slots[j]));
+    markCall = gsap.delayedCall(
+      POWERS_REVEAL.FILL_AT + POWERS_REVEAL.MARK_AT,
+      () => dropMark(slots[j]),
+    );
     tweens.push(markCall);
   };
 
@@ -657,13 +840,23 @@ export function initSuperPowersReveal(root: HTMLElement): () => void {
          an entrance spent here is an entrance nobody sees; coming back up, the
          reader is arriving at a section rather than watching one rearrange. The
          arrangement is layout, and layout does not have an entrance. */
-      onEnter: () => openTo(first, false),
+      onEnter: () => {
+        place(first);
+        focus(first, false);
+      },
       onEnterBack: () => {
-        if (open < 0) openTo(first, false);
+        if (open < 0) {
+          place(first);
+          focus(first, false);
+        }
       },
       onLeaveBack: () => {
-        openTo(-1, false);
-        for (const slot of slots) liftMark(slot);
+        place(-1);
+        focus(-1, false);
+        for (const slot of slots) {
+          liftMark(slot);
+          unfill(slot, false);
+        }
         /* Every card back to blank, and every timeline back to its own start so
            the next pass down the page plays them rather than finding them spent.
            clearProps is not the tool here — the parks below are exactly where the
@@ -689,8 +882,54 @@ export function initSuperPowersReveal(root: HTMLElement): () => void {
     }),
   );
 
-  /* THE PIN, and the beats spent on it. */
-  let step = -1;
+  /* THE PIN, and the beats spent on it.
+   *
+   * WHERE THE RUN STANDS AT A GIVEN PROGRESS, as one function — read by the
+   * pin's own update and again by its refresh, because a resize re-measures the
+   * pin without necessarily moving the reader and the stack has to be re-placed
+   * against the window it is now in.
+   *
+   * The pin's progress is read as a position along the beats: beat 0 is the
+   * first card, one beat per card after it, and one at the end to stand and look
+   * before the pin lets go. Inside a beat the reader gets HOLD of stillness and
+   * then the move, so `frac` past the hold is how far into the climb they have
+   * scrolled and MOVE_EASE is the shape of it.
+   *
+   * TWO THINGS COME OUT OF ONE NUMBER and they are deliberately different kinds
+   * of thing. `pos` is continuous and drives the arrangement, which therefore
+   * answers the wheel on every frame — that is the whole of the fix for a pin
+   * that felt like a wall. `want` is a whole slot and drives the WRITING, which
+   * is not scrubbed and must not be: it is the card the move is heading for, and
+   * it changes at TURN, the frame the two cards are the same size, so the green
+   * arrives on the card that is from then on the larger of the two and the pen
+   * starts while it is still growing into the middle.
+   *
+   * NOTHING HERE CAN FALL OUT OF STEP. The arrangement is recomputed from
+   * progress rather than tweened towards a target, so a wheel thrown through the
+   * whole section lands exactly where a slow one would; and `focus` is guarded
+   * on the card actually changing, so the same card being asked for sixty times
+   * a second costs one comparison and nothing else. */
+  const travel = (progress: number) => {
+    const t = progress * steps;
+    const beat = Math.min(Math.floor(t), steps - 1);
+    const frac = t - beat;
+
+    const moved =
+      frac <= POWERS_REVEAL.HOLD
+        ? 0
+        : POWERS_REVEAL.MOVE_EASE(
+            (frac - POWERS_REVEAL.HOLD) / (1 - POWERS_REVEAL.HOLD),
+          );
+
+    place(Math.min(first + beat + moved, last));
+
+    /* One card per beat, so the beat IS the slot less the pad in front of it —
+       and beat 0 asks for the card that is already open, which is what makes it
+       the held moment described at the step count. The last beat asks for the
+       last card again, which is the run standing still while the pin runs out. */
+    return Math.min(first + beat + (moved > POWERS_REVEAL.TURN ? 1 : 0), last);
+  };
+
   if (stage) {
     triggers.push(
       ScrollTrigger.create({
@@ -700,7 +939,7 @@ export function initSuperPowersReveal(root: HTMLElement): () => void {
            costs the same number of SCREENS whatever screen it is read on. THE
            SIBLINGS' pin is written the same way. */
         end: () =>
-          "+=" + Math.round(window.innerHeight * POWERS_REVEAL.BEAT * steps),
+          "+=" + Math.round(screenH() * POWERS_REVEAL.BEAT * steps),
         pin: stage,
         /* True pinning, not fake: the stage is the window's height in ordinary
            document flow, so it can be held with position: fixed and the rest of
@@ -709,6 +948,17 @@ export function initSuperPowersReveal(root: HTMLElement): () => void {
         /* Re-reads `end` on every refresh, which includes every resize. Without
            it the pin keeps the length it was built with on the old window. */
         invalidateOnRefresh: true,
+        /* AND THE PIN APPLIED A FRAME EARLY, which is the other half of what
+           made this section feel like hitting a wall. A pin is a threshold, and
+           under a smooth scroll the wheel can carry the page a long way past it
+           between two frames — so the section is still in flow on the frame that
+           crosses the pin point and is snapped into place on the next one, and
+           the faster the wheel the bigger the snap. SmoothScroll.tsx describes
+           the same failure on the home page's pin and fixes half of it by
+           updating ScrollTrigger from inside Lenis's own frame; this fixes the
+           rest by letting ScrollTrigger apply the pin slightly ahead of the
+           crossing, scaled by how fast the page is moving. */
+        anticipatePin: 1,
         /* THE FIRST CARD DEVELOPING, ON THE FRAME THE SECTION TAKES THE SCREEN.
          * Every other card writes itself as it takes its turn, but the first
          * card's turn began before the section was visible — its slot was opened
@@ -750,7 +1000,15 @@ export function initSuperPowersReveal(root: HTMLElement): () => void {
          * restore. The mark is left exactly as it is — it is a CSS animation,
          * nothing here is holding it, and a resize is not a reason to drop a box
          * on somebody. */
-        onRefresh: () => {
+        onRefresh: (self) => {
+          /* THE RUN PUT BACK WHERE IT STANDS, first. The arrangement is written
+             straight to the slots from scroll progress rather than held by a
+             tween (see `place`), so nothing is carrying it across a re-measure —
+             and a refresh can change the pin's length without moving the reader
+             at all, which would otherwise leave the stack holding the shape it
+             had against the old window. */
+          travel(self.progress);
+
           for (const [slot, c] of built) {
             for (const tl of [c.title, c.copy]) {
               tl.kill();
@@ -778,19 +1036,7 @@ export function initSuperPowersReveal(root: HTMLElement): () => void {
           }
         },
         onUpdate: (self) => {
-          const next = Math.min(
-            Math.floor(self.progress * steps),
-            steps - 1,
-          );
-          if (next === step) return;
-          step = next;
-
-          /* One card per beat, so the beat IS the slot less the pad in front of
-             it — and beat 0 asks for the card that is already open, which is what
-             makes it the held moment described at the step count. The last beat
-             asks for the last card again, which is the run standing still while
-             the pin runs out. */
-          openTo(Math.min(first + next, last), true);
+          focus(travel(self.progress), true);
         },
       }),
     );
@@ -815,11 +1061,15 @@ export function initSuperPowersReveal(root: HTMLElement): () => void {
     if (allRises.length) gsap.set(allRises, { clearProps: "transform" });
     for (const block of blocks) block.dataset.arrived = "";
     for (const slot of slots) clearMark(slot);
-    gsap.set(slots, { clearProps: "--pow-shown,--pow-open" });
+    gsap.set(slots, { clearProps: "--pow-shown,--pow-open,--pow-fill" });
     slots.forEach((slot, j) => {
       gsap.set(slot, {
         "--pow-shown": Math.abs(j - first) <= reach ? 1 : 0,
         "--pow-open": j === first ? 1 : 0,
+        /* Green on the card the window rests open on, for the reason the
+           reduced-motion branch gives: the resting state of this section is a
+           readable first card, and a readable card is a filled one. */
+        "--pow-fill": j === first ? 1 : 0,
       });
     });
   };

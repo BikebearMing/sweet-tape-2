@@ -19,6 +19,8 @@ import gsap from "gsap";
 
 import { whenRevealed } from "@/components/Preloader/gate";
 
+import { onViewportChange, screenH } from "@/components/viewport";
+
 /* The entrance. Straight from the original — a letter is quick on its own, and
    the stagger is what turns twenty-three of them into one move. */
 export const REVEAL = {
@@ -296,9 +298,29 @@ export function initCopyReveal(root: HTMLElement): () => void {
   }
 
   function measure() {
-    startY = docTop(el!) - window.innerHeight * 0.9;
+    startY = docTop(el!) - screenH() * 0.9;
     // The copy's own height plus a fifth of a screen: tall copy, long scrub.
-    travel = el!.offsetHeight + window.innerHeight * 0.2;
+    travel = el!.offsetHeight + screenH() * 0.2;
+  }
+
+  /* NOTHING TO SCRUB IF IT IS ALREADY THERE.
+   *
+   * The window above opens as the copy's top clears the bottom of the screen,
+   * which assumes the copy STARTS below the fold — true at 1440, where the
+   * cardboard sits at 958px under a 900px window. On a phone the hero is a
+   * column rather than a board and the same card lands at about 550px in an
+   * 844px window: on screen, at rest, before a single pixel has been scrolled.
+   *
+   * startY then comes out NEGATIVE, and the scrub is already part-run at scroll
+   * zero — the copy is painted at some fraction of its entrance, which is not a
+   * half-finished animation, it is a paragraph with letters missing from it.
+   * That is what the top of the page showed.
+   *
+   * So the entrance is only an entrance if there is one to make. If the copy is
+   * in view with the page at rest, it is simply set down and the ticker is never
+   * asked again. */
+  function alreadyIn() {
+    return docTop(el!) < screenH();
   }
 
   let best = 0; // the ratchet: the playhead never goes back
@@ -314,12 +336,18 @@ export function initCopyReveal(root: HTMLElement): () => void {
   const ro = new ResizeObserver(measure);
   ro.observe(root);
   const ac = new AbortController();
-  window.addEventListener("resize", measure, { signal: ac.signal, passive: true });
+  const stopVp = onViewportChange(measure);
 
   measure();
-  gsap.ticker.add(frame);
+  if (alreadyIn()) {
+    best = 1;
+    tl.progress(1);
+  } else {
+    gsap.ticker.add(frame);
+  }
 
   return () => {
+    stopVp();
     ac.abort();
     ro.disconnect();
     gsap.ticker.remove(frame);

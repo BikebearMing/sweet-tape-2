@@ -39,7 +39,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { initGiantParallax } from "./parallax";
 import { initGiantReveal } from "./reveal";
 
-import { screenH } from "@/components/viewport";
+import { screenHL } from "@/components/viewport";
 
 export const GIANT = {
   /** Where the FRAME takes the screen — .wrapper, not the section around it.
@@ -255,7 +255,11 @@ export function initGiantPinning(root: HTMLElement): () => void {
    */
   function readPath(): { stops: Stop[]; ends: boolean[]; opens: number[] } {
     const vw = window.innerWidth;
-    const vh = screenH();
+    /* screenHL() and not screenH(): this is the FRAME's height — .wrapper is
+       cut to --screen-lg — and the camera centres a phrase in it. Read the
+       small viewport here and every phrase would sit ~40px high of centre on a
+       phone, in a frame the reader can see all of. */
+    const vh = screenHL();
     const inset = vw * insetFraction();
     const stops: Stop[] = [];
     const ends: boolean[] = [];

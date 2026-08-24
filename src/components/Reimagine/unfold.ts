@@ -28,34 +28,62 @@
  * up is a sheet that was never opened — and unlike the section above this one,
  * none of this is scrubbed: the reader's arrival is the cue and the animation
  * has its own clock from there. It is a thing that HAPPENS, not a thing the
- * wheel drags.
- */
+ * wheel drags. That has not changed and it is not negotiable; what changed is
+ * that the section now HOLDS THE SCREEN while it happens.
+ *
+ * THE SECTION IS PINNED. The unfold and the writing run to four and three
+ * quarter seconds (LENGTH below does the arithmetic), which is more than a
+ * reader scrolling briskly gives a section that is not held — and the failure
+ * that came of leaving it unheld was not the tight timing. It was that the paper
+ * had ALREADY OPENED before the reader got to it: un-pinned, and triggered on
+ * its own centre reaching seven tenths of the way down the window, the whole
+ * flipbook ran off the bottom of the screen while the reader was still on the
+ * section above. What arrived was a sheet that had always been flat. See
+ * .reimagine in global.css, which argues the same decision from the layout end,
+ * and START below, which is where the trigger stopped guessing.
+ *
+ * AND `once` IS STILL WHAT MAKES THE PIN CHEAP RATHER THAN LOAD-BEARING.
+ * Nothing here is driven by scroll position, so the pin buys TIME and does not
+ * gate correctness: a reader who breaks out of it early still sees the paper
+ * spring open, the timeline runs on to its end whether or not the section is
+ * still on screen, and a reader who comes back finds the statement written and
+ * waiting rather than a ball of paper that has reset. If the pin were ever taken
+ * off again the section would degrade, not break. */
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+import { screenH } from "@/components/viewport";
 
 import { REVEAL } from "../Hero/reveal";
 
 export const REIMAGINE = {
-  /* WHERE THE SECTION HAS TO BE FOR IT TO GO, and it is measured off the
-   * section's CENTRE rather than its top edge — which is the whole of what this
-   * constant had wrong at first.
+  /* WHERE THE SCREEN CATCHES, AND IT IS ALSO WHERE THE PAPER GOES. One position
+   * for both, which is the point of pinning this section at all.
    *
-   * The ball sits in the middle of a section 1096 tall. Triggered on the
-   * section's top edge coming 70% down the window, the section is 630px in and
-   * the ball is at 1145 — a third of a screen BELOW the fold. The unfold played
-   * perfectly, off screen, every time; what the reader met on the way down was
-   * a sheet that had always been open.
+   * top top — the stage's top edge on the window's top edge, which for a stage
+   * exactly one screen tall means the stage IS the window. The pin catches, and
+   * on the same frame the ball of paper is dead centre of a screen with nothing
+   * else on it, has been visible for a moment on the way in, and has the whole
+   * window to open into. There is no gap between "the reader is looking at this"
+   * and "this starts" to get wrong.
    *
-   * On the centre it says what it means: the ball is 70% of the way down the
-   * window when the paper springs. It is on screen and has been for a moment
-   * before it goes, which is the beat the section is built on — a screen with
-   * nothing on it but a screwed-up piece of paper — and the sheet has most of
-   * the window to open into.
+   * WHAT IT REPLACED, because the trail is the argument. It was `center 70%`:
+   * the STAGE's centre reaching seven tenths of the way down the window. That is
+   * a guess at where the reader's eye is, and before it, it was `top 70%` — the
+   * box's TOP edge at 70%, which put the ball a third of a screen below the fold
+   * and played the entire unfold off the bottom of the window every time. Moving
+   * it to the centre fixed that particular miss and left the mechanism: a
+   * position on the way past, chosen by arithmetic, with nothing holding the
+   * reader there once it fired. A pinned start does not have the class of bug.
    *
-   * The section's centre and the ball's are 30px apart at the design size (the
-   * sheet sits a hair above centre, see .reimagine-sheet), which is close
-   * enough to call this the ball's own position. */
-  START: "center 70%",
+   * IT IS MEASURED ON THE STAGE AND NOT ON THE SECTION, and that distinction is
+   * live again rather than academic: the pin's spacer makes the section three
+   * screens tall while the stage stays one, so `top top` on the section and `top
+   * top` on the stage are the same instant only because the stage sits at the
+   * top of the spacer. The stage is also what is PINNED, and ScrollTrigger's own
+   * advice is that the pinned box is the honest trigger — .wanted-stage's
+   * trigger says the same. */
+  START: "top top",
 
   /* HOW LONG THE WHOLE UNFOLD TAKES, IN SECONDS. THIS IS THE KNOB.
    *
@@ -209,6 +237,36 @@ export const REIMAGINE = {
      The pinning section's own heading makes the same adjustment for the same
      reason. */
   STAGGER: 0.011,
+
+  /* HOW LONG THE SCREEN IS HELD, IN SCREENS. This is the pin's whole length and
+   * the only figure in this file measured in scroll rather than in seconds.
+   *
+   * WHAT IT HAS TO COVER is everything above it added up, and the sum is worth
+   * writing down because no single constant states it: UNFOLD 2 + TEXT_AT 0.67 +
+   * the writing (REVEAL.DURATION 0.6 plus STAGGER across the eighty-odd
+   * characters the statement turned out to have, so about 1.49) + TAPE.DURATION
+   * 0.55. Four and three quarter seconds from the first cut to the tape lying
+   * flat. Change any of those five and this is the figure that follows them.
+   *
+   * TWO SCREENS, WHICH IS 1800px AT A 900px WINDOW. A reader moving through a
+   * pinned section at a fairly typical 400px a second spends four and a half
+   * seconds in it — so the screen lets go at very nearly the moment the tape
+   * lands, which is the whole target. Faster than that and they break out early,
+   * which costs them the tail rather than the beat: the timeline is not scrubbed
+   * (see the head of this file), so it plays on to its end whether the section is
+   * still on the screen or not, and `once` means they never find it rewound.
+   *
+   * THE FAILURE AT EITHER END IS NOT SYMMETRICAL, which is why it is not longer.
+   * Too short and a fast reader misses the last two lines. Too long and EVERY
+   * reader gets dead scroll after the tape has landed — a screen that will not
+   * move with nothing left happening on it, which is the complaint people
+   * actually have about pinned pages. Erring short is erring on the side of the
+   * reader who is bored rather than the one who is behind.
+   *
+   * In screens rather than pixels so it means the same thing on a laptop and a
+   * phone, and re-read on every refresh — see `end` below, which is where the
+   * window's height is actually measured. */
+  LENGTH: 2,
 };
 
 /* Fisher–Yates, the hero's and the footer's. The shuffle IS the effect: reveal
@@ -396,10 +454,88 @@ export function initReimagine(root: HTMLElement): () => void {
     gsap.set(frames, { willChange: "auto" });
   });
 
+  /* THE STAGE IS THE TRIGGER, NOT THE SECTION — see START above, which is where
+     the difference between the two boxes is argued. The fallback is the section
+     itself, so a markup change that drops the wrapper degrades to the old
+     behaviour rather than to no section at all. */
+  const stage = root.querySelector<HTMLElement>(".reimagine-stage") ?? root;
+
   const st = ScrollTrigger.create({
-    trigger: root,
+    /* THE PINNED BOX IS THE TRIGGER, which is the same call .wanted-stage makes
+       and for the same reason: `start` is a statement about where THIS element
+       takes the screen, and the pin is what holds it there once it has. */
+    trigger: stage,
     start: REIMAGINE.START,
-    once: true,
+
+    /* Re-read on every refresh, which includes every resize — the pin's length
+       is the one thing here that is a function of the window. screenH() and not
+       innerHeight, for the reason components/viewport.ts gives: a retracting
+       mobile address bar must not change how long this section is mid-scroll. */
+    end: () => "+=" + Math.round(screenH() * REIMAGINE.LENGTH),
+
+    /* THE STAGE AND NOT THE SECTION, AND THAT IS THE ONE STRUCTURAL RULE THIS
+     * SITE HAS ABOUT PINNING.
+     *
+     * Pinning reparents: ScrollTrigger wraps the pinned element in a .pin-spacer
+     * and the element stops being a child of whatever React rendered it into.
+     * React never sees it happen, so on navigation it calls removeChild on a
+     * parent that is no longer the parent and the whole commit dies with a
+     * NotFoundError. Conveyor/Stage.tsx is where that was diagnosed and it
+     * carries the full account; the reason it happened THERE and not here is
+     * that it pins its section, which is a direct child of the page. A spacer
+     * built around an inner div is nested, and React removes the outermost node
+     * of a deleted subtree and lets the browser take the rest — so it never asks
+     * a question about it.
+     *
+     * This section has a stage precisely so it can pin one. Do not "simplify"
+     * this to `pin: true`. */
+    pin: stage,
+
+    /* True pinning, not fake: the stage is one screen in a normal document flow,
+       so ScrollTrigger can hold it with position: fixed and push the rest of the
+       page down with a spacer of its own. */
+    pinSpacing: true,
+
+    /* REFRESHED BEFORE ANYTHING THAT SITS BELOW IT.
+     *
+     * A refresh reverts every pin, measures the page in its natural state and
+     * puts the pins back, adding each one's spacing to the triggers that follow
+     * it — which only comes out right if the pins are measured down the page in
+     * order. This one is between the curtain and WE WANTED TO BE., and it now
+     * makes the document two screens longer than the trigger below it would
+     * otherwise measure. WE WANTED's crawl.ts documents exactly this failure
+     * happening to THIS SECTION back when the two were the other way round: it
+     * measured its start against a page without the pin above it and played its
+     * whole entrance 1620px early, off the bottom of the screen.
+     *
+     * 2 AND NOT SOMETHING BETWEEN 2 AND 1, which looks like a tie and is not
+     * one. The ladder on /about is the belt at 3, the curtain at 2, this at 2 and
+     * WE WANTED at 1. The curtain has no pin of its own — it is POSITIONED by
+     * the belt's, which is why it is above the default at all — and it sits
+     * ABOVE this section, so nothing it measures can be moved by this spacer and
+     * nothing this measures can be moved by it. Equal priority between two
+     * triggers that cannot affect each other is an honest statement that the
+     * order between them does not matter. What does matter is 2 > 1 and 2 < 3,
+     * and both of those are true. */
+    refreshPriority: 2,
+
+    /* THE CUE, AND IT IS ONLY EVER A CUE. onEnter and not `animation`, because
+     * the timeline is not tied to the scroll at all — the pin buys it time and
+     * the timeline keeps its own clock (see the head of this file).
+     *
+     * NO `once: true`, AND THAT IS NOT AN OVERSIGHT — IT IS THE OPPOSITE OF ONE.
+     * It was there when this trigger's only job was to fire the timeline, and
+     * `once` kills the ScrollTrigger the moment it has fired. Killing a pinning
+     * trigger REVERTS THE PIN: the spacer comes out of the document, the page
+     * loses two screens of height under the reader, and the section they are
+     * looking at is dragged up the window mid-unfold. The trigger has to outlive
+     * its own cue now that it is also holding the screen.
+     *
+     * Playing once is a property of the TIMELINE instead, and it comes free:
+     * play() on a timeline already at its end does nothing, so a reader who
+     * scrolls back above the start and comes down again re-enters the pin and
+     * finds the sheet exactly as they left it. Nothing here reverses, which is
+     * what a sheet of paper that has been opened does. */
     onEnter: () => tl.play(),
   });
 

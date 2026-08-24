@@ -51,7 +51,7 @@ const SLOT_LEN = SLOT.length;
     type: a little taller than the caps, and still clear of the tape's edges
     where the wave runs steepest. */
 export const BADGE_SIZE = 150;
-/** The roll, face-on. The vector copy rather than slider/opp/roll.png, which
+/** The roll, face-on. The vector copy rather than slider/opp/roll.webp, which
     is a 108px button graphic — at band size that is an upscale, and this sits
     under a grain overlay where softness shows. */
 export const BADGE_SRC = "/assets/slider/opp/card.svg";

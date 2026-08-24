@@ -269,10 +269,10 @@ export const tapes: Tape[] = [
     id: "masking",
     label: "Masking tape",
     word: "creative",
-    roll: "/assets/slider/masking/roll.png",
-    card: "/assets/slider/masking/card.png",
+    roll: "/assets/slider/masking/roll.webp",
+    card: "/assets/slider/masking/card.webp",
     model: "/assets/tapes/Masking-Tape.glb",
-    showcase: ["/assets/slider/masking/shot-1.png", "/assets/slider/masking/shot-2.png"],
+    showcase: ["/assets/slider/masking/shot-1.webp", "/assets/slider/masking/shot-2.webp"],
     tags: ["LABELING", "PAINT WORK", "BUNDLING"],
     copy: "Always ready for school projects, quick labels, and weekend crafts. Easygoing. Comes off clean. No drama.",
     /* PLACEHOLDER — the origin story has not been written for this tape. The
@@ -310,10 +310,10 @@ export const tapes: Tape[] = [
          rather than showing four broken images. Replace all four when the
          artwork lands. */
       shots: [
-        "/assets/slider/masking/shot-2.png",
-        "/assets/slider/masking/shot-1.png",
+        "/assets/slider/masking/shot-2.webp",
+        "/assets/slider/masking/shot-1.webp",
         "/assets/make-it-stick.jpg",
-        "/assets/slider/masking/shot-2.png",
+        "/assets/slider/masking/shot-2.webp",
       ], // placeholder
     },
     powers: PENDING_POWERS, // placeholder — see PENDING_POWERS above
@@ -330,10 +330,10 @@ export const tapes: Tape[] = [
     id: "double",
     label: "Double-sided tissue tape",
     word: "trusty",
-    roll: "/assets/slider/double/roll.png",
-    card: "/assets/slider/double/card.png",
+    roll: "/assets/slider/double/roll.webp",
+    card: "/assets/slider/double/card.webp",
     model: "/assets/tapes/Double-Tape.glb",
-    showcase: ["/assets/slider/double/shot-1.png", "/assets/slider/double/shot-2.png"],
+    showcase: ["/assets/slider/double/shot-1.webp", "/assets/slider/double/shot-2.webp"],
     tags: ["INVISIBLE HOLDING", "SMOOTH MOUNTING", "QUICK PATCHING"],
     copy: "The kind of tape that commits. Strong hold on both sides, easy to use, hard to let go.",
     /* PLACEHOLDER — the origin story has not been written for this tape. The
@@ -371,10 +371,10 @@ export const tapes: Tape[] = [
          rather than showing four broken images. Replace all four when the
          artwork lands. */
       shots: [
-        "/assets/slider/double/shot-2.png",
-        "/assets/slider/double/shot-1.png",
+        "/assets/slider/double/shot-2.webp",
+        "/assets/slider/double/shot-1.webp",
         "/assets/make-it-stick.jpg",
-        "/assets/slider/double/shot-2.png",
+        "/assets/slider/double/shot-2.webp",
       ], // placeholder
     },
     powers: PENDING_POWERS, // placeholder — see PENDING_POWERS above
@@ -391,12 +391,12 @@ export const tapes: Tape[] = [
     id: "stationery",
     label: "Stationery tape",
     word: "buddy",
-    roll: "/assets/slider/stationery/roll.png",
+    roll: "/assets/slider/stationery/roll.webp",
     card: "/assets/slider/stationery/card.svg",
     model: "/assets/tapes/Cello-Tape.glb",
     showcase: [
-      "/assets/slider/stationery/shot-1.png",
-      "/assets/slider/stationery/shot-2.png",
+      "/assets/slider/stationery/shot-1.webp",
+      "/assets/slider/stationery/shot-2.webp",
     ],
     tags: ["SMALL REPAIRS", "STICK & GO", "DESK DRAWER ESSENTIAL"],
     copy: "From broken corners to last-minute projects. Easy to tear. Easy to use. Weirdly reliable.",
@@ -435,10 +435,10 @@ export const tapes: Tape[] = [
          rather than showing four broken images. Replace all four when the
          artwork lands. */
       shots: [
-        "/assets/slider/stationery/shot-2.png",
-        "/assets/slider/stationery/shot-1.png",
+        "/assets/slider/stationery/shot-2.webp",
+        "/assets/slider/stationery/shot-1.webp",
         "/assets/make-it-stick.jpg",
-        "/assets/slider/stationery/shot-2.png",
+        "/assets/slider/stationery/shot-2.webp",
       ], // placeholder
     },
     powers: PENDING_POWERS, // placeholder — see PENDING_POWERS above
@@ -455,10 +455,10 @@ export const tapes: Tape[] = [
     id: "cloth",
     label: "Cloth tape",
     word: "fixer",
-    roll: "/assets/slider/cloth/roll.png",
-    card: "/assets/slider/cloth/card.png",
+    roll: "/assets/slider/cloth/roll.webp",
+    card: "/assets/slider/cloth/card.webp",
     model: "/assets/tapes/Cloth-Tape.glb",
-    showcase: ["/assets/slider/cloth/shot-1.png", "/assets/slider/cloth/shot-2.png"],
+    showcase: ["/assets/slider/cloth/shot-1.webp", "/assets/slider/cloth/shot-2.webp"],
     tags: ["HEAVY DUTY", "CARTON SEALING", "GAFFER WORK"],
     copy: "Built for the jobs that fight back. Tough weave, firm grip, tears clean by hand.",
     /* PLACEHOLDER — the origin story has not been written for this tape. The
@@ -496,10 +496,10 @@ export const tapes: Tape[] = [
          rather than showing four broken images. Replace all four when the
          artwork lands. */
       shots: [
-        "/assets/slider/cloth/shot-2.png",
-        "/assets/slider/cloth/shot-1.png",
+        "/assets/slider/cloth/shot-2.webp",
+        "/assets/slider/cloth/shot-1.webp",
         "/assets/make-it-stick.jpg",
-        "/assets/slider/cloth/shot-2.png",
+        "/assets/slider/cloth/shot-2.webp",
       ], // placeholder
     },
     powers: PENDING_POWERS, // placeholder — see PENDING_POWERS above
@@ -521,7 +521,7 @@ export const tapes: Tape[] = [
     id: "opp",
     label: "OPP tape",
     word: "reliable",
-    roll: "/assets/slider/opp/roll.png",
+    roll: "/assets/slider/opp/roll.webp",
     card: "/assets/slider/opp/card.svg",
     /* The only one delivered so far, and the page was designed around it. Not
        under /assets/slider/opp/ with the rest of this tape's files, because it
@@ -529,7 +529,7 @@ export const tapes: Tape[] = [
        tape's artwork lives together, and this is the exception worth naming
        rather than the rule being broken. Move it in when the other five land
        and the whole set can be keyed by id. */
-    hero: "/assets/opp-tape-inner-product.png",
+    hero: "/assets/opp-tape-inner-product.webp",
     /* The brown packing roll. It was opp.glb, which was in the tree, unused,
        and was a guess; this is the export the artwork was actually made for.
        It USED to be the hero's roll too — the hero now dispenses the low-noise
@@ -544,7 +544,7 @@ export const tapes: Tape[] = [
        whatever metalness, gloss and maps the close-up wants without the orbit of
        six changing by a pixel. Keep the bounding box. */
     modelInner: "/assets/tapes/Header-Brown-Inner.glb",
-    showcase: ["/assets/slider/opp/shot-1.png", "/assets/slider/opp/shot-2.png"],
+    showcase: ["/assets/slider/opp/shot-1.webp", "/assets/slider/opp/shot-2.webp"],
     tags: ["CARTON SEALING", "BULK PACKING", "BROWN"], // placeholder
     copy: "Placeholder copy for the OPP tape — replace before this goes anywhere near a build.", // placeholder
     /* The one that is written. Straight off the design. */
@@ -596,10 +596,10 @@ export const tapes: Tape[] = [
          rather than showing four broken images. Replace all four when the
          artwork lands. */
       shots: [
-        "/assets/slider/opp/shot-2.png",
-        "/assets/slider/opp/shot-1.png",
+        "/assets/slider/opp/shot-2.webp",
+        "/assets/slider/opp/shot-1.webp",
         "/assets/make-it-stick.jpg",
-        "/assets/slider/opp/shot-2.png",
+        "/assets/slider/opp/shot-2.webp",
       ], // placeholder
     },
     powers: PENDING_POWERS, // placeholder — see PENDING_POWERS above
@@ -622,15 +622,15 @@ export const tapes: Tape[] = [
     id: "opp-quiet",
     label: "OPP tape, low noise",
     word: "silent",
-    roll: "/assets/slider/opp-quiet/roll.png",
-    card: "/assets/slider/opp-quiet/card.png",
+    roll: "/assets/slider/opp-quiet/roll.webp",
+    card: "/assets/slider/opp-quiet/card.webp",
     /* THE HERO'S ROLL — the same file Hero/engine.ts opens the page with, so
        the slider shows the object the visitor has already been watching rather
        than a second model of it. */
     model: "/assets/tapes/Low-Noise-Tape.glb",
     showcase: [
-      "/assets/slider/opp-quiet/shot-1.png",
-      "/assets/slider/opp-quiet/shot-2.png",
+      "/assets/slider/opp-quiet/shot-1.webp",
+      "/assets/slider/opp-quiet/shot-2.webp",
     ],
     tags: ["LOW NOISE", "QUIET UNWIND", "NIGHT SHIFT"], // placeholder
     copy: "Placeholder copy for the low-noise OPP tape — replace before this goes anywhere near a build.", // placeholder
@@ -669,10 +669,10 @@ export const tapes: Tape[] = [
          rather than showing four broken images. Replace all four when the
          artwork lands. */
       shots: [
-        "/assets/slider/opp-quiet/shot-2.png",
-        "/assets/slider/opp-quiet/shot-1.png",
+        "/assets/slider/opp-quiet/shot-2.webp",
+        "/assets/slider/opp-quiet/shot-1.webp",
         "/assets/make-it-stick.jpg",
-        "/assets/slider/opp-quiet/shot-2.png",
+        "/assets/slider/opp-quiet/shot-2.webp",
       ], // placeholder
     },
     powers: PENDING_POWERS, // placeholder — see PENDING_POWERS above

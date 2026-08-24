@@ -4,8 +4,13 @@ import Mark, { type MarkKind } from "./Mark";
 import Stage from "./Stage";
 import { SENTENCE, START_OFFSET } from "./crawl";
 
-/* WE WANTED TO BE. — /about's second screen, and the first one with anything on
- * it.
+/* WE WANTED TO BE. — /about's last section, and where the green comes back.
+ *
+ * The two screens above this one are lime — a curtain falling over the belt, and
+ * the sheet of paper it reveals — and this is the page returning to the dark
+ * green it opened on, which is what closes it. It is also the last thing said
+ * and the plainest: the aisle, the answer, what the answer was for, and then the
+ * four words we wanted to be while we did it.
  *
  * ONE SENTENCE BENT ROUND A WAVE, CRAWLING RIGHT TO LEFT, and four boxes popping
  * up under it one at a time as it goes. The section is held still while a couple

@@ -39,7 +39,7 @@ const SHEET_HEADING = ["DROP US A", "MESSAGE"];
 
 /* The strip of tape holding the note to the board. The hero's own roll, at the
    hero's own size — one board, one roll. */
-const TAPE = "/assets/tape-on-note.png";
+const TAPE = "/assets/tape-on-note.webp";
 
 /* THE FORM'S FIELDS ARE DATA and not markup, which is what makes the row below
  * four lines instead of forty — and, more to the point, what makes changing one

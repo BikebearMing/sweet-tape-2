@@ -63,7 +63,7 @@ const CHIP = "HIGHLIGHT";
  * one number and the artwork's proportions are never typed.
  */
 const TAPE = {
-  src: "/assets/tape top.png",
+  src: "/assets/tape top.webp",
   ratio: 428 / 173,
   /* The roll's own colour, so the turned-back end shows the stuff the strip is
      made of rather than a sheet of paper grey. See BACKS in components/Peel. */

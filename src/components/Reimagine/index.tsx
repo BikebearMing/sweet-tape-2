@@ -3,15 +3,40 @@ import { letters } from "@/components/letters";
 import Peel from "@/components/Peel";
 import Stage from "./Stage";
 
-/* TO REIMAGINE AN EVERYDAY ESSENTIAL — /about's third screen, and the one the
+/* TO REIMAGINE AN EVERYDAY ESSENTIAL — /about's fourth section, and the one the
  * page has been building to.
  *
- * A BALL OF PAPER IN THE MIDDLE OF AN EMPTY LIME FIELD, WHICH OPENS. That is
- * the section: you scroll down onto what looks like a screen with nothing on it
- * but a screwed-up sheet, the sheet springs open, and the statement is written
- * across it. Everything the section has to say is on a piece of paper that was
- * thrown away and is being read anyway, which is the whole idea and the reason
- * the unfold is not decoration.
+ * IT IS THE SECOND HALF OF THE SECTION ABOVE IT, and that is why it sits where
+ * it sits. THAT'S WHY SWEET TAPE EXISTS. is not a sentence that finishes: read
+ * the two screens in order and they are one line — that's why Sweet Tape exists,
+ * TO REIMAGINE AN EVERYDAY ESSENTIAL AS SOMETHING MORE THOUGHTFUL, EXPRESSIVE
+ * AND FULL OF HEART — with the roll standing in the break. The lime runs on
+ * across the seam for the same reason: the curtain up there falls in this
+ * section's exact colour, so what rides out of the window at the end of it and
+ * what comes up behind it here are one unbroken ground. Neither the sentence nor
+ * the sheet survives putting another section between them.
+ *
+ * AND IT IS WHERE THE LIME IS PUT AWAY. This section is not one colour and the
+ * paper is lying across the join: the lime carries the top half of the sheet and
+ * the page's dark green carries the bottom half, running on into WE WANTED TO
+ * BE. without a boundary between them. The lime came down over the page as a
+ * curtain two sections ago and it goes back off here, halfway down the last
+ * thing printed on it. See --rei-split in global.css, which is measured off the
+ * photograph rather than off the box it is in.
+ *
+ * A BALL OF PAPER ON THE HORIZON, WHICH OPENS, AND THE SCREEN IS HELD WHILE IT
+ * DOES. That is the section: you scroll down onto a screen with nothing on it
+ * but a screwed-up sheet sitting on the line where the lime meets the green, the
+ * page stops, the sheet springs open, the statement is written across it and a
+ * strip of tape is laid over the gap in the third line — and then the page lets
+ * go. Everything the section has to say is on a piece of paper that was thrown
+ * away and is being read anyway, which is the whole idea and the reason the
+ * unfold is not decoration.
+ *
+ * THE PIN IS WHAT MAKES IT AN EVENT RATHER THAN SOMETHING THAT HAD HAPPENED.
+ * Un-held, the flipbook ran while the reader was still on the section above and
+ * what arrived was a sheet that had always been flat. ./unfold.ts argues the
+ * hold and its length; global.css argues the stage it is hung on.
  *
  * THE UNFOLD IS SIX PHOTOGRAPHS PLAYED IN ORDER — a flipbook, not a model. See
  * ./unfold.ts, which argues the mechanism and the cuts.
@@ -164,9 +189,23 @@ export default function Reimagine() {
                    * the reading, which is the tell. box is the artwork's own
                    * size as the stylesheet draws it — the design's 139.08 x
                    * 44.035 at the 1440 width — which the fold
-                   * arithmetic needs whenever the frame is turned; it is in em
-                   * so it scales with the type it is stuck to, and the height is
-                   * the artwork's 428x173 aspect.
+                   * arithmetic needs whenever the frame is turned, and the
+                   * height is the artwork's 428x173 aspect.
+                   *
+                   * IN --rei-u AND NOT IN vw, matching .reimagine-gap
+                   * .reimagine-tape in global.css, which sizes the same strip
+                   * and has to agree with this to the pixel. The section's unit
+                   * is capped so that the drawing fits the screen the pin holds
+                   * still; a strip still measured against the WINDOW would keep
+                   * its full size on a sheet that had shrunk under it, and lie
+                   * across the words either side of the hole.
+                   *
+                   * WRITTEN WITHOUT SPACES INSIDE THE calc(), WHICH IS LOAD
+                   * BEARING. Peel splits this prop on whitespace to get its two
+                   * lengths (see components/Peel), so a calc with spaces in it
+                   * arrives as four fragments and neither dimension survives.
+                   * CSS demands the spaces only around + and -; around * it
+                   * forbids nothing, which is what makes this writable at all.
                    *
                    * back is the kraft underside, because this is the brown
                    * packing roll — the same pairing the pinning section's tapes
@@ -174,12 +213,12 @@ export default function Reimagine() {
                   <span className="reimagine-gap">
                     <Peel
                       className="reimagine-tape"
-                      src="/assets/tape top.png"
+                      src="/assets/tape top.webp"
                       drive="manual"
                       from={0}
                       to={1}
                       direction="90deg"
-                      box="9.658vw 3.058vw"
+                      box="calc(9.658*var(--rei-u)) calc(3.058*var(--rei-u))"
                       back="peel-back-kraft"
                     />
                   </span>

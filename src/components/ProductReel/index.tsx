@@ -40,7 +40,7 @@ import Stage from "./Stage";
 
 /* THE KRAFT STRIP, and it is the site's own — the same file wherever a length of
    brown tape is drawn. Named here rather than written into the markup twice. */
-const KRAFT = "/assets/long-tape.png";
+const KRAFT = "/assets/long-tape.webp";
 
 /* The box Peel measures its fold against, in the stylesheet's own words rather
    than a second copy of the figures. --reel-tape-w / --reel-tape-h are the

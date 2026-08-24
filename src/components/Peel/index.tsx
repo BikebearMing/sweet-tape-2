@@ -216,13 +216,13 @@ const BACKS = {
      roll with the printed marks and the soft torn edges outvoted. Re-sample if
      the artwork is ever replaced — a value picked by eye off a screenshot picks
      up whatever the page was showing through it. */
-  "peel-back-kraft": "#dcad81", // tape top.png — the brown packing roll
-  "peel-back-black": "#2b2b2b", // black-tape.png
+  "peel-back-kraft": "#dcad81", // tape top.webp — the brown packing roll
+  "peel-back-black": "#2b2b2b", // black-tape.webp
   "peel-back-masking": "#d3c393", // tape-on-note / tape-on-lemon, the pale roll
 
   /* The slider's two, sampled the same way — median of the fully opaque pixels
-     of each file. The method checks out: re-run on black-tape.png it returns
-     #2b2b2b to the digit, and on tape-on-lemon.png #d3c494 against the #d3c393
+     of each file. The method checks out: re-run on black-tape.webp it returns
+     #2b2b2b to the digit, and on tape-on-lemon.webp #d3c494 against the #d3c393
      above.
 
      The clear one is the odd entry. Its artwork is drawn to be SCREENED over

@@ -129,7 +129,7 @@ const LEAN = { x: 100, y: 0 };
  *
  * THE NUMBER IS SET WHERE THE ARTWORK IS THE REFERENCE, AND IT IS SMALL. It is
  * scene.environmentIntensity, and it is turned up only as far as it takes to
- * bring the label back to the lime of /assets/opp-tape-inner-product.png — the
+ * bring the label back to the lime of /assets/opp-tape-inner-product.webp — the
  * flat hero this section's slot was designed around and the thing the roll
  * stands in for. Measured off a clean patch of the label field, that hero is
  * #b3d600; unlit the face rendered #8fb804, and at this setting it renders

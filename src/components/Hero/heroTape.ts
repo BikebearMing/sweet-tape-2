@@ -1316,6 +1316,40 @@ function curlNormals(geo: BufferGeometry) {
    same reasoning as FILM.FACE). */
 type Dome = { geo: BufferGeometry; flat: Float32Array };
 
+/* The export's normals, copied out into three packed floats per vertex.
+ *
+ * THROUGH getX/Y/Z AND NOT OFF .array, AND THE DIFFERENCE IS A BUG THAT SHIPPED.
+ * This was `(nor.array as Float32Array).slice()`, which is correct for exactly
+ * one vertex layout and silently wrong for the other. A glTF may store POSITION,
+ * NORMAL and TEXCOORD_0 as three separate arrays or INTERLEAVED into one buffer
+ * at a stride — both are legal, both load, and three gives you a BufferAttribute
+ * for the first and an InterleavedBufferAttribute for the second. Their `.array`
+ * is not the same thing: for the packed one it is the normals, for the
+ * interleaved one it is the entire woven buffer, positions and UVs included.
+ * Read at stride 3 that returns a blend of all three attributes.
+ *
+ * WHAT IT LOOKED LIKE, because nothing about it says "wrong array": applyDome
+ * takes each vertex's own normal as the axis to fan around, so a garbage axis
+ * gives a garbage dome. The label disc grew a hard faceted wedge across it where
+ * a smooth highlight belongs — a lighting fault, three layers away from the
+ * layout decision that caused it. It surfaced when the tape GLBs were re-written
+ * by a tool that interleaves on write (see scripts/shrink-tapes.mjs, which now
+ * also asks for the packed layout), and the exports had simply always been
+ * packed before that.
+ *
+ * getX/getY/getZ are the accessor both classes implement, and they do the stride
+ * arithmetic themselves. Slower than a slice of a few thousand vertices, once,
+ * at load — which is not a price worth having an invariant for. */
+function normalsOf(nor: BufferGeometry["attributes"][string]): Float32Array {
+  const out = new Float32Array(nor.count * 3);
+  for (let i = 0; i < nor.count; i++) {
+    out[i * 3] = nor.getX(i);
+    out[i * 3 + 1] = nor.getY(i);
+    out[i * 3 + 2] = nor.getZ(i);
+  }
+  return out;
+}
+
 /* Fan a disc's normals radially outward from its own centre.
  *
  * The axis is taken from each vertex's OWN exported normal rather than from one
@@ -2309,10 +2343,7 @@ export function createHeroTape(
           if (!domes.some((d) => d.geo === mesh.geometry)) {
             const nor = mesh.geometry.attributes.normal;
             if (nor) {
-              const dome = {
-                geo: mesh.geometry,
-                flat: (nor.array as Float32Array).slice(),
-              };
+              const dome = { geo: mesh.geometry, flat: normalsOf(nor) };
               domes.push(dome);
               applyDome(dome);
             }

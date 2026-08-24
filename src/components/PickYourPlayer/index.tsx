@@ -31,13 +31,16 @@ import Stage from "./Stage";
  * wrapper that owns the ref and hands the section to reveal.ts, fan.ts and the
  * shared body reveal; nothing below this line is a client component.
  *
- * THREE THINGS ARRIVE. The headline writes itself letter by letter in a
- * scattered order, which is the site's headline voice — the hero's, the
- * footer's and the closing key visual's (reveal.ts). The rolls are dealt out
- * left to right into a scatter and can then be picked up one at a time
- * (fan.ts). The small print rises a line at a time out of a floor that is not
- * drawn, which is the site's BODY voice and deliberately not the headline's
- * (components/bodyReveal.ts, shared with the footer's legal line).
+ * THREE THINGS ARRIVE, and the first two are timed to land together rather than
+ * in a queue. The headline writes itself letter by letter in a scattered order,
+ * which is the site's headline voice — the hero's, the footer's and the closing
+ * key visual's (reveal.ts). The rolls drop onto the line, left to right, and
+ * bounce there like six things put down too hard; from then on they can be
+ * picked up one at a time (fan.ts). The small print rises a line at a time out
+ * of a floor that is not drawn, which is the site's BODY voice and deliberately
+ * not the headline's (components/bodyReveal.ts, shared with the footer's legal
+ * line) — and it is the one of the three that is NOT on the preloader's cue: it
+ * is below the row, and it arrives when it is scrolled to.
  *
  * THE GEOMETRY IS IN global.css, in vw off the 1440 design width like the rest
  * of the site.
@@ -94,8 +97,11 @@ export default function PickYourPlayer() {
           THE ROLLS NEED NO SUCH ESCAPE, and that is worth saying rather than
           leaving to be noticed: their rest pose is the stylesheet's — square,
           evenly lapped, in order — and everything fan.ts does to them is on top
-          of a row that is already the row. No script, no scatter, no picking,
-          and the page still reads exactly as designed. */}
+          of a row that is already the row. That holds for the entrance as much
+          as for the picking: the rolls are parked above the line and at no size
+          by JavaScript, never by a rule here, so no script means no drop, no
+          scatter and no picking, and the page still reads exactly as designed
+          rather than showing an empty sheet where the row should be. */}
       <noscript>
         <style>{`.pick-player .char, .pick-player .body-rise { transform: none }`}</style>
       </noscript>

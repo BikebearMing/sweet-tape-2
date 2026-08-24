@@ -51,7 +51,7 @@ import Stage from "./Stage";
  * The design draws it already stuck down, and that is what this is.
  *
  * The same kraft roll the whole site tapes its photographs down with. */
-const TAPE = "/assets/tape top.png";
+const TAPE = "/assets/tape top.webp";
 
 export default function Article({ story }: { story: Story }) {
   return (

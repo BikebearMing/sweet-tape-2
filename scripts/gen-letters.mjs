@@ -35,10 +35,52 @@ import { fileURLToPath } from "node:url";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const marks = JSON.parse(readFileSync(join(ROOT, "src/data/wordmarks.json"), "utf8"));
 
-/** PNG header: width and height are big-endian uint32 at bytes 16 and 20. */
+/* THE ARTWORK'S INTRINSIC SIZE, READ OUT OF THE FILE HEADER.
+ *
+ * No image library — the two things this needs are four numbers near the front
+ * of the file, and a build script that can be run with plain node is worth more
+ * than one that cannot. It reads PNG and WebP because the letter artwork was
+ * converted to WebP and the PNGs it was made from may still be sitting beside
+ * it; whichever wordmarks.json names is what gets measured.
+ *
+ * WEBP IS THREE FORMATS IN ONE CONTAINER and all three have to be handled,
+ * because which one comes out is an encoder decision rather than ours: a
+ * lossless encode is VP8L, a lossy one is VP8, and either becomes VP8X the
+ * moment the file carries an alpha chunk or metadata. Guessing wrong here does
+ * not throw — it returns two plausible numbers off the wrong offsets, and the
+ * damage lands in letters.css as a letter with the wrong aspect ratio. */
 function dims(webPath) {
   const b = readFileSync(join(ROOT, "public", webPath));
-  return { w: b.readUInt32BE(16), h: b.readUInt32BE(20) };
+
+  /* PNG: the IHDR's width and height are big-endian uint32 at 16 and 20. */
+  if (b.readUInt32BE(0) === 0x89504e47) {
+    return { w: b.readUInt32BE(16), h: b.readUInt32BE(20) };
+  }
+
+  if (b.toString("ascii", 0, 4) === "RIFF" && b.toString("ascii", 8, 12) === "WEBP") {
+    const chunk = b.toString("ascii", 12, 16);
+
+    /* VP8X — the extended container. The canvas size is what matters and it is
+       stored MINUS ONE, as two 24-bit little-endian values at 24 and 27. */
+    if (chunk === "VP8X") {
+      return { w: b.readUIntLE(24, 3) + 1, h: b.readUIntLE(27, 3) + 1 };
+    }
+
+    /* VP8L — lossless. One 32-bit little-endian word at 21 carries both, 14
+       bits each and again minus one, width in the low bits. */
+    if (chunk === "VP8L") {
+      const v = b.readUInt32LE(21);
+      return { w: (v & 0x3fff) + 1, h: ((v >> 14) & 0x3fff) + 1 };
+    }
+
+    /* VP8 — lossy. Past the 3-byte frame tag and the 3-byte sync code, two
+       16-bit little-endian values whose low 14 bits are the dimensions. */
+    if (chunk === "VP8 ") {
+      return { w: b.readUInt16LE(26) & 0x3fff, h: b.readUInt16LE(28) & 0x3fff };
+    }
+  }
+
+  throw new Error(`dims: not a PNG or WebP — ${webPath}`);
 }
 
 /* THE. Three letters that never change, sharing out one fixed width — so each

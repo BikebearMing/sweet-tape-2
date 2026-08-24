@@ -46,7 +46,7 @@ import {
 } from "@/components/wordDip";
 import type { TapeViewer } from "./tape3d";
 
-import { screenH } from "@/components/viewport";
+import { onViewportChange, screenH } from "@/components/viewport";
 
 export function initTapeSlider(root: HTMLElement): () => void {
   const q = <T extends Element>(sel: string) => root.querySelector<T>(sel);
@@ -1149,20 +1149,23 @@ export function initTapeSlider(root: HTMLElement): () => void {
     viewIo.observe(root);
   }
 
-  let resizeTimer: ReturnType<typeof setTimeout>;
-  window.addEventListener(
-    "resize",
-    () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => {
-        measure();
-        place();
-        lastScroll = null; // offsetTop may have moved, so force a recompute
-        applyParallax();
-      }, 120);
-    },
-    { signal }
-  );
+  /* RE-PLACED ON A REAL VIEWPORT CHANGE, and this used to be a debounced
+     `resize`. The difference is the whole of components/viewport.ts: on iOS
+     Safari the address bar retracting fires `resize` several times during one
+     downward flick, and each one landed a re-measure of the track, a re-place of
+     the whole orbit and a forced parallax recompute a tenth of a second later —
+     six rolls jumping under the reader's thumb, on the one gesture where they
+     must not. A rotation or a dragged window corner still gets all four, because
+     that is a change of WIDTH and this section is drawn in vw.
+
+     The debounce goes with it: onViewportChange only fires when the numbers it
+     holds actually moved, so there is nothing left to debounce against. */
+  const stopVp = onViewportChange(() => {
+    measure();
+    place();
+    lastScroll = null; // offsetTop may have moved, so force a recompute
+    applyParallax();
+  });
 
   measure();
   gsap.set(rings, { scale: 0, opacity: 0 });
@@ -1285,7 +1288,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
      same DOM. */
   return () => {
     ac.abort();
-    clearTimeout(resizeTimer);
+    stopVp();
     io?.disconnect();
     viewIo?.disconnect();
     gsap.ticker.remove(applyParallax);

@@ -11,7 +11,7 @@ const nextConfig = {
   // Lets other devices on the LAN (phone previews) hit the dev server's
   // internal assets without Next blocking them as cross-origin. Dev-only
   // by definition; production ignores it.
-  allowedDevOrigins: ["192.168.100.127"],
+  allowedDevOrigins: ["192.168.100.127", "192.168.1.16", '192.168.0.36'],
 
   // Nothing else to configure for the front end — the artwork is served straight
   // from /public and none of it goes through next/image (see TapeSlider).

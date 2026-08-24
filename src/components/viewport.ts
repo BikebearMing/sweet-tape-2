@@ -46,9 +46,14 @@ const TOUCH =
   window.matchMedia("(hover: none) and (pointer: coarse)").matches;
 
 /* What the last measurement saw. Width decides whether a resize is real; height
-   is what everything else reads. */
+   is what everything else reads — two of them, the small viewport for boxes
+   that are arrived at with the toolbar out and the large one for the pinned
+   frames, which are always arrived at with it retracted. The stylesheet's
+   --screen / --screen-lg carry the same pair and the note at @property
+   --screen-lg argues the split. */
 let w = typeof window === "undefined" ? 0 : window.innerWidth;
 let h = 0;
+let hl = 0;
 
 /* Subscribers, called only when the numbers above actually moved. A Set rather
    than an array so a component that mounts twice under StrictMode and cleans up
@@ -68,8 +73,17 @@ const listeners = new Set<() => void>();
  * Falls back to innerHeight if the property is missing, which is a browser
  * without @property rather than a browser without svh. */
 function measureSmall(): number {
+  return measure("--screen");
+}
+
+/* The large viewport in pixels, read the same way off --screen-lg. */
+function measureLarge(): number {
+  return measure("--screen-lg");
+}
+
+function measure(prop: string): number {
   const raw = getComputedStyle(document.documentElement)
-    .getPropertyValue("--screen")
+    .getPropertyValue(prop)
     .trim();
   const px = parseFloat(raw);
   return Number.isFinite(px) && px > 0 ? px : window.innerHeight;
@@ -87,6 +101,13 @@ export function screenW(): number {
     the toolbar, of which this site has none. */
 export function screenH(): number {
   return h || window.innerHeight;
+}
+
+/** The window's height WITH THE TOOLBAR RETRACTED — the height a pinned frame
+    is cut to. Use this, and only this, for geometry measured against the inside
+    of a pin; everything else wants screenH(). See @property --screen-lg. */
+export function screenHL(): number {
+  return hl || window.innerHeight;
 }
 
 /** Subscribe to real viewport changes — a rotation or a desktop resize, never a
@@ -144,6 +165,7 @@ function sample(): boolean {
   if (!moved) return false;
   w = nw;
   h = nh;
+  hl = measureLarge();
   return true;
 }
 
@@ -157,8 +179,9 @@ function sample(): boolean {
    in-app webviews do — cannot move the layout mid-scroll. */
 export function initViewport(): () => void {
   h = measureSmall();
+  hl = measureLarge();
   w = window.innerWidth;
-  if (TOUCH) document.documentElement.style.setProperty("--screen", `${h}px`);
+  if (TOUCH) pin();
 
   const ac = new AbortController();
 
@@ -167,9 +190,9 @@ export function initViewport(): () => void {
        wrote — the property IS the measurement. Restoring the stylesheet's
        100svh lets the browser answer for the new orientation, then we pin the
        answer again. */
-    if (TOUCH) document.documentElement.style.removeProperty("--screen");
+    if (TOUCH) unpin();
     const changed = sample();
-    if (TOUCH) document.documentElement.style.setProperty("--screen", `${h}px`);
+    if (TOUCH) pin();
     if (changed) for (const fn of listeners) fn();
   }
 
@@ -188,6 +211,18 @@ export function initViewport(): () => void {
 
   return () => {
     ac.abort();
-    document.documentElement.style.removeProperty("--screen");
+    unpin();
   };
+}
+
+function pin() {
+  const st = document.documentElement.style;
+  st.setProperty("--screen", `${h}px`);
+  st.setProperty("--screen-lg", `${hl}px`);
+}
+
+function unpin() {
+  const st = document.documentElement.style;
+  st.removeProperty("--screen");
+  st.removeProperty("--screen-lg");
 }

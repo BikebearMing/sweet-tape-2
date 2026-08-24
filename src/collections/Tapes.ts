@@ -46,7 +46,7 @@ export const Tapes: CollectionConfig = {
           name: "roll",
           type: "text",
           required: true,
-          admin: { description: "Thumbnail on the orbit, e.g. /assets/rolling/roll-mask.png" },
+          admin: { description: "Thumbnail on the orbit, e.g. /assets/rolling/roll-mask.webp" },
         },
         {
           name: "card",

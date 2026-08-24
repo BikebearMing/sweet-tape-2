@@ -181,7 +181,7 @@ export interface Tape {
    */
   label: string;
   /**
-   * Thumbnail on the orbit, e.g. /assets/rolling/roll-mask.png
+   * Thumbnail on the orbit, e.g. /assets/rolling/roll-mask.webp
    */
   roll: string;
   /**

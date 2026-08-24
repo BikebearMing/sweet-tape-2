@@ -197,8 +197,8 @@ type Slot = {
  * In em of the giant type, like everything else inside a phrase, so a strip
  * scales with --giant-size along with the card it is holding down. */
 const TAPES = {
-  kraft: { src: "/assets/tape top.png", ratio: 428 / 173, back: "peel-back-kraft" },
-  black: { src: "/assets/black-tape.png", ratio: 213 / 106, back: "peel-back-black" },
+  kraft: { src: "/assets/tape top.webp", ratio: 428 / 173, back: "peel-back-kraft" },
+  black: { src: "/assets/black-tape.webp", ratio: 213 / 106, back: "peel-back-black" },
 } as const;
 
 type TapeName = keyof typeof TAPES;
@@ -261,7 +261,7 @@ const PANELS: Panel[] = [
     lead: "TO",
     word: "CREATE",
     slot: {
-      src: "/assets/slider/masking/shot-1.png",
+      src: "/assets/slider/masking/shot-1.webp",
       lift: 0.34,
       delay: 0.4,
       tilt: 3.19,
@@ -270,10 +270,10 @@ const PANELS: Panel[] = [
       e: "sine.inOut",
     },
     props: [
-      { src: "/assets/slider/double/shot-1.png", kind: "shot", x: 98, y: -15, w: 15, r: -8, z: 2, p: -0.03, e: "none" },
-      { src: "/assets/slider/double/card.png", kind: "tag", x: 69, y: -24, w: 17, r: -6, z: 1, p: 0.03, e: "sine.inOut" },
-      { src: "/assets/slider/masking/card.png", kind: "tag", x: 53, y: 58, w: 20, r: 5, z: 1, p: 0.03, e: "power1.inOut" },
-      { src: "/assets/slider/opp-quiet/card.png", kind: "tag", x: 94, y: 54, w: 18, r: -14, z: 1, p: -0.02, e: "power2.inOut" },
+      { src: "/assets/slider/double/shot-1.webp", kind: "shot", x: 98, y: -15, w: 15, r: -8, z: 2, p: -0.03, e: "none" },
+      { src: "/assets/slider/double/card.webp", kind: "tag", x: 69, y: -24, w: 17, r: -6, z: 1, p: 0.03, e: "sine.inOut" },
+      { src: "/assets/slider/masking/card.webp", kind: "tag", x: 53, y: 58, w: 20, r: 5, z: 1, p: 0.03, e: "power1.inOut" },
+      { src: "/assets/slider/opp-quiet/card.webp", kind: "tag", x: 94, y: 54, w: 18, r: -14, z: 1, p: -0.02, e: "power2.inOut" },
     ],
     /* Centred under the slot and just clear of it: the card spans 22.5%..37.4%
        of the row and ends at 73.8% of its height, and the note is 7.9% of the
@@ -286,7 +286,7 @@ const PANELS: Panel[] = [
     word: "FIX",
     tape: "black",
     slot: {
-      src: "/assets/slider/cloth/shot-1.png",
+      src: "/assets/slider/cloth/shot-1.webp",
       lift: 0.28,
       delay: 1.1,
       tilt: 9.6,
@@ -296,8 +296,8 @@ const PANELS: Panel[] = [
       e: "none",
     },
     props: [
-      { src: "/assets/slider/cloth/shot-2.png", kind: "shot", x: 32, y: 22, w: 21, r: -5, z: 1, p: -0.025, e: "power1.inOut" },
-      { src: "/assets/slider/cloth/card.png", kind: "tag", x: -5, y: 54, w: 16, r: 12, z: 1, p: 0.04, e: "sine.inOut" },
+      { src: "/assets/slider/cloth/shot-2.webp", kind: "shot", x: 32, y: 22, w: 21, r: -5, z: 1, p: -0.025, e: "power1.inOut" },
+      { src: "/assets/slider/cloth/card.webp", kind: "tag", x: -5, y: 54, w: 16, r: 12, z: 1, p: 0.04, e: "sine.inOut" },
     ],
     /* Above and to the left of BOTH pictures — the slot standing in the phrase's
        gap and the shot below it — so it reads as written about the pair rather
@@ -315,7 +315,7 @@ const PANELS: Panel[] = [
     lead: "TO",
     word: "PROTECT",
     slot: {
-      src: "/assets/slider/opp/shot-1.png",
+      src: "/assets/slider/opp/shot-1.webp",
       lift: 0.38,
       delay: 0.75,
       tilt: 4.8,
@@ -338,7 +338,7 @@ const PANELS: Panel[] = [
          depth cue disagreeing. At z 3 this wants a NEGATIVE p. It is left
          positive at 0.045 because that is the arrangement that was chosen; the
          one number to flip if it ever reads as sliding rather than as depth. */
-      { src: "/assets/slider/opp/shot-2.png", kind: "shot", x: 98, y: 12, w: 17, r: 5, z: 3, p: 0.045, e: "none" },
+      { src: "/assets/slider/opp/shot-2.webp", kind: "shot", x: 98, y: 12, w: 17, r: 5, z: 3, p: 0.045, e: "none" },
       { src: "/assets/slider/opp/card.svg", kind: "tag", x: 61, y: -66, w: 11, r: 6, z: 1, p: -0.02, e: "power2.inOut" },
       { src: "/assets/slider/opp/card.svg", kind: "tag", x: 43, y: 71, w: 16, r: 9, z: 1, p: 0.032, e: "power1.inOut" },
     ],

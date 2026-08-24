@@ -60,7 +60,7 @@ type Roll = {
 
 const ROLLS = {
   masking: {
-    src: "/assets/tape-on-lemon.png",
+    src: "/assets/tape-on-lemon.webp",
     box: [283, 134],
     ink: 0.968,
     back: "peel-back-masking",
@@ -79,7 +79,7 @@ const ROLLS = {
     blend: "screen",
   },
   cloth: {
-    src: "/assets/black-tape.png",
+    src: "/assets/black-tape.webp",
     box: [213, 106],
     ink: 0.916,
     back: "peel-back-black",
@@ -100,7 +100,7 @@ const ROLLS = {
    * opaque picture of a strip, not a set of highlights to be added to whatever
    * is underneath. */
   brown: {
-    src: "/assets/tape top.png",
+    src: "/assets/tape top.webp",
     box: [428, 173],
     ink: 0.972,
     back: "peel-back-masking",

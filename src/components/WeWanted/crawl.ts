@@ -351,23 +351,29 @@ export function initWeWanted(root: HTMLElement): () => void {
       pinSpacing: true,
       scrub: WANTED.SCRUB,
       invalidateOnRefresh: true,
-      /* REFRESHED BEFORE EVERY OTHER TRIGGER ON THE PAGE, and this is not a
-       * nicety — it is what makes the sections BELOW this one measure
-       * themselves correctly.
+      /* REFRESHED BEFORE ANY TRIGGER THAT COULD SIT BELOW THIS ONE.
        *
        * A refresh reverts every pin, measures the page in its natural state,
        * and puts the pins back, adding each pin's spacing to the triggers that
        * sit after it. That only comes out right if the pin is measured FIRST,
        * and the default order is the order the triggers were created in — which
-       * here is the wrong way round: this one is built inside a promise (the
-       * font wait above), so every trigger further down the page already
-       * exists by the time it appears.
+       * is the wrong way round for this one: it is built inside a promise (the
+       * font wait above), so every trigger further down the page already exists
+       * by the time it appears.
        *
-       * Left at the default, the section under this one measured its own start
-       * against a page without this pin's 1620px of spacer in it, and played
-       * its whole entrance that far early — off the bottom of the screen, where
-       * nobody saw it. Anything higher than the default fixes it; 1 says "this
-       * one first" and nothing else on the site claims a priority at all. */
+       * IT IS WRITTEN HERE BECAUSE OF A DEFECT, and the defect is worth keeping
+       * on the page even though the section it happened to is no longer
+       * underneath. TO REIMAGINE used to follow this one; left at the default it
+       * measured its own start against a page without this pin's 1620px of
+       * spacer in it, and played its whole entrance that far early — off the
+       * bottom of the screen, where nobody saw it. That section now sits ABOVE
+       * this one, so nothing on /about is currently exposed to it.
+       *
+       * THE PRIORITY STAYS ANYWAY, because it is a statement about THIS pin and
+       * not about who happened to be under it: a pin built late has to be
+       * measured first, and the page is not finished — the footer and the
+       * sign-off still to come go below this section. 1 says "this one first",
+       * above the default and below the curtain's 2 and the belt's 3. */
       refreshPriority: 1,
       animation: tl,
     });
@@ -379,10 +385,13 @@ export function initWeWanted(root: HTMLElement): () => void {
      * trigger is built inside a promise — the font wait above. Anything below
      * this section that had already measured itself did so against a document
      * without the spacer in it, so its start position is out by exactly the
-     * pin's length. It is not a subtle failure: the section under this one
-     * played its whole entrance 1620px early, off the bottom of the screen,
-     * every time, and what the reader met on the way down was a section that had
-     * already happened.
+     * pin's length. It is not a subtle failure: back when TO REIMAGINE sat under
+     * this section it played its whole entrance 1620px early, off the bottom of
+     * the screen, every time, and what the reader met on the way down was a
+     * section that had already happened. It sits above this one now and the call
+     * below is currently insurance rather than a fix — but it is the cheap half
+     * of a pair that costs a whole section when it is missing, and the page ends
+     * here only until the sign-off lands.
      *
      * ScrollTrigger refreshes everything on load and on resize; a trigger that
      * changes the page's height LATER, on its own schedule, is the case it

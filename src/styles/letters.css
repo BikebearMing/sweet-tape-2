@@ -36,21 +36,21 @@
 
 /* T — 120x212 */
 .top-title img:nth-child(1) {
-  --glyph: url("/assets/middle-T.png");
+  --glyph: url("/assets/middle-T.webp");
   flex-grow: 120;
   aspect-ratio: 120 / 212;
 }
 
 /* H — 139x207 */
 .top-title img:nth-child(2) {
-  --glyph: url("/assets/middle-H.png");
+  --glyph: url("/assets/middle-H.webp");
   flex-grow: 139;
   aspect-ratio: 139 / 207;
 }
 
 /* E — 120x214 */
 .top-title img:nth-child(3) {
-  --glyph: url("/assets/middle-E.png");
+  --glyph: url("/assets/middle-E.webp");
   flex-grow: 120;
   aspect-ratio: 120 / 214;
 }
@@ -71,7 +71,7 @@
 
 /* C — 95x221 */
 .bottom-title[data-word="creative"] .glyph:nth-child(1) {
-  --glyph: url("/assets/words/creative/C.png");
+  --glyph: url("/assets/words/creative/C.webp");
   --lw: 95;
   --lh: 221;
   --i: 0;
@@ -79,7 +79,7 @@
 
 /* R — 92x223 */
 .bottom-title[data-word="creative"] .glyph:nth-child(2) {
-  --glyph: url("/assets/words/creative/R.png");
+  --glyph: url("/assets/words/creative/R.webp");
   --lw: 92;
   --lh: 223;
   --i: 1;
@@ -87,7 +87,7 @@
 
 /* E — 77x219 */
 .bottom-title[data-word="creative"] .glyph:nth-child(3) {
-  --glyph: url("/assets/words/creative/E.png");
+  --glyph: url("/assets/words/creative/E.webp");
   --lw: 77;
   --lh: 219;
   --i: 2;
@@ -95,7 +95,7 @@
 
 /* A — 100x216 */
 .bottom-title[data-word="creative"] .glyph:nth-child(4) {
-  --glyph: url("/assets/words/creative/A.png");
+  --glyph: url("/assets/words/creative/A.webp");
   --lw: 100;
   --lh: 216;
   --i: 3;
@@ -103,7 +103,7 @@
 
 /* T — 75x217 */
 .bottom-title[data-word="creative"] .glyph:nth-child(5) {
-  --glyph: url("/assets/words/creative/T.png");
+  --glyph: url("/assets/words/creative/T.webp");
   --lw: 75;
   --lh: 217;
   --i: 4;
@@ -111,7 +111,7 @@
 
 /* I — 48x217 */
 .bottom-title[data-word="creative"] .glyph:nth-child(6) {
-  --glyph: url("/assets/words/creative/I.png");
+  --glyph: url("/assets/words/creative/I.webp");
   --lw: 48;
   --lh: 217;
   --i: 5;
@@ -119,7 +119,7 @@
 
 /* V — 99x222 */
 .bottom-title[data-word="creative"] .glyph:nth-child(7) {
-  --glyph: url("/assets/words/creative/V.png");
+  --glyph: url("/assets/words/creative/V.webp");
   --lw: 99;
   --lh: 222;
   --i: 6;
@@ -127,7 +127,7 @@
 
 /* E — 99x223 */
 .bottom-title[data-word="creative"] .glyph:nth-child(8) {
-  --glyph: url("/assets/words/creative/E2.png");
+  --glyph: url("/assets/words/creative/E2.webp");
   --lw: 99;
   --lh: 223;
   --i: 7;
@@ -145,7 +145,7 @@
 
 /* T — 114x221 */
 .bottom-title[data-word="trusty"] .glyph:nth-child(1) {
-  --glyph: url("/assets/words/trusty/T.png");
+  --glyph: url("/assets/words/trusty/T.webp");
   --lw: 114;
   --lh: 221;
   --i: 0;
@@ -153,7 +153,7 @@
 
 /* R — 144x225 */
 .bottom-title[data-word="trusty"] .glyph:nth-child(2) {
-  --glyph: url("/assets/words/trusty/R.png");
+  --glyph: url("/assets/words/trusty/R.webp");
   --lw: 144;
   --lh: 225;
   --i: 1;
@@ -161,7 +161,7 @@
 
 /* U — 129x218 */
 .bottom-title[data-word="trusty"] .glyph:nth-child(3) {
-  --glyph: url("/assets/words/trusty/U.png");
+  --glyph: url("/assets/words/trusty/U.webp");
   --lw: 129;
   --lh: 218;
   --i: 2;
@@ -169,7 +169,7 @@
 
 /* S — 128x220 */
 .bottom-title[data-word="trusty"] .glyph:nth-child(4) {
-  --glyph: url("/assets/words/trusty/S.png");
+  --glyph: url("/assets/words/trusty/S.webp");
   --lw: 128;
   --lh: 220;
   --i: 3;
@@ -177,7 +177,7 @@
 
 /* T — 117x224 */
 .bottom-title[data-word="trusty"] .glyph:nth-child(5) {
-  --glyph: url("/assets/words/trusty/T2.png");
+  --glyph: url("/assets/words/trusty/T2.webp");
   --lw: 117;
   --lh: 224;
   --i: 4;
@@ -185,7 +185,7 @@
 
 /* Y — 140x226 */
 .bottom-title[data-word="trusty"] .glyph:nth-child(6) {
-  --glyph: url("/assets/words/trusty/Y.png");
+  --glyph: url("/assets/words/trusty/Y.webp");
   --lw: 140;
   --lh: 226;
   --i: 5;
@@ -209,7 +209,7 @@
 
 /* B — 182x231 */
 .bottom-title[data-word="buddy"] .glyph:nth-child(1) {
-  --glyph: url("/assets/words/buddy/B.png");
+  --glyph: url("/assets/words/buddy/B.webp");
   --lw: 182;
   --lh: 231;
   --i: 0;
@@ -217,7 +217,7 @@
 
 /* U — 178x222 */
 .bottom-title[data-word="buddy"] .glyph:nth-child(2) {
-  --glyph: url("/assets/words/buddy/U.png");
+  --glyph: url("/assets/words/buddy/U.webp");
   --lw: 178;
   --lh: 222;
   --i: 1;
@@ -225,7 +225,7 @@
 
 /* D — 167x220 */
 .bottom-title[data-word="buddy"] .glyph:nth-child(3) {
-  --glyph: url("/assets/words/buddy/D.png");
+  --glyph: url("/assets/words/buddy/D.webp");
   --lw: 167;
   --lh: 220;
   --i: 2;
@@ -233,7 +233,7 @@
 
 /* D — 157x220 */
 .bottom-title[data-word="buddy"] .glyph:nth-child(4) {
-  --glyph: url("/assets/words/buddy/D2.png");
+  --glyph: url("/assets/words/buddy/D2.webp");
   --lw: 157;
   --lh: 220;
   --i: 3;
@@ -241,7 +241,7 @@
 
 /* Y — 193x231 */
 .bottom-title[data-word="buddy"] .glyph:nth-child(5) {
-  --glyph: url("/assets/words/buddy/Y.png");
+  --glyph: url("/assets/words/buddy/Y.webp");
   --lw: 193;
   --lh: 231;
   --i: 4;
@@ -265,7 +265,7 @@
 
 /* F — 197x217 */
 .bottom-title[data-word="fixer"] .glyph:nth-child(1) {
-  --glyph: url("/assets/words/fixer/F.png");
+  --glyph: url("/assets/words/fixer/F.webp");
   --lw: 197;
   --lh: 217;
   --i: 0;
@@ -273,7 +273,7 @@
 
 /* I — 117x212 */
 .bottom-title[data-word="fixer"] .glyph:nth-child(2) {
-  --glyph: url("/assets/words/fixer/I.png");
+  --glyph: url("/assets/words/fixer/I.webp");
   --lw: 117;
   --lh: 212;
   --i: 1;
@@ -281,7 +281,7 @@
 
 /* X — 200x206 */
 .bottom-title[data-word="fixer"] .glyph:nth-child(3) {
-  --glyph: url("/assets/words/fixer/X.png");
+  --glyph: url("/assets/words/fixer/X.webp");
   --lw: 200;
   --lh: 206;
   --i: 2;
@@ -289,7 +289,7 @@
 
 /* E — 181x216 */
 .bottom-title[data-word="fixer"] .glyph:nth-child(4) {
-  --glyph: url("/assets/words/fixer/E.png");
+  --glyph: url("/assets/words/fixer/E.webp");
   --lw: 181;
   --lh: 216;
   --i: 3;
@@ -297,7 +297,7 @@
 
 /* R — 221x221 */
 .bottom-title[data-word="fixer"] .glyph:nth-child(5) {
-  --glyph: url("/assets/words/fixer/R.png");
+  --glyph: url("/assets/words/fixer/R.webp");
   --lw: 221;
   --lh: 221;
   --i: 4;
@@ -321,7 +321,7 @@
 
 /* R — 147x244 */
 .bottom-title[data-word="reliable"] .glyph:nth-child(1) {
-  --glyph: url("/assets/words/reliable/R.png");
+  --glyph: url("/assets/words/reliable/R.webp");
   --lw: 147;
   --lh: 244;
   --i: 0;
@@ -329,7 +329,7 @@
 
 /* E — 115x236 */
 .bottom-title[data-word="reliable"] .glyph:nth-child(2) {
-  --glyph: url("/assets/words/reliable/E.png");
+  --glyph: url("/assets/words/reliable/E.webp");
   --lw: 115;
   --lh: 236;
   --i: 1;
@@ -337,7 +337,7 @@
 
 /* L — 80x232 */
 .bottom-title[data-word="reliable"] .glyph:nth-child(3) {
-  --glyph: url("/assets/words/reliable/L.png");
+  --glyph: url("/assets/words/reliable/L.webp");
   --lw: 80;
   --lh: 232;
   --i: 2;
@@ -345,7 +345,7 @@
 
 /* I — 39x228 */
 .bottom-title[data-word="reliable"] .glyph:nth-child(4) {
-  --glyph: url("/assets/words/reliable/I.png");
+  --glyph: url("/assets/words/reliable/I.webp");
   --lw: 39;
   --lh: 228;
   --i: 3;
@@ -353,7 +353,7 @@
 
 /* A — 111x229 */
 .bottom-title[data-word="reliable"] .glyph:nth-child(5) {
-  --glyph: url("/assets/words/reliable/A.png");
+  --glyph: url("/assets/words/reliable/A.webp");
   --lw: 111;
   --lh: 229;
   --i: 4;
@@ -361,7 +361,7 @@
 
 /* B — 129x231 */
 .bottom-title[data-word="reliable"] .glyph:nth-child(6) {
-  --glyph: url("/assets/words/reliable/B.png");
+  --glyph: url("/assets/words/reliable/B.webp");
   --lw: 129;
   --lh: 231;
   --i: 5;
@@ -369,7 +369,7 @@
 
 /* L — 113x229 */
 .bottom-title[data-word="reliable"] .glyph:nth-child(7) {
-  --glyph: url("/assets/words/reliable/L2.png");
+  --glyph: url("/assets/words/reliable/L2.webp");
   --lw: 113;
   --lh: 229;
   --i: 6;
@@ -377,7 +377,7 @@
 
 /* E — 133x240 */
 .bottom-title[data-word="reliable"] .glyph:nth-child(8) {
-  --glyph: url("/assets/words/reliable/E2.png");
+  --glyph: url("/assets/words/reliable/E2.webp");
   --lw: 133;
   --lh: 240;
   --i: 7;
@@ -395,7 +395,7 @@
 
 /* S — 139x204 */
 .bottom-title[data-word="silent"] .glyph:nth-child(1) {
-  --glyph: url("/assets/words/silent/S.png");
+  --glyph: url("/assets/words/silent/S.webp");
   --lw: 139;
   --lh: 204;
   --i: 0;
@@ -403,7 +403,7 @@
 
 /* I — 90x202 */
 .bottom-title[data-word="silent"] .glyph:nth-child(2) {
-  --glyph: url("/assets/words/silent/I.png");
+  --glyph: url("/assets/words/silent/I.webp");
   --lw: 90;
   --lh: 202;
   --i: 1;
@@ -411,7 +411,7 @@
 
 /* L — 156x207 */
 .bottom-title[data-word="silent"] .glyph:nth-child(3) {
-  --glyph: url("/assets/words/silent/L.png");
+  --glyph: url("/assets/words/silent/L.webp");
   --lw: 156;
   --lh: 207;
   --i: 2;
@@ -419,7 +419,7 @@
 
 /* E — 158x199 */
 .bottom-title[data-word="silent"] .glyph:nth-child(4) {
-  --glyph: url("/assets/words/silent/E.png");
+  --glyph: url("/assets/words/silent/E.webp");
   --lw: 158;
   --lh: 199;
   --i: 3;
@@ -427,7 +427,7 @@
 
 /* N — 184x210 */
 .bottom-title[data-word="silent"] .glyph:nth-child(5) {
-  --glyph: url("/assets/words/silent/N.png");
+  --glyph: url("/assets/words/silent/N.webp");
   --lw: 184;
   --lh: 210;
   --i: 4;
@@ -435,7 +435,7 @@
 
 /* T — 170x213 */
 .bottom-title[data-word="silent"] .glyph:nth-child(6) {
-  --glyph: url("/assets/words/silent/T.png");
+  --glyph: url("/assets/words/silent/T.webp");
   --lw: 170;
   --lh: 213;
   --i: 5;

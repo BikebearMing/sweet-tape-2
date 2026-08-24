@@ -256,7 +256,7 @@ export default function Hero() {
               The wrapper is what #tape-on-note sizes and places; the two copies
               of the artwork live inside it. */}
           <Peel
-            src="./assets/tape-on-note.png"
+            src="./assets/tape-on-note.webp"
             id="tape-on-note"
             back="peel-back-masking"
             drive="scroll"
@@ -279,7 +279,7 @@ export default function Hero() {
               box is 19vw by 8.997vw — the width #tape-on-lemon sets and the
               height its 283x134 artwork takes at that width. */}
           <Peel
-            src="./assets/tape-on-lemon.png"
+            src="./assets/tape-on-lemon.webp"
             id="tape-on-lemon"
             back="peel-back-masking"
             drive="scroll"
@@ -301,8 +301,8 @@ export default function Hero() {
               that. */}
           <HandNote />
           <div className="sticky-note" aria-hidden="true" />
-          <img id="paperclip" src="./assets/paper-clip-1.png" alt="" />
-          <img src="./assets/tape top.png" alt="" id="tape-top" />
+          <img id="paperclip" src="./assets/paper-clip-1.webp" alt="" />
+          <img src="./assets/tape top.webp" alt="" id="tape-top" />
         </div>
 
         

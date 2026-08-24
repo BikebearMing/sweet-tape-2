@@ -43,7 +43,7 @@ import { hrefOf, labelOf, type Story } from "@/data/news";
  *
  * The lead story keeps its peel: there is one of it, it is the size of a hand,
  * and the strip going on is half of what that section says. */
-const CARD_TAPE = "/assets/tape top.png";
+const CARD_TAPE = "/assets/tape top.webp";
 
 export default function StoryCard({ story }: { story: Story }) {
   return (

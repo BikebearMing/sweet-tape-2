@@ -116,7 +116,8 @@
 }
 
 html {
-  -webkit-text-size-adjust: 100%; /* stop iOS inflating text in landscape */
+  -webkit-text-size-adjust: 100%;
+  /* stop iOS inflating text in landscape */
 
   /* The gutter is reserved whether or not the page is scrollable at this
      moment, and it is the preloader that needs it: that lock is an
@@ -500,9 +501,12 @@ h6 {
    * copy needs to know the leading without also knowing the font-size, and the
    * news page's ruled cards are exactly that: their dotted rules are pitched off
    * --h2-line directly. */
-  --h2-size: 2.778vw; /* 40px */
-  --h2-line: 2.431vw; /* 35px — 87.5% */
-  --h2-track: -0.083vw; /* -1.2px */
+  --h2-size: 2.778vw;
+  /* 40px */
+  --h2-line: 2.431vw;
+  /* 35px — 87.5% */
+  --h2-track: -0.083vw;
+  /* -1.2px */
 
   /* THE MASTHEAD, AND THE LINE EVERY ROUTE OPENS UNDER.
    *
@@ -531,9 +535,11 @@ h6 {
    * deliberately not part of this: that one is type in a headline, not
    * furniture over a page, and TopBand renders nothing on the home page. */
   --top-inset: 1.2vw;
-  --top-mark-w: 9vw; /* 130px — furniture, so smaller than the hero's 12.7vw */
+  --top-mark-w: 9vw;
+  /* 130px — furniture, so smaller than the hero's 12.7vw */
   --top-mark-h: calc(var(--top-mark-w) * 118 / 191);
-  --masthead: calc(var(--top-inset) + var(--top-mark-h)); /* 6.76vw */
+  --masthead: calc(var(--top-inset) + var(--top-mark-h));
+  /* 6.76vw */
 
   /* THE PRODUCT PAGE'S ROLL — ONE BOX WITH TWO ADDRESSES, and the reason it is
    * up here rather than in either of them.
@@ -563,8 +569,10 @@ h6 {
    * live on either section alone. 2.2 is what the phone block sets it to and
    * where that comes from is argued there. */
   --product-scale: 1;
-  --product-roll-w: calc(30.625vw * var(--product-scale)); /* 441px */
-  --product-roll-h: calc(28.889vw * var(--product-scale)); /* 416px */
+  --product-roll-w: calc(30.625vw * var(--product-scale));
+  /* 441px */
+  --product-roll-h: calc(28.889vw * var(--product-scale));
+  /* 416px */
 }
 
 /* THE PHONE'S MASTHEAD, and it is the one place on this site where a figure
@@ -608,8 +616,10 @@ h6 {
        .giant-pinning .h2 both out-specify a bare class and are part of their own
        compositions; what is left is the level itself, which is the story cards
        on /news and /news/[id]. */
-    --h2-size: 5.6vw; /* 22px at 390 */
-    --h2-line: 4.9vw; /* 87.5%, as at 1440 */
+    --h2-size: 5.6vw;
+    /* 22px at 390 */
+    --h2-line: 4.9vw;
+    /* 87.5%, as at 1440 */
     --h2-track: -0.17vw;
   }
 }
@@ -735,7 +745,8 @@ html[data-loading] {
      condensed capitals run about six times the type size, so much past 2.9vw
      and the line is wider than the thing it belongs to. */
   --pre-line: 2.8vw;
-  --pre-gap: 1.4vw; /* mark to line */
+  --pre-gap: 1.4vw;
+  /* mark to line */
 
   position: fixed;
   inset: 0;
@@ -929,7 +940,8 @@ html[data-loading] {
    baseline. */
 .site-preloader .clip {
   display: block;
-  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  flex: 0 0 auto;
+  /* these are letters, not a layout — never shrink one */
   overflow: hidden;
   padding: 0.1em 0.06em 0;
   margin: -0.1em -0.06em 0;
@@ -959,6 +971,7 @@ html[data-loading] {
    page. The scroll lock goes with it: nothing is left to unlock it, since
    Preloader/reveal.ts releases the gate on mount and never builds a timeline. */
 @media (prefers-reduced-motion: reduce) {
+
   .site-preloader,
   .site-haze {
     display: none;
@@ -1180,11 +1193,9 @@ html[data-loading] {
   top: 0.12vw;
   bottom: 0.12vw;
   width: 0.2vw;
-  background-image: radial-gradient(
-    circle at 50% 50%,
-    currentColor 42%,
-    transparent 45%
-  );
+  background-image: radial-gradient(circle at 50% 50%,
+      currentColor 42%,
+      transparent 45%);
   background-size: 100% 0.35vw;
   background-repeat: repeat-y;
   opacity: 0.9;
@@ -1210,10 +1221,10 @@ html[data-loading] {
   /* The badge in the kicker's gap — its painted width, and how far it rides
      above the line it is centred on. Both are read by .hero-mark below, which
      is where the reasoning for them is. */
-  --hero-mark-w: 12.7vw; /* 183px at the 1440 design width */
-  --hero-mark-h: calc(
-    var(--hero-mark-w) * 118 / 191
-  ); /* the artwork's aspect */
+  --hero-mark-w: 12.7vw;
+  /* 183px at the 1440 design width */
+  --hero-mark-h: calc(var(--hero-mark-w) * 118 / 191);
+  /* the artwork's aspect */
   --hero-mark-lift: 0.5vw;
 
   /* Positioned only to lift the type over .top's grain — a positioned
@@ -1368,9 +1379,9 @@ html[data-loading] {
 
 .hero-section .h1 .line .clip {
   --u: calc(2 * var(--i) / (var(--letters) - 1) - 1);
-  transform-origin: 50% 100%; /* pivot on the baseline, not the letter centre */
-  transform: translateY(calc(var(--arc-drop) * (1 - var(--u) * var(--u))))
-    rotate(calc(var(--arc-tilt) * var(--u) * -1));
+  transform-origin: 50% 100%;
+  /* pivot on the baseline, not the letter centre */
+  transform: translateY(calc(var(--arc-drop) * (1 - var(--u) * var(--u)))) rotate(calc(var(--arc-tilt) * var(--u) * -1));
 }
 
 /* Split letters — the boxes.
@@ -1383,7 +1394,8 @@ html[data-loading] {
    image inside holds the dip. */
 .hero-section .clip {
   display: block;
-  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  flex: 0 0 auto;
+  /* these are letters, not a layout — never shrink one */
   overflow: hidden;
   /* Headroom, then handed straight back.
      ------------------------------------
@@ -1513,7 +1525,8 @@ html[data-loading] {
   top: 56vw;
   left: 4.5vw;
   width: 30vw;
-  aspect-ratio: 1 / 0.94; /* matches the sheet, NOTE.W : NOTE.H */
+  aspect-ratio: 1 / 0.94;
+  /* matches the sheet, NOTE.W : NOTE.H */
   /* The pin-up lean. On the slot rather than in the scene so a tape graphic
      laid over this box inherits the same tilt for free. */
   rotate: 3deg;
@@ -1553,6 +1566,7 @@ html[data-loading] {
    all raised the same way and for the same reason.
    -------------------------------------------------------------------------- */
 @media (max-width: 767px) {
+
   /* Nearly two screens of section against the desktop's one and a bit. The
      props below are stacked down a column rather than spread across a board,
      and a column needs the room. */
@@ -1732,7 +1746,8 @@ html[data-loading] {
   left: -5vw;
   display: block;
   width: calc(100% + 10vw);
-  max-width: none; /* the reset's img/svg max-width:100% would re-clamp this */
+  max-width: none;
+  /* the reset's img/svg max-width:100% would re-clamp this */
   /* Matches the viewBox (1760 units over 110vw is the same 16 units/vw). */
   aspect-ratio: 1760 / 540;
   /* The lean. On the svg, not the section, so the tape and its marquee tilt
@@ -1760,7 +1775,8 @@ html[data-loading] {
    colours — the band belongs to the page, and the rolls' palettes churn. */
 .wave-band .band-text {
   font-family: var(--font-heading);
-  font-size: 155px; /* viewBox units, not screen px */
+  font-size: 155px;
+  /* viewBox units, not screen px */
   font-weight: 800;
   letter-spacing: 0.02em;
   fill: #013900;
@@ -1842,7 +1858,8 @@ html[data-loading] {
      intrinsic width — they would refuse to shrink and overflow the word. */
   min-width: 0;
   height: auto;
-  max-width: none; /* the reset's max-width:100% would squash these */
+  max-width: none;
+  /* the reset's max-width:100% would squash these */
 }
 
 /* The tape's word, laid out AT THE SIZE IT WAS DRAWN, one letter at a time.
@@ -1857,7 +1874,8 @@ html[data-loading] {
   flex: 0 0 auto;
   width: calc(var(--lw) * var(--unit));
   height: calc(var(--lh) * var(--unit));
-  max-width: none; /* the reset's max-width:100% would squash these */
+  max-width: none;
+  /* the reset's max-width:100% would squash these */
 }
 
 /* The clipping box. The wrapper holds the letter's place on the arc, the image
@@ -1944,7 +1962,8 @@ html[data-loading] {
 }
 
 .tape-slider-parent .top-title {
-  width: 26.32vw; /* 379px at the 1440 design width */
+  width: 26.32vw;
+  /* 379px at the 1440 design width */
 }
 
 /* The arc every word sits on. Each letter keeps the x flex gives it and is only
@@ -1972,8 +1991,10 @@ html[data-loading] {
    different lengths one type size from slide to slide. The arc is taste; the
    size is a system. */
 .bottom-title {
-  --arc-depth: 1.3vw; /* how far the middle sits below the two ends */
-  --arc-tilt: 8deg; /* lean on the outermost letters */
+  --arc-depth: 1.3vw;
+  /* how far the middle sits below the two ends */
+  --arc-tilt: 8deg;
+  /* lean on the outermost letters */
 }
 
 /* On the wrapper, not the image. The image's transform belongs to the dip, and
@@ -1990,11 +2011,8 @@ html[data-loading] {
      NEIGHBOURS — a transform never does — so the kerning is safe either way. */
   transform-origin: var(--dorigin, 50% 100%);
 
-  transform: translate(
-      var(--dx, 0px),
-      calc(var(--arc-depth) * (1 - var(--u) * var(--u)) + var(--dy, 0px))
-    )
-    rotate(calc(var(--arc-tilt) * var(--u) * -1 + var(--dr, 0deg)));
+  transform: translate(var(--dx, 0px),
+      calc(var(--arc-depth) * (1 - var(--u) * var(--u)) + var(--dy, 0px))) rotate(calc(var(--arc-tilt) * var(--u) * -1 + var(--dr, 0deg)));
 }
 
 /* Per-letter tuning — taste, not measurement — lives in letters-tuning.css,
@@ -2137,7 +2155,7 @@ html[data-loading] {
 
      In vw so it scales with the layout; black at low alpha so it holds over all
      four stage colours. */
-  & .showcase > img {
+  & .showcase>img {
     display: block;
     border-radius: 3.472vw;
     box-shadow: 0.7vw 1vw 0 var(--drop-ink);
@@ -2338,13 +2356,15 @@ html[data-loading] {
   top: 50%;
   transform: translateY(-50%);
   width: 19vw;
-  z-index: 5; /* above the colour layers, below the roll picker */
+  z-index: 5;
+  /* above the colour layers, below the roll picker */
 }
 
 .tags {
   display: flex;
   flex-direction: column;
-  gap: 4.74vw; /* chips to paragraph */
+  gap: 4.74vw;
+  /* chips to paragraph */
 }
 
 /* align-items:flex-start is what keeps each chip the width of its own label —
@@ -2390,12 +2410,15 @@ html[data-loading] {
 .tag .h6:nth-child(1) {
   --rot: -1.7deg;
 }
+
 .tag .h6:nth-child(2) {
   --rot: 0.9deg;
 }
+
 .tag .h6:nth-child(3) {
   --rot: -0.6deg;
 }
+
 .tag .h6:nth-child(4) {
   --rot: 1.4deg;
 }
@@ -2416,11 +2439,9 @@ html[data-loading] {
   transform: translateY(-50%);
   width: 0.2vw;
   height: 1.05vw;
-  background-image: radial-gradient(
-    circle at 50% 50%,
-    currentColor 42%,
-    transparent 45%
-  );
+  background-image: radial-gradient(circle at 50% 50%,
+      currentColor 42%,
+      transparent 45%);
   background-size: 100% 33.333%;
   background-repeat: repeat-y;
   opacity: 0.9;
@@ -2439,6 +2460,7 @@ html[data-loading] {
    is global; only where a particular one sits is its own section's business,
    which is the split .tape-slider-parent .subhead argues above. */
 @media (max-width: 767px) {
+
   .tag .h6,
   .subhead,
   .rolling-tag,
@@ -2538,8 +2560,10 @@ html[data-loading] {
   top: 0;
   overflow: hidden;
   pointer-events: none;
-  transform: translateY(-100%); /* parked above the stage until a sweep runs */
-  z-index: 7; /* over the real subhead, under the roll picker */
+  transform: translateY(-100%);
+  /* parked above the stage until a sweep runs */
+  z-index: 7;
+  /* over the real subhead, under the roll picker */
 }
 
 /* Cancels the outer box's travel so the copy holds still on screen while the
@@ -2741,6 +2765,7 @@ html[data-loading] {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .rail-track,
   .rail-track button img {
     transition: none;
@@ -2778,6 +2803,7 @@ html[data-loading] {
    the same flip, the same word dip. Nothing below is a behaviour.
    -------------------------------------------------------------------------- */
 @media (max-width: 767px) {
+
   /* Room under the drawing for the copy and the orbit, which on the desktop sit
      beside it rather than below it. --screen and not a vw height, so a short
      phone still gets a stage taller than its own window. */
@@ -3243,7 +3269,7 @@ html[data-loading] {
 
 /* Everything on the canvas is placed the same way, off the same two variables,
    so a new piece of scenery needs no rule of its own — just --gx / --gy. */
-.giant-canvas > * {
+.giant-canvas>* {
   position: absolute;
   left: var(--gx);
   top: var(--gy);
@@ -3302,7 +3328,8 @@ html[data-loading] {
 
 .diagup-to-horizontal {
   --gx: 371vw;
-  --gy: 48vw; /* the climb: back to CREATE's level */
+  --gy: 48vw;
+  /* the climb: back to CREATE's level */
 }
 
 /* ON THE LEGS, in the clear space between two phrase spans and below both of
@@ -3325,9 +3352,11 @@ html[data-loading] {
 .diag-down-arrow,
 .diag-up-arrow {
   width: 26vw;
-  height: 17.33vw; /* 26 / (150 / 100) */
+  height: 17.33vw;
+  /* 26 / (150 / 100) */
   color: var(--giant-ink);
-  opacity: 0.75; /* a pencil note on the page, not a piece of signage */
+  opacity: 0.75;
+  /* a pencil note on the page, not a piece of signage */
 }
 
 /* Drawn, not masked. The stroke is what reveal.ts runs a dash along, and a mask
@@ -3399,9 +3428,11 @@ html[data-loading] {
   font-family: var(--font-heading);
   font-size: var(--giant-size);
   font-weight: 800;
-  line-height: 0.82; /* condensed caps: the face's own leading is all shoulder */
+  line-height: 0.82;
+  /* condensed caps: the face's own leading is all shoulder */
   letter-spacing: -0.005em;
-  white-space: nowrap; /* a phrase that wrapped would break the staircase */
+  white-space: nowrap;
+  /* a phrase that wrapped would break the staircase */
   margin: 0;
 
   /* A ROW OF LETTER BOXES, not a run of text — the phrase is split per character
@@ -3460,7 +3491,8 @@ html[data-loading] {
   width: var(--giant-slot);
   /* margin: 0 0.16em 0 0.1em; */
   position: relative;
-  z-index: 2; /* over the type: it is laid ON the line, not set into it */
+  z-index: 2;
+  /* over the type: it is laid ON the line, not set into it */
 
   /* Per card, from index.tsx. `rotate` rather than `transform` for the reason
      this file keeps giving — except that here it is safe: the tape inside is a
@@ -3598,7 +3630,7 @@ html[data-loading] {
    nothing distinguishes it yet, and this is where that goes when it does.
    flex rather than contents so its letters carry on the parent's row as their
    own boxes, which is what the mask needs them to be. */
-.giant-row .giant > span {
+.giant-row .giant>span {
   display: flex;
 }
 
@@ -3609,7 +3641,8 @@ html[data-loading] {
    -------------------------------------------------------------------------- */
 .giant-pinning .clip {
   display: block;
-  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  flex: 0 0 auto;
+  /* these are letters, not a layout — never shrink one */
   overflow: hidden;
 
   /* Headroom, then handed straight back. line-height here is 0.82 on the
@@ -3747,7 +3780,7 @@ html[data-loading] {
    picture's height and everything placed against the wrapper — the strip — is
    placed against the picture. The radius is inherited rather than repeated: the
    wrapper is what the rule above rounds, and the corners have to agree. */
-.giant-prop--shot > img {
+.giant-prop--shot>img {
   display: block;
   width: 100%;
   height: auto;
@@ -3830,6 +3863,7 @@ html[data-loading] {
    arrows going too, since they point along legs that are no longer there.
    -------------------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
+
   /* --giant-size IS NOT SET HERE ANY MORE. It has to be, and it is — at the END
      of this section, after the phone block, because the phone block sets its own
      and would otherwise win on order. See the note there. */
@@ -3863,7 +3897,7 @@ html[data-loading] {
     will-change: auto;
   }
 
-  .giant-canvas > * {
+  .giant-canvas>* {
     position: relative;
     left: auto;
     top: auto;
@@ -3924,7 +3958,8 @@ html[data-loading] {
    -------------------------------------------------------------------------- */
 @media (max-width: 767px) {
   .giant-pinning {
-    --giant-size: 91.67vw; /* 38.194 x 2.4 */
+    --giant-size: 91.67vw;
+    /* 38.194 x 2.4 */
     --giant-open-gx: 2.4vw;
     --giant-tail: 43vw;
     /* NOT scaled with the rest — the bite is an edge treatment shared with the
@@ -3999,7 +4034,8 @@ html[data-loading] {
   .diag-down-arrow,
   .diag-up-arrow {
     width: 62.4vw;
-    height: 41.6vw; /* 62.4 / (150 / 100) */
+    height: 41.6vw;
+    /* 62.4 / (150 / 100) */
   }
 
   .diag-down-arrow {
@@ -4126,8 +4162,7 @@ html[data-loading] {
 
   position: relative;
   width: 100%;
-  padding: var(--stick-pad-y) var(--stick-pad-x)
-    calc(var(--stick-pad-y) + var(--stick-arc));
+  padding: var(--stick-pad-y) var(--stick-pad-x) calc(var(--stick-pad-y) + var(--stick-arc));
   background: var(--stick-bg);
 }
 
@@ -4168,10 +4203,8 @@ html[data-loading] {
   background-size: 100% auto;
   background-repeat: repeat-y;
   opacity: 0.2;
-  -webkit-mask-image: linear-gradient(
-    rgba(0, 0, 0, 0.45) 0,
-    #000 var(--stick-pad-y)
-  );
+  -webkit-mask-image: linear-gradient(rgba(0, 0, 0, 0.45) 0,
+      #000 var(--stick-pad-y));
   mask-image: linear-gradient(rgba(0, 0, 0, 0.45) 0, #000 var(--stick-pad-y));
   pointer-events: none;
 }
@@ -4284,7 +4317,8 @@ html[data-loading] {
   justify-content: space-between;
   align-items: center;
   height: var(--stick-card-h);
-  padding: 4.236vw 2vw 3.819vw; /* 61px / 55px at the design width */
+  padding: 4.236vw 2vw 3.819vw;
+  /* 61px / 55px at the design width */
   border-radius: var(--stick-radius);
   background: var(--stick-card-bg);
   color: var(--stick-ink);
@@ -4340,7 +4374,8 @@ html[data-loading] {
 .make-it-stick .clip,
 .top-story .clip {
   display: block;
-  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  flex: 0 0 auto;
+  /* these are letters, not a layout — never shrink one */
   overflow: hidden;
   padding: 0.2em 0.06em 0;
   margin: -0.2em -0.06em 0;
@@ -4371,6 +4406,7 @@ html[data-loading] {
    before hydration, when the stylesheet is holding them down on its own — the
    hero and the footer make the same pair of statements for the same reason. */
 @media (prefers-reduced-motion: reduce) {
+
   .make-it-stick .char,
   .top-story .char {
     transform: none;
@@ -4385,7 +4421,8 @@ html[data-loading] {
 .stick-sub {
   font-family: var(--font-body);
   /* Floored — see the note by .contact-input. */
-  font-size: max(14px, 1.181vw); /* 17px at 1440 */
+  font-size: max(14px, 1.181vw);
+  /* 17px at 1440 */
   font-weight: 700;
   line-height: 1.4;
 }
@@ -4475,6 +4512,7 @@ html[data-loading] {
    otherwise take it. The <noscript> block in index.tsx is the same fix for the
    other way peel.ts can fail to run. */
 @media (prefers-reduced-motion: reduce) {
+
   .make-it-stick .stick-tape,
   .top-story .stick-tape {
     --peel: 1;
@@ -4651,7 +4689,8 @@ html[data-loading] {
    * the rolls and the small print are laid out against each other and never
    * against this. */
   --pick-rise-ratio: 1922 / 491;
-  --pick-rise-bleed: 15.972vw; /* 230px at the 1440 design width */
+  --pick-rise-bleed: 15.972vw;
+  /* 230px at the 1440 design width */
   --pick-rise-crest: 12.5vw;
 
   /* The hero's pairing, which this page opens on exactly as the home page does:
@@ -4853,7 +4892,8 @@ html[data-loading] {
    through, and it wants to sit tight on the baseline. */
 .pick-player .clip {
   display: block;
-  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  flex: 0 0 auto;
+  /* these are letters, not a layout — never shrink one */
   overflow: hidden;
   padding: 0.2em 0.06em 0;
   margin: -0.2em -0.06em 0;
@@ -5060,7 +5100,7 @@ html[data-loading] {
    translate: this has to come out of the row's WIDTH as well as its look, or the
    row would measure a full six diameters wide and the portions fan.ts cuts it
    into would all be offset. */
-.pick-roll + .pick-roll {
+.pick-roll+.pick-roll {
   margin-left: calc(var(--pick-lap) * -1);
 }
 
@@ -5156,7 +5196,8 @@ html[data-loading] {
 
   font-family: var(--font-body);
   /* Floored — see the note by .contact-input. */
-  font-size: max(14px, 1.667vw); /* 24px at 1440 */
+  font-size: max(14px, 1.667vw);
+  /* 24px at 1440 */
   font-style: normal;
   font-weight: 700;
   /* A RATIO, NOT THE SIZE RESTATED, and it has to be one now that the size can
@@ -5230,7 +5271,8 @@ html[data-loading] {
     /* Two thirds of a roll, as on the desktop — the crest crosses the BACK
        row's lower third and the front row stands wholly on the green. */
     --pick-rise-crest: 20vw;
-    --pick-arc: 14vw; /* in step with --footer-arc's own phone figure */
+    --pick-arc: 14vw;
+    /* in step with --footer-arc's own phone figure */
 
     padding-bottom: calc(8vw + var(--pick-arc));
   }
@@ -5705,16 +5747,21 @@ html[data-loading] {
    ========================================================================== */
 .product-inner-info {
   --info-pad-x: 2.823vw;
-  --info-pad-y: 8.772vw; /* 126.31px at the design width */
-  --info-gutter: 5.379vw; /* 77.46px — between the two columns */
-  --info-left: 42.076vw; /* 605.89px — the left column's width */
+  --info-pad-y: 8.772vw;
+  /* 126.31px at the design width */
+  --info-gutter: 5.379vw;
+  /* 77.46px — between the two columns */
+  --info-left: 42.076vw;
+  /* 605.89px — the left column's width */
 
   /* THE ROLL, in the box Tokens declares — the opening section's slot is that
      same box, and roll.ts translates between the two with no scale in it. */
   --info-roll-w: var(--product-roll-w);
   --info-roll-h: var(--product-roll-h);
-  --info-roll-top: 4.236vw; /* 61.23px */
-  --info-roll-left: 7.569vw; /* 109.35px */
+  --info-roll-top: 4.236vw;
+  /* 61.23px */
+  --info-roll-left: 7.569vw;
+  /* 109.35px */
 
   /* THE PHOTOGRAPH the roll stands on. Its lean is the stencil's; the corner
      radius is the site's card radius, which every loose photograph on the page
@@ -5731,7 +5778,8 @@ html[data-loading] {
      value, used by both strips on this screen — the one in the paragraph and
      the one holding the photograph down — because they are the same piece of
      tape off the same roll and two sizes would read as two products. */
-  --info-tape-w: 11.327vw; /* 163.11px */
+  --info-tape-w: 11.327vw;
+  /* 163.11px */
 
   position: relative;
   width: 100%;
@@ -5787,7 +5835,8 @@ html[data-loading] {
 }
 
 .product-inner-info .wrapper {
-  position: relative; /* over the grain */
+  position: relative;
+  /* over the grain */
   display: flex;
   justify-content: center;
   gap: var(--info-gutter);
@@ -5882,7 +5931,7 @@ html[data-loading] {
    about the assembly. The site's hard cast shadow; see --drop-ink in :root for
    why it is crisp rather than blurred. box-shadow rather than a filter: it
    follows the corner radius for free, and a filter would rasterise the card. */
-.product-inner-info .info-shot > img {
+.product-inner-info .info-shot>img {
   display: block;
   width: 100%;
   height: 100%;
@@ -5961,8 +6010,10 @@ html[data-loading] {
    have been a sixth of a colour scheme nothing else on the page follows. */
 .product-inner-info .info-arrow {
   top: 3.5vw;
-  right: -1.6vw; /* the gutter — see the note above on which edge this is */
-  width: 5.9vw; /* ~85px at the design width */
+  right: -1.6vw;
+  /* the gutter — see the note above on which edge this is */
+  width: 5.9vw;
+  /* ~85px at the design width */
   height: 3.6vw;
   color: #b6fe00;
   z-index: 3;
@@ -6048,10 +6099,12 @@ html[data-loading] {
  * the caps are the drawing, and the data file and the screen reader both keep
  * the readable version. */
 .product-inner-info .h3 {
-  max-width: 41.667vw; /* 600px — the stencil's measure */
+  max-width: 41.667vw;
+  /* 600px — the stencil's measure */
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 5.278vw; /* 76px at the design width */
+  font-size: 5.278vw;
+  /* 76px at the design width */
   font-weight: 800;
   line-height: 0.88;
   letter-spacing: -0.12vw;
@@ -6081,7 +6134,8 @@ html[data-loading] {
    box would shave the tops off. */
 .product-inner-info .clip {
   display: block;
-  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  flex: 0 0 auto;
+  /* these are letters, not a layout — never shrink one */
   overflow: hidden;
   padding: 0.2em 0.06em 0;
   margin: -0.2em -0.06em 0;
@@ -6246,7 +6300,8 @@ html[data-loading] {
      pen gets thicker. */
   top: calc(100% - 0.06em);
   height: 0.37em;
-  color: #b6fe00; /* with the story it rules under, and the note and the arrow */
+  color: #b6fe00;
+  /* with the story it rules under, and the note and the arrow */
   pointer-events: none;
 }
 
@@ -6288,7 +6343,8 @@ html[data-loading] {
   .product-inner-info {
     --info-pad-x: 4vw;
     --info-pad-y: 14vw;
-    --info-gutter: 10vw; /* now the gap BETWEEN the two blocks, not beside them */
+    --info-gutter: 10vw;
+    /* now the gap BETWEEN the two blocks, not beside them */
     --info-left: auto;
 
     /* Against a column that is now the sheet: the roll keeps the 18% inset off
@@ -6330,7 +6386,7 @@ html[data-loading] {
     display: none;
   }
 
-  .product-inner-info .info-shot > img {
+  .product-inner-info .info-shot>img {
     border-radius: 3vw;
     box-shadow: 1.5vw 2vw 0 var(--drop-ink);
   }
@@ -6374,15 +6430,19 @@ html[data-loading] {
 
   /* The label card: lime, and cornered at the design's own 100px. */
   --sib-card-bg: #c6fd00;
-  --sib-radius: 6.944vw; /* 100px */
+  --sib-radius: 6.944vw;
+  /* 100px */
 
   /* THE THREE SIZES AND THE DROP — the whole arrangement, in four numbers.
      430px for the middle one and 402 for the two beside it, which sit 115px
      lower. The row comes to 402 + 18 + 430 + 18 + 402 = 1270px, leaving 85px of
      green either side at the design width. */
-  --sib-w: 29.861vw; /* 430px — the middle card */
-  --sib-w-side: 27.917vw; /* 402px — the two beside it */
-  --sib-drop: 7.986vw; /* 115px — how much lower those two sit */
+  --sib-w: 29.861vw;
+  /* 430px — the middle card */
+  --sib-w-side: 27.917vw;
+  /* 402px — the two beside it */
+  --sib-drop: 7.986vw;
+  /* 115px — how much lower those two sit */
   /* Half the design's 36 — three labels put down close enough to read as one
      handful rather than as three things on a shelf, which is what the reference
      effect's overlapping deal is after. It is the one figure here that is not
@@ -6395,7 +6455,8 @@ html[data-loading] {
      going the other way is the name: it is placed between the two outer cards,
      and a gap wide enough to pull their inner edges inside THE SIBLINGS' measure
      would have them standing on it. */
-  --sib-gap: 0.2vw; /* 18px between cards */
+  --sib-gap: 0.2vw;
+  /* 18px between cards */
 
   /* HOW FAR THE LABEL IS INSET IN THE CARD. The design rules 65 / 65 / 64 / 64
      from the four edges of a 430px card, which is even to within a pixel and is
@@ -6403,7 +6464,8 @@ html[data-loading] {
      measured four times. As a PER CENT of the card and not in vw, so the two
      sizes above wear their labels in proportion rather than the smaller card
      carrying a fatter margin. */
-  --sib-face-inset: 15%; /* 64.5 / 430 */
+  --sib-face-inset: 15%;
+  /* 64.5 / 430 */
 
   /* The name, straight off the design: 70px, 60px of leading, -2.1px of
      tracking, and a lime a shade under the cards' own. It is deliberately not
@@ -6411,8 +6473,10 @@ html[data-loading] {
      it as the quieter one, which is the whole reason the design specifies two
      limes rather than one. */
   --sib-title-ink: #a8f000;
-  --sib-title-size: 4.861vw; /* 70px */
-  --sib-title-gap: 3.472vw; /* 50px, the middle card's bottom to the name */
+  --sib-title-size: 4.861vw;
+  /* 70px */
+  --sib-title-gap: 3.472vw;
+  /* 50px, the middle card's bottom to the name */
 
   position: relative;
   width: 100%;
@@ -6551,9 +6615,7 @@ html[data-loading] {
   /* Positioned, so the label inside is inset against the card. */
   position: relative;
   flex: none;
-  width: calc(
-    var(--sib-w-side) + (var(--sib-w) - var(--sib-w-side)) * var(--sib-raised)
-  );
+  width: calc(var(--sib-w-side) + (var(--sib-w) - var(--sib-w-side)) * var(--sib-raised));
   aspect-ratio: 1;
   margin-top: calc(var(--sib-drop) * (1 - var(--sib-raised)));
   border-radius: var(--sib-radius);
@@ -6653,7 +6715,8 @@ html[data-loading] {
   /* 60px against a 70px setting — the design's own figure, as a ratio so it
      follows the size. */
   line-height: 0.857;
-  letter-spacing: -0.146vw; /* -2.1px */
+  letter-spacing: -0.146vw;
+  /* -2.1px */
   white-space: nowrap;
 }
 
@@ -6676,7 +6739,8 @@ html[data-loading] {
    that room straight back to the layout. */
 .siblings-title .clip {
   display: block;
-  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  flex: 0 0 auto;
+  /* these are letters, not a layout — never shrink one */
   overflow: hidden;
   padding: 0.2em 0.06em 0;
   margin: -0.2em -0.06em 0;
@@ -6739,7 +6803,8 @@ html[data-loading] {
     /* Still the design's 27% of the middle card — the two beside it drop by
        their own share, not by a length that has stopped meaning anything. */
     --sib-drop: 8.9vw;
-    --sib-radius: 7.7vw; /* 100/430 of the card, as at 1440 */
+    --sib-radius: 7.7vw;
+    /* 100/430 of the card, as at 1440 */
     --sib-title-size: 9vw;
     --sib-title-gap: 6vw;
   }
@@ -6894,7 +6959,8 @@ html[data-loading] {
   /* Between the cards. Small: three claims about one tape read as one handful
      rather than as three things on a shelf, which is the same call THE SIBLINGS'
      --sib-gap makes. INFERRED. */
-  --pow-gap: calc(var(--screen-lg) * 0.012); /* the pin's screen — see @property --screen-lg */
+  --pow-gap: calc(var(--screen-lg) * 0.012);
+  /* the pin's screen — see @property --screen-lg */
 
   /* THE CARD'S SHAPE AND ITS CORNER, struck off the open height rather than
      measured, so a card is the same object at any window. A shade wider than it
@@ -7006,7 +7072,8 @@ html[data-loading] {
 .powers-name .clip,
 .powers-card-title .clip {
   display: block;
-  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  flex: 0 0 auto;
+  /* these are letters, not a layout — never shrink one */
   overflow: hidden;
   padding: 0.22em 0.06em 0;
   margin: -0.22em -0.06em 0;
@@ -7103,13 +7170,7 @@ html[data-loading] {
      A slot outside the window multiplies out to nothing at all, which is what
      collapses it; one inside is somewhere between shut and open. The whole
      mechanic is this line. */
-  height: calc(
-    var(--pow-shown) *
-      (
-        var(--pow-shut-h) + (var(--pow-open-h) - var(--pow-shut-h)) *
-          var(--pow-open)
-      )
-  );
+  height: calc(var(--pow-shown) * (var(--pow-shut-h) + (var(--pow-open-h) - var(--pow-shut-h)) * var(--pow-open)));
   /* THE GAP IS A MARGIN AND NOT THE STACK'S `gap`, and that is what keeps the
      window's height honest. A flex `gap` is drawn between every pair of
      children, collapsed ones included — so eight slots would contribute seven
@@ -7212,8 +7273,7 @@ html[data-loading] {
   left: 0;
   right: 0;
   height: var(--pow-open-h);
-  transform: translateY(-50%)
-    scale(calc(var(--pow-shut) + (1 - var(--pow-shut)) * var(--pow-open)));
+  transform: translateY(-50%) scale(calc(var(--pow-shut) + (1 - var(--pow-shut)) * var(--pow-open)));
 
   display: flex;
   flex-direction: column;
@@ -7485,201 +7545,267 @@ html[data-loading] {
   0% {
     transform: translateX(0px) translateY(-96px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   1.67% {
     transform: translateX(0px) translateY(-89.112px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   3.33% {
     transform: translateX(0px) translateY(-80.404px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   5% {
     transform: translateX(0px) translateY(-69.793px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   6.67% {
     transform: translateX(0px) translateY(-57.32px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   8.33% {
     transform: translateX(0px) translateY(-43.034px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   10% {
     transform: translateX(0px) translateY(-26.648px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   11.67% {
     transform: translateX(0px) translateY(-7.947px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   12.61% {
     transform: translateX(0px) translateY(4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   13.33% {
     transform: translateX(0px) translateY(0.313px) translate(197.938px, 182.651px) scaleX(1.089) scaleY(0.911) translate(-197.938px, -182.651px);
   }
+
   14.23% {
     transform: translateX(0px) translateY(0px) translate(197.938px, 182.651px) scaleX(1.2) scaleY(0.8) translate(-197.938px, -182.651px);
   }
+
   15% {
     transform: translateX(0px) translateY(-0.152px) translate(197.938px, 182.651px) scaleX(1.194) scaleY(0.806) translate(-197.938px, -182.651px);
   }
+
   16.67% {
     transform: translateX(0px) translateY(-1.264px) translate(197.938px, 182.651px) scaleX(1.18) scaleY(0.82) translate(-197.938px, -182.651px);
   }
+
   18.33% {
     transform: translateX(0px) translateY(-2.822px) translate(197.938px, 182.651px) scaleX(1.166) scaleY(0.834) translate(-197.938px, -182.651px);
   }
+
   20% {
     transform: translateX(0px) translateY(-4.217px) translate(197.938px, 182.651px) scaleX(1.153) scaleY(0.847) translate(-197.938px, -182.651px);
   }
+
   21.67% {
     transform: translateX(0px) translateY(-5.075px) translate(197.938px, 182.651px) scaleX(1.139) scaleY(0.861) translate(-197.938px, -182.651px);
   }
+
   23.33% {
     transform: translateX(0px) translateY(-5.316px) translate(197.938px, 182.651px) scaleX(1.125) scaleY(0.875) translate(-197.938px, -182.651px);
   }
+
   25% {
     transform: translateX(0px) translateY(-5.078px) translate(197.938px, 182.651px) scaleX(1.112) scaleY(0.888) translate(-197.938px, -182.651px);
   }
+
   26.67% {
     transform: translateX(0px) translateY(-4.593px) translate(197.938px, 182.651px) scaleX(1.098) scaleY(0.902) translate(-197.938px, -182.651px);
   }
+
   28.33% {
     transform: translateX(0px) translateY(-4.095px) translate(197.938px, 182.651px) scaleX(1.084) scaleY(0.916) translate(-197.938px, -182.651px);
   }
+
   30% {
     transform: translateX(0px) translateY(-3.734px) translate(197.938px, 182.651px) scaleX(1.071) scaleY(0.929) translate(-197.938px, -182.651px);
   }
+
   31.67% {
     transform: translateX(0px) translateY(-3.576px) translate(197.938px, 182.651px) scaleX(1.057) scaleY(0.943) translate(-197.938px, -182.651px);
   }
+
   33.33% {
     transform: translateX(0px) translateY(-3.599px) translate(197.938px, 182.651px) scaleX(1.043) scaleY(0.957) translate(-197.938px, -182.651px);
   }
+
   35% {
     transform: translateX(0px) translateY(-3.737px) translate(197.938px, 182.651px) scaleX(1.03) scaleY(0.97) translate(-197.938px, -182.651px);
   }
+
   36.67% {
     transform: translateX(0px) translateY(-3.907px) translate(197.938px, 182.651px) scaleX(1.016) scaleY(0.984) translate(-197.938px, -182.651px);
   }
+
   38.33% {
     transform: translateX(0px) translateY(-4.048px) translate(197.938px, 182.651px) scaleX(1.002) scaleY(0.998) translate(-197.938px, -182.651px);
   }
+
   39.23% {
     transform: translateX(0px) translateY(-4.099px) translate(197.938px, 182.651px) scaleX(0.995) scaleY(1.005) translate(-197.938px, -182.651px);
   }
+
   40% {
     transform: translateX(0px) translateY(-4.127px) translate(197.938px, 182.651px) scaleX(0.995) scaleY(1.005) translate(-197.938px, -182.651px);
   }
+
   41.67% {
     transform: translateX(0px) translateY(-4.141px) translate(197.938px, 182.651px) scaleX(0.995) scaleY(1.005) translate(-197.938px, -182.651px);
   }
+
   43.33% {
     transform: translateX(0px) translateY(-4.107px) translate(197.938px, 182.651px) scaleX(0.996) scaleY(1.004) translate(-197.938px, -182.651px);
   }
+
   45% {
     transform: translateX(0px) translateY(-4.053px) translate(197.938px, 182.651px) scaleX(0.996) scaleY(1.004) translate(-197.938px, -182.651px);
   }
+
   46.67% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(0.996) scaleY(1.004) translate(-197.938px, -182.651px);
   }
+
   48.33% {
     transform: translateX(0px) translateY(-3.966px) translate(197.938px, 182.651px) scaleX(0.997) scaleY(1.003) translate(-197.938px, -182.651px);
   }
+
   50% {
     transform: translateX(0px) translateY(-3.953px) translate(197.938px, 182.651px) scaleX(0.997) scaleY(1.003) translate(-197.938px, -182.651px);
   }
+
   51.67% {
     transform: translateX(0px) translateY(-3.959px) translate(197.938px, 182.651px) scaleX(0.997) scaleY(1.003) translate(-197.938px, -182.651px);
   }
+
   53.33% {
     transform: translateX(0px) translateY(-3.975px) translate(197.938px, 182.651px) scaleX(0.998) scaleY(1.002) translate(-197.938px, -182.651px);
   }
+
   55% {
     transform: translateX(0px) translateY(-3.994px) translate(197.938px, 182.651px) scaleX(0.998) scaleY(1.002) translate(-197.938px, -182.651px);
   }
+
   56.67% {
     transform: translateX(0px) translateY(-4.008px) translate(197.938px, 182.651px) scaleX(0.998) scaleY(1.002) translate(-197.938px, -182.651px);
   }
+
   58.33% {
     transform: translateX(0px) translateY(-4.015px) translate(197.938px, 182.651px) scaleX(0.999) scaleY(1.001) translate(-197.938px, -182.651px);
   }
+
   60% {
     transform: translateX(0px) translateY(-4.015px) translate(197.938px, 182.651px) scaleX(0.999) scaleY(1.001) translate(-197.938px, -182.651px);
   }
+
   61.67% {
     transform: translateX(0px) translateY(-4.011px) translate(197.938px, 182.651px) scaleX(0.999) scaleY(1.001) translate(-197.938px, -182.651px);
   }
+
   63.33% {
     transform: translateX(0px) translateY(-4.004px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   64.23% {
     transform: translateX(0px) translateY(-4.001px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   65% {
     transform: translateX(0px) translateY(-3.999px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   66.67% {
     transform: translateX(0px) translateY(-3.996px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   68.33% {
     transform: translateX(0px) translateY(-3.995px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   70% {
     transform: translateX(0px) translateY(-3.996px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   71.67% {
     transform: translateX(0px) translateY(-3.998px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   72.62% {
     transform: translateX(0px) translateY(-3.999px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   73.33% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   75% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   76.67% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   78.33% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   80% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   81.67% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   83.33% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   85% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   86.67% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   88.33% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   90% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   91.67% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   93.33% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   95% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   96.67% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   97.62% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   98.33% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
+
   100% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
   }
@@ -7702,6 +7828,7 @@ html[data-loading] {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
     opacity: 1;
   }
+
   100% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
     opacity: 0;
@@ -7745,7 +7872,8 @@ html[data-loading] {
        now, so the whole sheet less its gutters is the card's. 86 x 1.02 is
        87.7vw. */
     --pow-open-h: 86vw;
-    --pow-shut: 0.7; /* a settled card is seven tenths of an open one here */
+    --pow-shut: 0.7;
+    /* a settled card is seven tenths of an open one here */
     --pow-gap: 3vw;
     /* ONE LINE OF IT NOW, so this is what SUPER POWERS together comes to inside
        4vw gutters rather than what SUPER alone could take. */
@@ -7918,8 +8046,10 @@ html[data-loading] {
 
      Stated the way the file is drawn — standing up — so the only rotation on a
      strip is its LEAN. See --sr below. */
-  --reel-tape-w: calc(10.994vw * var(--reel-scale)); /* 158.317px */
-  --reel-tape-h: calc(52.362vw * var(--reel-scale)); /* 754.013px */
+  --reel-tape-w: calc(10.994vw * var(--reel-scale));
+  /* 158.317px */
+  --reel-tape-h: calc(52.362vw * var(--reel-scale));
+  /* 754.013px */
 
   /* HOW FAR ALONG THE ROW THE THREE CLOSING SHOTS BEGIN, and it is the one
      figure here that has to clear something rather than describe it — twice
@@ -7952,9 +8082,12 @@ html[data-loading] {
      The tracking is -2.7px against the 90, which is why it is stated as an em
      here — the type scales with the window and a px figure would loosen as it
      grew. */
-  --reel-claim-size: calc(6.25vw * var(--reel-scale)); /* 90px */
-  --reel-claim-line: 0.7778; /* 70px */
-  --reel-claim-track: -0.03em; /* -2.7px */
+  --reel-claim-size: calc(6.25vw * var(--reel-scale));
+  /* 90px */
+  --reel-claim-line: 0.7778;
+  /* 70px */
+  --reel-claim-track: -0.03em;
+  /* -2.7px */
 
   /* THE CORNERS ON THE PHOTOGRAPHS. Square on the mock; here as a property so a
      radius is one figure rather than four rules. INFERRED. */
@@ -8033,7 +8166,7 @@ html[data-loading] {
 /* Everything on the canvas is placed the same way, off the same two variables,
    so a new piece needs no rule of its own — just --rx / --ry. Same seam as
    .giant-canvas > * on the home page. */
-.reel-canvas > * {
+.reel-canvas>* {
   position: absolute;
   left: var(--rx);
   top: var(--ry);
@@ -8069,7 +8202,8 @@ html[data-loading] {
    this value back off the layout to decide where the travel ends. */
 .reel-shot--open {
   --rx: var(--reel-pad);
-  --ry: calc(7.556vw * var(--reel-scale)); /* 80px. INFERRED. */
+  --ry: calc(7.556vw * var(--reel-scale));
+  /* 80px. INFERRED. */
   width: var(--reel-open-w);
   height: var(--reel-open-h);
 }
@@ -8104,7 +8238,7 @@ html[data-loading] {
    way and says why. */
 .reel-badge {
   --rx: calc(71vw * var(--reel-scale));
-   --ry: calc(32.111vw * var(--reel-scale));
+  --ry: calc(32.111vw * var(--reel-scale));
   width: var(--reel-badge);
   height: var(--reel-badge);
 
@@ -8118,8 +8252,10 @@ html[data-loading] {
 .product-reel .reel-note {
   --hand-w: 13vw;
   --hand-ink: var(--reel-ink);
-  --rx: calc(93.5vw * var(--reel-scale)); /* INFERRED */
-  --ry: calc(41vw * var(--reel-scale)); /* INFERRED */
+  --rx: calc(93.5vw * var(--reel-scale));
+  /* INFERRED */
+  --ry: calc(41vw * var(--reel-scale));
+  /* INFERRED */
 
   z-index: 4;
 }
@@ -8134,8 +8270,10 @@ html[data-loading] {
  * truth, and the camera measures that width. max-content is what makes the box
  * the size of the type. */
 .reel-claim {
-  --rx: calc(71.861vw * var(--reel-scale)); /* 1150px. INFERRED. */
-  --ry: calc(7.861vw * var(--reel-scale)); /* 70px. INFERRED. */
+  --rx: calc(71.861vw * var(--reel-scale));
+  /* 1150px. INFERRED. */
+  --ry: calc(7.861vw * var(--reel-scale));
+  /* 70px. INFERRED. */
   width: max-content;
   font-family: var(--font-heading);
   font-size: var(--reel-claim-size);
@@ -8262,9 +8400,9 @@ html[data-loading] {
 }
 
 .reel-kraft-strip--2 {
-    --sx: 12.5vw;
-    --sy: 43vw;
-    --sr: 5.12deg;
+  --sx: 12.5vw;
+  --sy: 43vw;
+  --sr: 5.12deg;
 }
 
 /* --------------------------------------------------------------------------
@@ -8274,7 +8412,8 @@ html[data-loading] {
    -------------------------------------------------------------------------- */
 .product-reel .clip {
   display: block;
-  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  flex: 0 0 auto;
+  /* these are letters, not a layout — never shrink one */
   overflow: hidden;
 
   /* Headroom, then handed straight back. The line-height here is 0.7778 — well
@@ -8355,7 +8494,7 @@ html[data-loading] {
     translate: none;
   }
 
-  .reel-canvas > * {
+  .reel-canvas>* {
     position: relative;
     left: auto;
     top: auto;
@@ -8485,18 +8624,22 @@ html[data-loading] {
      The tracking is -8.094px against the 269.789, which is why it is stated as
      an em: the type scales with the window and a px figure would loosen as it
      grew. */
-  --nextup-size: 18.735vw; /* 269.789px */
-  --nextup-line: 0.86364; /* 233px */
-  --nextup-track: -0.03em; /* -8.094px */
+  --nextup-size: 18.735vw;
+  /* 269.789px */
+  --nextup-line: 0.86364;
+  /* 233px */
+  --nextup-track: -0.03em;
+  /* -8.094px */
 
   /* THE LABEL, at the artwork's own size. The slider's cards are around 400px
      square, so at this width one renders 1:1 on a 1440 window and is never
      resampled — the same argument the run's tape strips are sized by. */
-  --nextup-roll: 27.778vw; /* 400px */
+  --nextup-roll: 27.778vw;
+  /* 400px */
 
- 
+
   padding-inline: 0.833vw;
-  
+
   color: var(--nextup-ink);
 
   /* THE CHIP IS NOT INVERTED HERE ANY MORE, and the two lines that used to do it
@@ -8542,7 +8685,7 @@ html[data-loading] {
 .next-up .wrapper {
   display: flex;
   background: var(--nextup-bg);
-   padding-top: 2.369vw;
+  padding-top: 2.369vw;
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -8607,8 +8750,10 @@ html[data-loading] {
  * the roll's own middle, which is where the design has it. */
 .next-up .bottom-roll {
   --nextup-roll: 30.931vw;
-  --nextup-rise: 0.29; /* of the roll, up into the name */
-  --nextup-sink: 0.45; /* of the roll, down behind the footer */
+  --nextup-rise: 0.29;
+  /* of the roll, up into the name */
+  --nextup-sink: 0.45;
+  /* of the roll, down behind the footer */
 
   width: var(--nextup-roll);
   height: var(--nextup-roll);
@@ -8647,7 +8792,8 @@ html[data-loading] {
    -------------------------------------------------------------------------- */
 .next-up .clip {
   display: block;
-  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  flex: 0 0 auto;
+  /* these are letters, not a layout — never shrink one */
   overflow: hidden;
 
   /* Headroom, then handed straight back. The line-height here is under 1, so a
@@ -8752,7 +8898,8 @@ html[data-loading] {
      badge in the top middle (--top-mark-h plus --top-inset, in the Top band
      section below). The product page's opener clears the same pair with the same
      figure, and the two should move together. */
-  --rolling-pad-top: calc(var(--masthead) + 2.48vw); /* 9.236vw */
+  --rolling-pad-top: calc(var(--masthead) + 2.48vw);
+  /* 9.236vw */
   --rolling-pad-x: 4vw;
   --rolling-pad-bottom: 5vw;
 
@@ -8869,7 +9016,8 @@ html[data-loading] {
 
   display: inline-block;
   transform: rotate(-1.8deg);
-  font-size: 0.972vw; /* 14px at the design width */
+  font-size: 0.972vw;
+  /* 14px at the design width */
   opacity: 0;
   visibility: hidden;
 }
@@ -8969,9 +9117,9 @@ html[data-loading] {
    both want the transform property and one cannot hold both. */
 .rolling-title .line .clip {
   --u: calc(2 * var(--i) / (var(--letters) - 1) - 1 + var(--arc-shift));
-  transform-origin: 50% 100%; /* pivot on the baseline, not the letter centre */
-  transform: translateY(calc(var(--arc-drop) * (1 - var(--u) * var(--u))))
-    rotate(calc(var(--arc-tilt) * var(--u) * -1));
+  transform-origin: 50% 100%;
+  /* pivot on the baseline, not the letter centre */
+  transform: translateY(calc(var(--arc-drop) * (1 - var(--u) * var(--u)))) rotate(calc(var(--arc-tilt) * var(--u) * -1));
 }
 
 /* Split letters — the boxes. Headroom on three sides and then handed straight
@@ -8984,7 +9132,8 @@ html[data-loading] {
    through, and it wants to sit tight on the baseline. */
 .whats-rolling .clip {
   display: block;
-  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  flex: 0 0 auto;
+  /* these are letters, not a layout — never shrink one */
   overflow: hidden;
   padding: 0.2em 0.06em 0;
   margin: -0.2em -0.06em 0;
@@ -9064,7 +9213,8 @@ html[data-loading] {
   }
 
   .rolling-warp {
-    --arc-drop: 1.7vw; /* 0.072em, as at 1440 — see above */
+    --arc-drop: 1.7vw;
+    /* 0.072em, as at 1440 — see above */
   }
 }
 
@@ -9106,10 +9256,14 @@ html[data-loading] {
      rather than an omission: the photograph is a fixed column and the card takes
      what is left, so the pair spans the padding box exactly and 46.9vw is a
      figure nobody has to keep equal to the difference of the other two. */
-  --stick-pad-x: 1.389vw; /* 20px */
-  --stick-shot: 48.611vw; /* 697px */
-  --stick-gap: 0.833vw; /* 12px */
-  --stick-card-h: 34.861vw; /* 502px */
+  --stick-pad-x: 1.389vw;
+  /* 20px */
+  --stick-shot: 48.611vw;
+  /* 697px */
+  --stick-gap: 0.833vw;
+  /* 12px */
+  --stick-card-h: 34.861vw;
+  /* 502px */
 
   /* AND THE PHOTOGRAPH IS NOT SQUARE HERE. The key visual's artwork is 608x608
      and its frame is an aspect-ratio: 1; this box is landscape, so the ratio is
@@ -9190,8 +9344,10 @@ html[data-loading] {
      so does the foot rule. Written once so they cannot drift. */
   --story-pad-x: 4.792vw;
 
-  position: relative; /* the chip, title and foot stack against this box */
-  overflow: hidden; /* so they stop at the rounded corner */
+  position: relative;
+  /* the chip, title and foot stack against this box */
+  overflow: hidden;
+  /* so they stop at the rounded corner */
   justify-content: flex-start;
   align-items: stretch;
   text-align: left;
@@ -9334,11 +9490,9 @@ html[data-loading] {
   left: 0;
   right: 0;
   height: calc(var(--story-rules) * var(--story-line));
-  background-image: radial-gradient(
-    circle at 50% 100%,
-    rgba(13, 71, 12, 0.26) var(--story-dot-r),
-    transparent var(--story-dot-r)
-  );
+  background-image: radial-gradient(circle at 50% 100%,
+      rgba(13, 71, 12, 0.26) var(--story-dot-r),
+      transparent var(--story-dot-r));
   background-size: var(--story-dot) var(--story-line);
   pointer-events: none;
   z-index: -1;
@@ -9399,8 +9553,10 @@ html[data-loading] {
    Never restate font-size, line-height or letter-spacing on .story-day or
    .story-month again; that is the seam this block exists to keep. */
 .story-date {
-  --date-day: 4.861vw; /* 70px at the design width */
-  --date-month: 1.111vw; /* 16px */
+  --date-day: 4.861vw;
+  /* 70px at the design width */
+  --date-month: 1.111vw;
+  /* 16px */
 
   display: flex;
   flex-direction: column;
@@ -9420,7 +9576,8 @@ html[data-loading] {
 .story-day {
   font-size: var(--date-day);
   font-weight: 800;
-  line-height: 0.857; /* 60/70 — the design's 85.714% */
+  line-height: 0.857;
+  /* 60/70 — the design's 85.714% */
   letter-spacing: -0.03em;
 }
 
@@ -9443,7 +9600,8 @@ html[data-loading] {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
-  width: 2.153vw; /* 31px at the design width */
+  width: 2.153vw;
+  /* 31px at the design width */
   height: 2.153vw;
   border-radius: 50%;
   background: #b6fe00;
@@ -9579,15 +9737,19 @@ html[data-loading] {
      a 60px gutter to the wall, and 313px cards with 15px between them — which
      comes back to the 1440 width exactly and is why none of these is a rounded
      guess. */
-  --index-pad-x: 1.389vw; /* 20px */
+  --index-pad-x: 1.389vw;
+  /* 20px */
   --index-pad-y: 4vw;
-  --index-rule: 26.111vw; /* 376px */
+  --index-rule: 26.111vw;
+  /* 376px */
   /* Between the rule and the wall. NOT the same figure as the gap between two
      cards, and that is the design's call rather than an oversight: the cards are
      a grid and want to read as one block, the rule is a different thing standing
      beside it and wants air. */
-  --index-gutter: 4.167vw; /* 60px */
-  --index-gap: 1.042vw; /* 15px */
+  --index-gutter: 4.167vw;
+  /* 60px */
+  --index-gap: 1.042vw;
+  /* 15px */
 
   /* --index-bg MUST EQUAL --stick-bg ON .top-story. The lead story and this are
      one sheet with a row of cards lying on it, and the join is a hard full-width
@@ -9625,8 +9787,7 @@ html[data-loading] {
      and the pinning section with --giant-tail, for the same reason and with the
      same warning. */
   --index-arc: 9vw;
-  padding: var(--index-pad-y) var(--index-pad-x)
-    calc(var(--index-pad-y) + var(--index-arc));
+  padding: var(--index-pad-y) var(--index-pad-x) calc(var(--index-pad-y) + var(--index-arc));
   background: var(--index-bg);
   color: var(--index-ink);
 }
@@ -9676,7 +9837,8 @@ html[data-loading] {
    measured from. */
 .index-filters {
   position: sticky;
-  top: calc(var(--masthead) + 1.24vw); /* 8vw */
+  top: calc(var(--masthead) + 1.24vw);
+  /* 8vw */
   display: flex;
   gap: 1.042vw;
   flex-direction: column;
@@ -9749,11 +9911,9 @@ html[data-loading] {
 
   display: block;
   height: var(--index-mark);
-  background-image: linear-gradient(
-    to right,
-    var(--index-rule-ink) 0 var(--index-mark),
-    transparent var(--index-mark)
-  );
+  background-image: linear-gradient(to right,
+      var(--index-rule-ink) 0 var(--index-mark),
+      transparent var(--index-mark));
   background-size: var(--index-pitch) 100%;
   background-repeat: repeat-x;
 
@@ -9777,7 +9937,7 @@ html[data-loading] {
 }
 
 li::marker {
-   font-size: 0;
+  font-size: 0;
 }
 
 /* The label. Flex for the reason every row of split letters on this site is:
@@ -9802,7 +9962,8 @@ li::marker {
   align-self: flex-start;
   margin-top: 0.3vw;
   font-family: var(--font-heading);
-  font-size: 1.111vw; /* 12px at the design width */
+  font-size: 1.111vw;
+  /* 12px at the design width */
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0.04em;
@@ -9908,8 +10069,10 @@ li::marker {
    each edge — the margins of a ruled sheet. They are the reason nothing else in
    this block may claim ::before or ::after on this element. */
 .index-card-inner {
-  --index-card-pad: 1.736vw; /* 22px */
-  --index-card-margin: 1.042vw; /* 15px — where the vertical rules stand */
+  --index-card-pad: 1.736vw;
+  /* 22px */
+  --index-card-margin: 1.042vw;
+  /* 15px — where the vertical rules stand */
 
   /* THE CARD'S OWN PAINT, declared on the card rather than on a section — see
      the note where it used to live, up in .news-index. A card is one object with
@@ -9986,11 +10149,11 @@ li::marker {
   position: relative;
   z-index: 1;
   margin: 1.042vw 0 0;
-   font-family: var(--font-body);
-   font-size: 1.667vw;
-   font-weight: 800;
-   line-height: 1;
-   letter-spacing: -0.017vw;
+  font-family: var(--font-body);
+  font-size: 1.667vw;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.017vw;
 }
 
 /* Each word its own inline box, so the line breaks BETWEEN words exactly where
@@ -10010,7 +10173,8 @@ li::marker {
   z-index: 1;
   align-self: flex-start;
   margin-top: 1vw;
-  width: 1.736vw; /* 25px at the design width */
+  width: 1.736vw;
+  /* 25px at the design width */
   height: 1.736vw;
   color: var(--index-card-ink);
 }
@@ -10047,7 +10211,8 @@ li::marker {
    in em and follow this figure on their own — see the note there, which is the
    whole reason this rule is one line. */
 .index-date {
-  --date-day: 4.167vw; /* 60px at the design width */
+  --date-day: 4.167vw;
+  /* 60px at the design width */
 }
 
 /* THE PICTURE, LAID INTO THE CORNER BY HAND. Anchored to the bottom-right, turned
@@ -10113,6 +10278,7 @@ li::marker {
    so it also covers the window before hydration, when the stylesheet is holding
    all three on its own. */
 @media (prefers-reduced-motion: reduce) {
+
   .news-index .char,
   .related-news .char {
     transform: none;
@@ -10152,7 +10318,8 @@ li::marker {
   .news-index {
     --index-pad-x: 5vw;
     --index-pad-y: 10vw;
-    --index-gutter: 7vw; /* now the gap ABOVE the wall, not beside it */
+    --index-gutter: 7vw;
+    /* now the gap ABOVE the wall, not beside it */
     --index-gap: 3vw;
     /* In step with --footer-arc's own phone figure, exactly as the desktop
        pair are. Change one and change the other. */
@@ -10307,12 +10474,14 @@ li::marker {
      it stays with --article-rule above. */
   --article-btn: #f1ebcd;
 
-  --article-pad-x: 1.389vw; /* 20px — the index's own margin */
+  --article-pad-x: 1.389vw;
+  /* 20px — the index's own margin */
   /* Above the type: --masthead (the badge's bottom edge, in Tokens) plus this
      page's own air over it. The title card's --rolling-pad-top carries the same
      air and the two are meant to read as one page — they no longer have to be
      kept in step by hand, only by taste. */
-  --article-pad-top: calc(var(--masthead) + 2.48vw); /* 9.236vw */
+  --article-pad-top: calc(var(--masthead) + 2.48vw);
+  /* 9.236vw */
   /* Tight under the sheet, and the design draws it that way: the paper very
      nearly meets the dark green of the rail below, so the lime reads as the
      ground the sheet is lying on rather than as a margin around it. */
@@ -10344,8 +10513,7 @@ li::marker {
   overflow: hidden;
 
   width: 100%;
-  padding: var(--article-pad-top) var(--article-pad-x)
-    var(--article-pad-bottom);
+  padding: var(--article-pad-top) var(--article-pad-x) var(--article-pad-bottom);
   background: var(--article-bg);
   color: var(--article-ink);
 }
@@ -10407,7 +10575,8 @@ li::marker {
 
   display: inline-block;
   transform: rotate(-1.8deg);
-  font-size: 0.972vw; /* 14px at the design width */
+  font-size: 0.972vw;
+  /* 14px at the design width */
   opacity: 0;
   visibility: hidden;
 }
@@ -10439,7 +10608,8 @@ li::marker {
 .article-title {
   margin: 0.833vw 0 0;
   font-family: var(--font-heading);
-  font-size: 5vw; /* 72px */
+  font-size: 5vw;
+  /* 72px */
   font-weight: 800;
   line-height: 0.9;
   letter-spacing: -0.15vw;
@@ -10468,7 +10638,8 @@ li::marker {
    unlike the lead story's, which centres its pair under the card's measure. */
 .article-date {
   align-items: flex-start;
-  margin-top: 4.722vw; /* 68px */
+  margin-top: 4.722vw;
+  /* 68px */
 }
 
 /* The note, in the clear stretch of lime between the headline's measure and the
@@ -10535,18 +10706,18 @@ li::marker {
    because the reading order wants the headline first and the paint order wants
    the picture last. */
 .article-shot {
-    --article-shot-tilt: -10.199deg;
-    rotate: var(--article-shot-tilt);
-    z-index: 2;
-    position: absolute;
-    top: 10vw;
-    right: -5vw;
+  --article-shot-tilt: -10.199deg;
+  rotate: var(--article-shot-tilt);
+  z-index: 2;
+  position: absolute;
+  top: 10vw;
+  right: -5vw;
 }
 
 .article-shot-img {
   display: block;
   width: 47.063vw;
-   height: 47.063vw;
+  height: 47.063vw;
   object-fit: cover;
   border-radius: 4vw;
 }
@@ -10557,10 +10728,10 @@ li::marker {
    arrangement scales as one when the frame is resized: the index's cards tape
    their pictures the same way. */
 .article-shot-tape {
-    width: 19.588vw;
-    position: absolute;
-    top: -9%;
-    left: 31%;
+  width: 19.588vw;
+  position: absolute;
+  top: -9%;
+  left: 31%;
 }
 
 /* --------------------------------------------------------------------------
@@ -10580,13 +10751,18 @@ li::marker {
    Positioned, which lifts it over the grain and gives the perforation something
    to be placed against. */
 .article-sheet {
-  --sheet-pad-x: 7.431vw; /* 107px */
+  --sheet-pad-x: 7.431vw;
+  /* 107px */
 
   position: relative;
-  width: 74.722vw; /* 1076px */
-  margin: 6.528vw auto 0; /* 94px */
-  padding: 7.014vw var(--sheet-pad-x) 6.944vw; /* 101px top */
-  border-radius: 2.083vw 2.083vw 0 0 ; /* 46px — the lead story's radius */
+  width: 74.722vw;
+  /* 1076px */
+  margin: 6.528vw auto 0;
+  /* 94px */
+  padding: 7.014vw var(--sheet-pad-x) 6.944vw;
+  /* 101px top */
+  border-radius: 2.083vw 2.083vw 0 0;
+  /* 46px — the lead story's radius */
   background: var(--article-paper);
   color: var(--article-paper-ink);
 }
@@ -10608,16 +10784,16 @@ li::marker {
 .article-sheet::before {
   content: "";
   position: absolute;
-  top: 0.972vw; /* 14px in from the edge */
+  top: 0.972vw;
+  /* 14px in from the edge */
   left: 1.944vw;
   right: 1.944vw;
   height: 0.556vw;
-  background-image: radial-gradient(
-    circle closest-side,
-    #BDF400 96%,
-    transparent
-  );
-  background-size: 1.327vw 100%; /* 12px pitch */
+  background-image: radial-gradient(circle closest-side,
+      #BDF400 96%,
+      transparent);
+  background-size: 1.327vw 100%;
+  /* 12px pitch */
   background-repeat: repeat-x;
   pointer-events: none;
 }
@@ -10634,7 +10810,8 @@ li::marker {
 .article-cols {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 8.889vw; /* 128px */
+  gap: 8.889vw;
+  /* 128px */
   align-items: start;
 }
 
@@ -10646,7 +10823,8 @@ li::marker {
    headline written on it and the ruling is what says so; this is an article, and
    dotted lines under running copy are a form. */
 .article-deck {
-  margin: 0 0 3.125vw; /* 45px */
+  margin: 0 0 3.125vw;
+  /* 45px */
 }
 
 /* Split letters — the boxes, for both headings. The same headroom every headline
@@ -10684,11 +10862,13 @@ li::marker {
    indents in it. On the bottom of each and not the top, with the last one's
    cleared, so the sheet's own bottom padding is the only thing under the copy. */
 .article-para {
-  margin: 0 0 2.222vw; /* 32px */
+  margin: 0 0 2.222vw;
+  /* 32px */
   font-family: var(--font-body);
   /* Floored — see the note by .contact-input. Five paragraphs is the longest
      read on this site, and 17px is 9 on a tablet. */
-  font-size: max(15px, 1.181vw); /* 17px at 1440 */
+  font-size: max(15px, 1.181vw);
+  /* 17px at 1440 */
   font-weight: 500;
   line-height: 1.6;
   letter-spacing: -0.007vw;
@@ -10711,10 +10891,13 @@ li::marker {
    small block that starts level with a heading five times its size reads as part
    of the heading. */
 .article-aside {
-  --share-btn: 4.306vw; /* 62px */
-  --share-gap: 1.111vw; /* 16px */
+  --share-btn: 4.306vw;
+  /* 62px */
+  --share-gap: 1.111vw;
+  /* 16px */
 
-  width: calc(var(--share-btn) * 4 + var(--share-gap) * 3); /* 296px */
+  width: calc(var(--share-btn) * 4 + var(--share-gap) * 3);
+  /* 296px */
   margin-top: 14.028vw;
 }
 
@@ -10728,7 +10911,8 @@ li::marker {
   padding-bottom: 0.556vw;
   border-bottom: 1px dotted var(--article-rule);
   font-family: var(--font-heading);
-  font-size: max(13px, 1.111vw); /* 16px at 1440 — floored, see .contact-input */
+  font-size: max(13px, 1.111vw);
+  /* 16px at 1440 — floored, see .contact-input */
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0.02em;
@@ -10761,7 +10945,8 @@ li::marker {
   height: var(--share-btn);
   padding: 0;
   border: 0;
-  border-radius: 0.833vw; /* 12px */
+  border-radius: 0.833vw;
+  /* 12px */
   background: var(--article-btn);
   color: var(--article-paper-ink);
   /* THE MARK'S SIZE, and that is all a font-size is doing on a button with no
@@ -10770,7 +10955,8 @@ li::marker {
      coloured by the pair above. font-family is inherited rather than left to the
      UA's, which is the button reset this site has no global copy of. */
   font-family: inherit;
-  font-size: 1.667vw; /* 24px — the mark's drawn height */
+  font-size: 1.667vw;
+  /* 24px — the mark's drawn height */
   cursor: pointer;
   transition:
     background 0.3s ease,
@@ -10807,16 +10993,20 @@ li::marker {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 1.667vw; /* 24px — the mark to the label */
+  gap: 1.667vw;
+  /* 24px — the mark to the label */
   height: var(--share-btn);
-  padding-left: 1.667vw; /* 24px — the edge to the mark */
-  margin-top: 2.431vw; /* 35px */
+  padding-left: 1.667vw;
+  /* 24px — the edge to the mark */
+  margin-top: 2.431vw;
+  /* 35px */
   border: 1px dashed var(--article-rule);
   border-radius: 0.833vw;
   color: inherit;
   text-decoration: none;
   font-family: var(--font-heading);
-  font-size: max(13px, 1.111vw); /* 16px at 1440 — floored, see .contact-input */
+  font-size: max(13px, 1.111vw);
+  /* 16px at 1440 — floored, see .contact-input */
   font-weight: 800;
   letter-spacing: 0.02em;
   transition:
@@ -10830,7 +11020,8 @@ li::marker {
    take at this width anyway. */
 .article-back svg {
   flex: none;
-  width: 1.597vw; /* 23px */
+  width: 1.597vw;
+  /* 23px */
   height: 1.597vw;
   /* Back the way it came, on the same overshoot curve the site's other marks
      move on — the menu's arrow, the slider's rolls, the lead story's disc. A
@@ -10905,17 +11096,21 @@ li::marker {
 
   /* The index's two columns — MUST EQUAL --index-rule and --index-gutter. See
      the block note. */
-  --related-rule: 26.111vw; /* 376px */
-  --related-gutter: 4.167vw; /* 60px */
+  --related-rule: 26.111vw;
+  /* 376px */
+  --related-gutter: 4.167vw;
+  /* 60px */
 
   /* AND THE GRID'S OWN GAP, UNDER THE GRID'S OWN NAME — not a --related-
      synonym, because .index-grid reads this one and the grid is the shared
      object here rather than something this section drew. Declaring it under
      another name would mean a second rule to hand it over, which is two places
      to state one gutter. MUST EQUAL the index's. */
-  --index-gap: 1.042vw; /* 15px */
+  --index-gap: 1.042vw;
+  /* 15px */
 
-  --related-pad-x: 1.389vw; /* 20px — the index's own margin */
+  --related-pad-x: 1.389vw;
+  /* 20px — the index's own margin */
   --related-pad-y: 3.5vw;
 
   /* The footer rises into whatever is above it — margin-top: calc(--footer-arc *
@@ -10929,8 +11124,7 @@ li::marker {
 
   position: relative;
   width: 100%;
-  padding: var(--related-pad-y) var(--related-pad-x)
-    calc(var(--related-pad-y) + var(--related-arc));
+  padding: var(--related-pad-y) var(--related-pad-x) calc(var(--related-pad-y) + var(--related-arc));
   background: var(--related-bg);
   color: var(--related-ink);
 }
@@ -10969,7 +11163,8 @@ li::marker {
  * announcing itself but a shelf label over three cards. */
 .related-title {
   margin: 0;
-  font-size: 5.278vw; /* 76px at the design width */
+  font-size: 5.278vw;
+  /* 76px at the design width */
   line-height: 0.95;
   letter-spacing: -0.12vw;
 }
@@ -11047,7 +11242,8 @@ li::marker {
     position: relative;
     top: auto;
     right: auto;
-    width: fit-content; /* the tape is placed in per cent of this box */
+    width: fit-content;
+    /* the tape is placed in per cent of this box */
     margin: 12vw auto 0;
   }
 
@@ -11201,7 +11397,8 @@ li::marker {
   /* DESIGN FIGURE — 160px, the section's top edge to the chip. It clears the
      masthead's badge and the menu's tab, which is the same pair every other
      page's top padding is measured against. */
-  --contact-pad-top: calc(var(--masthead) + 4.35vw); /* 11.111vw */
+  --contact-pad-top: calc(var(--masthead) + 4.35vw);
+  /* 11.111vw */
 
   /* DESIGN FIGURE — 46px, the headline's last line to the sheet's top edge. */
   --contact-gap: 3.194vw;
@@ -11376,7 +11573,8 @@ li::marker {
   display: inline-block;
   margin: 0;
   transform: rotate(-1.8deg);
-  font-size: 0.972vw; /* 14px at the design width */
+  font-size: 0.972vw;
+  /* 14px at the design width */
   opacity: 0;
   visibility: hidden;
 }
@@ -11416,9 +11614,9 @@ li::marker {
    footer's and the title card's. */
 .contact-title .line .clip {
   --u: calc(2 * var(--i) / (var(--letters) - 1) - 1);
-  transform-origin: 50% 100%; /* pivot on the baseline, not the letter centre */
-  transform: translateY(calc(var(--arc-drop) * (1 - var(--u) * var(--u))))
-    rotate(calc(var(--arc-tilt) * var(--u) * -1));
+  transform-origin: 50% 100%;
+  /* pivot on the baseline, not the letter centre */
+  transform: translateY(calc(var(--arc-drop) * (1 - var(--u) * var(--u)))) rotate(calc(var(--arc-tilt) * var(--u) * -1));
 }
 
 /* Each line is a row of letter boxes. Flex rather than plain inline text,
@@ -11446,7 +11644,8 @@ li::marker {
    and height they always were. */
 .contact-section .clip {
   display: block;
-  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  flex: 0 0 auto;
+  /* these are letters, not a layout — never shrink one */
   overflow: hidden;
   padding: 0.2em 0.06em 0;
   margin: -0.2em -0.06em 0;
@@ -11526,7 +11725,8 @@ li::marker {
      above the sheet shifts by a pixel. */
   margin: var(--contact-gap) auto calc(var(--contact-overlap) * -1);
   padding: var(--contact-sheet-pad-top) var(--contact-sheet-pad-x) 7.014vw;
-  border-radius: 3.194vw; /* 46px — the article sheet's radius */
+  border-radius: 3.194vw;
+  /* 46px — the article sheet's radius */
   background: var(--contact-paper);
   color: var(--contact-paper-ink);
 }
@@ -11546,16 +11746,16 @@ li::marker {
 .contact-sheet::before {
   content: "";
   position: absolute;
-  top: 0.972vw; /* 14px in from the edge */
+  top: 0.972vw;
+  /* 14px in from the edge */
   left: 1.944vw;
   right: 1.944vw;
   height: 0.556vw;
-  background-image: radial-gradient(
-    circle closest-side,
-    var(--contact-perf) 96%,
-    transparent
-  );
-  background-size: 1.327vw 100%; /* 12px pitch */
+  background-image: radial-gradient(circle closest-side,
+      var(--contact-perf) 96%,
+      transparent);
+  background-size: 1.327vw 100%;
+  /* 12px pitch */
   background-repeat: repeat-x;
   pointer-events: none;
 }
@@ -11566,7 +11766,8 @@ li::marker {
 .contact-sheet-head {
   margin: 0 0 var(--contact-head-gap);
   font-family: var(--font-heading);
-  font-size: 2.5vw; /* 36px */
+  font-size: 2.5vw;
+  /* 36px */
   font-weight: 800;
   line-height: 0.92;
   letter-spacing: -0.05vw;
@@ -11626,9 +11827,11 @@ li::marker {
   display: block;
   width: 100%;
   height: var(--contact-field-h);
-  padding: 0 1.667vw; /* 24px */
+  padding: 0 1.667vw;
+  /* 24px */
   border: 0;
-  border-radius: 1.528vw; /* 22px */
+  border-radius: 1.528vw;
+  /* 22px */
   background: var(--contact-field-bg);
   color: var(--contact-field-ink);
   font-family: var(--font-heading);
@@ -11651,7 +11854,8 @@ li::marker {
    * the larger of the two; below it, it is the size the type stops shrinking
    * at. Nothing else on the site gets one: a chip, a date and a page number are
    * looked at, and they are allowed to be small on a small window. */
-  font-size: max(16px, 1.111vw); /* 16px at 1440 — see above */
+  font-size: max(16px, 1.111vw);
+  /* 16px at 1440 — see above */
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -11698,11 +11902,13 @@ li::marker {
   flex: none;
   width: var(--contact-send-w);
   border: 0;
-  border-radius: 2.778vw; /* 40px */
+  border-radius: 2.778vw;
+  /* 40px */
   background: var(--contact-bg);
   color: var(--contact-ink);
   font-family: var(--font-heading);
-  font-size: 1.944vw; /* 28px */
+  font-size: 1.944vw;
+  /* 28px */
   font-weight: 800;
   letter-spacing: 0.02em;
   cursor: pointer;
@@ -11761,7 +11967,8 @@ li::marker {
 }
 
 .contact-note .sticky-note {
-  aspect-ratio: 1 / 0.94; /* matches the sheet, NOTE.W : NOTE.H */
+  aspect-ratio: 1 / 0.94;
+  /* matches the sheet, NOTE.W : NOTE.H */
 }
 
 .contact-note .sticky-note canvas {
@@ -11804,9 +12011,12 @@ li::marker {
    own proportion. Stating one would be a second place the aspect lives. */
 .contact-note-tape {
   position: absolute;
-  width: 29.5%; /* 12.811vw of a 43.5vw slot */
-  top: 9.8%; /* 4vw of the slot's 40.89vw height */
-  left: 34.5%; /* 15vw of 43.5vw */
+  width: 29.5%;
+  /* 12.811vw of a 43.5vw slot */
+  top: 9.8%;
+  /* 4vw of the slot's 40.89vw height */
+  left: 34.5%;
+  /* 15vw of 43.5vw */
   rotate: -8deg;
 }
 
@@ -11933,7 +12143,8 @@ li::marker {
   .contact-input {
     padding: 0 4.5vw;
     border-radius: 3.5vw;
-    font-size: max(16px, 4.2vw); /* iOS focus zoom — see above */
+    font-size: max(16px, 4.2vw);
+    /* iOS focus zoom — see above */
   }
 
   .contact-textarea {
@@ -12008,26 +12219,30 @@ li::marker {
   --about-ink: #b6fe00;
 }
 
-/* THE MASTHEAD, TURNED LIME FOR THE LENGTH OF THIS ROUTE.
+/* THE MASTHEAD'S INK ON /about — AND THE ANSWER IS NOW "NOTHING", WHICH IS WHY
+ * THERE IS A NOTE HERE AND NO RULE.
  *
- * .top-band lives in the layout, OUTSIDE every section, and its ink is dark
- * green by default — which is the correct default and is invisible on this page,
- * because this page is a dark green sheet from the top of the screen down. So
- * the claim in the top-left corner would be printed in its own background.
+ * There was one: `body:has(.about-open) { --top-ink: var(--about-ink) }`, which
+ * turned the claim in the top-left corner lime for the length of the route. That
+ * was right while the opening screen was a DARK GREEN sheet — the masthead's
+ * default is the site's dark green, and dark green on dark green is a line of
+ * type printed in its own background.
  *
- * :has() rather than a class on the body, because the body's class list is the
- * layout's and the layout is shared by every route on the site — a page-specific
- * flag up there is a thing every other page has to keep not setting. What this
- * says instead is exactly the true statement: a document with the about page's
- * opening section in it is a document whose masthead is lime.
+ * THE SHEET IS LIME NOW (see .about-open below), and the rule inverted the same
+ * bug: lime ink on a lime screen. The masthead is `position: absolute` at the
+ * top of the document rather than fixed, so it only ever sits over this one
+ * screen — the dark green further down the page never passes under it, and one
+ * ink is the whole question.
  *
- * It sets the same custom property PickYourPlayer/recolour.ts writes when a roll
- * is hovered, and it loses to that one by the ordinary rule — an inline style
- * beats a stylesheet — which is right: there is no product page under this
- * selector, and if there ever were, the hover is the more specific statement. */
-body:has(.about-open) {
-  --top-ink: var(--about-ink);
-}
+ * So the route takes what every other light-field page takes, which is the
+ * fallback already written into .top-note: #013900, the ink of every light field
+ * on this site and the same green the headline below is set in. Restating it
+ * here would be a second place that colour lives.
+ *
+ * IF THE OPENING SCREEN EVER GOES BACK TO GREEN, this is the rule to bring back
+ * — and PickYourPlayer/recolour.ts writes the same custom property on hover, so
+ * whatever is written here loses to an inline style, which is the right way
+ * round. */
 
 /* --------------------------------------------------------------------------
    The opening screen
@@ -12046,8 +12261,39 @@ body:has(.about-open) {
 .about-open {
   position: relative;
   width: 100%;
-  height: var(--screen);
-  background: var(--about-bg);
+  height: 72.222vw;
+  background: #C6FD00;
+  padding-top: 9.097vw;
+
+  /* THE BOX HANGS OUT OF THE BOTTOM and is cropped by the section rather than
+     resized to fit it — the hand is pushed 320px past the sheet's own foot (see
+     img#hand) and the carton's flaps run off with it.
+
+     clip and NOT hidden. There is real overflow to crop here, but hidden would
+     make this box a scroll container, and a second scroller on a page driven by
+     Lenis is a scroller fighting the smooth scroll for the wheel. clip crops
+     without any of that. Every section on this site that has something hanging
+     out of it makes the same call — see .conveyor. */
+  overflow: clip;
+
+  & .title {
+    display: flex;
+    flex-direction: column;
+    gap: 4.639vw;
+    align-items: center;
+
+    & h2 {
+      font-size: 2.347vw;
+      font-style: normal;
+      font-weight: 800;
+      line-height: 0.71;
+      letter-spacing: -0.094vw;
+      color: #003900;
+    }
+  }
+
+
+
 }
 
 /* Paper grain — the same sheet the rest of the site is printed on, at the same
@@ -12064,6 +12310,346 @@ body:has(.about-open) {
   opacity: 0.2;
   pointer-events: none;
 }
+
+/* THE HEADLINE — THREE / GENERATION, on the site's arc.
+ *
+ * ONLY THE TYPE IS SETTLED HERE. Where the block sits on the screen and what is
+ * stacked around it are the section's layout and are not written yet; what is
+ * below is the size, the ink and the bend.
+ *
+ * THE MECHANISM IS THE HERO'S AND THE SLIDER'S, NOT A THIRD ONE. Each letter
+ * keeps the x its row gives it and is only dropped and tilted — see the long
+ * note at .hero-section .warped-text, which is where the case against bending
+ * type on a path is made, and which this block deliberately does not repeat. */
+
+/* THE ARC, AND IT IS THE SAME WAY UP AS THE HERO'S. Positive on both numbers:
+   the middle of each line sits BELOW its own two ends, and each letter leans
+   with the slope it is standing on. Which is the sign the mechanism treats as
+   its default — the pair is negated to arc the other way, and here it is not.
+
+   IT DIPS FOR A REASON RATHER THAN BY INHERITANCE. The two lines are read
+   together with the roll held up in the middle of the screen, and a dip is what
+   opens the middle of the block for it: the deepest part of GENERATION's curve
+   and the top of the hand are the same place. Crest it instead and the type
+   closes over exactly the gap the photograph needs.
+
+   These are the defaults, and they are also GENERATION's, because it is the line
+   the curve was drawn for. The short line takes its own below. */
+.about-hero .warped-text {
+  --arc-drop: 4.2vw;
+  --arc-tilt: 12deg;
+}
+
+/* PER LINE, BECAUSE --u RUNS OVER A LINE'S OWN WIDTH. The curve is measured from
+   the first letter of a row to the last, so two rows of different lengths handed
+   the same drop are bent by the same amount over different spans — which is two
+   curves, not one, and it reads as a mistake before it reads as anything else.
+   THREE is 46vw against GENERATION's 97 and takes 1.3vw against its 4.2, which is
+   what puts both lines on what looks like one arc rather than two.
+
+   THE TILT IS NOT ON THAT RATIO AND IS NOT MEANT TO BE. 7deg against 12 is far
+   more lean than a five-letter word's share of the curve — the true slope at
+   THREE's ends is nearer 3deg. It is exaggerated because the short line is the
+   one that reads as flat if it is left honest: over 46vw there is not enough
+   width for a drop to be legible as a curve, so the LEAN is what says the word
+   is sitting on one. The drop keeps the two lines geometrically consistent; the
+   tilt is taste, exactly as the slider's per-word values are.
+
+   Keyed off the copy, which is the tape slider's [data-word] restated: taste
+   lives in the stylesheet beside the rest of the drawing, and the component only
+   has to say which line is which. */
+.about-hero .h1 .line[data-line="three"] {
+  --arc-drop: 1.3vw;
+  --arc-tilt: 7deg;
+}
+
+/* THE SIZE IS THE MEASURE THE DRAWING ASKS FOR. What the design fixes is not a
+   type size but a width: GENERATION runs the window with a hair of margin at
+   each end and nothing more. 19.2vw is what puts it there — the word measures
+   97vw at that size, checked in the browser — and it is a whisker under
+   .hero-section .h1's 20.361vw, which is the site's giant headline. That the two
+   nearly agree is the check that this is the right SIZE OF THING; it is not the
+   derivation, and the hero's figure cannot simply be borrowed: STICK is five
+   letters and GENERATION is ten, so the same type size overruns this line off
+   both edges. Set it by eye instead and the word either clips its own G and N or
+   floats short of both edges, and the arc stops looking like a reason and starts
+   looking like a decoration.
+
+   line-height 0.73 IS NOT THE LEADING. It is a TYPE METRIC, and it is the hero's
+   figure because that is where Futura PT's box sits correctly around its own
+   capitals — the mask's bottom edge lands just below the baseline instead of
+   through the feet. What the two rows are actually spaced by is --line-gap
+   below, and the long note at .line + .line is the reason they are separate.
+
+   THE ARC IS WHAT PAYS FOR A TIGHT GAP. Both lines DIP, so they bend away from
+   each other rather than into each other, and GENERATION's middle drops 4.2vw
+   against THREE's 1.3 — nearly three vw of clearance a flat setting never has to
+   find. Deepen the arc and --line-gap can go further negative; flatten it and
+   the gap has to open up or the two lines touch. Reverse it and the gap has to
+   open a long way: crested, the middle of GENERATION rises into the underside of
+   THREE instead of away from it.
+
+   AND THE TIGHTEST POINT IS NOT THE MIDDLE OF THE SCREEN. It is out where
+   THREE's ends are, at roughly a quarter and three quarters across, because that
+   is where THREE has dropped least and GENERATION has not yet dropped much
+   either. That is the one place to look after moving either number.
+
+   The green is .hero-section .h1's exactly. This is the same object as the home
+   page's headline — the site's dark type on the site's lime — and there is no
+   reason for the two to be different greens. */
+.about-hero .h1 {
+  font-size: 19.2vw;
+  line-height: 0.73;
+
+  /* THE GAP BETWEEN THE TWO ROWS. Negative, because 0.73 is the loosest these
+     two lines ever want to be and every value of interest is tighter. */
+  --line-gap: -0.15em;
+  letter-spacing: 0;
+  font-weight: 800;
+  color: #013900;
+  text-align: center;
+  margin: 0;
+}
+
+/* The rows. Flex so the letter boxes sit in a row and centre as one; text-align
+   is inert once they are, and justify-content is what centres them. The hero
+   needs flex to keep its masks off the baseline — see .hero-section .clip. Here
+   it is simply what letters() expects: the spaces between words are NBSP
+   characters carrying their own width precisely because a plain space between
+   two flex items is dropped. */
+.about-hero .h1 .line {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* CLOSING THE TWO LINES UP, AND THE POINT IS THAT IT HAPPENS HERE RATHER THAN ON
+   line-height.
+   --------------------------------------------------------------------------
+   line-height looks like the control and is a trap, because .clip's box IS the
+   line box — so one number sets three unrelated things at once: how far apart
+   the rows sit, where the mask's two edges fall, and how far the reveal has to
+   travel to park a letter out of sight (gsap moves .char by a percentage of its
+   own height, so a shorter box is a shorter journey).
+
+   Tighten it and the rows do close up — and the mask's BOTTOM edge climbs above
+   the baseline with them, because .clip carries headroom at the top and none at
+   the foot. At 0.62 it was shaving 7px off the bottom of every letter on the
+   screen, which reads as a font that has gone wrong rather than as a mask.
+   Tighter still and the entrance breaks too: below about 0.52 the travel is
+   shorter than a capital is tall, so a letter can no longer get clear of its own
+   mask and sits parked half in view.
+
+   A margin has none of that reach. The line box stays the size the type wants,
+   the mask keeps sitting where it should, the reveal keeps its full travel, and
+   the only thing that moves is the one thing being asked for. The floor is no
+   longer a rendering fault — it is just the ink, where THREE's feet meet
+   GENERATION's capitals. */
+.about-hero .h1 .line + .line {
+  margin-top: var(--line-gap);
+}
+
+/* THE ARC ITSELF, and the arithmetic is the hero's line for line. --u runs -1 at
+   the first letter of a row to +1 at the last; the drop follows 1-u², a parabola
+   at its deepest in the middle; the tilt runs linearly with u, so each letter
+   leans with the slope it is standing on. The pivot is the baseline rather than
+   the letter's centre, because a letter standing on a curve turns about its
+   feet. */
+.about-hero .h1 .line .clip {
+  --u: calc(2 * var(--i) / (var(--letters) - 1) - 1);
+  transform-origin: 50% 100%;
+  transform: translateY(calc(var(--arc-drop) * (1 - var(--u) * var(--u)))) rotate(calc(var(--arc-tilt) * var(--u) * -1));
+}
+
+/* The letter boxes. .clip holds the letter's place in the row AND its place on
+   the arc (above), and masks it; .char is the only thing that moves. Two
+   elements because the arc and the entrance both want the transform property and
+   one element cannot carry both — the same division of labour as the hero's
+   headline and CREATIVE's letters in the tape slider.
+
+   Headroom, then handed straight back.
+   ------------------------------------
+   line-height here is 0.62, far under 1, so a letter's content box is a good deal
+   shorter than the capital standing in it and the mask would shave the tops off.
+   Sideways is the arc's own tilt, which swings a rotated letter past the edges
+   of a box that was measured for an upright one. The padding gives the mask room
+   on three sides; the matching negative margins take that room back out of the
+   layout, so the rows are the width they always were.
+
+   Nothing at the bottom — the mask's lower edge is what the letters slide out
+   through, and it wants to sit tight on the baseline. */
+.about-hero .clip {
+  display: block;
+  flex: 0 0 auto;
+  /* these are letters, not a layout — never shrink one */
+  overflow: hidden;
+  padding: 0.2em 0.12em 0;
+  margin: -0.2em -0.12em 0;
+}
+
+.about-hero .char {
+  display: block;
+  /* Where a letter waits before the reveal, and — since the reveal is JS — what
+     it falls back to. AboutOpen/reveal.ts sets data-reveal on the section to
+     lift this and take the letters over; the <noscript> in index.tsx lifts it
+     for good if that is never going to happen. REVEAL.HIDDEN there is the same
+     figure and the two have to agree.
+
+     130 rather than 100 because capitals overshoot their own box, so a letter
+     moved exactly its own height still leaves a hairline of tops at the mask's
+     edge. The excess is all behind the mask, so it is set well clear rather than
+     measured against the font. */
+  transform: translateY(130%);
+}
+
+.about-hero[data-reveal="live"] .char {
+  transform: none;
+}
+
+/* Fifteen letters flying in from nowhere is what this setting is asking about.
+   Here rather than only in reveal.ts so it also covers the window before
+   hydration, when the stylesheet is holding them down on its own. */
+@media (prefers-reduced-motion: reduce) {
+  .about-hero .char {
+    transform: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   ONE SHARED — BELIEF, and the gap the roll comes up through
+   -------------------------------------------------------------------------- */
+
+/* THE LINE UNDER THE HEADLINE. Two halves with a space between them at rest,
+   prised apart to 361px as the reader scrolls — see components/AboutOpen/
+   spaceOut.ts, which owns the movement. Only the resting state is here.
+
+   AND THE RESTING STATE IS AN ORDINARY CENTRED PHRASE, which is the whole of
+   this rule. The halves take their natural widths and the row centres them, so
+   with no script — and in the first frame, before a pixel has been scrolled —
+   the line reads ONE SHARED BELIEF, centred, like any other line of type.
+
+   IT WAS NOT, AND THE BUG IS WORTH LEAVING WRITTEN DOWN. The halves were
+   flex: 1 1 0, which makes the two boxes equal whatever is in them and therefore
+   puts the SPACE between them at the middle of the row by construction — which
+   is what the roll coming up needs. But ONE SHARED is 154px of ink against
+   BELIEF's 81, and equal boxes buy that centred gap by throwing the phrase half
+   the difference the other way: 37px left of centre, every frame, before the
+   move has started. It centred the thing that has to be centred at the END and
+   broke the thing that has to be centred at the BEGINNING.
+
+   BOTH ARE TRUE NOW, and neither is a CSS trick: the phrase is centred here, and
+   spaceOut.ts moves the two halves by DIFFERENT distances — measured, not
+   assumed — so that the gap arrives centred on the screen where the hand comes
+   up. The travel is the one place the asymmetry belongs, because the asymmetry
+   is a fact about two particular words.
+
+   THE SIZE IS THE HERO'S KICKER. 2.347vw is what .hero-section .h4 sets, and it
+   is what the drawing measures here too — this is the same object doing the same
+   job under a headline, and the site had already decided how big that is. */
+.about-hero .h4 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 0;
+
+  /* An ordinary word space — the gap the phrase rests at. spaceOut.ts no longer
+     needs to be told this figure: it MEASURES where the two halves actually sit
+     and moves them from there, so this can be re-set without a second number
+     going stale somewhere else. */
+  gap: 0.6vw;
+
+  font-size: 2.347vw;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: #013900;
+}
+
+/* Natural widths — see above. Flex only so the letter boxes row up. */
+.about-hero .h4 .half {
+  display: flex;
+}
+
+/* --------------------------------------------------------------------------
+   The jack-in-the-box
+   -------------------------------------------------------------------------- */
+
+/* THREE FLAT PHOTOGRAPHS STACKED INTO ONE OBJECT — the back of the carton, the
+   hand coming out of it, and the front of the carton printed over the hand, so
+   the hand reads as being INSIDE the box rather than in front of it. The whole
+   illusion is the z-index order below and nothing else; see components/AboutOpen
+   for the markup, whose source order is deliberately not the paint order.
+
+   THE WRAPPER IS THE SECTION, not the .jack-in-box div around it. inset: 0 on an
+   absolutely positioned box resolves against the nearest positioned ancestor,
+   and that is .about-open — so the three images are placed against the SHEET and
+   .jack-in-box collapses to nothing, which is what it is for. */
+.about-hero .wrapper {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+}
+
+/* All three sit on the floor of the sheet, centred. The half-width pull is what
+   centres them without either image having to know how wide it is; the two that
+   move from here restate it, because a transform is one property and a second
+   declaration replaces the first rather than adding to it. */
+.about-hero .wrapper img {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translate(-50%);
+}
+
+/* THE STACK, floor upward: the carton's back wall, the hand rising out of it,
+ * the carton's front wall over both.
+ *
+ * ALL THREE ARE SIZED IN vw AND THAT IS NOT DECORATION — it is the only thing
+ * holding the illusion together. Two of these used to carry no width at all and
+ * therefore rendered at their natural pixel size (673x258 and 324x522), while
+ * the back wall was the one image written in vw. At the 1440 design width the
+ * two units agree and the box is a box; at any other window they come apart,
+ * because one of them scales and the other does not. At 1920 the back wall grew
+ * to 595 and its `bottom: 15vw` lifted it to 288 while the carton's mouth stayed
+ * at 258, so the wall floated thirty pixels clear of the box it belongs to with
+ * the arm running through the gap. Below 1440 the same mistake sinks it into the
+ * carton instead.
+ *
+ * So the figures are the artwork's own sizes over 1440 — 673 is 46.736vw, 324 is
+ * 22.5vw — which is the site's unit and what every other length on this screen
+ * is already in. Nothing moves at the design width; everything moves together
+ * anywhere else. */
+img#behind {
+  bottom: 15vw;
+  width: 31vw;
+  z-index: 0;
+}
+
+img#hand {
+  z-index: 1;
+  width: 22.5vw;
+  /* 324px at 1440 */
+  /* Pushed past the foot of the sheet, so the arm is cropped by the section
+     instead of ending — see overflow: clip on .about-open. The -50% is the
+     centring above, restated because it is the same property.
+
+     22.222vw AND NOT 320px, which is the same distance at the design width and
+     the same distance as SPACE_OUT.HAND.REST in AboutOpen/spaceOut.ts — the
+     scrub has always been in vw and this was the one end of the appointment
+     still written in pixels. It is the pose the markup rests on before the
+     scrub takes the hand over, so the two disagreeing meant the hand jumped on
+     any window that was not 1440. */
+  transform: translate(-50%, 22.222vw);
+}
+
+img#front {
+  width: 46.736vw;
+  /* 673px at 1440 */
+  z-index: 3;
+}
+
 
 /* --------------------------------------------------------------------------
    THE BELT — three rows of pills running past the window
@@ -12196,7 +12782,7 @@ body:has(.about-open) {
   will-change: translate;
 }
 
-.conveyor-track > * {
+.conveyor-track>* {
   flex: 0 0 auto;
 }
 
@@ -12231,7 +12817,7 @@ body:has(.about-open) {
   overflow: hidden;
 }
 
-.conveyor-train > img {
+.conveyor-train>img {
   display: block;
   width: 100%;
   height: 100%;
@@ -12291,7 +12877,8 @@ body:has(.about-open) {
 
 .conveyor-index {
   font-family: var(--font-body);
-  font-size: 0.694vw; /* 10px */
+  font-size: 0.694vw;
+  /* 10px */
   font-weight: 700;
   line-height: 1;
   /* Off the cap height of the line beside it rather than off its box: the .h2's
@@ -12356,7 +12943,8 @@ body:has(.about-open) {
    it. */
 .conveyor-note {
   font-family: var(--font-body);
-  font-size: 0.972vw; /* 14px */
+  font-size: 0.972vw;
+  /* 14px */
   font-weight: 700;
   line-height: 1.45;
   text-align: center;
@@ -12457,6 +13045,23 @@ body:has(.about-open) {
      pair of figures and is where this one comes from. */
   --reason-arc: 9vw;
 
+  /* THE HAIR THE PARKED SHEET IS LIFTED BY, AND IT IS AN ANTIALIASING FIX.
+     Parked, the sheet's bottom edge lands EXACTLY on .reason-stage's clip edge —
+     the arithmetic below is exact, and that is the problem. The arc's deepest
+     point is the one place on that curve which reaches the edge, and a curve is
+     drawn with antialiasing: the browser paints the part-covered row of pixels ON
+     the boundary rather than clipping it away. So a lime seam a pixel or two tall
+     and a couple of hundred wide sat on the stage's top edge for the whole of the
+     belt above — wide because the arc is nearly flat at its lowest point, which is
+     also why it read as a chunk of the curtain rather than as a rendering hair.
+
+     So the park overshoots by this much and the two edges no longer coincide. It
+     is carried on the fall's OWN factor in both translates below, so the sheet
+     down is still exactly down and only the parked pose moves; and it is a fixed
+     px rather than a length off the design, because what it is covering is a
+     device pixel and not a proportion of anything. */
+  --reason-park: 2px;
+
   /* THE COMPOSITION'S ONE DIAL, AND IT IS MEASURED AGAINST THE WINDOW'S HEIGHT
    * AS WELL AS ITS WIDTH.
    *
@@ -12528,7 +13133,9 @@ body:has(.about-open) {
  *
  * PARKED A WHOLE SHEET ABOVE THE WINDOW. The translate is a percentage of the
  * sheet's OWN height, which is the stage plus the arc — so at 0 the arc is above
- * the top edge too and there is no bulge showing before the fall begins.
+ * the top edge too and there is no bulge showing before the fall begins. Plus
+ * --reason-park, which is the hair that keeps the arc's tip off the stage's clip
+ * edge rather than exactly on it; see the token, which is the whole argument.
  *
  * --reason-fall RESTS AT 1, WHICH IS THE SHEET DOWN. The rest pose of everything
  * in this section is the FINISHED composition, so that a page with no script on
@@ -12545,7 +13152,7 @@ body:has(.about-open) {
   height: calc(100% + var(--reason-arc));
   background: var(--reason-sheet);
   border-radius: 0 0 50% 50% / 0 0 var(--reason-arc) var(--reason-arc);
-  translate: 0 calc((var(--reason-fall, 1) - 1) * 100%);
+  translate: 0 calc((var(--reason-fall, 1) - 1) * (100% + var(--reason-park)));
   will-change: translate;
 
   /* AND IT CLIPS WHAT IT CARRIES. The composition is inside this box, so the
@@ -12619,7 +13226,9 @@ body:has(.about-open) {
   right: 0;
   top: 0;
   bottom: var(--reason-arc);
-  translate: 0 calc((1 - var(--reason-fall, 1)) * (100% + var(--reason-arc)));
+  translate: 0 calc(
+      (1 - var(--reason-fall, 1)) * (100% + var(--reason-arc) + var(--reason-park))
+    );
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -12663,10 +13272,13 @@ body:has(.about-open) {
 .reason-title {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: var(--reason-type); /* 190px in the design, 160 here */
+  font-size: var(--reason-type);
+  /* 190px in the design, 160 here */
   font-weight: 800;
-  line-height: 0.763em; /* 145/190 */
-  letter-spacing: -0.03em; /* -5.7/190 */
+  line-height: 0.763em;
+  /* 145/190 */
+  letter-spacing: -0.03em;
+  /* -5.7/190 */
   text-transform: uppercase;
   text-align: center;
 }
@@ -12694,7 +13306,8 @@ body:has(.about-open) {
    site makes the same pair of statements. */
 .reason-title .clip {
   display: block;
-  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  flex: 0 0 auto;
+  /* these are letters, not a layout — never shrink one */
   overflow: hidden;
   padding: 0.16em 0.03em 0;
   margin: -0.16em -0.03em 0;
@@ -12727,7 +13340,8 @@ body:has(.about-open) {
 .reason-gap {
   position: relative;
   flex: 0 0 auto;
-  width: calc(0.16em + var(--reason-space, 1) * 0.5542em); /* 0.584em open */
+  width: calc(0.16em + var(--reason-space, 1) * 0.5542em);
+  /* 0.584em open */
 }
 
 /* THE MARK ITSELF. Centred on the hole and free of it — left/top at 50% with the
@@ -12752,8 +13366,10 @@ body:has(.about-open) {
      set between: 187 and 124 against the design's 190px type. It is the brand's
      mark sitting inside the brand's name, and the one thing it must never do is
      change size relative to the name. */
-  width: 0.984em; /* 187/190 */
-  height: 0.653em; /* 124/190 */
+  width: 0.984em;
+  /* 187/190 */
+  height: 0.653em;
+  /* 124/190 */
   translate: -50% -50%;
   scale: var(--reason-open, 1);
   will-change: scale;
@@ -12794,10 +13410,13 @@ body:has(.about-open) {
   align-items: center;
   justify-content: center;
   font-family: var(--font-heading);
-  font-size: 0.1867em; /* 35.474/190 */
+  font-size: 0.1867em;
+  /* 35.474/190 */
   font-weight: 800;
-  line-height: 0.7222em; /* 25.62/35.474 */
-  letter-spacing: -0.03em; /* -1.064/35.474 */
+  line-height: 0.7222em;
+  /* 25.62/35.474 */
+  letter-spacing: -0.03em;
+  /* -1.064/35.474 */
   text-transform: uppercase;
   color: var(--reason-sheet);
   transform: rotate(-11.392deg);
@@ -12966,6 +13585,7 @@ body:has(.about-open) {
    roll is not mentioned because it is not an animation: arrive.ts mounts it
    under this setting exactly as it does without it. */
 @media (prefers-reduced-motion: reduce) {
+
   .reason .char,
   .reason .body-rise {
     transform: none;
@@ -13055,12 +13675,54 @@ body:has(.about-open) {
    * frame: whatever does not fit is never seen, and what did not fit was the
    * bottom of the sheet.
    *
-   * So the unit is capped. 1vw while the window is tall enough to hold the
-   * drawing, and the height that exactly holds it once it is not — 76.111 of
-   * them being the drawing, one screen being what there is to put it in. At 1440
-   * x 900 that is 11.83px against a nominal 14.4, so the drawing lands at 82%
-   * and the sheet at 1103 x 760 with the design's own margins above and below
-   * it. Nothing inside re-lays-out; it is the same drawing, smaller.
+   * So the unit is capped: 1vw while the screen is tall enough, and the height
+   * that exactly fills it once it is not.
+   *
+   * AND WHAT HAS TO FIT IS THE WRITING. Not the artboard, and not the paper —
+   * and the divisor has been each of those three in turn, so it is worth saying
+   * what each one cost.
+   *
+   * 76.111 WAS THE ARTBOARD, sheet plus the empty ground the design leaves above
+   * and below it. It defended that ground at the sheet's expense on every window
+   * shorter than the artboard, which is nearly all of them: 1096px of CONTENT
+   * height at 1440 wide is a browser almost nobody has with devtools open. The
+   * sheet came out 874 wide at 1440 x 700 against a design of 1354.
+   *
+   * 65.752 WAS THE PAPER, edge to edge in the held screen with the margins spent.
+   * Better — 1011 at the same window — and still not the drawing. A sheet of
+   * paper that always sits wholly inside the frame is a sheet of paper being
+   * kept at arm's length, and on a short window it is a small object in the
+   * middle of a lot of ground.
+   *
+   * SO THE PAPER IS ALLOWED TO BLEED. What the reader has to be able to read is
+   * the sentence written on it; the blank top and bottom of the sheet are the
+   * parts that can go off the edge, and a sheet running past the frame reads as
+   * a sheet too big for the frame, which is the right impression for a section
+   * whose whole subject is the thing on the paper. .reimagine-stage carries the
+   * clip that makes that a crop instead of a spill.
+   *
+   * WHERE 55.052 COMES FROM. The statement's block — rotated -3deg, so this is
+   * its rendered box and not the type's own — stands from 25.526 units above the
+   * stage's centre to 2.087 below it. The top is the edge that binds. Give it 2
+   * units of clear ground above and half a screen has to hold 25.526 + 2 =
+   * 27.526 of them, which is 55.052 for the whole.
+   *
+   * FOR REFERENCE, THE PAPER'S OWN FIGURES, since they are what decides where it
+   * crops: .reimagine-sheet's box is 94.993 units wide and its aspect is the
+   * canvas's, so 94.993 x 950/1378 = 65.489 units tall; the paper is 911 of the
+   * canvas's 950 and so 62.800 of those, sitting 0.655 low in the box because
+   * the canvas carries 29 units of margin above the sheet and 10 below; the box
+   * is centred 2.131 above the stage's centre, so the paper's top edge stands
+   * 2.131 - 0.655 + 62.800/2 = 32.876 units up and its foot 29.914 down.
+   *
+   * WHAT THAT GIVES. At 1440 wide the drawing reaches its design size at 793px
+   * of screen rather than 1096, and the paper is wholly inside the frame again
+   * from 947. Between those two the sheet is full size and its top runs off the
+   * fold — 23px at 900, 73px at 800. Below 793 everything scales together as it
+   * always did: at 1440 x 700 the unit is 12.72 against a nominal 14.4, the
+   * sheet is 1208 x 833 where the artboard rule gave 874 and the paper rule
+   * 1011, and the sentence still has 25px of clear paper above its first line.
+   * Nothing inside re-lays-out at any of them; it is the same drawing, bigger.
    *
    * --screen and not 100vh, for the reason Tokens gives: a retracting mobile
    * address bar must not re-scale a pinned composition mid-scroll.
@@ -13070,7 +13732,7 @@ body:has(.about-open) {
    * proportions — so the design figures are still readable in place, and the
    * markup passes the tape's box through in the same form (see ./index.tsx,
    * where it has to be written without spaces to survive being split). */
-  --rei-u: min(1vw, calc(var(--screen-lg) / 76.111));
+  --rei-u: min(1vw, calc(var(--screen-lg) / 55.052));
 
   /* WHERE THE LIME STOPS AND THE GREEN STARTS. THIS IS THE ONE NUMBER TO TURN.
    *
@@ -13085,15 +13747,21 @@ body:has(.about-open) {
    * centred 2.131 units above the stage's centre (see .reimagine-sheet), and the
    * paper inside that box is not centred in it either: paper-1.webp carries 29px
    * of empty canvas above the sheet and 10 below, so the printed area's middle
-   * sits 0.609 units low. 2.131 - 0.609 = 1.522, and that is the whole of this
+   * sits 0.655 units low. 2.131 - 0.655 = 1.476, and that is the whole of this
    * figure. Measured, not judged — the two errors are in opposite directions and
    * eyeballing the box would have put the line 18px off at the design size.
+   *
+   * IT WAS 1.522, off a 0.609 that no longer reproduces from the figures beside
+   * it — 9.5 canvas units of offset scaled into the box comes to 0.655, and the
+   * cap's derivation two rules above now depends on that same number. It is a
+   * 0.6px correction at the design size and it is here so there is one value for
+   * one measurement rather than two.
    *
    * A PERCENTAGE OF THE STAGE MINUS UNITS, because the two halves of it are
    * different kinds of thing: the stage's centre is a fraction of the window and
    * the offset is a fraction of the drawing. There is no single unit both can be
    * written in, and calc() is the thing that means neither has to be. */
-  --rei-split: calc(50% - 1.522 * var(--rei-u));
+  --rei-split: calc(50% - 1.476 * var(--rei-u));
 
   position: relative;
   width: 100%;
@@ -13155,11 +13823,26 @@ body:has(.about-open) {
   width: 100%;
   /* The pin's height — --screen-lg and not --screen. See @property. */
   height: var(--screen-lg);
-  background: linear-gradient(
-    to bottom,
-    var(--rei-bg) var(--rei-split),
-    var(--about-bg) var(--rei-split)
-  );
+
+  /* AND THE FRAME CROPS THE SHEET, which it never had to before. The unit above
+     used to guarantee the paper fitted inside this box; it no longer does — the
+     sheet is deliberately bigger than the held screen on a short window and runs
+     off the top and the foot of it. Without this that overhang is not a crop, it
+     is a spill: this box is PINNED, so a sheet hanging out of it is painted over
+     the curtain above and over WE WANTED TO BE. below, both of which are on
+     screen while this one is held.
+
+     clip and NOT hidden, the call every section on this site makes: hidden would
+     make this a scroll container, and a second scroller on a page driven by
+     Lenis fights the smooth scroll for the wheel. clip crops with none of that,
+     and — unlike hidden — does not make the box a scroll container on either
+     axis, which matters here because the pin has to be able to fix this element
+     to the WINDOW. The section around it clips x for its own reason; see
+     overflow-x on .reimagine. */
+  overflow: clip;
+  background: linear-gradient(to bottom,
+      var(--rei-bg) var(--rei-split),
+      var(--about-bg) var(--rei-split));
 }
 
 /* Paper grain — the same sheet the rest of the site is printed on.
@@ -13219,12 +13902,36 @@ body:has(.about-open) {
 /* THE SHEET'S BOX — one box, six photographs, and the statement written inside
  * it.
  *
- * IT IS THE FLAT SHEET'S SHAPE AND SIZE, not the ball's and not the frames'.
- * 1343 x 926 at the design width is what the last frame measures on the page,
- * and the type is placed inside this box as a percentage of it — so the writing
- * sits where it was drawn on the paper however the window scales the paper.
+ * IT IS THE LAST FRAME'S CANVAS AND NOT THE PAPER IN IT, which is the one thing
+ * about this box that has to be read before either figure below makes sense.
+ * paper-1.webp is a 1378 x 950 canvas with the sheet occupying 1364 x 911 of it
+ * at an offset of 5, 29 — there is empty canvas all round the photograph, most
+ * of it above. The aspect-ratio below is that CANVAS, because the six frames are
+ * registered by object-fit: contain and only agree with each other if the box
+ * they are contained in has the last frame's proportions exactly. So the box's
+ * own height is a consequence and never a design figure: it is width x 950/1378
+ * and nothing else.
  *
- * 93.264 UNITS AND NOT 93.264vw, which is the whole of what the pin changed
+ * WHICH MEANS THE WIDTH IS SET SO THAT THE PAPER COMES OUT RIGHT, not the box.
+ * The design draws the sheet at 1354 x 903 at 1440, and the sheet is 1364 of the
+ * canvas's 1378 — so the canvas has to be 1354 x 1378/1364 = 1369.9px for the
+ * printed area to measure the 1354 the drawing asks for. That is 94.993 units,
+ * and the paper then comes out 1354.0 x 904.3 on the page.
+ *
+ * THE 1.3px ON THE HEIGHT IS THE PHOTOGRAPH AND NOT AN ERROR. The design's
+ * rectangle is 1.4995 wide to tall and the photographed sheet is 1.4973 — it is
+ * a picture of a real piece of paper with a soft, slightly wavy edge, so the two
+ * cannot both be hit to the pixel. The width is what the rest of the section is
+ * measured against, so the width is the one that is matched exactly.
+ *
+ * IT WAS 93.264 UNITS, which is the same arithmetic run against the CANVAS
+ * rather than the paper: it put the box on 1343 and the visible sheet on 1329 x
+ * 888, about 2% under the drawing. The comment that stood here called
+ * "1343 x 926" the design's own figures read off the drawing; the width was
+ * a design figure misapplied to the canvas, and 926 was never one at all — it is
+ * 1343 x 950/1378, the asset's aspect wearing a design label.
+ *
+ * 94.993 UNITS AND NOT 94.993vw, which is the whole of what the pin changed
  * here. They are the same figure at a window tall enough to hold the drawing and
  * the unit shrinks below that; --rei-u above argues it, and the type, the hole
  * and the tape are all written the same way so the composition scales as one
@@ -13250,7 +13957,8 @@ body:has(.about-open) {
   left: 50%;
   top: calc(50% - 2.131 * var(--rei-u));
   transform: translate(-50%, -50%);
-  width: calc(93.264 * var(--rei-u)); /* 1343 / 1440 */
+  width: calc(94.993 * var(--rei-u));
+  /* 1369.9 / 1440 — the canvas that puts the PAPER on the design's 1354 */
   /* The last frame's own proportions — see the box's argument above. */
   aspect-ratio: 1378 / 950;
 }
@@ -13314,8 +14022,21 @@ body:has(.about-open) {
  * line hanging off the left edge on any window shorter than the drawing. The
  * figures below did not change; only what they are a fraction of did.
  *
- * 68px in from the sheet's left edge and 222px down from its top, against a
- * sheet 1343 x 926 — the design's own, read off the drawing. */
+ * 76px in from the BOX's left edge and 156px down from its top at the design
+ * width, which is 71px and 127px from the edges of the PAPER — the box carries
+ * 5 canvas units of empty margin on the left and 29 above it, and those are the
+ * edges the reader sees. The comment that stood here said 68 and 222 against a
+ * sheet of 1343 x 926; none of those four figures was true of the CSS beneath
+ * it, and 1343 x 926 was the canvas rather than the paper. See .reimagine-sheet.
+ *
+ * THESE ARE UNITS FROM THE BOX AND NOT PERCENTAGES OF IT, whatever the paragraph
+ * above says, and it matters in exactly one way: the box is centred, so when it
+ * was widened to put the paper on the design's 1354 both edges moved outward
+ * together and the type's distance from the paper's edge did not change — 62.39
+ * to 62.30 measured. What DID change is the proportion. The paper grew 1.8% and
+ * the writing did not, so the block now covers 61.6% of the sheet's width where
+ * it covered 62.7%. If the drawing wants the old share back, this rule's
+ * font-size and both offsets scale by 1.018 together; nothing else does. */
 .reimagine-copy {
   position: absolute;
   left: calc(5.278 * var(--rei-u));
@@ -13325,10 +14046,10 @@ body:has(.about-open) {
   font-family: var(--font-heading);
   /* 65px at the 1440 design width. */
   font-size: calc(6.25 * var(--rei-u));
-font-style: normal;
-font-weight: 800;
-line-height: 0.77;
-letter-spacing: calc(-0.188 * var(--rei-u));
+  font-style: normal;
+  font-weight: 800;
+  line-height: 0.77;
+  letter-spacing: calc(-0.188 * var(--rei-u));
   rotate: -3deg;
 }
 
@@ -13350,7 +14071,8 @@ letter-spacing: calc(-0.188 * var(--rei-u));
    site makes the same pair of statements. */
 .reimagine-copy .clip {
   display: block;
-  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  flex: 0 0 auto;
+  /* these are letters, not a layout — never shrink one */
   overflow: hidden;
   padding: 0.2em 0.04em 0;
   margin: -0.2em -0.04em 0;
@@ -13376,7 +14098,8 @@ letter-spacing: calc(-0.188 * var(--rei-u));
      across the G and the M. Change the strip's width below and this is the
      figure that follows it: the two are read together, and the difference
      between them IS the clearance. */
-  width: calc(11.806 * var(--rei-u)); /* 170 / 1440 */
+  width: calc(11.806 * var(--rei-u));
+  /* 170 / 1440 */
   /* AND A HEIGHT, WHICH IS PURELY SOMETHING FOR THE TAPE TO BE CENTRED ON.
      An empty flex item has no height at all, and the row is aligned to
      flex-end — so its box collapses onto the line's floor, which is the
@@ -13438,8 +14161,10 @@ letter-spacing: calc(-0.188 * var(--rei-u));
 
      The markup passes the same pair as `box`, which the fold arithmetic needs
      whenever the frame is turned; the two have to agree. */
-  width: calc(9.658 * var(--rei-u)); /* 139.08 / 1440 */
-  height: calc(3.058 * var(--rei-u)); /* 44.035 / 1440 */
+  width: calc(9.658 * var(--rei-u));
+  /* 139.08 / 1440 */
+  height: calc(3.058 * var(--rei-u));
+  /* 44.035 / 1440 */
   translate: -50% -50%;
   /* OVER THE LETTERS, always. The strip is stuck ON the sentence, not set into
      it, so on the frames where it does touch a letter it has to be the thing on
@@ -13615,7 +14340,8 @@ letter-spacing: calc(-0.188 * var(--rei-u));
  * type on the green, which is how the footer signs off. */
 .wanted-text {
   font-family: var(--font-heading);
-  font-size: 222px; /* viewBox units — 200px at the 1440 design width */
+  font-size: 222px;
+  /* viewBox units — 200px at the 1440 design width */
   font-weight: 800;
   letter-spacing: 0.01em;
   fill: var(--about-ink);
@@ -13645,9 +14371,12 @@ letter-spacing: calc(-0.188 * var(--rei-u));
    * The pitch is what makes the row a row: it is applied per box off --n, so the
    * four are evenly spaced by construction and cannot drift apart one edit at a
    * time. */
-  --box-w: 18.889vw; /* 272 / 1440 */
-  --box-h: 18.819vw; /* 271 / 1440 */
-  --box-pitch: 27.083vw; /* 390 / 1440 */
+  --box-w: 18.889vw;
+  /* 272 / 1440 */
+  --box-h: 18.819vw;
+  /* 271 / 1440 */
+  --box-pitch: 27.083vw;
+  /* 390 / 1440 */
 
   /* WHERE THE ROW STARTS, and it is off the left edge on purpose: box 01 is cut
      by the crop, which is what says the four are a stretch of something longer
@@ -14324,9 +15053,9 @@ letter-spacing: calc(-0.188 * var(--rei-u));
    and one element cannot carry both. Same division of labour as the hero's. */
 .footer-headline .line .clip {
   --u: calc(2 * var(--i) / (var(--letters) - 1) - 1);
-  transform-origin: 50% 100%; /* pivot on the baseline, not the letter centre */
-  transform: translateY(calc(var(--arc-drop) * (1 - var(--u) * var(--u))))
-    rotate(calc(var(--arc-tilt) * var(--u) * -1));
+  transform-origin: 50% 100%;
+  /* pivot on the baseline, not the letter centre */
+  transform: translateY(calc(var(--arc-drop) * (1 - var(--u) * var(--u)))) rotate(calc(var(--arc-tilt) * var(--u) * -1));
 }
 
 /* The rows. Flex rather than plain inline text, for the reason every row of
@@ -14353,7 +15082,8 @@ letter-spacing: calc(-0.188 * var(--rei-u));
    through, and it wants to sit tight on the baseline. */
 .site-footer .clip {
   display: block;
-  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  flex: 0 0 auto;
+  /* these are letters, not a layout — never shrink one */
   overflow: hidden;
   padding: 0.2em 0.12em 0;
   margin: -0.2em -0.12em 0;
@@ -14655,7 +15385,8 @@ letter-spacing: calc(-0.188 * var(--rei-u));
      31vw leaves about 1.4vw of slack on top of that. Re-measure when a label
      changes — a word wider than OUR FAMILY collides with the arrow disc rather
      than wrapping, because the letters are split into unshrinkable boxes. */
-  --menu-w: 31vw; /* 446px at the 1440 design width */
+  --menu-w: 31vw;
+  /* 446px at the 1440 design width */
 
   /* Asymmetric on purpose: the labels start close to the left edge, while the
      right side has to leave the arrow room to breathe. */
@@ -14663,7 +15394,8 @@ letter-spacing: calc(-0.188 * var(--rei-u));
   --menu-pad-r: 1.4vw;
 
   --menu-row-h: 6.6vw;
-  --menu-thumb: 5.4vw; /* the hover preview, a square */
+  --menu-thumb: 5.4vw;
+  /* the hover preview, a square */
 
   /* The preview is pinned on rather than set in: it leans, and it rides up over
      the row's own rule instead of sitting politely under it. Keep the lift
@@ -14671,7 +15403,8 @@ letter-spacing: calc(-0.188 * var(--rei-u));
      but that between it and the clipped edge. */
   --menu-thumb-lift: 0.55vw;
   --menu-thumb-rot: -5deg;
-  --menu-thumb-radius: 1.736vw; /* 25px at the 1440 design width */
+  --menu-thumb-radius: 1.736vw;
+  /* 25px at the 1440 design width */
 
   /* THE PERFORATION, AND IT IS ONE PERFORATION. The rules between the rows and
      the tear line across the tab are the same line drawn twice — the menu is a
@@ -14689,8 +15422,10 @@ letter-spacing: calc(-0.188 * var(--rei-u));
      Square, so the mark is one figure and not two — the rules used to carry a
      --menu-dash-h of their own that was neither the dash's width nor anything
      else. A perforation is punched, and a punch has one size. */
-  --perf-mark: 0.208vw; /* 3px */
-  --perf-pitch: 0.417vw; /* 6px */
+  --perf-mark: 0.208vw;
+  /* 3px */
+  --perf-pitch: 0.417vw;
+  /* 6px */
 
   /* The hover preview, in two beats: the slot opens and shoves the label aside,
      and the image scales up into it. OPEN is how long the shove takes; how long
@@ -14739,7 +15474,8 @@ letter-spacing: calc(-0.188 * var(--rei-u));
      are drawn at full strength now, which is what makes them and the tab's tear
      line one perforation rather than two that merely line up. currentColor off
      --menu-ink above, exactly as the tab draws its own. */
-  --menu-dot: #b6fe00; /* the disc behind each arrow — the hero's lime */
+  --menu-dot: #b6fe00;
+  /* the disc behind each arrow — the hero's lime */
 
   position: fixed;
   top: 0;
@@ -14748,7 +15484,8 @@ letter-spacing: calc(-0.188 * var(--rei-u));
      rounded below. */
   right: 1.4vw;
   width: var(--menu-w);
-  z-index: 101; /* over the slider's stage (10) and the band (11), under the cursor */
+  z-index: 101;
+  /* over the slider's stage (10) and the band (11), under the cursor */
   font-family: var(--font-heading);
   color: var(--menu-ink);
 
@@ -14888,11 +15625,9 @@ letter-spacing: calc(-0.188 * var(--rei-u));
 .menu-rule {
   display: block;
   height: var(--perf-mark);
-  background-image: linear-gradient(
-    to right,
-    currentColor 0 var(--perf-mark),
-    transparent var(--perf-mark)
-  );
+  background-image: linear-gradient(to right,
+      currentColor 0 var(--perf-mark),
+      transparent var(--perf-mark));
   background-size: var(--perf-pitch) 100%;
   background-repeat: repeat-x;
 }
@@ -14951,10 +15686,8 @@ letter-spacing: calc(-0.188 * var(--rei-u));
      itself, and a frame where those two disagree is a frame where the label
      slides independently of the thing supposedly pushing it. */
   transition:
-    width var(--menu-thumb-open) cubic-bezier(0.16, 0.84, 0.3, 1)
-      var(--menu-thumb-pop),
-    margin-right var(--menu-thumb-open) cubic-bezier(0.16, 0.84, 0.3, 1)
-      var(--menu-thumb-pop);
+    width var(--menu-thumb-open) cubic-bezier(0.16, 0.84, 0.3, 1) var(--menu-thumb-pop),
+    margin-right var(--menu-thumb-open) cubic-bezier(0.16, 0.84, 0.3, 1) var(--menu-thumb-pop);
 }
 
 /* The image, second beat. It is a fixed square inside the slot rather than
@@ -15040,7 +15773,8 @@ letter-spacing: calc(-0.188 * var(--rei-u));
    through, and it wants to sit tight on the baseline. */
 .site-menu .clip {
   display: block;
-  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  flex: 0 0 auto;
+  /* these are letters, not a layout — never shrink one */
   overflow: hidden;
   padding: 0.1em 0.06em 0;
   margin: -0.1em -0.06em 0;
@@ -15107,7 +15841,8 @@ letter-spacing: calc(-0.188 * var(--rei-u));
    here, and nothing has to be restructured for it. */
 .menu-tab {
   display: block;
-  margin-left: auto; /* right-aligned under the panel, flush with its edge */
+  margin-left: auto;
+  /* right-aligned under the panel, flush with its edge */
   width: 9.3vw;
   color: var(--menu-ink);
   /* Only so the arrival's paper below can hang off it. */
@@ -15220,9 +15955,7 @@ letter-spacing: calc(-0.188 * var(--rei-u));
 
      0.8em IS the line box (the line-height above times this font size), so the
      three terms stay true if any of them is re-set. */
-  padding-top: calc(
-    var(--perf-y) + (var(--tab-body) - var(--perf-y) - 0.8em) / 2
-  );
+  padding-top: calc(var(--perf-y) + (var(--tab-body) - var(--perf-y) - 0.8em) / 2);
   /* The tracking is added to the right of the last letter too, which shifts the
      word left of centre; half of it back squares the word up in the box. */
   text-indent: 0.1em;
@@ -15309,11 +16042,9 @@ letter-spacing: calc(-0.188 * var(--rei-u));
   left: var(--perf-x);
   right: var(--perf-x);
   height: var(--perf-mark);
-  background-image: linear-gradient(
-    to right,
-    currentColor 0 var(--perf-mark),
-    transparent var(--perf-mark)
-  );
+  background-image: linear-gradient(to right,
+      currentColor 0 var(--perf-mark),
+      transparent var(--perf-mark));
   background-size: var(--perf-pitch) 100%;
   background-repeat: repeat-x;
   pointer-events: none;
@@ -15424,7 +16155,8 @@ letter-spacing: calc(-0.188 * var(--rei-u));
      below, and .giant-note under the pinning section. */
   position: absolute;
   width: var(--hand-w);
-  height: calc(var(--hand-w) * 0.6875); /* 220 units of the rule's 320 */
+  height: calc(var(--hand-w) * 0.6875);
+  /* 220 units of the rule's 320 */
   /* Decoration. The readable copy inside it is a .sr-only text node, which is
      unaffected — this only keeps the box from being what a click lands on. */
   pointer-events: none;
@@ -15541,6 +16273,88 @@ letter-spacing: calc(-0.188 * var(--rei-u));
 }
 
 .whats-rolling[data-note="live"] .rolling-note {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* THE OPENING SCREEN'S NOTE — four lines in the empty bottom-right corner of the
+ * sheet, beside the shut box and clear of GENERATION's last letter.
+ *
+ * PLACED FROM THE RIGHT AND THE BOTTOM, which is the design's own pair of
+ * figures and is also the right pair to keep: what the note has to hold is its
+ * relationship to the CORNER it is written into. Measured from the left it would
+ * drift with nothing in particular, and measured from the top it would be
+ * downstream of the section's padding and two lines of 19.2vw type — three
+ * things that can each move on their own. The news page's note is placed from
+ * its bottom edge for the same argument.
+ *
+ * BOTH IN vw OFF THE 1440 DESIGN, which is the site's unit and is also what this
+ * section's own height is written in (.about-open is 72.222vw, not a screen), so
+ * a figure measured DOWN a 1040-tall artboard is a fraction of the same width
+ * everything else here is. 72.44px is 5.031vw and 377px is 26.181vw; the px are
+ * kept in the comments because the source of a figure should never be in doubt.
+ *
+ * 12.8vw IS THE WIDTH THE DESIGN ASKED FOR — 184.4px, the same size the pinning
+ * section's note is, and the note by .giant-note explains why the height that
+ * comes with it is a consequence rather than a second figure: the box has ONE
+ * aspect (the ruled margin's 320 x 200 artwork with the writing fitted beside
+ * it) and --hand-w picks a point on it.
+ *
+ * IT IS WITH THE OTHER INSTANCES AND NOT WITH ITS SECTION, unlike everything
+ * else /about writes: .hand-note above sets --hand-w and the rest at the same
+ * specificity this rule has, so an instance written earlier in the file loses
+ * every dial it tries to set and keeps only the properties the base does not
+ * name. The hero's, the pinning section's and the news page's are all here for
+ * that reason, and this one joins them.
+ *
+ * NO z-index, deliberately. Everything it could be under is nowhere near it —
+ * the box is centred on the floor of the sheet — and leaving it out is what puts
+ * the section's paper grain OVER the note rather than under it, which is the
+ * bargain every other box on /about strikes: .about-open's ::after is later in
+ * tree order and z-index: auto, so it paints above this and below img#front.
+ * The note is written on the page's paper, not laid on top of it. */
+.about-note {
+  --hand-w: 12.8vw;
+  /* 184.4px at 1440 */
+
+  /* The sheet's ink — the headline's dark green, not the lime --about-ink, which
+     is the MASTHEAD's colour for the length of this route and not the colour
+     anything on the sheet is written in. hand.ts reads this property off the
+     note and draws the letters in it, so the ruled margin and the writing take
+     one value. */
+  --hand-ink: #013900;
+
+  /* A shade quicker than the hero's pen. This one is on the opening screen and
+     starts while the headline is still arriving, where the hero's has a whole
+     screen of scrolling to itself — see `pace` in HandNote/hand.ts. */
+  --hand-draw: 0.8;
+
+  /* AND IT WAITS FOR THE HEADLINE. Without a hold the pen touches down on the
+     same frame the cover clears and writes straight across the letters' own
+     arrival — two gestures on an otherwise empty screen, cancelling each other.
+     The rise is 0.3 late and runs a little over two seconds (see ABOUT_REVEAL in
+     AboutOpen/reveal.ts), so this starts as the last of the letters are landing
+     and finishes alone. Seconds as a bare number: hand.ts parses it as one and a
+     CSS time would come out NaN. */
+  --hand-delay: 1.6;
+
+  right: 5.031vw;
+  /* 72.44px */
+  bottom: 26.181vw;
+  /* 377px */
+
+  /* PARKED AT NOTHING AND HANDED OVER BY data-note, the same bargain the
+     headline's letters strike with data-reveal and a different attribute because
+     it is a different beat. The ruled margin is real markup and is drawn the
+     moment it is parsed; hand.ts only parks it when it BUILDS, and on this page
+     that build waits for the cover (AboutOpen/Stage.tsx). Without this the
+     reader gets a finished ruled corner for a few frames, then nothing while the
+     note waits on the headline, then the same corner drawn properly. */
+  opacity: 0;
+  visibility: hidden;
+}
+
+.about-hero[data-note="live"] .about-note {
   opacity: 1;
   visibility: visible;
 }
@@ -15829,11 +16643,9 @@ letter-spacing: calc(-0.188 * var(--rei-u));
   top: 0.12vw;
   bottom: 0.12vw;
   width: 0.2vw;
-  background-image: radial-gradient(
-    circle at 50% 50%,
-    currentColor 42%,
-    transparent 45%
-  );
+  background-image: radial-gradient(circle at 50% 50%,
+      currentColor 42%,
+      transparent 45%);
   background-size: 100% 0.35vw;
   background-repeat: repeat-y;
   opacity: 0.9;
@@ -15867,7 +16679,8 @@ letter-spacing: calc(-0.188 * var(--rei-u));
    through, and it wants to sit tight on the baseline. */
 .top-band .clip {
   display: block;
-  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  flex: 0 0 auto;
+  /* these are letters, not a layout — never shrink one */
   overflow: hidden;
   padding: 0.25em 0.06em 0;
   margin: -0.25em -0.06em 0;
@@ -15996,19 +16809,12 @@ letter-spacing: calc(-0.188 * var(--rei-u));
      auto, laid out BELOW the face: a second flat copy of the artwork under the
      first, and nothing that moves. Every call site happened to pass a direction,
      so it went unseen until one did not. */
-  --peel-span: calc(
-    var(--peel-w) *
-      max(sin(var(--peel-dir, 0deg)), -1 * sin(var(--peel-dir, 0deg))) +
-      var(--peel-h) *
-      max(cos(var(--peel-dir, 0deg)), -1 * cos(var(--peel-dir, 0deg)))
-  );
+  --peel-span: calc(var(--peel-w) * max(sin(var(--peel-dir, 0deg)), -1 * sin(var(--peel-dir, 0deg))) + var(--peel-h) * max(cos(var(--peel-dir, 0deg)), -1 * cos(var(--peel-dir, 0deg))));
 
   /* So the frame is bled by exactly what it swings off by, plus the shadow's
      room. Derived rather than typed because a hand-computed one is a number
      that silently stops being true the moment the artwork is re-cropped. */
-  --peel-pad: calc(
-    var(--peel-bleed) + max(0px, calc((var(--peel-span) - var(--peel-h)) / 2))
-  );
+  --peel-pad: calc(var(--peel-bleed) + max(0px, calc((var(--peel-span) - var(--peel-h)) / 2)));
 
   --peel-shut: calc(-1 * var(--peel-pad));
   --peel-far: calc(100% + var(--peel-pad));
@@ -16039,9 +16845,7 @@ letter-spacing: calc(-0.188 * var(--rei-u));
   --peel-to: 32%;
 
   /* The fold line. This is the whole animation. */
-  --peel-cut: calc(
-    var(--peel-from) + var(--peel) * (var(--peel-to) - var(--peel-from))
-  );
+  --peel-cut: calc(var(--peel-from) + var(--peel) * (var(--peel-to) - var(--peel-from)));
 }
 
 /* The picture, cut off at the fold. clip-path applies AFTER filter, so the
@@ -16050,12 +16854,10 @@ letter-spacing: calc(-0.188 * var(--rei-u));
 .peel-face {
   display: block;
   height: 100%;
-  clip-path: polygon(
-    var(--peel-shut) var(--peel-cut),
-    var(--peel-far) var(--peel-cut),
-    var(--peel-far) var(--peel-far),
-    var(--peel-shut) var(--peel-far)
-  );
+  clip-path: polygon(var(--peel-shut) var(--peel-cut),
+      var(--peel-far) var(--peel-cut),
+      var(--peel-far) var(--peel-far),
+      var(--peel-shut) var(--peel-far));
   /* The site's cast shadow, thrown by the FACE — see --drop-ink in :root. Kept
      a shade tighter than a photograph's because a peel is a strip of tape or a
      sticker, which lies flatter against the paper than a card does.
@@ -16063,10 +16865,8 @@ letter-spacing: calc(-0.188 * var(--rei-u));
      Still overridable, and both overrides matter: the giant tapes take it off
      entirely (their wrapper casts one shadow for face and lifted flap together)
      and the preloader's mark sets it to none because it is not on paper at all. */
-  filter: var(
-    --peel-shadow,
-    drop-shadow(0.22vw 0.32vw var(--drop-blur) var(--drop-ink))
-  );
+  filter: var(--peel-shadow,
+      drop-shadow(0.22vw 0.32vw var(--drop-blur) var(--drop-ink)));
 }
 
 /* The strip that came off: the same image, upside down, one height above the
@@ -16084,12 +16884,10 @@ letter-spacing: calc(-0.188 * var(--rei-u));
   top: calc(-100% + 2 * var(--peel-cut) - 1px);
   transform: scaleY(-1);
 
-  clip-path: polygon(
-    var(--peel-shut) var(--peel-shut),
-    var(--peel-far) var(--peel-shut),
-    var(--peel-far) var(--peel-cut),
-    var(--peel-shut) var(--peel-cut)
-  );
+  clip-path: polygon(var(--peel-shut) var(--peel-shut),
+      var(--peel-far) var(--peel-shut),
+      var(--peel-far) var(--peel-cut),
+      var(--peel-shut) var(--peel-cut));
 }
 
 /* Undoes --peel-dir for the artwork alone: the frame turns so the fold can
@@ -16127,8 +16925,7 @@ letter-spacing: calc(-0.188 * var(--rei-u));
      resolves var() against the <feFlood> inside the shared <defs> rather than
      against the element that referenced it, so one filter is one colour for the
      whole document however it is written. See BACKS in components/Peel. */
-  filter: var(--peel-back, url(#peel-back))
-    brightness(calc(1 + var(--peel) * 0.22));
+  filter: var(--peel-back, url(#peel-back)) brightness(calc(1 + var(--peel) * 0.22));
 }
 
 .peel-face,
@@ -16150,6 +16947,7 @@ letter-spacing: calc(-0.188 * var(--rei-u));
    pointer rather than something that happens on its own: it still happens, it
    just stops sliding. */
 @media (prefers-reduced-motion: reduce) {
+
   .menu-thumb,
   .menu-thumb img,
   .menu-arrow svg {
@@ -16202,8 +17000,10 @@ html.has-cursor textarea {
   translate: -11.2px -12px;
   transform-origin: 11.2px 12px;
 
-  pointer-events: none; /* never be what a click lands on */
-  z-index: 9999; /* over the slider's stage (10) and the band's svg (11) */
+  pointer-events: none;
+  /* never be what a click lands on */
+  z-index: 9999;
+  /* over the slider's stage (10) and the band's svg (11) */
   will-change: transform;
 
   /* The artwork is pale masking tape and the page runs pale in places (the
@@ -16211,4 +17011,3 @@ html.has-cursor textarea {
      arrow readable over all of them without tinting it. */
   filter: drop-shadow(0 1px 1.5px rgba(0, 0, 0, 0.45));
 }
-

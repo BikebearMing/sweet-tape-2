@@ -103,12 +103,12 @@ const BASELINE: Record<string, number> = {
   ",": 0.2,
 };
 
-/* A GLYPH THE EXPORT DOES NOT HAVE, drawn here rather than left as a gap.
+/* THE GLYPHS THE EXPORT DOES NOT HAVE, drawn here rather than left as gaps.
  *
- * The hyphen is the only character in all forty-nine note lines on this site
- * that the folder cannot spell, and it is wanted in two of them — "not
- * industrial-just" on the board and "steady, no-nonsense." on one tape. Every
- * other character the notes use is exported.
+ * Two characters in all of this site's note copy are ones the folder cannot
+ * spell: the hyphen — wanted in "not industrial-just" on the board and
+ * "steady, no-nonsense." on one tape — and the apostrophe, wanted in /about's
+ * "we've believed that". Every other character the notes use is exported.
  *
  * IT IS A STROKE AND NOT A PNG, which makes it the one glyph here that draws
  * itself: the letters are ink uncovered by a pen, and this is the pen. That is
@@ -120,10 +120,50 @@ const BASELINE: Record<string, number> = {
  * hyphen had, and the note's copy has always leant on it standing in for an em
  * dash. THIS SHOULD BE DELETED the moment a hyphen is exported; it is a stopgap
  * with a drawn character's job. */
-const SYNTHETIC: Record<
-  string,
-  { w: number; pen: number; path: (x: number, y: number) => string }
-> = {
+type Synthetic = {
+  w: number;
+  pen: number;
+  /** The mark's own ink height. The x-height unless a mark says otherwise. */
+  h?: number;
+  /** How far the ink's TOP stands above the writing line. The x-height unless a
+      mark says otherwise, which puts its box exactly where an `o`'s is. */
+  rise?: number;
+  path: (x: number, y: number) => string;
+};
+
+/* THE TICK, and it is the one synthetic mark that does not live on the
+ * x-height — which is why the two figures above exist at all.
+ *
+ * IT IS WANTED FOR ONE WORD. /about's note opens "we've believed that", and an
+ * apostrophe is not in the folder: without this the layout leaves a word gap
+ * where the mark should be and the note reads "we ve believed that". Written as
+ * "we have" it would not need drawing, and that was the other way out; this is
+ * the note's own voice and the contraction is part of it.
+ *
+ * WHERE IT HANGS FROM. The exported ascenders measure 362 to 449 comp units
+ * above the line — b 362, d 370, t 387, l 404, h 449 — so 400 is the middle of
+ * that hand's own ceiling rather than a figure picked off a type chart, and the
+ * mark falls 130 from there. It is the same pen as the hyphen because it is the
+ * same hand.
+ *
+ * LEANING, AND WITH A BOW IN IT, for the reason the ruled margin's two strokes
+ * have one: a vertical tick drawn stroke-first reads as a tally mark. It starts
+ * high and to the right and pulls down and left, which is the direction a right
+ * hand travels coming off the preceding letter.
+ *
+ * DELETE IT the day an apostrophe is exported, exactly as the hyphen's note
+ * says of itself. */
+const TICK: Synthetic = {
+  w: 70,
+  pen: 26,
+  h: 130,
+  rise: 400,
+  path: (x, y) =>
+    `M ${x + 48} ${y + 10} C ${x + 43} ${y + 44}, ${x + 34} ${y + 82}, ` +
+    `${x + 22} ${y + 120}`,
+};
+
+const SYNTHETIC: Record<string, Synthetic> = {
   "-": {
     w: 150,
     pen: 26,
@@ -135,6 +175,14 @@ const SYNTHETIC: Record<
       `M ${x + 8} ${y + X_HEIGHT * 0.56} C ${x + 50} ${y + X_HEIGHT * 0.53}, ` +
       `${x + 100} ${y + X_HEIGHT * 0.5}, ${x + 142} ${y + X_HEIGHT * 0.46}`,
   },
+
+  /* BOTH APOSTROPHES POINT AT THE ONE MARK. The copy is set with the
+     typographic one, which is what the .sr-only sentence should carry and what a
+     word processor produces; the typewriter one is here because it is what gets
+     typed, and a note quietly losing its apostrophe to the wrong code point is
+     not a failure anybody would look for. One drawing either way. */
+  "\u2019": TICK,
+  "'": TICK,
 };
 
 /* One pass of the pen: some ink, and the path that uncovers it.
@@ -275,18 +323,23 @@ function parse(ch: string, comp: Comp): Glyph | null {
 function synthesise(ch: string): Glyph | null {
   const spec = SYNTHETIC[ch];
   if (!spec) return null;
+  const h = spec.h ?? X_HEIGHT;
+  const rise = spec.rise ?? X_HEIGHT;
+  /* THE WRITING LINE IS WHERE IT ALWAYS WAS — the foot of an x-height glyph
+     centred in the comp — and the ink box is hung off it by `rise`. A mark that
+     says neither figure lands exactly where it did before the two existed,
+     which is the hyphen and is the point of the defaults. */
   const x = (COMP - spec.w) / 2;
-  const y = (COMP - X_HEIGHT) / 2;
+  const baseline = (COMP - X_HEIGHT) / 2 + X_HEIGHT;
+  const y = baseline - rise;
   return {
     ch,
-    strokes: [
-      { x, y, w: spec.w, h: X_HEIGHT, d: spec.path(x, y), pen: spec.pen },
-    ],
+    strokes: [{ x, y, w: spec.w, h, d: spec.path(x, y), pen: spec.pen }],
     x,
     y,
     w: spec.w,
-    h: X_HEIGHT,
-    baseline: y + X_HEIGHT,
+    h,
+    baseline,
   };
 }
 

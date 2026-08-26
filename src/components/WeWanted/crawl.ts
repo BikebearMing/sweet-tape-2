@@ -204,6 +204,90 @@ function whenFace(run: () => void): void {
   document.fonts.ready.then(tick);
 }
 
+/* --------------------------------------------------------------------------
+   THREE NUMBERS THE STYLESHEET OWNS
+   --------------------------------------------------------------------------
+   All three are facts about the COMPOSITION rather than about the mechanism,
+   and all three differ between the two sheets this section is drawn on. They
+   are declared on the section and read back as bare numbers, the same bargain
+   AboutOpen/spaceOut.ts strikes with --space-gap and Reimagine/unfold.ts with
+   --rei-run; the constants in WANTED stay as the fallbacks, so the section
+   still works if a rule is ever dropped.
+
+   An unregistered custom property comes back as the token as authored, so a
+   unit here would parse to the same number and mean something else entirely.
+   Each is written bare and its unit is decided in exactly one place, which is
+   the function that reads it. */
+
+/* WHERE THE SENTENCE'S HEAD STANDS AT REST, as a fraction of the frame's width.
+ *
+ * IT IS THE FRAME-RELATIVE FORM OF OVERHANG AND IT EXISTS BECAUSE OVERHANG DOES
+ * NOT SURVIVE A BIG TYPE SIZE. That figure is a share of the SENTENCE'S OWN
+ * LENGTH — 0.77 of it past the right edge — which says the same thing about the
+ * arrival pose only while the sentence is a couple of screens long. At the
+ * desktop's 222 it puts the head at about four fifths across, which is the
+ * design. At the phone's 1000 the sentence is four screens long, the remaining
+ * 23 per cent of it is more than a screen, and the head starts off the LEFT edge
+ * — the reader arrives in the middle of a word rather than at the beginning of a
+ * sentence.
+ *
+ * So the phone says where the head STANDS instead, which is a statement about
+ * the window and is therefore the same statement at any type size. NaN when the
+ * property is absent, which is how the desktop keeps OVERHANG. */
+const openAt = (root: HTMLElement): number =>
+  Number.parseFloat(getComputedStyle(root).getPropertyValue("--wanted-open"));
+
+/* HOW MUCH SCROLL THE PIN IS GIVEN, in screens. WANTED.LENGTH is the fallback
+   and the argument for the figure; what the phone changes is only that its
+   sentence travels four times as far, so the same pin would run it four times as
+   fast under the same wheel. */
+const runScreens = (root: HTMLElement): number => {
+  const n = Number.parseFloat(
+    getComputedStyle(root).getPropertyValue("--wanted-run"),
+  );
+  return Number.isFinite(n) ? n : WANTED.LENGTH;
+};
+
+/* WHETHER THE SECTION IS A CANVAS WALKED PAST A WINDOW, and it is the one thing
+ * the stylesheet says here that changes what the section IS rather than what
+ * size it is.
+ *
+ * ON THE DESKTOP IT IS NOT. The sentence is about a window and a half long, so
+ * it is delivered by CRAWLING IT ALONG THE WAVE: startOffset is an arc length,
+ * the glyphs slide along a curve that stands still in the frame, and the line
+ * rises and falls through the hump as it goes. Four boxes at 18.889vw fit across
+ * the window under it — a row, all of it in front of the reader at once, popping
+ * in order because the order is the only thing left to say about a group that is
+ * already whole.
+ *
+ * ON A PHONE THE CRAWL IS THE WRONG MECHANISM AND NOT MERELY THE WRONG SIZE, and
+ * this is the whole argument for the branch. A glyph's speed ACROSS THE SCREEN
+ * is its speed along the arc divided by the local slope of the wave. At 222
+ * units the sentence stands on most of one broad hump, so that ratio barely
+ * moves and the crawl reads as a line sliding sideways. At 1000 it is four
+ * screens long, which is three and a half full cycles: the letters bunch up on
+ * the steep parts and stretch out over the crests, the word spacing pulses as it
+ * passes, and anything standing BESIDE the line at one fixed speed drifts out of
+ * step with the words it belongs to. The mechanism is only quiet while the
+ * sentence is short.
+ *
+ * SO THE PHONE BORROWS THE HOME PAGE'S PINNING SECTION OUTRIGHT. ONE CANVAS,
+ * SEVERAL WINDOWS WIDE, WITH EVERYTHING STANDING ON IT — the sentence drawn once
+ * along the wave and left there, the four boxes at fixed places along it — and
+ * ONE translate walking it past a window that holds still. Nothing slides
+ * against anything else because there is only one thing moving: the drawing
+ * keeps the shape it was drawn in and the reader travels along it. That is
+ * .giant-canvas exactly; see GiantPinning/pin.ts, which argues it at length.
+ *
+ * AND NOTHING ARRIVES, WHICH FOLLOWS FROM THE SAME FACT. A prop on a canvas does
+ * not fade, pop or slide in — it is simply THERE, at full size, in its place,
+ * and what changes is where the reader is looking. Every entrance this section
+ * had was a way of saying "here is another one" to a reader who could already
+ * see all four; on a canvas the scroll says it. See the build below, where the
+ * two mechanisms are the two halves of one branch. */
+const pans = (root: HTMLElement): boolean =>
+  Number.parseFloat(getComputedStyle(root).getPropertyValue("--wanted-pan")) > 0;
+
 /* The arc length at which the path crosses a given x.
  *
  * Bisection, because startOffset speaks arc length and the frame's edges are
@@ -297,8 +381,37 @@ export function initWeWanted(root: HTMLElement): () => void {
      * which is always positive: the line can only ever crawl leftward, however
      * long the sentence gets or however wide the frame is. There is no
      * arrangement of these figures that reverses it. */
-    const from = right + span * WANTED.OVERHANG - span;
+    const open = openAt(root);
+    const from = Number.isFinite(open)
+      ? /* WHERE THE HEAD STANDS, straight off the frame — see openAt. The head
+           IS the offset: startOffset is the arc length the first glyph is set
+           at, so asking for a position is asking for the arc length at that x
+           and nothing more. */
+        lengthAtX(guide, FRAME_LEFT + open * (FRAME_RIGHT - FRAME_LEFT))
+      : right + span * WANTED.OVERHANG - span;
     const to = right - WANTED.END_INSET * width - span;
+
+    /* WHICH OF THE TWO MECHANISMS THIS SHEET IS DRAWN WITH, and the stylesheet
+     * told as well as asked — which is the half of the arrangement that keeps it
+     * honest.
+     *
+     * --wanted-pan is the INTENT: this composition wants a canvas walked past a
+     * window, and that is true of the phone's sheet whether or not anything is
+     * driving it. data-pan is the FACT — set here, inside the build, on the one
+     * path where a timeline exists — so the canvas layout and the translate that
+     * carries it are only ever applied while something is writing --wanted-x.
+     *
+     * WHAT THAT BUYS IS THE TWO CASES WHERE NOTHING IS. A reader who has asked
+     * for less motion is handed the section standing still, and a page whose
+     * script never ran has the <noscript> escape in components/WeWanted showing
+     * the boxes outright — and in both, a canvas four windows wide with nothing
+     * to walk it is three claims parked off the right edge for good. Neither
+     * gets data-pan, so both keep the stacked arrangement, which is four boxes a
+     * reader can see.
+     *
+     * FIRST, BECAUSE EVERYTHING BELOW DEPENDS ON IT. */
+    const panning = pans(root);
+    if (panning) root.dataset.pan = "live";
 
     /* THE STEP BETWEEN POPS. Struck off the two ends and the count rather than
        typed, so a fifth box added to BOXES spreads the run instead of running
@@ -309,32 +422,111 @@ export function initWeWanted(root: HTMLElement): () => void {
       boxes.length > 1 ? (LAST - EACH - FIRST) / (boxes.length - 1) : 0;
 
     /* ONE TIMELINE, ONE UNIT LONG. Everything in the section is positioned as a
-       fraction of it, which is what lets LENGTH above be the only figure that
-       decides how much scroll any of this costs. */
+       fraction of it, which is what lets the pin's length be the only figure
+       that decides how much scroll any of this costs. */
     tl = gsap.timeline({ paused: true });
 
-    tl.fromTo(
-      tp,
-      { attr: { startOffset: from } },
-      { attr: { startOffset: to }, duration: 1, ease: "none" },
-      0,
-    );
+    if (panning) {
+      /* THE SENTENCE IS SET ONCE AND NEVER MOVED AGAIN. startOffset is where the
+       * first glyph stands on the wave, and on a canvas that is a fact about the
+       * DRAWING rather than about the scroll — the whole point of the mechanism
+       * is that the line keeps the shape it was drawn in. Nothing after this
+       * touches the attribute; the section is one translate from here on. */
+      tp.setAttribute("startOffset", String(from));
 
-    /* THE POPS. Scale from nothing while climbing into place, with one
-       overshoot at the end of each — see POP. Not opacity: a box that fades is a
-       box that was always there, and these are meant to arrive. */
-    tl.fromTo(
-      boxes,
-      { scale: 0, yPercent: RISE },
-      {
-        scale: 1,
-        yPercent: 0,
-        duration: EACH,
-        ease: EASE,
-        stagger: step,
-      },
-      FIRST,
-    );
+      /* HOW WIDE THE CANVAS IS, in vw, and it is MEASURED off the sentence
+       * rather than declared. A figure typed here would be a second copy of
+       * something the type size, the font and the wave already decide between
+       * them, and two copies of a number are two numbers that drift.
+       *
+       * IN x AND NOT IN ARC LENGTH. The tail's arc length is `from + span` —
+       * span is an advance width, and bending a run of glyphs round a curve
+       * never stretches it — but what the camera travels is the DISTANCE ACROSS
+       * THE SCREEN from the tail to where the full stop is meant to park, and an
+       * inch of arc spent on a steep part of the wave buys less than an inch of
+       * x. So both ends are read off the path as points.
+       *
+       * WHERE IT STOPS IS THE CRAWL'S OWN END_INSET, restated in x: a quarter of
+       * the frame in from the right edge, which is where this section has parked
+       * its full stop since it was drawn. The two mechanisms finish in the same
+       * pose, which is what makes them the same section.
+       *
+       * PUBLISHED IN vw, and that is what makes it usable from the stylesheet:
+       * the viewBox is 1600 units over a box exactly 100vw wide, so a unit is a
+       * fixed fraction of the window and this figure is the same at any width.
+       * The four claims are placed as fractions of it — see .wanted-boxes in
+       * global.css, where the composition is done.
+       *
+       * FLOORED AT ZERO for a sheet whose sentence already fits: there is
+       * nothing to walk past, and a negative canvas would pan it backwards. */
+      const frame = FRAME_RIGHT - FRAME_LEFT;
+      const tailX = guide.getPointAtLength(from + span).x;
+      const travel = Math.max(
+        0,
+        ((tailX - (FRAME_RIGHT - WANTED.END_INSET * frame)) * 100) / frame,
+      );
+      root.style.setProperty("--wanted-travel", `${travel}vw`);
+
+      /* THE CAMERA. Off a plain object rather than off the property itself:
+       * GSAP would have to parse a custom property's current value out of the
+       * computed style on every invalidation to tween it in place, and a number
+       * in a closure is already the number. Peel's --peel and the belt's --x are
+       * driven this way for the same reason.
+       *
+       * NEGATIVE, because walking rightwards along a canvas is sliding the
+       * canvas left. One number, one property, one element — see .wanted-canvas,
+       * which is the only thing in the section that moves. */
+      const cam = { x: 0 };
+      const write = () => {
+        root.style.setProperty("--wanted-x", `${-cam.x}vw`);
+      };
+
+      write();
+      tl.to(cam, { x: travel, duration: 1, ease: "none", onUpdate: write }, 0);
+    } else {
+      /* THE CRAWL, AND ONLY ONE NUMBER MOVES. <textPath> means the browser does
+         the bending; the tween animates startOffset, an arc length along the
+         wave, and every glyph follows it. Same mechanism as WaveBand/marquee.ts,
+         and that file argues it at length. */
+      tl.fromTo(
+        tp,
+        { attr: { startOffset: from } },
+        { attr: { startOffset: to }, duration: 1, ease: "none" },
+        0,
+      );
+
+      /* THE POPS, AND THEY BELONG TO THIS BRANCH ALONE. Scale from nothing while
+         climbing into place, with one overshoot at the end of each — see POP.
+         Not opacity: a box that fades is a box that was always there, and on a
+         sheet where all four are in front of the reader from the first frame,
+         ARRIVING is the only thing left for them to say.
+
+         ON THE CANVAS THERE IS NOTHING TO SAY IT WITH, AND NOTHING TO SAY. The
+         boxes stand in their places several windows apart and the scroll is what
+         brings the reader to them, which is the whole of the entrance — a pop on
+         top of that is a prop animating for its own sake, and a prop that pops
+         while it is still off the right edge has animated where nobody was
+         looking. The home page's scenery is placed the same way and is not
+         animated either.
+
+         WHICH IS ALSO WHY GSAP MUST NOT TOUCH THEM THERE. data-reveal is already
+         set — it is the first thing initWeWanted does — so the stylesheet's park
+         at scale 0 has been lifted and the computed transform is `none`. Not
+         building the tween is the whole of it; there is no second state to
+         write. */
+      tl.fromTo(
+        boxes,
+        { scale: 0, yPercent: RISE },
+        {
+          scale: 1,
+          yPercent: 0,
+          duration: EACH,
+          ease: EASE,
+          stagger: step,
+        },
+        FIRST,
+      );
+    }
 
     st = ScrollTrigger.create({
       /* The pinned box is the honest trigger: `start` is about where THIS
@@ -343,7 +535,7 @@ export function initWeWanted(root: HTMLElement): () => void {
       start: "top top",
       /* Re-read on every refresh, which includes every resize — the pin's
          length is the one thing here that is a function of the window. */
-      end: () => "+=" + Math.round(screenH() * WANTED.LENGTH),
+      end: () => "+=" + Math.round(screenH() * runScreens(root)),
       pin: stage,
       /* True pinning, not fake: the stage is 100vh in a normal document flow, so
          ScrollTrigger can hold it with position: fixed and push the rest of the
@@ -419,5 +611,12 @@ export function initWeWanted(root: HTMLElement): () => void {
        standing at rest, which is the right place for a teardown mid-scrub to
        leave them — not scaled to whatever fraction the wheel had reached. */
     gsap.set(boxes, { clearProps: "transform" });
+    /* And the camera with them. Left behind, --wanted-x would hold the canvas at
+       whatever fraction of its travel the wheel had reached while nothing was
+       driving it any more, and data-pan would keep the boxes out along a canvas
+       that no longer moves. */
+    root.style.removeProperty("--wanted-x");
+    root.style.removeProperty("--wanted-travel");
+    delete root.dataset.pan;
   };
 }

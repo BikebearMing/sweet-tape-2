@@ -73,17 +73,53 @@ import Stage from "./Stage";
  * pipe rather than with a wider run of spaces, because a space is something the
  * font decides the width of and this is a measurement. */
 const GAP = "|";
+
+/* AND THE PHONE'S OWN TURN, which is the other marker in the copy below.
+ *
+ * THE STATEMENT IS BROKEN TWICE, and the two sets of breaks are not nested. The
+ * five lines are the design's at 1440. At 390 the type is 50px on a sheet a
+ * third the width, and the same sentence wants eight — but not eight made by
+ * splitting the five, which is what a per-line wrap would give: AN comes off the
+ * end of the first line and goes to the head of the second, EXPRESSIVE and AND
+ * come together out of two different lines. Some of the desktop's breaks survive
+ * on the phone, some are suppressed, and four new ones appear inside lines.
+ *
+ * SO BOTH ARE WRITTEN DOWN, and neither is inferred from a measure. That is this
+ * site's rule for display type and it is worth restating here because the
+ * alternative looks so reasonable: give the block a width and let it wrap. The
+ * measure that produces exactly these eight lines is a four per cent window —
+ * wide enough for EXPRESSIVE AND, narrow enough to turn before TO REIMAGINE AN —
+ * so where this statement breaks would be decided by how a font happened to
+ * load, on a phone, under a reader. It is a drawing. It is typed.
+ *
+ * HOW IT WORKS is one element per turn (.reimagine-turn) and one per word, and
+ * the stylesheet decides which of the two sets is live: above the breakpoint the
+ * turns are display: none and .line lays the row out, and below it .line is
+ * display: contents and the turns are what break. Neither set is markup the
+ * other has to route around.
+ *
+ * A SLASH BECAUSE THE COPY HAS NO SLASH IN IT, exactly as GAP is a pipe. Both
+ * are stripped for SPOKEN below. */
+const TURN = "/";
+
+/* THE FIVE LINES, WITH THE PHONE'S SEVEN TURNS MARKED IN THEM. Read the slashes
+ * and ignore the line ends and you have the phone's eight; read the line ends
+ * and ignore the slashes and you have the desktop's five. A line that ends with
+ * a slash is one both agree on. */
 const LINES = [
-  "TO REIMAGINE AN",
-  "EVERYDAY ESSENTIAL AS",
-  `SOMETHING ${GAP} MORE`,
-  "THOUGHTFUL, EXPRESSIVE",
-  "AND FULL OF HEART.",
+  `TO REIMAGINE ${TURN} AN`,
+  `EVERYDAY ${TURN} ESSENTIAL AS ${TURN}`,
+  `SOMETHING ${GAP} ${TURN} MORE ${TURN}`,
+  `THOUGHTFUL, ${TURN} EXPRESSIVE`,
+  `AND ${TURN} FULL OF HEART.`,
 ];
 
 /** The sentence as it is READ — the lines joined, with the tape's hole taken
     back out. Screen readers get this and never the five fragments. */
-const SPOKEN = LINES.join(" ").replace(` ${GAP} `, " ");
+const SPOKEN = LINES.join(" ")
+  .replace(/[|/]/g, "")
+  .replace(/\s+/g, " ")
+  .trim();
 
 /* THE SIX STILLS, CRUMPLED FIRST. Document order IS play order — unfold.ts
  * takes them off the markup and plays them down the list, so the sequence is
@@ -99,6 +135,40 @@ const SPOKEN = LINES.join(" ").replace(` ${GAP} `, " ");
  * second; the other five are frames of its arrival and are announced as
  * nothing. */
 const FRAMES = [6, 5, 4, 3, 2, 1];
+
+/* ONE WORD, ONE BOX.
+ *
+ * IT IS WHAT LETS THE PHONE BREAK THE STATEMENT SOMEWHERE ELSE. .line is a flex
+ * row and its letter clips are flex items, so a row lays out on one line however
+ * long it gets — right for breaks that are drawn, and no use at all when a
+ * SECOND set of breaks has to be drawn on the same markup. Boxed, the words are
+ * the units both arrangements are made of: above the breakpoint the row is a
+ * row, and below it .line is display: contents and every word in the statement
+ * becomes a sibling of every other, turning where a Turn says.
+ *
+ * EVERY WORD CARRIES ITS OWN TRAILING SPACE, the last on a line included, and
+ * that is the one thing here that has to be got right. The desktop's rows are
+ * ranged left, so a space hanging off the end of one is invisible; the phone
+ * NEEDS it, because a word that ended a line at 1440 sits in the middle of one
+ * at 390 — AN closes the first line there and opens the second here. Left off,
+ * AN and EVERYDAY butt together.
+ *
+ * An NBSP for letters()' reason: a plain space between two flex items is
+ * dropped. */
+function Word({ text }: { text: string }) {
+  return <span className="reimagine-word">{letters(`${text} `)}</span>;
+}
+
+/* WHERE THE PHONE TURNS — an empty box that takes a whole flex line to itself, so
+ * everything after it starts on the next one. Nothing above the breakpoint,
+ * where it is display: none and .line does the breaking.
+ *
+ * A REAL ELEMENT AND NOT A ::before ON THE WORD AFTER IT, which is the obvious
+ * saving and does not work: a pseudo-element is not a flex item, so it cannot
+ * take a line. */
+function Turn() {
+  return <span className="reimagine-turn" aria-hidden="true" />;
+}
 
 export default function Reimagine() {
   return (
@@ -155,78 +225,105 @@ export default function Reimagine() {
         <h2 className="reimagine-copy" aria-label={SPOKEN}>
           {LINES.map((line, i) => (
             <span className="line" aria-hidden="true" key={i}>
-              {line === `SOMETHING ${GAP} MORE` ? (
-                <>
-                  {letters("SOMETHING ")}
-                  {/* THE HOLE IN THE SENTENCE, WITH THE STRIP OF TAPE IN IT.
-                   *
-                   * The hole is a flex item with a width and no content — its
-                   * width is a measurement off the design, and it is what stops
-                   * the line closing up under the tape. The strip is absolutely
-                   * positioned inside it and is WIDER than it, which is the
-                   * point: tape laid over a sentence overlaps the words either
-                   * side of the gap, or it reads as a swatch dropped into a
-                   * space left for it.
-                   *
-                   * A PEEL AND NOT AN IMAGE, because of how it arrives — rolled
-                   * down from its left end once the statement is written. The
-                   * site has one mechanism for that and this is it; the
-                   * preloader's mark is the other thing driven this way. See
-                   * TAPE in ./unfold.ts for the beat and the curve.
-                   *
-                   * from={0} is the fold at the near edge — nothing folded, the
-                   * strip lying flat — and that is the pose --peel: 0 draws,
-                   * which is what paints before any script runs and if none ever
-                   * does. The rolled-up pose is the far end, to={1}: the
-                   * timeline starts there and comes back.
-                   *
-                   * direction is 90deg — the RIGHT end is the one that lifts,
-                   * which is what makes the strip lay down LEFT TO RIGHT, the
-                   * direction the sentence under it is read. It reads
-                   * backwards: the edge named is the edge the fold hinges
-                   * from, so the stub left standing at --peel 1 is the OTHER
-                   * end. At -90deg the strip unrolled right to left, against
-                   * the reading, which is the tell. box is the artwork's own
-                   * size as the stylesheet draws it — the design's 139.08 x
-                   * 44.035 at the 1440 width — which the fold
-                   * arithmetic needs whenever the frame is turned, and the
-                   * height is the artwork's 428x173 aspect.
-                   *
-                   * IN --rei-u AND NOT IN vw, matching .reimagine-gap
-                   * .reimagine-tape in global.css, which sizes the same strip
-                   * and has to agree with this to the pixel. The section's unit
-                   * is capped so that the drawing fits the screen the pin holds
-                   * still; a strip still measured against the WINDOW would keep
-                   * its full size on a sheet that had shrunk under it, and lie
-                   * across the words either side of the hole.
-                   *
-                   * WRITTEN WITHOUT SPACES INSIDE THE calc(), WHICH IS LOAD
-                   * BEARING. Peel splits this prop on whitespace to get its two
-                   * lengths (see components/Peel), so a calc with spaces in it
-                   * arrives as four fragments and neither dimension survives.
-                   * CSS demands the spaces only around + and -; around * it
-                   * forbids nothing, which is what makes this writable at all.
-                   *
-                   * back is the kraft underside, because this is the brown
-                   * packing roll — the same pairing the pinning section's tapes
-                   * make. */}
-                  <span className="reimagine-gap">
-                    <Peel
-                      className="reimagine-tape"
-                      src="/assets/tape top.webp"
-                      drive="manual"
-                      from={0}
-                      to={1}
-                      direction="90deg"
-                      box="calc(9.658*var(--rei-u)) calc(3.058*var(--rei-u))"
-                      back="peel-back-kraft"
-                    />
-                  </span>
-                  {letters(" MORE")}
-                </>
-              ) : (
-                letters(line)
-              )}
+              {line
+                .split(" ")
+                .filter(Boolean)
+                .map((token, j) => {
+                  if (token === TURN) return <Turn key={j} />;
+                  if (token !== GAP) return <Word key={j} text={token} />;
+
+                  return (
+                    <span className="reimagine-word" key={j}>
+                    {/* THE HOLE IN THE SENTENCE, WITH THE STRIP OF TAPE IN IT.
+                     *
+                     * The hole is a flex item with a width and no content — its
+                     * width is a measurement off the design, and it is what stops
+                     * the line closing up under the tape. The strip is absolutely
+                     * positioned inside it and is WIDER than it, which is the
+                     * point: tape laid over a sentence overlaps the words either
+                     * side of the gap, or it reads as a swatch dropped into a
+                     * space left for it.
+                     *
+                     * A PEEL AND NOT AN IMAGE, because of how it arrives — rolled
+                     * down from its left end once the statement is written. The
+                     * site has one mechanism for that and this is it; the
+                     * preloader's mark is the other thing driven this way. See
+                     * TAPE in ./unfold.ts for the beat and the curve.
+                     *
+                     * from={0} is the fold at the near edge — nothing folded, the
+                     * strip lying flat — and that is the pose --peel: 0 draws,
+                     * which is what paints before any script runs and if none ever
+                     * does. The rolled-up pose is the far end, to={1}: the
+                     * timeline starts there and comes back.
+                     *
+                     * direction is 90deg — the RIGHT end is the one that lifts,
+                     * which is what makes the strip lay down LEFT TO RIGHT, the
+                     * direction the sentence under it is read. It reads
+                     * backwards: the edge named is the edge the fold hinges
+                     * from, so the stub left standing at --peel 1 is the OTHER
+                     * end. At -90deg the strip unrolled right to left, against
+                     * the reading, which is the tell. box is the artwork's own
+                     * size as the stylesheet draws it — the design's 139.08 x
+                     * 44.035 at the 1440 width — which the fold
+                     * arithmetic needs whenever the frame is turned, and the
+                     * height is the artwork's 428x173 aspect.
+                     *
+                     * IN em AND NOT IN vw OR IN --rei-u, matching .reimagine-gap
+                     * .reimagine-tape in global.css, which sizes the same strip
+                     * and has to agree with this to the pixel. 1.545 x 0.489em is
+                     * 9.658 x 3.058 units at the copy's own 6.25, so this is the
+                     * same strip it has always been at the design width.
+                     *
+                     * IT WAS IN --rei-u AND THE ARGUMENT FOR THAT IS WORTH KEEPING
+                     * BECAUSE IT IS HALF RIGHT. The section's unit is capped so
+                     * the drawing fits the screen the pin holds still, and a strip
+                     * measured against the WINDOW would keep its full size on a
+                     * sheet that had shrunk under it and lie across the words
+                     * either side of the hole. True — and the unit it should have
+                     * been measured against all along is the SENTENCE, not the
+                     * paper. The tape is set INTO this line: what it must not
+                     * overlap is the G of SOMETHING and the M of MORE, and that is
+                     * a fact about the type. A phone sets this statement larger on
+                     * the same paper (see the About phone block), which is exactly
+                     * the case --rei-u cannot see — it would hold the strip at the
+                     * size it had while the letters grew past it.
+                     *
+                     * AND THE SPACES ARE GONE FROM THE PROBLEM WITH THEM, which is
+                     * worth writing down because the next figure typed here may
+                     * bring them back. Peel splits this prop on whitespace to get
+                     * its two lengths (see components/Peel), so a calc() with
+                     * spaces in it arrives as four fragments and neither dimension
+                     * survives. Two bare lengths cannot trip on it; a calc() can,
+                     * and CSS demands the spaces only around + and -.
+                     *
+                     * back is the kraft underside, because this is the brown
+                     * packing roll — the same pairing the pinning section's tapes
+                     * make. */}
+                      <span className="reimagine-gap">
+                        <Peel
+                          className="reimagine-tape"
+                          src="/assets/tape top.webp"
+                          drive="manual"
+                          from={0}
+                          to={1}
+                          direction="90deg"
+                          box="1.545em 0.489em"
+                          back="peel-back-kraft"
+                        />
+                      </span>
+
+                      {/* THE WORD SPACE AFTER THE TAPE AND NOT BEFORE MORE,
+                          which is the same call Word makes, made here by hand
+                          because a hole is not a word. The phone turns
+                          immediately after the tape, so a space carried on the
+                          far side of it would open the next line by a word
+                          space and MORE would sit indented under SOMETHING.
+                          Above the breakpoint it is the same characters in the
+                          same order it always was. */}
+                      {letters(" ")}
+                    </span>
+                  );
+                })}
             </span>
           ))}
         </h2>

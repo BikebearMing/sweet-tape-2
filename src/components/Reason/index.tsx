@@ -54,14 +54,36 @@ import Stage from "./Stage";
  * line. See LINES in components/Reimagine, which makes the argument at length.
  *
  * The middle line is a PAIR because the gap between its two halves is a moving
- * part rather than a space: see .reason-gap in global.css. */
-const TOP = "THAT'S WHY";
+ * part rather than a space: see .reason-gap in global.css.
+ *
+ * AND EVERY LINE IS A LIST OF WORDS RATHER THAN A STRING, WHICH IS WHAT LETS A
+ * PHONE BREAK THEM AGAIN. The three above are the breaks the design draws at
+ * 1440 and they stay exactly that; what changes at 390 is that there is not
+ * enough width for them. SWEET, its gap and TAPE at a type size a phone can read
+ * measure well past the sheet, and a flex row cannot break — its boxes are flex
+ * items and they lay out on one line however long it gets, which is right for a
+ * headline whose breaks are set by design and is the whole problem here.
+ *
+ * SO THE WORDS ARE BOXED and the phone's block turns wrapping on: the line
+ * breaks BETWEEN two words exactly where the unsplit copy would have broken, and
+ * nowhere else. Nothing changes at any width where the line already fits, which
+ * is every width above the breakpoint. words() in components/letters is the same
+ * idea for copy that never had set breaks at all; this is that idea kept on a
+ * leash, because these breaks ARE set — the phone is only allowed to add more.
+ *
+ * THE GAP TRAVELS WITH TAPE and not with SWEET, which is the one grouping worth
+ * saying out loud. It is the hole the mark drops into, the mark is wider than
+ * it, and the two overlap the word after it — so a break between the gap and
+ * TAPE would leave the logo alone on a line and the word it is set into on the
+ * next one. Bound to TAPE, the pair wraps as one object and the phone reads
+ * SWEET over the mark-and-TAPE, which is what the design draws. */
+const TOP: [string, string] = ["THAT'S", "WHY"];
 const MIDDLE: [string, string] = ["SWEET", "TAPE"];
 const BOTTOM = "EXISTS.";
 
 /** The sentence as it is READ, with the hole taken back out. Screen readers get
     this and never the four fragments or the row of letter boxes. */
-const SPOKEN = `${TOP} ${MIDDLE[0]} ${MIDDLE[1]} ${BOTTOM}`;
+const SPOKEN = `${TOP[0]} ${TOP[1]} ${MIDDLE[0]} ${MIDDLE[1]} ${BOTTOM}`;
 
 /* The chip over it. Section-level copy, so a named constant rather than a string
    buried in the markup — the same call the slider, the origin section and NEXT
@@ -175,25 +197,37 @@ export default function Reason() {
               neither is something to read out. */}
             <h2 className="reason-title" aria-label={SPOKEN}>
               <span className="line" aria-hidden="true">
-                {letters(TOP)}
+                {/* The word space rides with the word BEFORE it rather than
+                    sitting between the two boxes, so the desktop's row is the
+                    same run of letter boxes it has always been — and when the
+                    phone breaks here the space goes up with THAT'S, where a
+                    reader cannot see it, instead of opening the second line. */}
+                <span className="reason-word">{letters(`${TOP[0]} `)}</span>
+                <span className="reason-word">{letters(TOP[1])}</span>
               </span>
 
               <span className="line" aria-hidden="true">
-                {letters(MIDDLE[0])}
+                <span className="reason-word">{letters(MIDDLE[0])}</span>
                 {/* THE HOLE THE MARK DROPS INTO, and the one element on this page
                   whose WIDTH is animated. It rests at the width the design
                   draws — so a page with no script has the mark sitting in its
                   space rather than jammed between two words — and the timeline
                   starts it at a plain word space and spreads it open. See
                   --reason-space in global.css. */}
-                <span className="reason-gap">
-                  <Mark />
+                {/* BOXED WITH TAPE AND NOT ON ITS OWN — see the note at the
+                  head of this file. The hole and the word it is set into wrap
+                  as one object, so a phone can never leave the mark stranded
+                  on a line by itself. */}
+                <span className="reason-word">
+                  <span className="reason-gap">
+                    <Mark />
+                  </span>
+                  {letters(MIDDLE[1])}
                 </span>
-                {letters(MIDDLE[1])}
               </span>
 
               <span className="line" aria-hidden="true">
-                {letters(BOTTOM)}
+                <span className="reason-word">{letters(BOTTOM)}</span>
               </span>
             </h2>
 

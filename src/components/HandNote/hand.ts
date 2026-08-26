@@ -77,29 +77,41 @@ const ALPHA_MASKS =
  * the block taller under it. Every instance's --hand-ink-w is the dial for
  * that, and they are set section by section in global.css. */
 const SET = {
-  /* Taken out of every LETTER gap, or added to it — it is signed, and it is now
-     a hair POSITIVE. It was -0.04 against the old alphabet, which stood well
-     apart and wanted closing up; the hand these figures were tuned against
-     wants the opposite by a fraction of a fraction. Word gaps are not touched
+  /* Taken out of every LETTER gap, or added to it — it is signed, and it is
+     POSITIVE. It was -0.04 against the old alphabet, which stood well apart and
+     wanted closing up; this hand wants the opposite. Word gaps are not touched
      by it — they have their own figure below, because moving the spaces at the
      same rate as the letters runs the words together long before the letters
-     look written. */
-  TRACK: 0.01,
+     look written.
+
+     FOUR TIMES WHAT IT WAS, and it moves against the word gap below rather than
+     with it: the letters stand further apart and the spaces close up, which is
+     the pair of changes that stops a line reading as one long word without
+     making it read as a ransom note. Both figures came off the lab together and
+     neither is meaningful on its own. */
+  TRACK: 0.04,
 
   /* What a space costs the pen. Its own number rather than a multiple of the
-     tracking, for the reason above, and nearly three times what it was: a hand
-     writing at this tracking leaves a real gap between words rather than the
-     hairline a proportional space would give it. DRAW.SPACE below is the same
-     figure again in time rather than in room, and the two move together. */
-  WORD_GAP: 0.58,
+     tracking, for the reason above.
 
-  /* Between writing lines, baseline to baseline. Just over one em now, where it
-     used to sit under one — an em here is the whole comp box, ascender room and
-     descender room and all, so this is a note set a shade open rather than a
-     double-spaced one. What it buys is the descenders: at 0.86 the y of
-     "everyday" was landing beside the t of "not" only just, and the wider word
-     gaps above make the lines longer and therefore worth separating. */
-  LEADING: 1.02,
+     DOWN FROM 0.58, against a tracking that has gone up — see above. A hand
+     writing with this much air between its letters does not need two thirds of
+     a comp box to say where a word ends, and at 0.58 it was saying it twice.
+     DRAW.SPACE below is this same figure again in time rather than in room, and
+     the two move together. */
+  WORD_GAP: 0.4,
+
+  /* Between writing lines, baseline to baseline. UNDER one em, where it used to
+     sit just over — an em here is the whole comp box, ascender room and
+     descender room and all, so a note set at 1.02 was a note with a clear band
+     of nothing between every pair of lines. A hand writing four lines on the
+     back of something does not leave that much.
+
+     IT IS THE FIGURE THE DESCENDERS ARE SPENT ON, and 0.82 is the lab's answer
+     to how close they can come: the y of "everyday" passes the t of "not" below
+     it rather than clearing it, which is what a written note does and what a
+     typeset one never does. Tighter than this and they start to touch. */
+  LEADING: 0.82,
 };
 
 /* The drawing, in seconds.
@@ -118,27 +130,39 @@ const DRAW = {
      folder are) shares this between them by length, so it still takes one
      letter's worth of time.
 
-     A THIRD OF WHAT IT WAS, which makes every note on the site about three
-     times quicker to write. That is the figure the lab settled on and it is the
-     one number here a reader actually feels — at 0.15 the hand was drawing each
-     letter rather than writing it. The per-instance paces (--hand-draw, read
-     below) are MULTIPLES of this and were tuned against the old figure, so they
-     have all come down with it; see the note by `pace`. */
-  PER: 0.05,
+     BACK UP TO ABOUT WHERE IT STARTED. It was 0.15, then 0.05 — three times
+     quicker, on the argument that at 0.15 the hand was drawing each letter
+     rather than writing it — and the lab's answer, with the setting above under
+     it, is 0.16. What changed is the rest of the note: a hand with this much air
+     between its letters and this little between its lines reads as writing at a
+     speed that looked like drawing when the letters were tighter.
+
+     IT IS THE ONE NUMBER HERE A READER ACTUALLY FEELS, and it is the one to
+     reach for if a note ever runs long. The per-instance paces (--hand-draw,
+     read below) are MULTIPLES of this, so every note on the site has just
+     become about three times slower to write — which is the pace they were
+     tuned at. See the note by `pace`. */
+  PER: 0.16,
 
   /* How much of the next letter starts before the last one finishes. 0 is a
      typewriter and 1 is every letter at once; this is the dial that decides
-     whether a row of separate files reads as writing. */
-  OVERLAP: 0.4,
+     whether a row of separate files reads as writing.
+
+     UP FROM 0.4, and it is what pays for the slower letter above: each glyph
+     takes three times as long as it did, and without more of them running
+     together the note would take three times as long to finish. At 0.6 the pen
+     is well into the next letter before the last is done, which is both quicker
+     and more like a hand than 0.4 was. */
+  OVERLAP: 0.6,
 
   /* And what a space costs, as a fraction of a letter.
      
      TIED TO SET.WORD_GAP, which is the lab's own model: a space is a distance
      the pen crosses, so what it costs in time follows what it costs in room.
      The lab spends `per * wordGap * 2` on one, and this is that same figure —
-     0.58 x 2 — written where the rest of the timing is. Change the word gap and
-     this should change with it. */
-  SPACE: 1.16,
+     0.4 x 2 — written where the rest of the timing is. Change the word gap and
+     change this with it. */
+  SPACE: 0.8,
 };
 
 /* Where the note starts writing: its top at this fraction down the viewport.

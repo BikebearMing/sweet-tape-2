@@ -477,6 +477,12 @@ h6 {
   --ink: #16110a;
   --word-colour: #fcd805;
 
+  /* The slider's phone step buttons, same story: the engine copies the active
+     tape's --ring and --word onto the pair (paintNav in TapeSlider/engine.ts)
+     and these two are only what they wear before it does. */
+  --nav-face: #fff1a2;
+  --nav-ink: #fcd805;
+
   /* THE H2, and it is the site's first heading level that is not a section's
    * private business.
    *
@@ -1540,6 +1546,88 @@ html[data-loading] {
   height: 100%;
 }
 
+/* The board's small props — the clip, the strips of tape, the packing tape
+   across the cardboard. Placed here, in the section that puts them on the
+   board, rather than beside the Peel geometry or the menu: the phone block at
+   the foot of this section has to be able to restate them, and a rule declared
+   ten thousand lines further down would win that restatement on source order
+   alone. Each is registered to the thing it is stuck to, so the two move
+   together — see the phone block for what that costs when one of them moves. */
+
+#paperclip {
+  position: absolute;
+  top: 74vw;
+  left: 5vw;
+  z-index: 1;
+  width: 8.216vw;
+  height: 9.043vw;
+  /* The site's cast shadow — see --drop-ink in :root. This one was the softest
+     and heaviest on the page: 20px of pure black blur under 14px of offset, a
+     paperclip apparently hovering an inch off the board. Longer than a
+     photograph's because a clip is bent wire standing proud of the paper rather
+     than lying flat on it, so it genuinely does throw further. */
+  filter: drop-shadow(0.24vw 0.62vw var(--drop-blur) var(--drop-ink));
+}
+
+/* The two masking strips, and the ONE DIAL each of them has.
+   --------------------------------------------------------------------------
+   --tape-w is the strip's width and everything else follows it: the layout box
+   below, and the peel's own frame, which Hero/index.tsx passes through as
+   `box` and the Peel section turns into --peel-w / --peel-h. The height is
+   derived from the artwork's aspect rather than typed, so re-cropping the file
+   is one figure to change and the fold cannot be left bleeding the old shape.
+
+   THE PAIR HAS TO MOVE TOGETHER, which is the whole reason for the property.
+   The clip frame is the face's own box turned back upright; give it a box that
+   is not the artwork's and the frame swings off the picture and clips all of
+   it away — see --peel-span. A width restated in the phone block with a box
+   still typed at the desktop size is exactly that failure, and it looks like
+   the animation simply not running. */
+#tape-on-note {
+  --tape-w: 11vw;
+  /* 132 x 68 */
+  --tape-h: calc(var(--tape-w) * 0.5152);
+
+  position: absolute;
+  top: 58.3vw;
+  left: 14vw;
+  z-index: 5;
+  width: var(--tape-w);
+}
+
+#tape-on-lemon {
+  --tape-w: 19vw;
+  /* 283 x 134 */
+  --tape-h: calc(var(--tape-w) * 0.4735);
+
+  position: absolute;
+  top: 99vw;
+  left: 22vw;
+  width: var(--tape-w);
+}
+
+#tape-top {
+  position: absolute;
+  top: 60vw;
+  right: -5vw;
+  z-index: 10;
+  width: 42.126vw;
+  height: 8.74vw;
+  object-fit: cover;
+}
+
+/* The hero's copy: on the dark green above the taped-down lemon painting. The
+   25vw is what the band there will take — the writing then runs from 90.6vw to
+   100.7vw, clear of the sticky note above it and inside the painting's diagonal
+   below. Going much past 27vw puts the last line on the paper. */
+.hero-section .hand-note {
+  top: 85vw;
+  left: 3.5vw;
+  /* Above the painting it overhangs — which paints from tree order anyway, but
+     not above the gift (1) by accident. */
+  z-index: 2;
+}
+
 /* --------------------------------------------------------------------------
    Hero — the phone
    --------------------------------------------------------------------------
@@ -1567,27 +1655,50 @@ html[data-loading] {
    -------------------------------------------------------------------------- */
 @media (max-width: 767px) {
 
-  /* Nearly two screens of section against the desktop's one and a bit. The
-     props below are stacked down a column rather than spread across a board,
-     and a column needs the room. */
+  /* THREE AND A HALF SCREENS of section against the desktop's one and a bit,
+     and the height is not a taste call. The board's props are stacked down a
+     column rather than scattered across a board, and every one of them is
+     wider as a FRACTION of the sheet than its desktop self — a 62vw card and a
+     50vw painting cannot sit side by side the way a 51vw card and a 45vw one
+     do at 1440. So the column is the only arrangement left, and a column of
+     six props is as tall as the six of them are.
+
+     The figure itself is read off the design: the wave band's own margin is
+     -16.875vw, so the band's crest lands at 345vw, which is where the mock
+     puts it. Moving this moves the band, and the band is the hand-off to the
+     slider — check both. */
   .hero-section {
-    height: 250vw;
+    height: 362vw;
   }
 
-  /* The lime field, deep enough to hold the kicker and both headline lines with
-     the roll straddling its curve. The curve's depth comes down from 32 to 12vw
-     — a 32vw dip on a 390 sheet is a third of the type's height and reads as a
-     bowl rather than as an edge. */
+  /* The lime field, deep enough to hold the kicker, the badge and both
+     headline lines with the roll straddling its curve. Deeper than it was by
+     30vw, and the headline is why: at 32vw of type the second line's outer
+     letters reach within a few vw of the sheet's edges, where the ellipse is
+     at its SHALLOWEST — a field cut to clear the middle of the line leaves the
+     Y and the U of BY YOU sitting on the green.
+
+     The curve's depth comes down from the desktop's 32 to 13vw. A 32vw dip on
+     a 390 sheet is a third of the type's height and reads as a bowl rather
+     than as an edge. */
   .hero-section .top {
-    height: 92vw;
-    border-radius: 0 0 100% 100% / 0 0 12vw 12vw;
+    height: 127vw;
+    border-radius: 0 0 100% 100% / 0 0 13vw 13vw;
   }
 
   /* Two lines of type that has to fill the width. See the note above for where
-     26 comes from: it is what makes BY YOU span the sheet the way STICK spans
-     the design's. */
+     the figure comes from: it is what makes BY YOU span the sheet the way
+     STICK spans the design's. */
   .hero-section .h1 {
-    font-size: 25vw;
+    font-size: 32vw;
+    /* LOOSER THAN THE DESKTOP'S 0.73, and the field is why. The width is spoken
+       for — 32vw is what makes BY YOU span the sheet, and a larger figure runs
+       the outer letters off both edges — so the only way to fill the lime the
+       way the design does is to open the leading. It buys 7vw of headline
+       between the badge and the curve at no cost to the line's width, and the
+       air between STICK and BY YOU is the design's own — the two lines are
+       set apart on the mock and butted together at 0.73. */
+    line-height: 0.9;
   }
 
   /* The arc the two lines sit on. Shallower in absolute terms and the same
@@ -1600,98 +1711,218 @@ html[data-loading] {
   }
 
   /* WE'RE / badge / HERE TO, with the badge grown to hold the middle of a
-     narrow line. The gap is a shade wider than the badge so the words clear it
-     — it is halved between the two flex gaps, hence a figure larger than the
-     mark itself. */
+     narrow line. The gap is a good deal wider than the badge so the words
+     clear it — it is halved between the two flex gaps, hence a figure larger
+     than the mark itself.
+
+     THE ROW SPANS THE SHEET, which is the change from a kicker that sat in the
+     middle 59vw of it. Two short words either side of a 37vw badge is a line
+     with the same shape as the headline under it; the same two words huddled
+     around a small mark is a caption sitting above a headline, which is what
+     it read as. */
   .hero-section .title {
-    padding-top: 20vw;
+    padding-top: 42.7vw;
+
+    /* AND THE GAP UNDER IT, which on this sheet is a real measurement rather
+       than the 0.3em it is at 1440. The badge is 23vw tall against a kicker
+       line box of 4.5 — it hangs five times its own line's depth below the
+       words it is centred on, and a gap measured off the TEXT would put STICK
+       straight through it. This is the clearance the mark actually needs plus
+       the air the design leaves under it. */
+    gap: 15.2vw;
+
+    --hero-mark-w: 37vw;
+    --hero-mark-lift: 1.4vw;
   }
 
   .hero-section .h4 {
-    --kicker-gap: 32vw;
-    font-size: 5.4vw;
-    letter-spacing: -0.2vw;
-  }
-
-  .hero-section .title {
-    --hero-mark-w: 26vw;
-    --hero-mark-lift: 1vw;
+    --kicker-gap: 50vw;
+    font-size: 6.4vw;
+    letter-spacing: -0.24vw;
   }
 
   /* The masthead in the corner. Small, but no longer 5px: the perforation and
      the leading go up with it so the mark stays the same object. */
   .hero-section .corner-mark {
-    top: 2.4vw;
-    left: 2vw;
-    padding-left: 2.2vw;
-    font-size: 2.9vw;
-    line-height: 2.7vw;
-    letter-spacing: -0.09vw;
+    top: 3vw;
+    left: 2.4vw;
+    padding-left: 2.8vw;
+    font-size: 3.8vw;
+    line-height: 3.6vw;
+    letter-spacing: -0.12vw;
   }
 
   .hero-section .corner-perf {
-    top: 0.3vw;
-    bottom: 0.3vw;
-    width: 0.5vw;
-    background-size: 100% 0.9vw;
+    top: 0.4vw;
+    bottom: 0.4vw;
+    width: 0.62vw;
+    background-size: 100% 1.15vw;
   }
 
   /* THE ROLL, and the one placement on this page with a rule behind it rather
      than a mock reading: its CENTRE sits on the curve's lowest point, so the
      product straddles the two colour fields the way it does on the design.
-     92vw of lime less a touch, less half the box, is the top.
+     122vw of lime plus the 13vw the curve dips, less half the box, is the top.
 
-     Off centre to the right, which is the mock's arrangement and also what
-     leaves the left half of the board clear for the sticky note to come. */
+     CENTRED, not off to the right. It was pushed right to leave the left of
+     the board clear for the sticky note, and that was solving a problem the
+     column below no longer has: the note is most of a screen further down now,
+     not beside the roll. A hero product half a sheet off centre under a
+     headline that is centred reads as a mistake.
+
+     AND THE BOX IS NOT THE ROLL — measure before moving it. Most of this box
+     is transparent drawing room for the strip, and how much of it the product
+     fills DEPENDS ON THE POSE: at rest, label to the camera, the roll paints
+     0.86 of the box wide and 0.81 of it tall, with its top an eighth of a box
+     down and its centre a hair left of the box's — which is what the 52% is
+     for. Once the scroll has yawed it edge-on it is barely half that wide, so
+     a fraction read off a scrolled screenshot is about twice what it should
+     be, which is exactly the mistake to make here. The rest pose is the one
+     the design draws, and 42vw is what puts the roll at 36vw on it: a shade
+     wider than the to-do list note below, with its top edge on the curve. */
   .hero-section .hero-tape {
-    --roll-box: 43vw;
-    top: 64vw;
-    left: 57%;
+    --roll-box: 42vw;
+    top: 119vw;
+    left: 50%;
     bottom: -8vw;
   }
 
-  /* The pinboard, stacked. Left, right, left, right down the column — the
-     desktop's scatter has nowhere to scatter to at this width, and a single
-     file of props alternating sides is what the mock makes of it. */
+  /* THE PINBOARD, STACKED — and the props that are STUCK TO something are the
+     reason this block is as long as it is.
+     ------------------------------------------------------------------------
+     Five of the things below are not placed against the sheet at all. The clip
+     grips the note, a masking strip is stuck across its top, the packing tape
+     runs over the card's top edge, a second strip holds the painting down, and
+     the written note fills the band the sticky note leaves. Each is a fraction
+     of the thing it sits on, and moving the host without moving it leaves a
+     strip of tape stuck to bare green a screen away from anything.
+
+     WHICH IS WHAT WAS WRONG. The hosts were restated here and the props were
+     not — they were filed with the menu's rules, ten thousand lines down,
+     where a rule in this block could not have won anyway. So the clip, both
+     strips of masking tape, the packing tape and the hand-written note all
+     stayed at their 1440 coordinates: four pieces of adhesive and a sentence
+     scattered across the lime field, stuck to nothing. They live in this
+     section now (see the note above #paperclip) and every one of them is
+     restated below AS A FRACTION OF ITS HOST, worked out from the desktop
+     rule. Move a host, work its props out again from the same fractions. */
+
+  /* The note. The slot is bigger than the sheet — the sheet is SPAN (0.62) of
+     the canvas height and the rest is the drawing room the wind lifts the
+     corners into — so this box is 55vw to put a 34vw note on the board, and it
+     is aimed by its CENTRE. Its left edge hangs off the sheet, which is only
+     ever bleed: nothing paints out there. */
   .hero-section .sticky-note {
-    top: 96vw;
-    left: 4vw;
-    width: 48vw;
+    top: 186vw;
+    left: -5vw;
+    width: 55vw;
   }
 
-  .hero-section .cardboard-wrapper {
-    top: 128vw;
-    right: -3vw;
-    width: 73vw;
-    height: 82vw;
+  /* The masking strip across the note's top, dead centre on it and half on,
+     half off — which is the desktop's arrangement stated as fractions of the
+     sheet: 59% of its width, its own centre on the sheet's top edge. The
+     figures below are that centre less half the strip, because top / left
+     place the wrapper's layout box and the quarter turn happens about its
+     middle. */
+  #tape-on-note {
+    --tape-w: 20.3vw;
+    top: 190.4vw;
+    left: 12.35vw;
+  }
 
+  /* The clip on the note's bottom-left corner. Held further ON the note than
+     the desktop's is — a clip that overhangs by 28% of the sheet's width is
+     off the left of a 390 sheet altogether, and half a paperclip bleeding off
+     the edge is not the same object. */
+  #paperclip {
+    top: 218vw;
+    left: 1.5vw;
+    width: 15vw;
+    height: 16.5vw;
+  }
+
+  /* The card. Narrower than it was and squarer, which is the copy's doing as
+     much as the mock's: 73vw left the painting under it nowhere to go, and the
+     eleven short lines the old box wrapped to were a column of text rather
+     than a paragraph on a piece of card. */
+  .hero-section .cardboard-wrapper {
+    top: 200vw;
+    right: -3vw;
+    width: 62vw;
+    height: 60vw;
+
+    /* THE COPY STARTS WHERE THE STRIP ENDS, and that is the constraint on
+       this box rather than the card's own margins. The dispensed strip is
+       0.43 of --roll-box wide and centred on it, so at 42vw it lands across
+       41..59vw of the sheet — which at 1440 is the card's empty left
+       margin and here is a fifth of the way into the card. A copy inset the
+       desktop's 21% of the card would be read through a strip of packing
+       tape. This is that inset worked out from the strip instead: its right
+       edge, plus the clear kraft the design leaves beside it. */
     & h2 {
-      top: 11vw;
-      left: 9vw;
-      max-width: 49vw;
+      top: 8vw;
+      left: 22vw;
+      max-width: 33vw;
     }
   }
 
+  /* The packing tape over the card's top edge: 82% of the card's width, its
+     own top a tenth of the card's height above it, and hanging past the card's
+     right edge by the same share of the width it does at 1440. */
+  #tape-top {
+    top: 194vw;
+    right: -9vw;
+    width: 50.8vw;
+    height: 10.54vw;
+  }
+
   /* The cardboard's copy is the one block of running text in the section, and
-     it is the size the whole section is judged by — at the desktop figure it
-     lands at 24px inside a card two thirds of the screen wide, which wraps to a
-     column of eleven short lines. */
+     it is the size the whole section is judged by. Down from 6.6 with the
+     column it is set in: the card lost 11vw of width and the strip took a
+     fifth of what was left, so the measure is 33vw and the copy has to stay a
+     paragraph of nine lines rather than becoming a column of thirteen. */
   .hero-section h2 {
-    font-size: 6.6vw;
+    font-size: 5.8vw;
     line-height: 0.84;
     letter-spacing: -0.22vw;
   }
 
-  #lemon {
-    left: -5vw;
-    bottom: 56vw;
-    width: 64vw;
+  /* The written note, in the band between the sticky note's bottom and the
+     painting's top edge — the same band it fills at 1440, restated. It is
+     nearly a third of the sheet here against a sixth of the design's, which is
+     what four lines of handwriting need to still be handwriting at this
+     width. */
+  .hero-section .hand-note {
+    top: 232vw;
+    left: 4vw;
+    --hand-w: 30vw;
   }
 
+  /* The painting, and the strip holding it down at 48% across its top edge —
+     the desktop's fractions again. */
+  #lemon {
+    left: -5vw;
+    bottom: 44vw;
+    width: 50vw;
+  }
+
+  #tape-on-lemon {
+    --tape-w: 20.9vw;
+    top: 266.3vw;
+    left: 19.2vw;
+  }
+
+  /* The gift, last down the column and clear of the bottom edge — 18vw of
+     board under it rather than the flush 0 it had, which put its bottom corner
+     behind the wave band's crest instead of on the green. */
   #gift {
-    bottom: 0vw;
-    right: -9vw;
-    height: 70vw;
+    bottom: 21vw;
+    /* Barely off the edge, where the desktop's copy is bled by a fifth of
+       itself. At 390 that bleed was throwing away the ribbon's right-hand loop
+       — the box reads as a wrapped present because of the bow, and half a bow
+       going off the sheet is a striped rectangle. */
+    right: -3vw;
+    height: 65vw;
   }
 }
 
@@ -2204,22 +2435,12 @@ html[data-loading] {
     top: 0;
     width: var(--peel-w);
     height: var(--peel-h);
+    
     translate: -50% -46%;
     z-index: 3;
 
-    /* TURNED A QUARTER, because this element is. --peel-dir is 90deg and a
-       filter is applied in the element's own coordinates, before the rotation
-       carries the result round — so an offset written down-and-right here
-       arrives on screen down-and-LEFT. Swapped and signed to come out at
-       (3px, 4px): down and right, with everything else on the page.
-
-       Hard, not soft, and heavier than --drop-ink. Tape is thin and in contact
-       along its whole length, so its shadow has no room to spread — and this one
-       falls on a PHOTOGRAPH rather than on flat colour, which is mid-toned and
-       busy enough to swallow the site's usual alpha. The blur is not literally
-       0: the strip's ends are torn and drop-shadow takes its shape from the
-       alpha channel, so a zero blur stair-steps them. */
-    filter: drop-shadow(4px -3px var(--drop-blur) rgba(0, 0, 0, 0.42));
+    /* NO SHADOW — see .peel-face. The strip is read as lying flat on the
+       photograph rather than standing off it. */
 
     /* HOW THE STRIP MEETS THE PICTURE. normal for the three tapes you cannot
        see through; screen for the clear one, whose artwork is a set of
@@ -2764,6 +2985,22 @@ html[data-loading] {
   border-radius: 100%;
 }
 
+/* --------------------------------------------------------------------------
+   Step buttons — the phone's, and OFF at every other width.
+   --------------------------------------------------------------------------
+   THE ORBIT IS THE SELECTOR and this pair is not a second one: above 767px the
+   circle of rolls is on stage, every tape is one click away, and a prev/next
+   under it would be a worse route to the same six things. The phone hides the
+   orbit (see the block below for why), and a stepper is what is left when there
+   is nothing on screen to aim at.
+
+   display:none rather than conditional rendering — the markup ships at every
+   width so nothing has to re-render when the viewport changes its mind. See
+   the note on it in TapeSlider/index.tsx. */
+.tape-nav {
+  display: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
 
   .rail-track,
@@ -2793,14 +3030,34 @@ html[data-loading] {
    fraction of the width — which lands it at roughly the same fraction of a
    PHONE screen as the desktop drawing occupies of a laptop one.
 
-   THE ZONING IS THE MOCK'S. The composition (chip, THE, the pair of shots, the
-   roll, CREATIVE) runs down the middle; the tags and the intro copy come out
-   from under it and sit across the bottom left, where the desktop has them in a
-   narrow column at the side; the orbit stays at the right edge, where it
-   already was and where a thumb can reach it.
+   THE ZONING IS THE MOCK'S, AND IT IS ONE COLUMN READ TOP TO BOTTOM. The
+   desktop arranges the section AROUND the roll — shots either side of it, copy
+   in a narrow column beside that, orbit off to the right — and a phone has no
+   sideways to put any of it. So the same pieces are stacked instead: chip, THE,
+   the roll with CREATIVE crossing behind it, the pair of shots under the word
+   with their tops just over its feet, the labels and the intro copy side by
+   side beneath, and the step buttons at the foot.
 
-   WHAT DID NOT CHANGE is every mechanic: the same orbit, the same colour sweep,
-   the same flip, the same word dip. Nothing below is a behaviour.
+   THE SHOTS ARE THE ONE THING SCALED rather than re-placed, and they had to be:
+   they paint at their own 204px whatever the window is (see INK in
+   TapeSlider/strips.ts) which is 52% of a phone, and two of those side by side
+   is 104% of the sheet. `scale`, the property, not a width — the strip of tape
+   across each one is measured in px against the photograph's own size, so
+   shrinking the picture alone would leave the tape hanging off it. Scaling the
+   WRAPPER takes the photograph, its tape and its shadow together, and it is a
+   property GSAP never writes (it owns `transform` here, for the flip), so the
+   two compose instead of fighting.
+
+   THE ORBIT IS GONE AT THIS WIDTH — display:none, markup and all. It is a
+   circle read as the sliver of itself the screen edge lets through, and at a
+   phone's width that sliver is either too small to hit or big enough to eat the
+   drawing. The stepper below (.tape-nav) is what replaces it, and it drives the
+   very same goTo. The rolls stay in the DOM because every tape's payload is
+   packed onto them and the engine reads it from there — hiding the circle costs
+   the section nothing but the circle.
+
+   WHAT DID NOT CHANGE is every mechanic: the same selection, the same colour
+   sweep, the same flip, the same word dip. Nothing below is a behaviour.
    -------------------------------------------------------------------------- */
 @media (max-width: 767px) {
 
@@ -2814,8 +3071,13 @@ html[data-loading] {
        it. On a phone the drawing is a fixed 210vw of artwork and the window is
        anywhere from 178 to 220vw depending on the handset — so the box has to be
        the DRAWING's height, with a screen as the floor so a short phone still
-       gets a full stage rather than a letterbox. */
-    height: 220vw;
+       gets a full stage rather than a letterbox.
+
+       212vw and not the 220 it was: the stack below is one piece shorter now
+       that the orbit has gone, and the figure is the step buttons' foot (201vw)
+       plus a margin under them. It is the LAST number to change if anything in
+       the column moves — it is measured off the column, not chosen. */
+    height: 212vw;
     min-height: var(--screen);
   }
 
@@ -2855,8 +3117,15 @@ html[data-loading] {
     --unit-base: 0.126vw;
   }
 
+  /* CREATIVE, CROSSING BEHIND THE ROLL — which is what it does on the desktop
+     (the word's top is 29.9vw and the roll's foot is 40.4vw, so a third of the
+     letters is behind it) and what it stopped doing when the phone layout
+     pushed it clear. Nothing in the DOM decides that: .key-visual carries
+     z-index 4 and the word carries none, so the roll is in front wherever the
+     two are put. Overlapping it back buys about 22vw of column, which is most
+     of what the shots below need. */
   .tape-slider-parent .middle .bottom-title {
-    top: 122vw;
+    top: 76vw;
     left: 50%;
   }
 
@@ -2865,88 +3134,248 @@ html[data-loading] {
   }
 
   /* The roll. Its slot is square and the 3D camera is framed to it, so this one
-     figure is the product's size on screen. */
+     figure is the product's size on screen. `top` is its CENTRE — the slot is
+     translated -50% both ways — so 62vw puts its foot at 89vw, a little over
+     THE's feet at the top and a little over CREATIVE's head at the bottom. */
   .tape-slider-parent .middle .key-visual {
     left: 50%;
-    top: 76vw;
-    width: 56vw;
-    height: 56vw;
+    top: 62vw;
+    width: 54vw;
+    height: 54vw;
   }
 
-  /* THE PAIR OF SHOTS, and they are the one thing on this stage NOT restated in
-     vw — deliberately. The photographs paint at their own 204px and the tape
-     across each of them is measured in px to match (INK in TapeSlider/strips.ts
-     spells out why). 204px is 52% of a phone's width, which is the size these
-     want to be here anyway, so the pair is only re-placed: they flank the roll
-     instead of sitting above and beside it, and they overlap it, which is what
-     gives a narrow column its depth. */
+  /* THE PAIR OF SHOTS, under the word and just over its feet.
+   *
+   * SCALED, and the block's header note is the argument for why it is `scale`
+   * and why it is the wrapper. The design's size is 123.571 x 127.278, and the
+   * factor is written as that OVER the artwork's own 204 rather than as the
+   * 0.6057 it works out to — the two numbers in the division are the two facts
+   * (what the design asks for, what the file is), and a decimal is neither.
+   *
+   * A WIDTH ON THE <img> WOULD NOT DO. The strip of tape across each card is
+   * sized in px against the photograph's 204 (INK in TapeSlider/strips.ts), so
+   * resizing the picture alone leaves the tape hanging off its end. The scale
+   * takes the picture, its tape and its shadow together, which is the only way
+   * the assembly stays an assembly.
+   *
+   * PLACED FROM THE CENTRE, not off the two edges, and that is the scale's
+   * doing: `left`/`right` resolve against the wrapper's UNSCALED 204px box, so
+   * an offset from an edge means something different on every handset. A
+   * centred pair with a symmetrical +/-21vw step holds its arrangement at any
+   * width.
+   *
+   * THE STEP IS A MARGIN, AND IT HAS TO BE — `translate` here is a trap, and an
+   * expensive one to find. GSAP folds an element's independent transform
+   * properties into `transform` before it animates it (_parseTransform in
+   * CSSPlugin) and then blanks all three, permanently, with an inline
+   * `translate/rotate/scale: none`. The fold builds the string by SPLITTING THE
+   * COMPUTED VALUE ON SPACES — so a calc(), which computes with spaces around
+   * its operator, comes back out as `translate3d(calc(-50%, -, 81.9px))`. That
+   * is invalid, so the browser drops the whole declaration, and the `scale`
+   * below goes with it because it was folded into the same string. The pair
+   * arrives full size, both at left:50%, on top of each other.
+   *
+   * A margin cannot be caught by any of that: it is layout, GSAP never reads or
+   * writes it, and a calc() in it is just a calc(). -102px is half the card's
+   * own 204px box, which is what does the centring `translate: -50%` would have.
+   * (The strip's own `translate: -50% -46%` is fine and stays — two plain
+   * percentages survive the split; only a calc does not.)
+   *
+   * `scale` on its own is safe for the same reason it broke here: folded alone
+   * it comes out as `scale(0.6057)`, which is valid.
+   *
+   * IN PX, AND THE STEP IS TOO, because the pair is a px object — that is the
+   * whole of strips.ts's argument, and half a rigid assembly measured in vw
+   * would come apart at every width but one. 70.29 is half the gap-to-gap
+   * distance: a card (123.571) plus the 17px between the two, halved. The pair
+   * comes out 264px wide whatever the handset is, centred.
+   *
+   * THE `top` IS THE BOX'S AND THE 94vw IS THE PICTURE'S, which is the whole
+   * reason it is written as a subtraction: the scale takes (210 - 127.278) / 2
+   * = 41.36px off the box's top edge, so the box has to start that much higher
+   * for the photograph to land on 94vw. That is about 6vw over CREATIVE's feet
+   * at 100vw, and the overlap is the point — the shots read as laid ON the word
+   * rather than parked under it, the same relationship the roll has with it.
+   * Written this way the picture holds 94vw at every width instead of drifting
+   * as the fixed 41.36px becomes a different fraction of the sheet. */
+  .tape-slider-parent .middle .showcase {
+    scale: calc(123.571 / 204);
+    top: calc(94vw - 21.36px);
+    left: 50%;
+    right: auto;
+    margin-left: -102px;
+
+    & > img {
+      border-radius: 6.4103vw;
+      box-shadow: 1.7vw 3vw 0 var(--drop-ink) !important;
+    }
+
+  }
+
   .tape-slider-parent .middle .showcase:first-child {
-    top: 46vw;
-    left: -14vw;
+    margin-left: -197.29px;
   }
 
   .tape-slider-parent .middle .showcase:nth-child(2) {
-    top: 56vw;
-    right: -14vw;
+    margin-left: calc(-102px + 70.29px);
+  }
+
+  /* THE FIRST CARD'S STRIP, LEANED. The pair's photographs already sit at two
+     different tilts (--rot, up in .middle) so they do not read as one object cut
+     in half; at this size the two tapes across them were the one thing still
+     perfectly parallel, which put the seam back. 12deg off is enough to break
+     it and little enough to still be a strip laid on straight.
+   *
+   * `transform` AND NOT `rotate`, which is the whole of this rule. `rotate` is
+   * spoken for on a .peel — it carries --peel-dir, which is how the FOLD is
+   * aimed, and .peel-turn takes exactly that much back off the artwork inside so
+   * the picture stays the way up it was drawn. Writing an angle there replaces
+   * the aim rather than adding to it, and the strip's angle on screen is
+   * whatever is applied ON TOP of it. So the lean goes on `transform`, the one
+   * property nothing else here uses: GSAP owns the .showcase WRAPPER's, not this
+   * element's — all the engine ever writes on a strip is --peel (addPress) and
+   * the four values a swap repaints it with (setStrip).
+   *
+   * Same call .make-it-stick .stick-tape makes, at more length, and the note on
+   * `& .showcase-tape` up in .middle is the warning this is the answer to.
+   *
+   * -12deg, because --peel-dir is 90: 90 - 12 is the 78deg the strip stands at.
+   * Change the direction and this stays a 12deg lean on top of whatever it
+   * becomes, which is what it is meant to be. */
+  .tape-slider-parent .middle .showcase:first-child .showcase-tape {
+    transform: rotate(-12deg);
   }
 
   /* THE COPY, out of the side column and across the foot of the drawing. Still
      absolutely placed — it is over the stage rather than in it, same as the
-     desktop, so it holds its position however tall the centre column gets. */
+     desktop, so it holds its position however tall the centre column gets.
+
+     ACROSS THE FULL SHEET NOW rather than 66vw of it, because the labels and
+     the paragraph are side by side here (see .tags below) and a two-column
+     block in two thirds of a phone is two very narrow columns. */
   .tape-slider-parent .left {
     left: 6vw;
-    top: 152vw;
+    top: 144vw;
     transform: none;
-    width: 66vw;
+    width: 88vw;
   }
 
+  /* LABELS LEFT, PARAGRAPH RIGHT. The desktop stacks them because it has a tall
+     narrow column to stack them in; the phone has a wide short one, and reading
+     three chips and five lines of copy as one tall list wastes the width and
+     pushes the buttons off the stage.
+
+     The chips keep their own widths — .tag is align-items:flex-start already,
+     and flex:0 0 auto here stops the row stretching the column to match the
+     paragraph. min-width:0 on the copy is the standard flex-item release: it
+     defaults to min-content, which for an unbreakable word is wider than the
+     space left and would push the chips off the sheet. */
   .tape-slider-parent .tags {
-    gap: 5vw;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 4vw;
   }
 
   .tape-slider-parent .tag {
     gap: 2.2vw;
+    flex: 0 0 auto;
   }
 
+  .tape-slider-parent .subtext {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  /* max-width goes, and it has to: the paragraph's width is now the column's
+     share of the row, and a 64vw cap on a box that has about 47vw to live in is
+     a second answer to a question the flex row has already settled. */
   .tape-slider-parent .subtext .h5 {
-    font-size: 3.9vw;
-    max-width: 64vw;
+    font-size: 3.7vw;
+    max-width: none;
   }
 
-  /* THE ORBIT, unchanged in kind: the same circle, the same spin, the same
-     9 o'clock slot — and still read as the sliver of it the stage's right edge
-     lets through. Only bigger, because a 16vw circle carrying 7vw rolls is 64px
-     and 27px on a phone, which is a control nobody can hit.
-
-     The circle is pushed further right than the desktop's 50% so that a much
-     larger radius still shows about the same slice: at r=65vw an 84% offset
-     leaves 16vw of arc on screen, which is three rolls and part of a fourth.
-
-     Down the RIGHT EDGE and not across the bottom, which is where the mock puts
-     a pair of chevrons instead. The arc is the mechanic; a phone's thumb rests
-     on that edge; and turning the orbit on its side would turn every roll's
-     label with it. */
-  .tape-slider-parent {
-    /* BOTH, not just the radius. --orbit-d is declared on :root as a calc over
-       --orbit-r, so it is RESOLVED there — what inherits down to this section is
-       the finished 16.366vw, and overriding the radius alone changes nothing.
-       The two are restated together here for that reason. */
-    --orbit-r: calc(52vw / 2);
-    --orbit-d: 52vw;
-    --roll-size: 15vw;
-  }
-
+  /* THE ORBIT, OFF. The header note at the top of this block is the argument;
+     what it costs is nothing, because the rolls are the engine's data store and
+     they keep working unread. The one thing that changes behind this is the
+     measured radius, which comes out 0 on a box with no layout — and 0 radius
+     places six rolls on top of each other in the middle of a circle nobody can
+     see, which is exactly as harmless as it sounds. */
   .tape-slider-parent .roll-parent {
-    left: 0;
-    top: auto;
-    bottom: 0;
-    transform: none;
-    height: 100%;
+    display: none;
   }
 
-  .tape-slider-parent .rail-track {
-    left: 76%;
-    top: 80%;
+  /* THE STEP BUTTONS, across the foot of the column where the mock puts them.
+     Two discs and nothing else: the arrow inside is one glyph mirrored (see
+     NavArrow in TapeSlider/index.tsx), and the palette arrives as --nav-face /
+     --nav-ink, repainted per tape by the engine as the colour sheet commits.
+
+     OUTSIDE .tape-slide in the markup, so the 8vw the wave band's tape costs
+     the drawing is not inherited — and restated here, because the buttons sit
+     under copy that IS shifted by it and the two have to travel together. */
+  .tape-nav {
+    display: flex;
+    justify-content: center;
+    gap: 6vw;
+
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 178vw;
+    translate: 0 8vw;
+    z-index: 11;
+    /* over the colour layers and the drawing alike */
+  }
+
+  .tape-nav button {
+    width: 15vw;
+    height: 15vw;
+    flex: 0 0 auto;
+    border: 0;
+    padding: 0;
+    border-radius: 100%;
+    background: var(--nav-face);
+    color: var(--nav-ink);
+    cursor: pointer;
+
+    display: grid;
+    place-items: center;
+
+    /* The site's shadow, at the showcase cards' offset — these are objects
+       resting just off the stage like everything else on it, not flat marks
+       printed on the colour. See --drop-ink in :root. */
+    box-shadow: 0.7vw 1vw 0 var(--drop-ink);
+    transition: translate 0.12s ease-out, box-shadow 0.12s ease-out;
+  }
+
+  .tape-nav button svg {
+    width: 7vw;
+    height: 7vw;
+  }
+
+  /* ONE GLYPH, TURNED. The forward button is the back one mirrored, so the two
+     arrows are the same drawing and cannot drift apart in weight or length.
+     `scale` on the svg, which owns no other transform. */
+  .tape-nav button[data-step="1"] svg {
+    scale: -1 1;
+  }
+
+  /* Pressed down onto the stage — the disc travels to meet its own shadow,
+     which is what a button being pushed does. */
+  .tape-nav button:active {
+    translate: 0 0.7vw;
+    box-shadow: 0.4vw 0.4vw 0 var(--drop-ink);
+  }
+
+  .tape-nav button:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 3px;
+  }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+
+  .tape-nav button {
+    transition: none;
   }
 }
 
@@ -3065,7 +3494,7 @@ html[data-loading] {
   z-index: 11;
   margin-top: calc(var(--giant-arc) * -1);
   padding-top: var(--giant-arc);
-  /* padding-bottom: var(--giant-tail); */
+  padding-bottom: var(--giant-tail);
 
   /* FLAT. The paper is a separate layer — see .wrapper::before below.
 
@@ -3596,34 +4025,9 @@ html[data-loading] {
      the tilt PLUS 90deg, which is the hero's note about its angled tape and the
      same arithmetic. translate is free, being a separate property again. */
 
-  /* HARD, NOT SOFT, and that is a statement about what the strip IS.
-   *
-   * The blur was 0.03em, which at the type size this is written in comes out
-   * around 15px — wider than the shadow's own offset, so what reached the screen
-   * was a grey cloud centred on the strip rather than a strip standing off the
-   * paper. The mock's is a crisp offset copy, and it should be: tape is thin and
-   * it is in CONTACT along its whole length. A contact shadow has no room to
-   * spread, and the amount a shadow spreads is exactly how far off the surface
-   * the eye reads the thing as being.
-   *
-   * Not literally 0 — see --drop-blur in :root, which this now shares with
-   * every other shadow on the site so there is one number that decides hard or
-   * soft. The strip's ends are torn and drop-shadow takes its shape from the
-   * alpha channel, so a zero blur hands those ragged edges straight through
-   * unfiltered and they stair-step.
-   *
-   * The ALPHA is this rule's own and deliberately heavier than --drop-ink. Every
-   * other shadow here falls on flat lime; this one falls on a PHOTOGRAPH, which
-   * is mid-toned and busy, and 0.34 disappears into it.
-   *
-   * It goes UP with the blur coming off, either way. Spreading the same ink over
-   * fifteen pixels is what made 0.25 look like the right amount of shadow; concen-
-   * trated into a sharp edge it would read as barely there.
-   *
-   * All three in em, so a strip keeps its shadow's proportions at any size —
-   * .giant-prop--shot's font-size trick is what makes that true of the loose
-   * photographs as well as of the card in the phrase. */
-  filter: drop-shadow(0.011em 0.015em var(--drop-blur) rgba(0, 0, 0, 0.42));
+  /* NO SHADOW — see .peel-face. Tape is thin and in contact along its whole
+     length; the design reads these strips as pressed onto the photograph rather
+     than floating above it, so neither the face nor this wrapper throws one. */
 }
 
 /* The noun. Its own node because the mock treats it as the word that matters —
@@ -4047,6 +4451,66 @@ html[data-loading] {
     --gx: 811vw;
     --gy: 192vw;
   }
+
+  /* THE SCENERY, ALL AT ONE SIZE. The desktop arrangement runs from 11vw to
+     21vw — pictures of different sizes scattered around type that fills three
+     quarters of a 1440 sheet. Carried over at the staircase's 2.4 they would be
+     26vw to 50vw, and the small end of that is a 100px tag on a 390px screen: a
+     photograph printed too small to be read as one, which shows as a mistake
+     rather than as a detail.
+
+     So the phone does not scale the arrangement, it flattens it — one width for
+     every prop, big enough that each is unmistakably a picture of a roll. What
+     goes with it is the depth the size differences carried, which a screen this
+     narrow never had: it shows one or two props at a time rather than the whole
+     scatter, and a scatter is what those differences were for.
+
+     --pw AND NOT `width`, for the reason .giant-prop--shot gives — its
+     font-size is calc(--pw * 1.6815), and that is what makes the strip on a
+     photograph a fraction of the picture instead of an absolute size. Set the
+     width here and every shot would wear a strip cut for the desktop's box.
+
+     !important because --pw arrives as an INLINE style from PANELS in
+     components/GiantPinning/index.tsx, and no selector a stylesheet can write
+     outranks an inline declaration. .stick-tape's box carries one for exactly
+     the same reason. */
+  .giant-pinning .giant-prop {
+    --pw: 45vw !important;
+  }
+
+  /* THE HAND-WRITTEN NOTE. --hand-w is a physical width like a prop's --pw, not
+     a fraction of the phrase it sits by, so it does not come along on its own
+     either — and 12.8vw of a phone is 50px of handwriting, which is not small
+     writing but unreadable writing. Nearly the full width instead, which is
+     what a note written on this board at arm's length would be.
+
+     TWO CLASSES DEEP, and needed: .giant-note's own rule is far enough down
+     this file that a bare .giant-note here would lose to it on order. */
+  .giant-pinning .giant-note {
+    --hand-w: 100.8vw;
+  }
+
+  /* WHERE EACH ONE SITS, one rule per panel — --px / --py are percentages of
+     THE ROW and the three rows are different widths, which is the whole of the
+     note beside `note` in PANELS. They are re-placed rather than converted: at
+     this size the note is most of the screen, so the desktop's tuck under the
+     slot is not on offer and each is set against its own phrase.
+
+     !important for the props' reason — these arrive inline from PANELS too. */
+  .down-to-horizontal .giant-note {
+    --px: 14% !important;
+    --py: 90% !important;
+  }
+
+  .diagdown-to-horizontal .giant-note {
+    --px: 14% !important;
+    --py: 80% !important;
+  }
+
+  .diagup-to-horizontal .giant-note {
+    --px: 19% !important;
+    --py: 98% !important;
+  }
 }
 
 /* THE PHRASE SIZE WITH THE CAMERA GONE, and it is LAST IN THE SECTION on
@@ -4465,8 +4929,11 @@ html[data-loading] {
    Direction is therefore the switch for which end lifts: -90deg here is the
    same strip laid on from the top.
 
-   WHAT THE HALF TURN COSTS is the cast shadow, and it is paid below rather than
-   left wrong — see --peel-shadow.
+   THE HALF TURN USED TO COST the cast shadow — a shadow written in the face's
+   own coordinates arrives on the page pointing the other way once the frame is
+   turned over. Nothing to pay now that no peel on the site throws one; the note
+   stands because it is what a shadow put back here would have to answer for.
+   See --peel-shadow below.
 
    CENTRED WITH MARGINS, not with a percentage translate. Two reasons, and
    either is enough: `translate` composes AHEAD of `rotate`, so a percentage
@@ -4489,17 +4956,11 @@ html[data-loading] {
      not look like a z-index mistake, it would look like the peel not running. */
   z-index: 2;
 
-  /* THE LIGHT COMES FROM THE SAME PLACE IT DOES EVERYWHERE ELSE ON THIS PAGE.
-     Peel writes the face's shadow in the FACE'S own coordinates, and the frame
-     those coordinates belong to has been turned over by the rule above — so the
-     site's down-and-right offset would arrive on the page pointing up and to the
-     left, and one prop with its own idea of where the window is is exactly what
-     --drop-ink in :root exists to prevent.
-
-     So it is written pre-turned: negated here, negated again by the half turn,
-     and it lands as the 0.22/0.32 every other object on this page throws.
-     Recompute if the turn above changes. */
-  --peel-shadow: drop-shadow(-0.22vw -0.32vw var(--drop-blur) var(--drop-ink));
+  /* NO SHADOW, like every other strip on the site — see .peel-face. Said here
+     as well as inherited because this frame is turned over by the rule above,
+     so anything written back in would have to be pre-negated to land on the
+     page pointing the way the rest of the light does. */
+  --peel-shadow: none;
 }
 
 /* Pressed flat when motion is not wanted. The general rule in the Peel section
@@ -4569,10 +5030,25 @@ html[data-loading] {
     --stick-arc: 14vw;
   }
 
+  .stick-shot {
+    transform: unset;
+  }
+
+  .roll-parent {
+    display: none;
+  }
+
+  
+
   /* One column. --stick-shot no longer names anything — the photograph is the
      full width and its own aspect-ratio makes it square. */
   .make-it-stick .stick-row {
     grid-template-columns: 1fr;
+    gap: unset;
+
+    & .peel-turn {
+    rotate: unset !important;
+  }
   }
 
   /* LET'S / MAKE IT / STICK!, at the size that puts the longest line across
@@ -4592,8 +5068,32 @@ html[data-loading] {
   }
 
   /* The strip, on the join. See the note above for why it is still upright and
-     why this is arithmetic rather than a typed offset. */
+     why this is arithmetic rather than a typed offset.
+
+     AND BIGGER, because the join it crosses is. Side by side, 22.222vw of a
+     1440 sheet is 320px taking a good bite of each box; stacked, the seam runs
+     the full width of the phone and the same strip is 87px of tape sitting in
+     the middle of it — a sticker rather than the thing holding the two
+     together. This is that strip at the scale the rest of this block works in.
+
+     THE BOX, NOT THE WIDTH. Everything the fold is built from — --peel-span,
+     --peel-edge, --peel-pad in the Peel section — is derived from this pair, so
+     sizing the wrapper with width/height here would stretch the frame and leave
+     the clip working to the old box. There is one statement of the strip's size
+     and this is an override of it.
+
+     !important, AND IT HAS TO BE: the pair arrives as an INLINE style from
+     Peel's `box` prop (TAPE_BOX in components/MakeItStick), and no selector a
+     stylesheet can write outranks an inline declaration.
+
+     NOT THE ARTWORK'S RATIO ANY MORE. 428/173 would make this 25.554vw thick;
+     .peel img is object-fit: cover, so what the extra length costs is the long
+     edges, cropped — the strip reads leaner than the picture is drawn. Use
+     calc(63.222vw / (428 / 173)) for the thickness if the torn edges are wanted
+     back. */
   .make-it-stick .stick-tape {
+    --peel-w: 63.222vw !important;
+    --peel-h: 11.982vw !important;
     left: 50%;
     top: calc(100% - var(--stick-card-h) - var(--stick-gap) / 2);
   }
@@ -6216,11 +6716,8 @@ html[data-loading] {
      make the identical statement for the identical reason. */
   --peel: 1;
 
-  /* ONE SHADOW, AND IT IS THIS ELEMENT'S. Peel gives its own face one, which is
-     right for a sticker lying loose on a page and wrong here: the two would
-     stack and the strip would carry two blurs at two offsets. */
+  /* NO SHADOW — see .peel-face. Neither the face nor this wrapper throws one. */
   --peel-shadow: none;
-  filter: drop-shadow(3px 2px var(--drop-blur) rgba(0, 0, 0, 0.42));
 
   /* How the strip meets what is under it. The clear tape's artwork is drawn as
      a set of highlights meant to be ADDED to whatever it lies on rather than as
@@ -8347,13 +8844,8 @@ html[data-loading] {
   translate: -50% -50%;
   rotate: var(--sr);
 
-  /* ONE SHADOW, AND IT IS THIS ELEMENT'S. Peel gives its own face one, which is
-     right for a sticker lying loose on a page and wrong here: the face's and
-     the lifted flap's would stack, and the strip would carry two blurs at two
-     offsets down the seam. Taken off the face below and thrown from the wrapper
-     instead, so face and flap cast one together. The origin section's strips
-     make the identical statement for the identical reason. */
-  filter: drop-shadow(3px 2px var(--drop-blur) rgba(0, 0, 0, 0.42));
+  /* NO SHADOW — see .peel-face. The face's is off below and the wrapper throws
+     none either, so the strip reads as stuck flat to the board. */
 }
 
 /* The tape. The torn ends, the crease and the shading are IN THE FILE, which is
@@ -12115,7 +12607,7 @@ li::marker {
 
   .contact-sheet {
     border-radius: 6vw;
-    padding-bottom: 9vw;
+    padding-bottom: 13vw;
   }
 
   .contact-sheet::before {
@@ -12180,8 +12672,9 @@ li::marker {
 /* ==========================================================================
    About — the opening screen, the sheet that opens, and WE WANTED TO BE.
    ==========================================================================
-   Markup in components/AboutOpen, components/Reimagine and components/WeWanted;
-   the movement is in Reimagine/unfold.ts and WeWanted/crawl.ts.
+   Markup in components/AboutOpen, components/Reimagine, components/WeWanted and
+   components/AboutCta; the movement is in Reimagine/unfold.ts and
+   WeWanted/crawl.ts. The last of the four does not move at all.
 
    THE PAGE IS A DARK GREEN SHEET and that is the first thing to know about it.
    Every other route on this site opens on lime and turns green somewhere down
@@ -12189,20 +12682,22 @@ li::marker {
    the surface the product pages' ORIGIN sections are printed on and the one the
    footer closes every page with. Nothing here declares a second green.
 
-   FIVE SECTIONS, AND THE PAGE IS TURNED OVER FOR TWO OF THEM. The first two are
+   SIX SECTIONS, AND THE PAGE IS TURNED OVER FOR TWO OF THEM. The first two are
    the same dark green sheet and the second of them is pinned; THAT'S WHY SWEET
    TAPE EXISTS. is where the page turns, and it does not scroll into view — it
    falls over the belt on one wide arc of lime, which is why its box starts two
    screens further up the page than it is written. TO REIMAGINE stays on that
    lime: the curtain's sheet slides up off the window and the sheet of paper's
    own lime comes up behind it, so the two sections are ONE ground with a seam
-   the reader never sees. WE WANTED TO BE. is where the green comes back, and it
-   closes the page on the colour the page opened with.
+   the reader never sees. WE WANTED TO BE. is where the green comes back, and the
+   call to action under it is the way off the page — the same green, behind a
+   curtain, with the tapes themselves standing at the foot of it.
 
    The rules below are in that order: the opening screen, the belt, the curtain
    and what is under it, then the lime section with its sheet of paper and the
    statement written on it — and then the pinned stage, the sentence, the boxes
-   and their parking.
+   and their parking, and last the closing call to action, which is the page's
+   way out and the only static section on it.
    ========================================================================== */
 
 /* THE SHEET'S TWO COLOURS. The ink is the site's lime and the ground is the
@@ -12248,22 +12743,72 @@ li::marker {
    The opening screen
    -------------------------------------------------------------------------- */
 
-/* ONE SCREEN OF GREEN AND NOTHING ON IT — the section is empty by design; see
-   components/AboutOpen.
+/* ONE SHEET OF LIME WITH THE PAGE'S CLAIM ON IT — the headline, the line that
+   prises itself open under it, the note, and a carton with a hand coming out of
+   it. See components/AboutOpen.
 
-   --screen RATHER THAN vh, and this was the first box on the site to need the
-   distinction: a section whose only content is its own height is exactly the
-   case mobile browsers' shrinking toolbars ruin. At 100vh the screen is one
-   toolbar taller than the window, so the page opens with a strip of the section
-   below it already showing. The argument generalised and moved to Tokens — see
-   the note on @property --screen — and every full-window box on the site now
-   takes the same length. */
+   IT USED TO SAY "ONE SCREEN OF GREEN AND NOTHING ON IT — the section is empty
+   by design", and the height below is the last of that arrangement: 72.222vw is
+   a share of the WIDTH, so at 1440 it is 1040px against a 900px window and the
+   composition fills a box a little taller than the screen. That is a drawing
+   with a shape, and it is why this rule no longer reaches for --screen.
+
+   --screen RATHER THAN vh IS STILL THE RULE WHERE A BOX MEANS THE WINDOW, and
+   this was the first box on the site to need the distinction: a section whose
+   only content is its own height is exactly the case mobile browsers' shrinking
+   toolbars ruin. At 100vh the screen is one toolbar taller than the window, so
+   the page opens with a strip of the section below it already showing. The
+   argument generalised and moved to Tokens — see the note on @property --screen
+   — and every full-window box on the site takes that length. THE PHONE'S COPY
+   OF THIS SECTION IS ONE OF THEM: at 390 a sheet 72.222vw tall is a band across
+   the top fifth of the window, so there the height is --screen with a floor
+   under it. See the About phone block, where that is argued at length. */
 .about-open {
   position: relative;
   width: 100%;
   height: 72.222vw;
   background: #C6FD00;
   padding-top: 9.097vw;
+
+  /* HOW BIG THE JACK-IN-THE-BOX IS, AS ONE FIGURE, and it is a scale rather
+     than four widths because the drawing is INTERLOCKED: the hand rests inside
+     the carton's mouth, the back wall stands behind it, and the roll clears the
+     front flap by an amount that is only correct while all four are the same
+     size. Re-authoring them one at a time for the phone is four chances to put
+     the arm through the side of the box.
+
+     It is spent as a transform on .wrapper, so it also carries the SCRUB. The
+     hand's rise is a vw distance written in AboutOpen/spaceOut.ts and applied
+     to an element inside that wrapper, which means scaling the wrapper scales
+     the journey with the object making it — the one arrangement where the
+     engine needs to know nothing at all. The product page's --product-scale and
+     the belt's --mark-gain are the same call in the same words.
+
+     1 at every width but the phone's; see the About phone block. */
+  --jack-scale: 1;
+
+  /* HOW FAR ONE SHARED AND BELIEF ARE PRISED APART, in vw, as a BARE NUMBER —
+     AboutOpen/spaceOut.ts reads this property and parses it as one, so a unit
+     here would come back NaN.
+
+     IT IS DECLARED HERE RATHER THAN ONLY IN THAT FILE because the gap is a
+     LAYOUT fact and the phone's is not the desktop's: on the desktop the roll
+     comes up THROUGH the opening and the gap has to be wide enough to hold it,
+     and on a phone the box is at the foot of a screen twice as tall and the
+     roll never reaches this line at all. A 25vw hole with nothing in it is what
+     the desktop's figure draws there. The constant in spaceOut.ts stays as the
+     fallback, so the move still works if this is ever dropped. */
+  --space-gap: 25.069;
+
+  /* AND HOW MUCH PAGE THE MOVE IS GIVEN, in screens — which is also WHETHER IT
+     IS A MOVE. AboutOpen/spaceOut.ts reads this the way it reads the gap above,
+     and 0 means the composition is given no scroll to happen over: the words
+     stay in their phrase and the box opens once, on a clock, as the cover
+     clears. That is the phone's answer and it is argued in the About phone
+     block; here it is a third of a screen, which is what the scrub costs.
+
+     Bare, in screens, for the reason --space-gap is bare in vw. */
+  --space-run: 0.38;
 
   /* THE BOX HANGS OUT OF THE BOTTOM and is cropped by the section rather than
      resized to fit it — the hand is pushed 320px past the sheet's own foot (see
@@ -12590,6 +13135,19 @@ li::marker {
   height: 100%;
   position: absolute;
   inset: 0;
+
+  /* THE WHOLE DRAWING AT ONE SIZE — see --jack-scale on .about-open, which is
+     the argument. From the FLOOR of the sheet and its centre line, because that
+     is the one point every image in here is placed against: all three sit on
+     `bottom: 0; left: 50%`, so scaling about that corner grows the box without
+     any of them sliding off the spot they were drawn on.
+
+     It also multiplies the hand's own translate, which is what carries the
+     scrub — the rise, the overshoot and the resting pose inside the carton are
+     all vw distances on an element in this box, so they arrive already in the
+     drawing's own units and spaceOut.ts never learns that a phone exists. */
+  transform: scale(var(--jack-scale));
+  transform-origin: 50% 100%;
 }
 
 /* All three sit on the floor of the sheet, centred. The half-width pull is what
@@ -12648,6 +13206,40 @@ img#front {
   width: 46.736vw;
   /* 673px at 1440 */
   z-index: 3;
+}
+
+/* --------------------------------------------------------------------------
+   The collage — the press cutting, the shophouse and the filing tab
+   -------------------------------------------------------------------------- */
+
+/* NOT DRAWN ABOVE 767px, AND THAT IS A DECISION RATHER THAN AN OVERSIGHT.
+ *
+ * These three are the PHONE'S drawing of this screen. The desktop composition is
+ * settled — a headline the width of the window, a line prised open under it and
+ * a box on the floor with a hand coming out — and there is nothing in it these
+ * would join; the sheet is 72.222vw tall and the only empty corner in it is
+ * where the note already is. The phone's sheet is a WINDOW tall, nearer two and
+ * a half times its own width, and the same three objects leave a field of bare
+ * lime through the middle of it. So the phone gets a middle: a cutting on the
+ * left, the note and its tab on the right, and the shophouse standing beside
+ * the carton.
+ *
+ * WHICH IS THE ONE PLACE ON THIS SITE A PHONE ADDS SOMETHING rather than
+ * re-stating it, and it is worth saying why that is allowed here. Everywhere
+ * else a phone block re-authors a composition that already works, because the
+ * complaint is the FRAME — 16:9 shown in 9:19.5. This screen's complaint is the
+ * opposite: the frame is twice as tall and the composition does not have enough
+ * IN it. A drawing cannot be stretched into a hole.
+ *
+ * WHEN A DESKTOP MOCK LANDS WITH THEM IN IT, this rule is the only thing that
+ * has to go — the markup, the artwork and the phone's own placements all stay.
+ *
+ * display: none AND NOT opacity, deliberately. Two photographs the desktop never
+ * shows should not be fetched by it either, and a `display: none` <img> is not
+ * loaded by any engine that ships. */
+.about-clipping,
+.about-shop {
+  display: none;
 }
 
 
@@ -12982,8 +13574,33 @@ img#front {
      
      It is 1 everywhere but the phone, where the resting mark has to fill a row
      three times its desktop share and the grown one would otherwise end up five
-     screens across. See the About phone block, where the pair are set. */
-  scale: calc(var(--mark-scale, 1) * var(--mark-gain, 1));
+     screens across. See the About phone block, where the pair are set.
+
+     THE GAIN IS ON THE GROWTH AND NOT ON THE WHOLE VALUE, and that is a fix
+     rather than the arrangement. Written as scale x gain, the gain multiplied
+     the REST pose too: at the phone's 0.68 a mark drawn 70vw wide to fill a 45vw
+     row rendered at 47.6, a third short of the slot it was sized for, sitting in
+     22vw of its own empty gap while the pills either side of it filled their
+     rows. That was invisible in the figure it was chosen for — 8 x 0.68 lands
+     the grown mark at 250vw tall, which is what the phone block wanted — and
+     wrong in every frame before the growth started.
+
+     1 + (scale - 1) x gain is the same statement with rest pinned: at
+     --mark-scale 1 it is exactly 1 whatever the gain, so a mark is always the
+     size the stylesheet drew it, and the gain then only says how much of the
+     belt's journey to spend. The phone's 0.68 puts the grown mark at 5.76, which
+     is 264vw tall — still past the 216vw of the tallest screen this is drawn
+     for, which is the only thing that beat has to be.
+
+     AND THE DIP COMES ALONG WITH IT. MARK.DIP is 0.72, the draw-back before the
+     launch, and a gain on the growth shallows it in proportion — 0.81 on the
+     phone against 0.72 here. That is the right way round: anticipation is read
+     against the size of the thing anticipating, and the phone's mark is three
+     times the share of the window.
+
+     Nothing changes above the breakpoint. With no gain declared the fallback is
+     1 and the expression collapses to --mark-scale exactly. */
+  scale: calc(1 + (var(--mark-scale, 1) - 1) * var(--mark-gain, 1));
 }
 
 /* --------------------------------------------------------------------------
@@ -13297,6 +13914,29 @@ img#front {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* EACH WORD ITS OWN BOX, AND IT CHANGES NOTHING AT THIS WIDTH. The boxes butt
+   together with no gap and no alignment of their own that the row was not
+   already giving them, so the row is the same run of letter clips it was before
+   — which is the point: this exists for the phone, where the line is allowed to
+   break BETWEEN two of these and nowhere else (see the About phone block), and
+   a structure that only earns its keep at one width must cost nothing at the
+   others.
+
+   flex AND NOT inline-flex. These are flex items of .line, so their outer
+   display is blockified either way and the inner one is what is being chosen —
+   a row for the letter clips. align-items: center matches .line's own, which is
+   what keeps .reason-gap's zero-height box on the row's centre line now that it
+   is nested one deeper. That box is how the mark finds the middle of the
+   sentence; see .reason-mark.
+
+   flex: 0 0 auto for .clip's reason — these are words, not a layout, and a row
+   that overflows must overflow rather than squeeze the type. */
+.reason-title .reason-word {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
 }
 
 /* The letter's mask, with headroom. A line-height well under the size leaves a
@@ -13734,6 +14374,16 @@ img#front {
    * where it has to be written without spaces to survive being split). */
   --rei-u: min(1vw, calc(var(--screen-lg) / 55.052));
 
+  /* HOW MUCH SCROLL THE PIN IS GIVEN, in screens — and therefore whether there
+     is a pin. Reimagine/unfold.ts reads this the way AboutOpen/spaceOut.ts reads
+     --space-run, and 0 means the section is given no page: no pin, no flipbook,
+     and the sheet resting already open with the statement on it. That is the
+     phone's, and it is argued in the About phone block. Two screens here, which
+     is what the unfold and the writing take.
+
+     Bare, in screens — the engine parses it as one. */
+  --rei-run: 2;
+
   /* WHERE THE LIME STOPS AND THE GREEN STARTS. THIS IS THE ONE NUMBER TO TURN.
    *
    * THROUGH THE MIDDLE OF THE PAPER — the sheet's top half lies on lime and its
@@ -14064,6 +14714,32 @@ img#front {
   align-items: flex-end;
 }
 
+/* EACH WORD ITS OWN BOX, AND IT CHANGES NOTHING AT THIS WIDTH. The boxes butt
+   together with no gap and take the alignment the row was already giving them,
+   so a line is the same run of letter clips it was before. It exists for the
+   phone, where the statement is broken again and the words are the units that
+   re-arrangement is made of — see components/Reimagine, where both sets of
+   breaks are written down.
+
+   flex AND NOT inline-flex: these are flex items of .line either way, so what
+   is being chosen is the INNER display, which is a row for the letter clips.
+   flex: 0 0 auto for .clip's reason — words are not a layout, and a row that
+   overflows must overflow rather than squeeze the type. */
+.reimagine-copy .reimagine-word {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-end;
+}
+
+/* AND THE PHONE'S TURNS ARE NOT DRAWN HERE. Above the breakpoint .line is the
+   row and the five breaks it makes are the design's; the seven marked inside
+   those lines belong to the other arrangement entirely. display: none rather
+   than a zero width, so they are not flex items at all and cannot contribute a
+   hairline to a row's measure. */
+.reimagine-turn {
+  display: none;
+}
+
 /* The letter's mask, with headroom. line-height 1 leaves a capital standing
    taller than the box it is in for most faces, so a mask flush to the box would
    shave the tops off; the padding gives it room and the matching negative
@@ -14098,8 +14774,15 @@ img#front {
      across the G and the M. Change the strip's width below and this is the
      figure that follows it: the two are read together, and the difference
      between them IS the clearance. */
-  width: calc(11.806 * var(--rei-u));
-  /* 170 / 1440 */
+  /* IN em, AGAINST THE SENTENCE'S OWN SIZE. 1.889em is 11.806 units at the
+     copy's 6.25, so nothing moves at this width — what changes is what happens
+     when the TYPE moves. The phone sets this statement larger (see the About
+     phone block) and a hole measured against the PAPER would stay the size it
+     was: a strip of tape shrinking inside a headline growing around it. Every
+     part of this line is a fraction of the line now, which is what the height
+     below always was. */
+  width: 1.889em;
+  /* 170 / 1440, over the copy's 6.25 */
   /* AND A HEIGHT, WHICH IS PURELY SOMETHING FOR THE TAPE TO BE CENTRED ON.
      An empty flex item has no height at all, and the row is aligned to
      flex-end — so its box collapses onto the line's floor, which is the
@@ -14161,10 +14844,12 @@ img#front {
 
      The markup passes the same pair as `box`, which the fold arithmetic needs
      whenever the frame is turned; the two have to agree. */
-  width: calc(9.658 * var(--rei-u));
-  /* 139.08 / 1440 */
-  height: calc(3.058 * var(--rei-u));
-  /* 44.035 / 1440 */
+  width: 1.545em;
+  /* 139.08 / 1440, over the copy's 6.25 — and in em for the reason
+     .reimagine-gap gives: the strip is set INTO this sentence, so it is a
+     fraction of it and not of the sheet it is written on. */
+  height: 0.489em;
+  /* 44.035 / 1440, over the same */
   translate: -50% -50%;
   /* OVER THE LETTERS, always. The strip is stuck ON the sentence, not set into
      it, so on the frames where it does touch a letter it has to be the thing on
@@ -14226,7 +14911,14 @@ img#front {
     transform: none;
   }
 
-  .reimagine-paper {
+  /* :first-of-type IS NAMED HERE AND HAS TO BE. The rest pose above is
+     .reimagine-paper:first-of-type — one class and a pseudo-class — which a bare
+     .reimagine-paper does not out-specify however late it comes, so the ball of
+     paper stayed at full opacity and was merely COVERED by the flat sheet laid
+     over it. Two stacked photographs where there should be one, and it survives
+     only as long as the top one is opaque edge to edge. */
+  .reimagine-paper,
+  .reimagine-paper:first-of-type {
     opacity: 0;
   }
 
@@ -14255,6 +14947,16 @@ img#front {
   width: 100%;
   background: var(--about-bg);
   overflow-x: clip;
+
+  /* HOW MUCH SCROLL THE PIN IS GIVEN, in screens. WeWanted/crawl.ts reads it and
+     WANTED.LENGTH there is the fallback and the argument; the two agree at this
+     width. It is declared because the phone's sentence is four times as long,
+     so the same pin would run it four times as fast under the same wheel — and
+     how long a section holds the screen is a fact about the page rather than
+     about the mechanism.
+
+     Bare, in screens — the engine parses it as one. */
+  --wanted-run: 1.8;
 }
 
 /* THE BOX THAT IS HELD STILL. One screen tall, and everything the section draws
@@ -14283,6 +14985,25 @@ img#front {
   background-repeat: repeat-y;
   opacity: 0.2;
   pointer-events: none;
+}
+
+/* THE THING THAT MOVES, on the sheets where anything does.
+
+   inset: 0 rather than a declared width, which is .giant-canvas's own line: the
+   sentence and the boxes overflow this box in every direction and that is fine,
+   because nothing here is laid out BY the box. It exists to be one element to
+   put one transform on, and to be the positioning context everything on it is
+   placed against. The crop is .wanted-stage's, one level up, which is what makes
+   the window the SCREEN rather than the canvas.
+
+   ON THE DESKTOP IT NEVER MOVES and this rule is the whole of it — a positioning
+   context in the same place the stage was, which changes nothing about where
+   anything sits. The grain above stays outside it on purpose: it belongs to the
+   pinned screen, and a grain that travelled with the drawing would be the one
+   thing on a held screen that gave the trick away. */
+.wanted-canvas {
+  position: absolute;
+  inset: 0;
 }
 
 /* --------------------------------------------------------------------------
@@ -14627,6 +15348,110 @@ img#front {
    Scale 0 and not opacity: these arrive from nowhere, and a box that fades in is
    a box that was always there. The <noscript> escape in components/WeWanted
    lifts exactly this rule. */
+/* --------------------------------------------------------------------------
+   THE CANVAS — the claims standing along the sentence
+   --------------------------------------------------------------------------
+   THIS IS THE HOME PAGE'S PINNING SECTION, BORROWED WHOLE. There the section
+   holds still and one element moves: .giant-canvas, several viewports wide,
+   carrying the phrases and every piece of scenery on it, with a camera walking
+   along it. Here the canvas is .wanted-canvas, the sentence is drawn once along
+   the wave and left there, and the four claims stand at fixed places beside it.
+   The reader gets one at a time because that is all the window holds, and nothing
+   arrives — a prop on a canvas is simply THERE, at full size, in its place, and
+   what changes is where the reader is looking.
+
+   THIS RULE IS THE PLACES; the translate that walks past them is the rule below
+   it, on the canvas itself.
+
+   BOTH FIGURES ARE FRACTIONS OF --wanted-travel, which crawl.ts measures and
+   publishes in vw: how wide the canvas actually is — the distance across the
+   screen from the sentence's tail to where its full stop is meant to park, read
+   off the path as points. So the claims spread themselves over whatever the
+   sentence does, at whatever type size, in whatever font actually loaded; there
+   is no pitch in vw here to go quietly out of step with it.
+
+   THE FRACTIONS ARE THE COMPOSITION, and they are read as WHEN. The camera goes
+   from 0 to the full travel, and a claim is centred in the window at the moment
+   the camera reaches its fraction — so 0.12, 0.39, 0.66 and 0.93 are four claims
+   evenly spread across the run with neither end of it empty. At rest, box 01 is
+   a fifth of the way into the right edge and cut by the crop, which is the base
+   arrangement's own line about the row bleeding off its edges; at the end of the
+   run, box 04 has just crossed the middle. There is no frame of the pin with
+   nothing standing on it.
+
+   --box-x IS WHERE A BOX IS CENTRED AND NOT WHERE IT STARTS, which is why half
+   its own width comes off: the fractions are about when a claim is IN FRONT OF
+   the reader, and a box's left edge is not. The 50vw is the window's middle, and
+   it is the only part of this that is about the SCREEN rather than the canvas.
+
+   AND THE VERTICAL SCATTER IS UNTOUCHED. --y is hand-placed per box and is what
+   stops the four reading as a row; on a canvas it does the job --gy does for the
+   pinning section's scenery, which is to say the claims sit at different heights
+   as well as different distances.
+
+   THE FALLBACK IS NOT DECORATION. --wanted-travel does not exist until the
+   timeline is built, which is behind a font wait; the row would otherwise
+   resolve to nothing at all for those frames and stack every box in the middle
+   of the window. 400vw is about what the phone's sentence measures, so the
+   pre-measured pose is the measured one to within a hair.
+
+   IT HANGS OFF data-pan AND NOT OFF THE BREAKPOINT. The attribute is set by
+   crawl.ts on the one path where something is actually walking the canvas — see
+   the note there. A reader who has asked for less motion, and a page whose script
+   never ran, both keep the stacked arrangement instead, because a canvas four
+   screens wide with nothing to walk it is three claims parked off the right edge
+   for ever. */
+.we-wanted[data-pan="live"] .wanted-boxes {
+  --box-x: calc(
+    50vw - var(--box-w) / 2 + var(--wanted-travel, 400vw) * 0.12
+  );
+  --box-pitch: calc(var(--wanted-travel, 400vw) * 0.27);
+}
+
+/* AND THE CAMERA IS ONE TRANSFORM ON ONE ELEMENT, which is the whole of the
+   mechanism and the whole reason for the branch. The sentence is drawn once
+   along the wave and left alone; the boxes stand where the rule above puts them;
+   this slides the box they are all inside. Nothing moves relative to anything
+   else, so the drawing keeps the shape it was drawn in and the reader is the
+   only thing that travels.
+
+   WHICH IS WHAT THE CRAWL CANNOT DO. There the glyphs slide ALONG the wave, and
+   a glyph's speed across the screen is its speed along the arc divided by the
+   local slope — so over a sentence long enough to cross several cycles the words
+   bunch and stretch as they pass, and anything beside them at one fixed speed
+   drifts. See pans() in WeWanted/crawl.ts, where that is argued in full.
+
+   `translate` and not `transform`: .wanted-band carries a transform of its own
+   to centre itself and the boxes carry one wherever the pop still runs —
+   separate properties that compose rather than one that would have to be
+   composed by hand. The belt's rows and the curtain's sheet are moved this way
+   for the same reason.
+
+   will-change HERE AND NOT ON THE BASE RULE, because this is the case the hint
+   is actually for: a transform that changes on every scrolled frame for the
+   whole length of the section. On the desktop the box never moves and a promoted
+   layer would be a cost with nothing to show for it. .giant-canvas takes the
+   hint unconditionally because it always moves. */
+.we-wanted[data-pan="live"] .wanted-canvas {
+  translate: var(--wanted-x, 0vw) 0;
+  will-change: transform;
+}
+
+/* AND THE STACK'S TWO OVERRIDES COME OFF WITH IT. The standing-still arrangement
+   wraps boxes 03 and 04 onto a second row — it re-states their `left` off --n
+   minus two and drops them by a fifth of the stage — and both are still sitting
+   there when the canvas is live. Left alone they put 03 and 04 back at the head
+   of the run, two pitches early and a screen low.
+
+   FOUR CLASSES DEEP because that is what it takes: the rules being beaten are
+   .wanted-box:nth-child(n + 3), which is two, and a bare restatement here would
+   lose to them on order however late it comes. The `left` is the base rule's own
+   line, given back. */
+.we-wanted[data-pan="live"] .wanted-box:nth-child(n + 3) {
+  left: calc(var(--box-x) + var(--box-pitch) * var(--n));
+  margin-top: 0;
+}
+
 .we-wanted .wanted-box {
   transform: scale(0);
 }
@@ -14650,17 +15475,648 @@ img#front {
 }
 
 /* --------------------------------------------------------------------------
+   THE WAY OUT — the closing call to action
+   --------------------------------------------------------------------------
+   Markup in components/AboutCta. Three things run in it and each has its own
+   file: the claim's letters and the pill's pop are AboutCta/reveal.ts, the small
+   line above them is the site's shared body-copy entrance
+   (components/bodyReveal.ts), and the curtain's drift is AboutCta/parallax.ts.
+
+   IT IS THE HOME PAGE'S OPENING BLOCK, PRINTED AT THE FOOT OF THIS ONE — a
+   small line, a three-line claim under it, a pill under that, and the tapes
+   standing in a crate at the bottom of the screen. Every figure below comes off
+   the drawing, in vw against the 1440 design width like the rest of this
+   stylesheet, with the pixel source beside it.
+
+   THE DRAWING PINS FOUR THINGS AND THE REST FALLS OUT OF THEM: the sheet is
+   1649 deep, the small line starts 174 down it, the headline's column is 212 in
+   from each edge, and the pill's two ends are 54 of air before the label and a
+   107 disc with 13 around it at the other. THREE FIGURES ARE NOT ON THE DRAWING
+   and each says so where it is set: the air under the headline, the gap between
+   the label and the disc, and where the crate's top edge lands.
+   -------------------------------------------------------------------------- */
+
+/* THE SHEET. A box of one declared height with a photograph laid over it — so
+   the section's own colour is only ever seen in the two bottom corners, past
+   the curve of the sheet above it. That is what --cta-arc is for, and it is why
+   the green is here rather than left to the page.
+
+   THE HEIGHT IS THE DRAWING'S, not the sum of what is in it. 1649 against a
+   1440 sheet is a section a good deal taller than a window, and it has to be:
+   the copy takes the top 720 of it and everything below that is the room the
+   crate stands in. A section sized by its copy would be a headline with a
+   photograph jammed under it.
+
+   overflow: clip AND NOT hidden, the call every section on this site makes when
+   something hangs out of it: hidden on one axis makes the box a scroll
+   container on the other, and a second scroller on a page driven by Lenis is a
+   scroller fighting the smooth scroll for the wheel. There is real overflow
+   here — see .about-cta-front, which hangs a third of itself past the bottom
+   edge. */
+.about-cta {
+  /* The sheet's depth. */
+  --cta-h: 114.514vw; /* 1649px */
+
+  /* WHERE THE CRATE'S FILE STARTS, and the arithmetic is worth writing out
+     because the number does not look like anything on the drawing.
+
+     What the composition wants is the OPP TAPE'S TOP EDGE at 737 — just clear
+     of the pill's foot at 722, which is the whole relationship: the tape rises
+     to meet the button and stops short of it. What this property positions is
+     the FILE, and the file carries 878 rows of fully transparent black over
+     that tape — 27.94% of its 3143 — which at the width it is drawn (the full
+     1440) is 549 of empty picture. So the box starts 549 higher than the
+     artwork does: 737 - 549 = 188.
+
+     RE-EXPORT THE ARTWORK WITH THAT BAND TRIMMED and this becomes 737 (51.181
+     vw) and nothing else changes. It is the one figure in this section that is
+     about the file rather than about the drawing. */
+  --cta-front-top: 13.056vw; /* 188px */
+
+  /* THE ARC ALONG THE BOTTOM. How far the sheet's two corners rise above its
+     own middle — the dark green in the corners of the drawing is the section
+     showing past it.
+
+     A RADIUS AND NOT --edge-bite, and the difference is which way the curve
+     bends. The footer's top edge and the pinning section's brow are BITTEN
+     into — concave, corners standing proud of a valley — and that shape can
+     only be a mask. This one bulges DOWNWARD, which is what a corner radius
+     already is; the hero's lime field, the preloader's sheets and the slider's
+     colour wipe are all the same call. Set it to 0 for a square foot. */
+  --cta-arc: 3.333vw; /* 48px */
+
+  /* THE CURTAIN'S OVERHANG — how much taller than the sheet the photograph is
+     cut, half of it hanging above and half below.
+
+     IT IS THE PARALLAX'S WHOLE TRAVEL. AboutCta/parallax.ts reads this back off
+     the layout rather than being told it, so the drift is whatever the overhang
+     actually is and the picture can never be driven past its own edge and let
+     the green show through. Raise it for a longer drift, set it to 0 to stop the
+     curtain dead — nothing else has to change either way.
+
+     1000 AGAINST A 1649 SHEET, AND IT WAS 200, THEN 600. That is more than a third of the
+     picture spent on the drift, where the closing key visual spends a tenth —
+     and the difference is the ARTWORK, not the taste. That one is a photograph
+     of a room: move it fifty pixels and every edge in it moves against the
+     frame. This is a curtain of vertical folds, which is very nearly the one
+     image a vertical drift cannot be seen on — nothing in it changes along the
+     axis it travels, so 200 was a picture that moved and a section that looked
+     completely still. The travel had to buy back in distance what the subject
+     refuses to give in detail.
+
+     AND THE ZOOM IS THE OTHER HALF OF THAT, for the same reason — see
+     --cta-zoom below. Folds spreading apart is a change the eye catches on this
+     picture where sliding is not. */
+  --cta-drift: 69.444vw; /* 1000px */
+
+  /* HOW MUCH BIGGER THE CURTAIN IS AT THE TOP OF ITS CROSSING THAN AT THE
+     BOTTOM. AboutCta/parallax.ts winds this from 1 + the figure down to 1 as the
+     section crosses the window, on the same t the drift is spent on, and the
+     transform below composes the two.
+
+     WHY THERE IS A ZOOM AT ALL, when no other parallax on this site has one: a
+     curtain of vertical folds gives a vertical slide almost nothing to show. The
+     folds spreading is a change on the axis the picture actually has detail on,
+     and six per cent over a whole crossing is slow enough that it reads as the
+     picture being nearer at the start rather than as a zoom.
+
+     NEVER BELOW 1. The image is cover-cropped to the sheet at exactly 1, so
+     anything under it would pull the picture off its own edges and show the
+     section's green down the sides. It is a ceiling that moves, not a range
+     around 1. */
+  --cta-zoom-gain: 0.12;
+
+  /* AND HOW FAR THE CRATE GOES THE OTHER WAY.
+   *
+   * THIS IS THE ONE THAT MAKES THE REST OF IT VISIBLE, and it is worth being
+   * plain about why. A parallax is not a picture moving; it is two pictures
+   * moving at DIFFERENT RATES, and the eye reads the difference between them
+   * rather than either one on its own. The curtain by itself — a flat green
+   * field with no edge in it — was a layer with nothing to be measured against,
+   * so a thousand pixels of drift looked like a still photograph. Forty pixels
+   * on the crate, against a curtain going the other way, is legible immediately:
+   * the tapes and the fruit have edges, and every one of them moves against the
+   * folds behind them.
+   *
+   * IT WAS ZERO ON PURPOSE BEFORE THIS. The argument was that the crate has an
+   * APPOINTMENT — its top edge is placed to clear the pill's foot by 15 — and a
+   * crate that drifted would break it. That argument was right and this is
+   * bounded by it: 40 is a fortieth of the artwork's height, the crate is only
+   * ever high when the section is on its way OUT (which is when the pill is at
+   * the top of the window or past it), and the sheet paints behind the copy
+   * anyway, so the worst case is a tape passing behind a white pill rather than
+   * over it.
+   *
+   * OPPOSITE IN SIGN TO THE CURTAIN, which is the whole of the effect: the
+   * curtain gives back some of every scrolled pixel and the crate takes a few
+   * extra, so one reads as behind the sheet and the other as standing in front
+   * of it. Set it to 0 to put the crate back on the page and leave the backdrop
+   * drifting alone.
+   *
+   * A SHARE OF THE CRATE'S OWN HEIGHT, NOT A LENGTH, and that is not a stylistic
+   * preference — it is the only form that works. AboutCta/parallax.ts reads this
+   * property back through getComputedStyle, and a custom property that has not
+   * been registered with @property comes back as the TOKEN IT WAS WRITTEN AS: a
+   * vw here would arrive at the script as the literal string "2.778vw", whose
+   * leading number is 2.778, and the crate would drift three pixels instead of
+   * forty. A bare ratio has no unit to lose.
+   *
+   * It is also the better statement. NEXT UP's label writes its own travel as a
+   * share of its box and says why: a shared absolute makes a bigger object
+   * travel visibly less far relative to itself. 0.02 of a 1964-tall artwork is
+   * the 40 this was, and it stays 40's worth of drift at any window. */
+  --cta-front-drift: 0.02; /* of the crate's own height — about 40px at 1440 */
+
+  position: relative;
+  width: 100%;
+  height: var(--cta-h);
+  background: var(--about-bg);
+  overflow: clip;
+}
+
+/* THE PHOTOGRAPH'S BOX — the window the curtain drifts inside and the edge the
+ * crate is cropped by.
+ *
+ * ITS OWN BOX RATHER THAN THE SECTION'S, for three reasons that arrive
+ * together. The crate hangs out of the bottom and has to be cropped by the same
+ * edge the curtain is, so the two belong in one box; that edge is an arc, which
+ * on the section would round off the dark green as well and show whatever is
+ * behind the page through the corners; and a picture that drifts needs
+ * something with an edge to drift INSIDE, or it is just a picture moving down
+ * the page.
+ *
+ * IT NEVER MOVES, AND THAT IS THE POINT OF IT. Everything on this section is
+ * measured against this box's edges — the copy's 174, the crate's top, the arc
+ * along the foot — so what drifts is the picture, never the frame. See
+ * AboutCta/parallax.ts, which is the closing key visual's argument restated.
+ */
+.about-cta-sheet {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  border-radius: 0 0 50% 50% / 0 0 var(--cta-arc) var(--cta-arc);
+}
+
+/* THE CURTAIN, CUT TALLER THAN ITS WINDOW AND CENTRED IN IT. The overhang is
+   --cta-drift and it is split evenly above and below by the centring, which is
+   what gives the drift somewhere to go in both directions.
+
+   object-fit: cover, because a photograph forced to a box of another aspect is
+   a stretched photograph. This is the one image treatment on the site that is
+   not the paper grain's width-fit-and-tile — that one is a TILE laid so it
+   never stretches, and this is a picture of a specific curtain that has to fill
+   the sheet.
+
+   THE TRANSFORM CARRIES THE CENTRING, THE DRIFT AND THE ZOOM, which is why both
+   of the moving parts are custom properties and not a transform written by the
+   script: parallax.ts sets --cta-pan and --cta-zoom and this composes them, so
+   the -50% cannot be silently taken over. Both default to their resting values,
+   so with no script the curtain is simply centred at its cover size.
+
+   THE ORDER IS LOAD-BEARING. Transform functions apply right to left, so the
+   scale happens first and the translate is spent in UNSCALED pixels — which is
+   what lets parallax.ts talk about the pan in the same units it measured the
+   overhang in. Swap the two and the drift would quietly grow with the zoom. */
+.about-cta-bg {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: calc(100% + var(--cta-drift));
+  object-fit: cover;
+  transform: translate3d(0, calc(-50% + var(--cta-pan, 0px)), 0)
+    scale(var(--cta-zoom, 1));
+}
+
+/* THE CRATE, FULL BLEED AND CROPPED BY THE SHEET'S FOOT. Width 100% and the
+   height left to the file, which at 1440 makes it 1964 tall against the 1461 of
+   sheet below its top edge — so the bottom third is off the page and what the
+   reader sees is fruit running past the edge rather than a photograph sitting
+   in the middle of a green screen.
+
+   NO height AND NO object-fit. The file's own aspect is the drawing's, so the
+   one figure to set is the width; anything that made this box a shape of its
+   own would be a second opinion about the artwork's proportions.
+
+   AND IT DRIFTS A LITTLE, THE OTHER WAY. Forty pixels against the curtain's
+   thousand, which is what gives the backdrop something to be measured against —
+   see --cta-front-drift above, where the whole argument is, including why it
+   used to be nothing at all. */
+.about-cta-front {
+  position: absolute;
+  top: var(--cta-front-top);
+  left: 0;
+  width: 100%;
+  height: auto;
+
+  /* The counter-drift, composed here for the reason the curtain's is: the
+     script sets a custom property and the stylesheet owns the transform. It
+     defaults to 0, so with no script the crate sits exactly where
+     --cta-front-top puts it. */
+  transform: translate3d(0, var(--cta-front-pan, 0px), 0);
+}
+
+/* THE COPY, AND IT IS A BOX OF ITS OWN SO THAT IT PAINTS OVER THE SHEET. The
+   sheet is positioned and this is not, and a positioned box paints over an
+   in-flow one whatever order the two are written in — so without this the
+   curtain would be printed on top of the headline. One wrapper settles it for
+   all three pieces.
+
+   CENTRED, ALL THREE OF THEM. The claim is centred on its own rows rather than
+   by this — see .about-cta-title .line, which has to say it again in the flex
+   row's own terms — but the small line and the pill take it from here.
+
+   The column is 212 in from each edge, which is what the claim is set to; the
+   two insets being equal is what makes centred-in-the-column and
+   centred-on-the-page the same place. */
+.about-cta-copy {
+  position: relative;
+
+  /* 174 down to the small line — the drawing's one vertical measurement in the
+     top half of the sheet. There is no padding at the foot: the section's
+     height is declared, and what is under the pill is the crate's business. */
+  padding-top: 12.083vw; /* 174px */
+
+  /* The headline's column. */
+  padding-inline: 14.722vw; /* 212px */
+
+  color: var(--about-ink);
+  text-align: center;
+}
+
+/* THE BELIEF. The site's body face against the claim's condensed Futura, and
+   that is the whole reason it is here: it is the one line on this screen a
+   reader READS, and it is set in the face the rest of the site reads in — which
+   is also what decides how it arrives. .body-copy is the opt-in
+   components/bodyReveal.ts scans for, and the words inside it are already the
+   two boxes that entrance needs.
+
+   --body-foot BECAUSE THE LEADING IS 1.0 AND THE MASK IS THE LINE BOX. At
+   line-height 1 there is no half-leading under the type for a descender to sit
+   in, so a mask flush to the box shaves the tail off a `g`. This line has no
+   descender in it today; the copy is not a promise. The matching negative
+   margin hands the room straight back, so the 174 above still measures to the
+   same place. */
+.about-cta-kicker {
+  --body-foot: 0.2em;
+
+  font-family: var(--font-body);
+  font-size: 1.667vw; /* 24px */
+  font-weight: 700;
+  line-height: 1.667vw; /* 24px — 100% */
+  letter-spacing: -0.017vw; /* -0.24px */
+}
+
+/* THE CLAIM. 150 on 115 — leading TIGHTER than the type, which is what makes
+   three lines read as one block of colour rather than as three sentences, and
+   it is why the lines have to be spans: at this leading a browser's own break
+   would put two words on a line and one on the next.
+
+   THE AIR ABOVE IT IS NOT ON THE DRAWING. What the drawing pins is the small
+   line's own place (174, above); the gap under it is what lands the claim's
+   cap-line where the design has it once the negative leading has pulled the
+   line box up over the type. 30 is that figure. */
+.about-cta-title {
+  margin-top: 2.083vw; /* 30px */
+  font-family: var(--font-heading);
+  font-size: 10.417vw; /* 150px */
+  font-weight: 800;
+  line-height: 7.986vw; /* 115px — 76.667% */
+  letter-spacing: -0.313vw; /* -4.5px */
+  text-transform: uppercase;
+}
+
+/* THE ROWS. Flex rather than block, for the reason every row of split letters
+   on this site is: .clip below carries overflow: hidden, and an inline-block
+   whose overflow is not visible takes its baseline from its bottom margin edge
+   rather than from the text inside it — which would hang every letter above the
+   baseline and grow each line box by the font's whole descent, pushing the
+   three lines apart for no visible reason. Flex items have no baseline to get
+   wrong.
+
+   justify-content AND NOT THE COPY'S text-align, which is the whole of the
+   centring: text-align does not reach flex items, and the three lines are three
+   different widths. The closing key visual's headline is centred the same way
+   and says so in the same words. */
+.about-cta-title .line {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* Split letters — the closing key visual's boxes and its headroom, because this
+   is that setting again: line-height well under 1 (0.767 here), so a letter's
+   content box is shorter than the capital standing in it and a mask flush to
+   the box would shave the tops off. The padding gives it room on three sides and
+   the matching negative margins hand that room straight back to the layout, so
+   the rows are the width and height they always were.
+
+   Nothing at the bottom — the mask's lower edge is what the letters slide out
+   through, and it wants to sit tight on the baseline. */
+.about-cta-title .clip {
+  display: block;
+  flex: 0 0 auto; /* these are letters, not a layout — never shrink one */
+  overflow: hidden;
+  padding: 0.2em 0.06em 0;
+  margin: -0.2em -0.06em 0;
+}
+
+/* Parked, and handed over exactly as the hero's and the opening screen's are:
+   the stylesheet holds the letters under their masks until AboutCta/reveal.ts
+   sets data-reveal, which lifts this and lets GSAP own the whole transform. A
+   percentage translate coming from CSS is reported as resolved px, and GSAP
+   would ADD its yPercent to it and leave every letter a full height low.
+
+   130 for the reason the hero gives: capitals overshoot their own box, so a
+   letter moved exactly its own height still leaves a hairline of tops at the
+   mask's edge. REVEAL.HIDDEN is the same figure and the two have to agree. */
+.about-cta-title .char {
+  display: block;
+  transform: translateY(130%);
+}
+
+.about-cta[data-reveal="live"] .about-cta-title .char {
+  transform: none;
+}
+
+/* THE PILL, AND EVERY LENGTH IN IT IS AN em OF ITS OWN TYPE.
+ *
+ * This is the one object on the page whose parts are all fixed to each other:
+ * 54 of air, a 25 line of type, 54 of air is a 133 pill, and a 107 disc with 13
+ * around it is the same 133 read the other way. Two closed sums, and neither
+ * survives one of its terms being restated on its own. So the FONT SIZE is the
+ * only figure here in vw and everything else is a ratio of it — the phone block
+ * sets one number and the whole pill arrives re-drawn.
+ *
+ * The em values, and their pixels at the 35 the type is set at: 3.8em is 133,
+ * 1.543em is 54, 0.371em is 13, 3.057em is 107, 0.714em is the 25 leading.
+ *
+ * THE GAP IS THE ONE FIGURE THE DRAWING DOES NOT PIN. The two ends are measured
+ * and the middle is whatever the label happens to be — so 2em (70) is what puts
+ * the pill at the width the drawing shows with this label in it, and it is the
+ * figure to move if the words change. Nothing else in the pill depends on it.
+ *
+ * A RADIUS OF HALF THE HEIGHT rather than a large round number: the ends are
+ * true semicircles, which is what makes the disc's 13 read as an even margin
+ * all the way round its end of the pill rather than as three different gaps. */
+.about-cta-button {
+  /* THE PILL'S FOUR PARTS, NAMED — because the hover MIRRORS them and a mirror
+     written out in second copies is a mirror that goes crooked the first time
+     one of the four is retuned. Every length in the rule below reads one of
+     these, and so do the two journeys the hover is made of.
+
+     At rest, left to right: 54 of air, the label, 70 of gap, the 107 disc, 13
+     to the pill's end. Under the pointer that reads backwards: 13, the disc, 70,
+     the label, 54 — the same four figures in the other order, which is why the
+     pill is exactly as wide either way and nothing reflows. */
+  --cta-pad: 1.543em; /* 54px — the air before the label */
+  --cta-inset: 0.371em; /* 13px — the disc's margin at its own end */
+  --cta-disc: 3.057em; /* 107px */
+  --cta-gap: 2em; /* 70px — see the note on the gap below */
+
+  /* WHAT EACH OF THE THREE MOVING PARTS HAS TO TRAVEL, derived from those four
+     and never typed as a figure of its own.
+
+     --cta-swap is out of the pill: the disc's own width plus its margin, which
+     is exactly enough to clear the end it leaves through, and exactly enough to
+     park the arriving one out of sight beyond the other end.
+
+     --cta-shift is what the label moves: the difference between where it starts
+     (--cta-pad from the left) and where the mirror puts it (past the inset, the
+     disc and the gap). It is the arithmetic of the swap and nothing else. */
+  --cta-swap: calc(var(--cta-disc) + var(--cta-inset)); /* 120px */
+  --cta-shift: calc(
+    var(--cta-inset) + var(--cta-disc) + var(--cta-gap) - var(--cta-pad)
+  ); /* 136px */
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+
+  /* THE CLIP THAT MAKES THE HOVER A HOVER. Both discs travel out of the pill —
+     one to the right, one in from beyond the left — and without this they would
+     simply be seen sliding about on the curtain outside a button that is not
+     the shape it says it is. With a radius this large the clip is the pill's own
+     outline, so a disc leaves through a curved end rather than a corner. */
+  overflow: hidden;
+  gap: var(--cta-gap);
+  height: 3.8em; /* 133px */
+  padding-left: var(--cta-pad);
+  padding-right: var(--cta-inset);
+  border-radius: 1.9em;
+  background: #fff;
+  color: var(--about-bg);
+  font-family: var(--font-heading);
+  font-size: 2.431vw; /* 35px */
+  font-weight: 800;
+  line-height: 0.714em; /* 25px */
+  letter-spacing: -0.03em; /* -1.05px */
+  text-transform: capitalize;
+  text-decoration: none;
+
+  /* The pill is centred by the copy's text-align, which reaches it because it is
+     an inline-flex box; the margin is what puts air between it and the claim's
+     last line. NOT pinned on the drawing either — the negative leading leaves
+     about 20 of the line box empty under the last baseline, and 16 on top of
+     that is where the design has the pill's top edge. It is also the figure the
+     crate is measured against: the tape's top edge clears the pill's foot by 15,
+     so moving this moves --cta-front-top with it. */
+  margin-top: 1.111vw; /* 16px */
+
+  /* WHERE THE PILL WAITS, and the hand-off is the site's usual one: the
+     stylesheet holds it at nothing until AboutCta/reveal.ts sets data-reveal,
+     which lifts this and lets GSAP own the whole thing. A scale coming from CSS
+     is reported as a resolved matrix and GSAP would MULTIPLY its own scale by
+     it; WE WANTED TO BE.'s cards make the same statement in the same words.
+
+     0.86 AND NOT 0, where those cards start at nothing. A card popping out of
+     nowhere is a drawing appearing; this is a BUTTON, and one that grows from a
+     point reads as a notification rather than as part of the composition.
+     CTA_REVEAL.PILL_FROM is the same figure and the two have to agree. */
+  opacity: 0;
+  transform: scale(0.86);
+}
+
+.about-cta[data-reveal="live"] .about-cta-button {
+  opacity: 1;
+  transform: none;
+}
+
+/* THE DISC AT THE END. Lime on white, which is the page's pairing a third time:
+   lime type on the curtain above it, green type on this white, and the site's
+   lime back again inside the disc. */
+.about-cta-disc {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--cta-disc);
+  height: var(--cta-disc);
+  border-radius: 50%;
+  background: var(--about-ink);
+  color: var(--about-bg);
+}
+
+.about-cta-disc svg {
+  width: 0.857em; /* 30px */
+  height: 0.857em;
+}
+
+/* THE HOVER — THE PILL READ BACKWARDS.
+ *
+ * At rest it is what the drawing shows: air, the label, the gap, the disc at the
+ * right-hand end. Under the pointer the disc leaves through the RIGHT end, one
+ * arrives from beyond the LEFT, and it does not go back where the first one was
+ * — it stops at the left end and the label is pushed across to make room for it.
+ * What settles is the same four measurements in the opposite order, so the pill
+ * is exactly as wide as it was and nothing on the page moves around it.
+ *
+ * IT IS ONE CIRCLE GOING ROUND THE OUTSIDE and two elements in the DOM, because
+ * a single element cannot be on both sides of a journey it has not made yet.
+ * Both travel --cta-swap: the leaving one out through its own end, the arriving
+ * one in from beyond the other, which are the same distance because the disc's
+ * margin is the same at both ends of the pill. They cross in opposite directions
+ * on the same clock, and the label moves with them rather than after them — one
+ * gesture, three parts.
+ *
+ * THE LABEL IS LIFTED OVER THE DISCS. It ends up clear of both, but on the way
+ * the arriving disc is briefly under where the label was standing; over the type
+ * it would read as the words being wiped, under it as a circle passing behind
+ * them. Dark green on lime is the pairing this site prints everywhere, so
+ * nothing is unreadable in the frames where they cross.
+ *
+ * NOTHING HERE TOUCHES THE PILL'S OWN TRANSFORM, and that is not a matter of
+ * taste: GSAP leaves an inline transform on the button when the entrance pop
+ * lands, and an inline style beats a stylesheet's :hover. A lift written here
+ * would work until the section had arrived and then silently stop — the worst of
+ * the three possible outcomes. The label and the discs are touched by nothing
+ * else, so the interaction lives on them.
+ *
+ * A pill this size with no hover state at all reads as a picture of a button. */
+.about-cta-label {
+  position: relative;
+  z-index: 1;
+}
+
+/* The arriving disc. Absolutely positioned and out of the layout entirely, so
+   the pill is the same size whether it is moving or not — the resting disc is
+   the flex item, and it is what gives the pill its right-hand end.
+
+   Parked at the LEFT end's own inset and pushed one --cta-swap past it, which
+   puts it exactly out of sight beyond the pill's left edge. The vertical
+   centring is a margin rather than a second translate, so the transform on this
+   element stays one axis and one number — the hover's. */
+.about-cta-next {
+  position: absolute;
+  top: 50%;
+  left: var(--cta-inset);
+  margin-top: calc(var(--cta-disc) / -2);
+  transform: translateX(calc(var(--cta-swap) * -1));
+}
+
+.about-cta-disc,
+.about-cta-label {
+  /* Long enough to be a journey rather than a jump, and eased hard at both ends
+     so the circle leaves and lands rather than sliding at a constant speed. The
+     label is on the same clock: the room is made exactly as the disc arrives to
+     take it. */
+  transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.about-cta-button:hover .about-cta-disc {
+  transform: translateX(var(--cta-swap));
+}
+
+.about-cta-button:hover .about-cta-next {
+  transform: translateX(0);
+}
+
+.about-cta-button:hover .about-cta-label {
+  transform: translateX(var(--cta-shift));
+}
+
+/* THE WHOLE SECTION, STILL. Thirty-eight letters flying in from nowhere, a
+   button springing out of the page and a photograph sliding behind the type are
+   exactly what this setting is asking about — and each of the three files says
+   so on its own, so this is the window BEFORE hydration, when the stylesheet is
+   holding the letters and the pill down by itself. Every section on this site
+   makes the same pair of statements.
+
+   THE HOVER STAYS, and only its tween goes: it is feedback, not motion, and a
+   reader who has asked for less of the second still needs the first. The pill
+   turns itself round on the frame the pointer lands rather than travelling
+   there, which is still the whole of the statement it was making. */
+@media (prefers-reduced-motion: reduce) {
+  .about-cta-title .char {
+    transform: none;
+  }
+
+  .about-cta-button {
+    opacity: 1;
+    transform: none;
+  }
+
+  .about-cta-disc,
+  .about-cta-label {
+    transition: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
    About — the phone
    --------------------------------------------------------------------------
-   THREE OF THE FIVE SECTIONS NEED NOTHING, and knowing which is most of this
-   block. The opening screen is an empty green sheet a window tall. THE
-   REIMAGINE CURTAIN is already written against a unit that is the smaller of a
-   vw and a share of the screen — --rei-u — so its paper is the sheet's width at
-   any window and everything drawn on it is a fraction of the paper. And WE
-   WANTED TO BE.'s sentence is set in viewBox units inside a band with an aspect
-   ratio, which scales with the width by construction. Only the belt, the
-   curtain's HEADLINE and the four boxes are written in flat vw, and those are
-   the three below.
+   ALL SIX SECTIONS ARE HERE NOW, and the one that changed is the first: this
+   block used to open "THREE OF THE SIX NEED NOTHING — the opening screen is an
+   empty green sheet a window tall". It is not empty any more. It carries the
+   page's headline, the line that prises itself open under it, the note, and a
+   carton with a hand coming out of it, and every figure in that arrangement was
+   a share of 1440. So the opening screen leads this block rather than being
+   excused from it.
+
+   WHAT EACH OF THE SIX NEEDS, in one line each:
+
+     the opening screen  re-authored whole — the sheet is a WINDOW tall here and
+                         72.222vw there, which is not the same drawing at a
+                         different size, and the phone's has two things in it the
+                         desktop's does not (see .about-clipping)
+     the belt            a height problem and not a width one; see below
+     the curtain         its headline WRAPS on a phone, which is where the type
+                         size comes from
+     the paper           already written against --rei-u, so only the copy's own
+                         size and inset are restated
+     WE WANTED TO BE.    the sentence goes GIANT, which is the home page's
+                         pinning section's answer to the same question
+     the way out         re-authored against 390, argued at the foot of this
+                         block
+
+   THE OPENING SCREEN, AND THE SHAPE OF THE PROBLEM. At 1440 the sheet is
+   72.222vw — 1040px against a 900px window, so it is a little TALLER than the
+   screen and the composition fills it corner to corner. On a phone 72.222vw is
+   282px: a band across the top fifth of the window with the whole of the belt's
+   dark green under it, and a headline, a kicker, a note and a carton all inside
+   it at a quarter of their size. Everything below is that band opened out to a
+   window and the drawing re-placed in it.
+
+   AND THE SHEET IS 165vw, WHICH IS SHORTER THAN THE WINDOW ON PURPOSE. Every
+   phone this site is drawn for is 178vw to 216vw tall, so the whole composition
+   — headline, kicker, cutting, note, carton and the roll standing out of it — is
+   inside the first screen with the belt's first pills showing under it. The
+   reader ARRIVES on the finished picture rather than scrolling it into being,
+   and that one fact is what --space-run: 0 below follows from.
+
+   IT IS A FLAT FIGURE AND NOT --screen, which is the opposite call from the
+   desktop's and the right one here. A box cut to the window is a box whose
+   drawing changes shape between a 178 phone and a 216 one; this is a
+   COMPOSITION with things placed down it, and it wants to be the same drawing on
+   both with a different amount of the belt showing under it. --screen belongs to
+   boxes that mean "the window", and this one no longer does.
+
+   TWO ANCHORS AND NOT ONE, which is the only structural decision in it. The type
+   and the middle band hang off the TOP of the sheet, under the masthead, because
+   that is what the reader arrives on and it must not move; the carton, the hand
+   and the shophouse hang off the BOTTOM, because the carton is standing on the
+   floor of the screen. With the height fixed the two anchors resolve to one
+   drawing — what they buy is that either end can be re-tuned without the other
+   end's figures being re-counted.
 
    THE BELT IS A HEIGHT PROBLEM AND NOT A WIDTH ONE. Its rows run past the
    window sideways, so nothing in it can be too wide — a row is as long as it
@@ -14676,6 +16132,179 @@ img#front {
    the belt itself. A custom property inherits, so three declarations on the
    section reach every pill's copy without a single selector for it. */
 @media (max-width: 767px) {
+  /* THE SHEET, OPENED OUT TO A WINDOW. max() and not a bare --screen: the
+     drawing below is 190vw of composition and a 375 x 667 phone is 178vw, so on
+     the shortest screens this site is drawn for the section runs a little past
+     the fold rather than crushing the middle band into the carton. Every phone
+     taller than the drawing takes --screen exactly and the extra opens as lime.
+
+     THE PADDING IS THE MASTHEAD PLUS THE AIR UNDER IT. The badge is 18vw wide at
+     3vw of inset here (see Tokens), so --masthead is about 14vw, and the design
+     stands THREE's mask 22vw under it. Written as a sum rather than as 36vw so
+     the two move together the day the badge does — which is exactly the drift
+     the rest of this site avoids by measuring against --masthead. */
+  .about-open {
+    height: 165vw;
+    padding-top: calc(var(--masthead) + 22vw);
+
+    /* THE CARTON AND EVERYTHING IN IT, at 1.65 — and the figure is pinned at
+       both ends rather than chosen to look right.
+
+       THE FRONT WALL FIXES IT. 46.736vw of a 1440 sheet is a box that takes just
+       under half the window; the design draws it at about 78vw of a phone, which
+       is the carton standing on the floor of the screen with a hand's width of
+       lime either side of it. 46.736 x 1.65 is 77.1, and there is no second
+       figure to choose because every other part of the drawing is a fraction of
+       this one.
+
+       AND THE ROLL LANDS WHERE THE DESIGN PUTS IT, which is the check rather
+       than the derivation. The hand is 36.25vw tall and rises to 14vw above the
+       floor (SPACE_OUT.HAND.UP), so at 1.65 its top comes to rest 82.9vw up the
+       sheet — about 107vw down a 190vw screen, which is where the mock stands
+       the roll: under the note, clear of the carton's flap, with the shophouse
+       beside it. Two independent measurements agreeing on one number is what
+       makes it the right one. */
+    --jack-scale: 1.65;
+
+    /* AND THE SCREEN IS HANDED OVER FINISHED RATHER THAN SCRUBBED OPEN.
+       ----------------------------------------------------------------------
+       THE SHEET IS SHORTER THAN THE WINDOW HERE, which is the whole argument.
+       165vw against a phone that is 178 to 216 means the reader ARRIVES on the
+       entire composition — headline, kicker, cutting, note, carton and all — with
+       the belt's first pills already showing under it. A scrub has nothing left
+       to reveal on a screen like that. What it would do instead is take the
+       picture apart and charge scroll to put it back: the reader lands on a
+       shut box and two words with a hole opening between them, which is the one
+       arrangement this section must not open on.
+
+       AND THE LINE DOES NOT COME APART AT ALL. The 25vw the desktop opens is a
+       hole for the roll to come up THROUGH, and on this sheet the roll tops out
+       a long way below the kicker with the note and the cutting in between — so
+       the gap would open onto nothing. ONE SHARED BELIEF is a centred line of
+       type here, first frame to last, which is what --space-gap above draws when
+       nothing is asked to move; the phone simply never asks. There is no figure
+       for it in this block for that reason.
+
+       WHAT STILL HAPPENS IS THE BOX, on a clock instead of on the wheel. 0 is
+       not an off switch — it is "this composition is given no page" — and what
+       spaceOut.ts does with that is play the one beat that has to happen, behind
+       the cover, in the order the rest of the screen arrives in. See LAND
+       there. */
+    --space-run: 0;
+  }
+
+  /* THE HEADLINE IS THE ONE THING ON THIS SCREEN THAT NEEDS NO NUMBER, and it is
+     worth writing down that this is a result rather than an omission. 19.2vw was
+     set so that GENERATION runs the window with a hair of margin at each end — a
+     WIDTH, not a type size — and a width stated in vw is the same width at 390 as
+     it is at 1440. The word still measures 97vw. The arc under it is in vw as
+     well, so the curve is the same curve.
+
+     The gap under it is not, and that is because the arc's drop is a transform:
+     GENERATION's middle falls 4.2vw below its own box without the box growing,
+     so the kicker has to be cleared of ink the layout cannot see. 4.639vw at
+     1440 is 67px under a 260px headline; 9vw here is 35px under one about the
+     same size in vw but a third of the screen's height, which is the proportion
+     the design draws. */
+  .about-hero .title {
+    gap: 9vw;
+  }
+
+  /* ONE SHARED BELIEF. 2.347vw is 9px on a phone — a line that is not small
+     type, it is unreadable type. The hero's kicker takes 4.6vw in its own phone
+     block and this is the same object doing the same job under a headline, so it
+     takes the same figure. The word space goes with it: 0.6vw of a 1440 sheet is
+     a quarter of this type's size, and 1.2vw here is the same quarter.
+
+     THE SPACED-OUT STATE IS NOT HERE — see --space-gap above. This is the line
+     at rest, which is what it is on the first frame and what it stays until the
+     reader scrolls.
+
+     THREE CLASSES DEEP, AND IT HAS TO BE. The size that actually paints on this
+     line is not .about-hero .h4's — it is a nested `& h2` inside .about-open's
+     own `& .title`, which resolves to .about-open .title h2 and out-specifies
+     the class rule that looks like it owns the type. Both say 2.347vw at this
+     width so the collision is invisible until something tries to change one of
+     them, which is exactly what this is. .giant-pinning .top-title .h2 is the
+     same trap in the same words, and it is beaten the same way: match the shape
+     and win on count. */
+  .about-hero .title .h4 {
+    font-size: 4.6vw;
+    gap: 1.2vw;
+  }
+
+  /* ------------------------------------------------------------------------
+     The middle band — the cutting, the note and its tab
+     ------------------------------------------------------------------------
+     THE THREE OF THEM ARE ONE ROW read left to right: a column torn out of a
+     paper, and beside it the note that answers it. They hang off the TOP of the
+     sheet, under the headline, for the reason the block's header gives — they
+     belong to the type, not to the floor.
+
+     90vw IS UNDER THE KICKER AND THE THREE SHARE IT. The type block ends about
+     80vw down (masthead 14, 22 of air, 25 of headline, 9 of gap, 5 of kicker,
+     plus the arc's own drop), so 90 is one line of air under it. The cutting
+     hangs lower than the note because it is the taller object and the two are
+     ranged from the same top edge, which is how two things pinned to a board sit
+     rather than how two boxes in a row do. */
+  .about-clipping {
+    display: block;
+    position: absolute;
+    /* Off the left edge on purpose — a cutting laid on the sheet rather than
+       placed in a margin. .about-open crops it (overflow: clip). */
+    left: -2vw;
+    /* RANGED FROM THE NOTE'S OWN TOP EDGE, which is the one number the two
+       share. Ranged from the same line and hanging to different depths is how
+       two things pinned to a board sit; matched at the FOOT would be how two
+       boxes in a row sit, and this is a board. Move the note and move this. */
+    top: 71vw;
+    width: 34vw;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* THE SHOPHOUSE STANDS ON THE FLOOR, WITH THE CARTON, and that is the whole
+     reason it is anchored the other way up from the cutting. It is the same
+     depth of field: the box is nearest, this is the building behind it, and the
+     two have to keep their relationship whatever the window does. Anchored to
+     the top it would drift up off the carton on a tall screen and read as a
+     third object floating in the middle of the page.
+
+     UNDER THE CARTON'S FRONT WALL. img#front is z-index 3 and this is 1, so the
+     flap crops the bottom of the photograph exactly as it crops the arm — the
+     building is BEHIND the box rather than propped against it. */
+  .about-shop {
+    display: block;
+    position: absolute;
+    right: 0;
+    bottom: 17vw;
+    width: 36vw;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* THE NOTE. 12.8vw is 50px of handwriting on a phone, which is not small
+     writing but unreadable writing — the pinning section's note makes the same
+     complaint in its own block and takes nearly the full width for it. This one
+     shares the row with the cutting, so it takes the right-hand half of it: 40vw
+     of note against 38 of cutting, with the sheet's own margin either side.
+
+     bottom: auto IS LOAD-BEARING. The desktop places this note from the FLOOR
+     (bottom: 26.181vw) and the phone places it from the type; left as it is,
+     both edges resolve and the note is stretched between them.
+
+     TWO CLASSES DEEP AND IT HAS TO BE. .about-note's own rule is far enough down
+     this file (with the other instances, and its comment says why it is filed
+     there) that a bare .about-note here would lose to it on order however late
+     this block comes. .giant-note is overridden the same way for the same
+     reason. */
+  .about-hero .about-note {
+    --hand-w: 50vw;
+    right: -1vw;
+    bottom: auto;
+    top: 71vw;
+  }
+
   .conveyor {
     /* The level, for the pills only — see above. */
     --h2-size: 9vw;
@@ -14740,12 +16369,19 @@ img#front {
      rather than a size, so it is not something a stylesheet should be reaching
      into. 70 x 8 is 560vw, which is five and a half screens of lemon and reads
      as a yellow field rather than as a mark. The gain is what corrects for the
-     resting size having tripled: 0.68 lands the grown mark at 250vw tall, a
-     shade over the 216vw an 844px phone is, so the screen is covered exactly as
-     it is at 1440 — where 8 puts the mark at twice the window's height.
+     resting size having tripled: it spends 0.68 of the belt's journey, which
+     lands the grown mark at 5.76 and 264vw tall — a little over the 216vw an
+     844px phone is, so the screen is covered exactly as it is at 1440, where 8
+     puts the mark at twice the window's height.
+
+     ON THE GROWTH AND NOT ON THE WHOLE SCALE, which is what the expression at
+     .conveyor-mark now says and did not used to: the resting pose stays the 70vw
+     drawn above whatever this is set to. This figure was chosen for the grown
+     mark and it used to shrink the resting one by the same third; see that rule,
+     where the correction is argued.
      
-     A portrait screen cannot also be covered in WIDTH at that gain: 382vw is
-     nearly four windows across, so what fills the screen is the middle of the
+     A portrait screen cannot also be covered in WIDTH at that gain: 403vw is
+     four windows across, so what fills the screen is the middle of the
      lemon rather than most of it. That is the shape of the phone rather than a
      figure to tune — covering the height is what the beat is. */
   .conveyor-mark {
@@ -14754,26 +16390,420 @@ img#front {
     --mark-gain: 0.68;
   }
 
-  /* THE CURTAIN'S HEADLINE. --reason-type is already the smaller of a width and
-     a share of the screen, which is what stops three lines of it overflowing a
-     short window — so only the WIDTH half is restated and the guard is left
-     alone. At 11.111vw the longest line, SWEET TAPE with the mark set into it,
-     measures half the sheet; 20vw takes it to about nine tenths, which is the
-     proportion it has at 1440. The roll under it is 2.34 times the type and
-     follows on its own. */
+  /* --------------------------------------------------------------------------
+     THE CURTAIN'S HEADLINE — THREE LINES BECOME FIVE
+     --------------------------------------------------------------------------
+     IT USED TO BE ONE NUMBER HERE and the number was too small, which is worth
+     writing down because the reasoning that produced it is still half right.
+     The old block set --reason-type to 20vw — "at 11.111vw the longest line,
+     SWEET TAPE with the mark set into it, measures half the sheet; 20vw takes it
+     to about nine tenths, which is the proportion it has at 1440" — and that is
+     a correct derivation of the wrong quantity. Filling nine tenths of the
+     window is what this headline does at 1440 because at 1440 the window is
+     WIDE. On a phone it is 390 across and twice that tall, and a display line
+     that fills the width fills a tenth of the screen: the curtain falls, and
+     what lands is three short rows of type marooned in a lot of lime with a roll
+     under them.
+
+     SO THE LINES BREAK AGAIN AND THE TYPE GOES UP. THAT'S WHY becomes THAT'S
+     over WHY, and SWEET, its mark and TAPE become SWEET over mark-and-TAPE —
+     five rows instead of three, each of them a third of the sheet across, at a
+     size that owns the screen. Which is the phone's answer everywhere else on
+     this page: the belt's pills go from a fifth of the screen to nearly half,
+     and WE WANTED TO BE. goes giant rather than fitting itself to the window.
+
+     THE BREAKS ARE NOT TYPED ANYWHERE. components/Reason boxes its words and
+     this block turns wrapping on; where each row turns is where the copy runs
+     out of measure, which is what a re-broken headline should be. The three
+     breaks the design draws are still in the markup and still hold — the phone
+     only adds to them. See the note at the head of that file.
+
+     24vw IS SET BY THE FIRST BREAK. THAT'S WHY measures about 3.83em, so it
+     clears an 84vw measure at anything past 22vw and the line turns; 24 puts a
+     tenth of margin on that, which is what stops a font that loads a hair wider
+     or narrower deciding how many lines this headline has. Everything else
+     fits inside it — the widest row that comes out is the mark-and-TAPE pair at
+     about 57vw.
+
+     AND THE GUARD IS RE-STRUCK, because it was written for three lines. Five
+     rows and a roll is 6.2 times the type plus the chip, and a 375 x 667 phone
+     is 178vw with 16 of arc off it — so the type cannot pass about 0.137 of the
+     screen without the sentence and the roll being cropped by the stage. It
+     bites only on the shortest screens, which is what a guard is for. */
   .reason {
-    --reason-type: min(20vw, var(--screen-lg) * 0.1778);
+    --reason-type: min(24vw, var(--screen-lg) * 0.137);
     --reason-arc: 16vw;
   }
 
-  /* FOUR ACROSS BECOME TWO AND TWO. The row is placed off one pitch times each
-     box's --n, so four boxes at a size a phone can read would need 123vw of
-     sheet. Two rows of two is the same four props scattered around the same
-     sentence with 40vw of box instead of 19 — a label a reader can actually
-     read, which is the whole reason these are here.
+  /* AND THE MEASURE IS THE THING BEING BROKEN AGAINST. Without it the sentence
+     wraps against the SHEET, which is the full width of the screen — so the
+     rows would run edge to edge with no margin, and the first break would sit
+     on a knife edge at any type size that nearly fits. 8vw either side is the
+     inset the rest of this page's phone rules stand copy on, and it is what
+     makes 24vw above a decision rather than a coincidence. */
+  .reason-wrapper {
+    padding-inline: 8vw;
+  }
 
-     THE SECOND ROW IS TWO DECLARATIONS, and neither of them is --n. That was
-     the first attempt and it cannot work twice over: a custom property may not
+  /* WRAPPING ON, AND ONLY HERE. Above the breakpoint every line fits and a wrap
+     that never happens is a wrap that cannot be checked; a row this size is one
+     bad font-metric away from breaking somewhere nobody drew, so the desktop
+     keeps the row that cannot break at all.
+
+     align-content: center so the rows a line breaks into sit as a block rather
+     than being stretched apart — .line's height is its content's, so this is
+     insurance against a future rule giving it one. */
+  .reason-title .line {
+    flex-wrap: wrap;
+    align-content: center;
+  }
+
+  /* A LINE OF AIR UNDER THE CHIP. 1vw is 4px on a phone, which reads as the
+     label having fallen onto the headline. */
+  .reason-kicker {
+    margin-bottom: 3vw;
+  }
+
+  /* THE ROLL, AND IT IS NOT 2.34 OF THE TYPE HERE. That ratio was struck
+     against a three-line block on a wide sheet; against five rows on a narrow
+     one it comes out at 56vw, which is a small object under a large sentence
+     rather than the thing the sentence is about. 2.7 takes it to 65vw — about
+     two thirds of the window, which is the presence it has at 1440 — and the
+     deeper negative margin sets it into the foot of the type by the same share
+     it is set in by there, so EXISTS. still stands in front of it rather than
+     above it. The two figures are one adjustment and move together. */
+  .reason-roll {
+    width: calc(var(--reason-type) * 2.7);
+    height: calc(var(--reason-type) * 2.7);
+    margin-top: calc(var(--reason-type) * -0.3);
+  }
+
+  /* --------------------------------------------------------------------------
+     THE PAPER — THE STATEMENT ON IT, AND ONLY THAT
+     --------------------------------------------------------------------------
+     THE SHEET NEEDS NOTHING AND THAT PART OF THE OLD NOTE STILL STANDS. It is
+     drawn against --rei-u, the smaller of a vw and a share of the screen, so the
+     paper is 95vw of whatever the window is and the crops, the unfold and the
+     six frames all follow it. On every phone this site is drawn for that unit
+     resolves to 1vw and the paper is the sheet's own width.
+
+     WHAT IS WRONG IS THE COPY'S SHARE OF IT. 6.25 units is 24px on a 390 screen,
+     and this is the page's central statement — the one sentence everything above
+     and below is in service of. At that size it is a caption lying on a large
+     piece of paper, and the rest of the paper is empty, which is the thing that
+     says it could simply be bigger. 8.6 units takes the longest line from a
+     little over half the paper's width to about four fifths of it, which is the
+     measure a sheet actually written on by hand carries.
+
+     AND NOTHING ELSE HAS TO MOVE, which is the whole return on the two rules
+     above. The hole in SOMETHING | MORE and the strip of tape set into it are
+     fractions of the sentence rather than of the paper, so they arrive at the
+     new size on their own. The head of the block is raised by the couple of
+     units the taller block needs to keep the same air over it.
+
+     THE PHOTOGRAPHS THE DESIGN LAYS ON THE LOWER HALF OF THIS PAPER ARE NOT
+     HERE, and that is the one thing in this section still owed. They want a
+     PORTRAIT sheet — the artwork this is drawn on is 1378 x 950 and the phone's
+     is taller than it is wide — so they are a change of asset and a change of
+     crop before they are a change of rule. What this block does is leave the
+     room: the copy ends about 44 units down a 65 unit paper. */
+  /* THE PAPER, AT THE SIZE THE DESIGN DRAWS IT — 505.299 x 757.949 at the 390
+     width, which is 129.564vw by 194.346, and both of those are bigger than the
+     screen in the direction that matters.
+
+     THE COMPLAINT WAS THE SPACE AND THE SPACE WAS ARITHMETIC. --rei-u is capped
+     at 1vw, so the sheet came out 94.993vw wide at the artwork's 1378 x 950 —
+     65.5vw tall — sitting in a stage cut to the window, which on a phone is over
+     200. Two thirds of the section was empty lime with a small landscape sheet
+     floating in the middle of it. The paper is the section; it has to fill it.
+
+     PORTRAIT, AND IT RUNS OFF THE RIGHT EDGE. 2:3 against the artwork's 1.45 is
+     not a crop of the same photograph, it is a different photograph — a sheet
+     stood up rather than laid down — and it is the one asset this section is
+     still owed. What is here now is the landscape file shown `cover` in the
+     portrait box (see .reimagine-paper below), which is paper texture rather
+     than a sheet with edges, and which becomes exact and needs no rule changed
+     the day the portrait file lands.
+
+     RANGED LEFT AND TOP RATHER THAN CENTRED, which is the opposite of the
+     desktop's and follows from the size. A box wider than the window centred is
+     a box cropped at BOTH edges, and this one is read from its top left corner
+     down: the tape at the head, the statement under it, the photographs below
+     that. So the corner the reader needs is pinned and the overflow all goes to
+     the far side, where there is nothing but paper.
+
+     THE TRANSFORM HAS TO BE TAKEN OFF EXPLICITLY. The base rule centres with
+     translate(-50%, -50%) and `left`/`top` alone do not undo it. */
+  /* AND THE STAGE IS GIVEN A FLOOR, so the green still comes back under the
+     paper. That hand-over is what this section is FOR at the page level: the
+     lime falls over the belt two screens up, runs through the curtain and this
+     sheet, and stops HALFWAY DOWN so WE WANTED TO BE. arrives on a colour that
+     has already been running (see --rei-split). At 198vw of paper in a stage cut
+     to the window, a 375 x 667 phone is 178 — the paper runs off the bottom, the
+     split never shows, and the page changes colour at a section boundary
+     instead. 215 leaves about 17vw of green under the sheet on every screen,
+     which is the band the reader carries into the next section. Taller screens
+     take their own height and get a little more of it. */
+  .reimagine-stage {
+    height: max(var(--screen-lg), 215vw);
+  }
+
+  .reimagine-sheet {
+    left: 2vw;
+    top: 4vw;
+    transform: none;
+    width: 129.564vw;
+    /* 505.299 / 757.949 */
+    aspect-ratio: 505.299 / 757.949;
+  }
+
+  /* cover AND NOT contain, WHICH IS A PLACEHOLDER AND ALSO NOT ONE. The frames
+     are 1378 x 950 and the box above is 2:3, so `contain` letterboxes the
+     landscape sheet into the top of a tall box and draws back the empty field
+     this block exists to remove. `cover` fills it — a crop through the middle of
+     the paper, so what shows is texture rather than a sheet with its own edges,
+     which is the honest look of a section waiting for its artwork.
+
+     AND IT IS NOT A LINE TO TAKE OUT LATER. A portrait file is 2:3 like the box,
+     and at the box's own aspect cover and contain are the same picture. */
+  .reimagine-paper {
+    object-fit: cover;
+  }
+
+  /* THE STATEMENT, AT 50px ON 40 — the design's, in vw of the 390 it is drawn
+     against. It is four fifths of a line box, which is what `line-height: 0.8`
+     says without a second figure to keep in step with the first, and the
+     tracking is -1.5 over 50, which is -0.03em for the same reason: they follow
+     the type rather than being restated beside it.
+
+     THE BREAKS ARE NOT A MEASURE AND THE WIDTH IS NOT WHERE THEY COME FROM.
+     Every turn in this statement is an element in the markup (see
+     components/Reimagine); the width below is only wide enough that NOTHING ELSE
+     turns. The longest run between two turns is SOMETHING and the tape at about
+     6.1em, so a hundred and five leaves a third of that in hand — enough that a
+     font loading a little wider than expected cannot introduce a ninth line
+     nobody drew. It is wider than the window and it is meant to be: it is a
+     ceiling on the wrap, not a column.
+
+     ROOM FOR THE PHOTOGRAPHS UNDERNEATH. Eight lines at 0.8em is 82vw, from 12
+     down the paper, so the statement ends a little under half way and the lower
+     half of the sheet is left for what the design lays on it. */
+  .reimagine-copy {
+    left: 6vw;
+    top: 12vw;
+    width: 105vw;
+    font-size: 12.821vw;
+    /* 50 / 390 */
+    line-height: 0.8;
+    /* 40 / 50 */
+    letter-spacing: -0.03em;
+    /* -1.5 / 50 */
+
+    /* THE WHOLE STATEMENT AS ONE WRAPPING ROW — which is what .line giving up
+       its box below buys. The eight lines regroup ACROSS the desktop's five
+       (AN leaves the first and opens the second), so they cannot be made by
+       breaking each of those five on its own; every word in the sentence has to
+       be a sibling of every other for the turns to fall where they are drawn.
+
+       align-content: flex-start so the rows stack from the top of the block
+       rather than spreading to fill whatever height it is given. */
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    align-content: flex-start;
+  }
+
+  /* AND THE DESKTOP'S FIVE BREAKS COME OFF. display: contents takes the row's
+     BOX out of the layout while leaving everything in it — so .line stops being
+     a line and its words join the wrapping block above. It is the cleanest thing
+     in this block: no width to fight, no float, and the markup that carries the
+     desktop arrangement is untouched and comes straight back at 768. */
+  .reimagine-copy .line {
+    display: contents;
+  }
+
+  /* WHERE IT TURNS INSTEAD. An empty flex item given a whole line to itself, so
+     everything after it starts on the next one — the standard way to force a
+     break in a wrap container, and the reason a turn has to be an element
+     rather than a pseudo-element. Nothing is drawn: no height, and the row it
+     takes collapses onto the one below it. */
+  .reimagine-turn {
+    display: block;
+    flex: 0 0 100%;
+    width: 100%;
+    height: 0;
+  }
+
+  /* AND THE SHEET IS ALREADY OPEN.
+     ------------------------------------------------------------------------
+     THE UNFOLD IS A GESTURE THAT NEEDS ROOM TO BE READ AS ONE. It is six
+     photographs of a hand opening a ball of paper, and at 1440 the sheet is a
+     third of a wide window: you can see the ball, the space around it, and the
+     paper travelling outward into that space. On a phone the paper is 95vw of a
+     sheet two and a half times as tall — it fills the frame edge to edge from
+     the first frame — so what the flipbook shows is a shape flexing in the
+     middle of the screen rather than a sheet being opened. The move's whole
+     subject is the growth, and there is nowhere for it to grow.
+
+     AND IT COSTS TWO SCREENS OF PIN TO SHOW IT. That is the trade this section
+     cannot win on a phone: two screens the reader cannot move through, spent on
+     a gesture the frame is too small to carry, on the way to a statement that is
+     the actual point of the section. Handed over open, the statement is there
+     when they arrive and the page keeps moving.
+
+     0 IS NOT AN OFF SWITCH, it is "this section is given no page" — and what
+     unfold.ts does with that is the same thing it does for a reader who has
+     asked for less motion: nothing, and let the stylesheet stand the section on
+     its last frame. Give the phone its two screens back here and the flipbook
+     comes back with them. */
+  .reimagine {
+    --rei-run: 0;
+  }
+
+  /* THE LAST FRAME AND ONLY THE LAST FRAME — the flat sheet. The stylesheet
+     rests on the FIRST (see .reimagine-paper:first-of-type), which is the ball
+     of paper, because that is where the flipbook starts; with no flipbook to run
+     it would be a ball of paper that never opened. This is the reduced-motion
+     block's pair restated, and it has to be restated rather than shared: the two
+     conditions are unrelated, and a phone is not an accessibility preference. */
+  .reimagine-paper,
+  .reimagine-paper:first-of-type {
+    opacity: 0;
+
+    /* AND THE LAYERS ARE HANDED BACK IMMEDIATELY. will-change: opacity on the
+       base rule is what keeps all six frames decoded and ready in the compositor
+       so a cut has no hole in it; unfold.ts takes it off when the run finishes.
+       With no run there is no onComplete to take it off, so six full-size layers
+       would be held on the GPU for ever — on the phone, which is the device
+       least able to spare them, for a section showing one image. */
+    will-change: auto;
+  }
+
+  .reimagine-paper:last-of-type {
+    opacity: 1;
+  }
+
+  /* --------------------------------------------------------------------------
+     WE WANTED TO BE. — THE SENTENCE GOES GIANT
+     --------------------------------------------------------------------------
+     THIS IS THE HOME PAGE'S PINNING SECTION'S ANSWER, APPLIED TO THE SAME
+     QUESTION. Both sections are one held frame with a phrase crossing it and
+     props scattered over the top, and both were drawn for a 16:9 window. The
+     phrases there go from 38.194vw to 91.67 and the props flatten to one size;
+     the reasoning is written out at length in that block and is not repeated
+     here, because it is the same reasoning: at the desktop's proportion a phone
+     shows a small line of type marooned in the middle of a lot of colour, and
+     what fixes it is not fitting the sentence to the window but making it far
+     TOO BIG for the window and letting the section deliver it a piece at a time.
+
+     WHICH THIS SECTION ALREADY KNEW HOW TO DO. The crawl exists precisely
+     because the line is longer than the frame — you arrive on WE W and scroll BE.
+     into view. All the phone changes is HOW MUCH longer.
+
+     WHY THE TYPE AND NOT THE BAND. The sentence is set in viewBox units inside a
+     box that is 100vw wide, so the band already scales with the width — which is
+     why this section was once listed as needing nothing. That is also what makes
+     the type the only honest dial: the viewBox is 1600 units over 100vw, and
+     crawl.ts talks to the frame's edges in exactly those units (FRAME_LEFT and
+     FRAME_RIGHT). Widen the BAND and 1600 stops being the right-hand edge of the
+     screen, the two ends of the crawl are struck against a frame that no longer
+     exists, and the line parks somewhere off the side. Set the type instead and
+     every number in that file still means what it says — the sentence is simply
+     longer, so it travels further, and it does so without one word of this
+     arriving in the engine.
+
+     1000 IS 222 x 4.5, AND THE CHECK IS THE MOCK'S OWN FRAME. It went 560 first
+     — 222 x 2.52, near enough the staircase's 2.4 to be the same decision — and
+     that is a defensible multiplier and the wrong quantity. What the drawing
+     fixes is not a multiple of the desktop's type, it is HOW MUCH OF THE
+     SENTENCE STANDS IN THE WINDOW: the mock holds about four characters, E WA
+     across the screen with both of the outer two cut by the crop. At 1000 units
+     a character is a little over a quarter of the frame, which is that. 560 held
+     seven, and seven characters is most of a word — near enough to a readable
+     line that the crop reads as a mistake rather than as a crop.
+
+     A CHARACTER AND A QUARTER OF A WINDOW IS ALSO WHY THE SECTION BECOMES A
+     CANVAS. At this size the line is four screens long, so it is delivered a
+     piece at a time over the length of the pin; four boxes standing still on the
+     stage would be the only thing in the section that was not, and a sentence
+     this long crawling ALONG the wave ripples through itself as it passes. See
+     --wanted-pan below.
+
+     AND THE WAVE FLATTENS ITSELF. Its swing is +/-140 viewBox units and does not
+     move, so against type two and a half times bigger the same curve reads as a
+     line with a lean on it rather than as a hump — which is what the drawing
+     wants at this size and what a hump this deep under letters this tall would
+     ruin. Nothing to set. */
+  .wanted-text {
+    font-size: 1000px;
+  }
+
+  /* AND THE SVG STOPS CROPPING ITS OWN TYPE. The viewBox is 560 units deep
+     because that is the wave's swing plus the room a capital needs AT 222 — at
+     560 a capital is the whole box and everything above the centreline is cut
+     off at the top edge. The depth cannot be re-set from here (it is an
+     attribute in the markup, and the three figures that hold it together are
+     argued in components/WeWanted), and there is no need: an svg root clips to
+     its viewport only while it is asked to, and the box this one sits in is
+     already cropped by .wanted-stage. So the crop stays where it belongs — at
+     the edges of the SCREEN, which is what the section is about. */
+  .wanted-band svg {
+    overflow: visible;
+  }
+
+  /* THE THREE FIGURES THE CRAWL IS TOLD, and each of them is a consequence of
+     the type size above rather than a taste.
+
+     --wanted-open IS WHERE THE SENTENCE'S HEAD STANDS AT REST, as a fraction of
+     the window, and it exists because the figure it replaces does not survive
+     this. WANTED.OVERHANG is a share of the SENTENCE'S OWN LENGTH — 0.77 of it
+     past the right edge — which puts the head about four fifths across while the
+     line is a couple of screens long, and which at 1000 units leaves 23 per cent
+     of four screens on the window: the head starts off the LEFT edge and the
+     reader arrives in the middle of a word. 0.8 is the desktop's arrival pose
+     stated as a fact about the FRAME, so it is the same pose at any type size.
+     See openAt in WeWanted/crawl.ts.
+
+     --wanted-run IS THE PACE. The sentence now travels about four screens where
+     it travelled one, so 1.8 screens of pin would run it under the reader four
+     times as fast — and the whole point of the section is a line that ARRIVES
+     rather than one that flies past. 2.8 puts it back at roughly the pace it has
+     at 1440, with a little more held for the four claims to come in one at a
+     time.
+
+     --wanted-pan MAKES THE SECTION A CANVAS RATHER THAN A CRAWL, and it is the
+     one figure here that changes the mechanism instead of a size. The sentence
+     is drawn once along the wave, the four claims stand at fixed places along
+     it, and one translate walks the lot of it past a window that holds still —
+     which is the home page's pinning section exactly. The crawl it replaces
+     slid the GLYPHS along a wave that stood still, and over a line this long
+     that is three and a half cycles of the words bunching and stretching as they
+     go. Argued at pans() in WeWanted/crawl.ts and laid out at
+     .we-wanted[data-pan="live"] .wanted-canvas; the boxes lose their entrance
+     with it, because on a canvas a prop is simply there and the scroll is the
+     only thing that arrives. */
+  .we-wanted {
+    --wanted-open: 0.8;
+    --wanted-run: 2.8;
+    --wanted-pan: 1;
+  }
+
+  /* FOUR ACROSS BECOME TWO AND TWO — the standing-still arrangement, which is
+     now what a reader who has asked for less motion gets and what a page whose
+     script never ran shows. The canvas is above, under data-pan. Everything
+     below still describes this one because it is still drawn, and because it is
+     the arrangement to come back to if the canvas is ever taken off.
+
+     THE PROPS FLATTENED. The row is
+     placed off one pitch times each box's --n, so four boxes at a size a phone
+     can read would need 123vw of sheet. Two rows of two is the same four props
+     scattered around the same sentence with 40vw of box instead of 19 — a label
+     a reader can actually read, which is the whole reason these are here. It is
+     also the pinning section's answer to its own scenery: one size for every
+     prop, big enough that each is unmistakably the thing it is a picture of.
+
+     THE SECOND ROW IS RESTATED IN PLACE, AND NONE OF IT IS --n. That was the
+     first attempt and it cannot work twice over: a custom property may not
      be defined in terms of itself (`--n: calc(var(--n) - 2)` is a cycle, and a
      cycle resolves to nothing at all), and --n arrives as an INLINE style from
      the component, which no rule in a stylesheet outranks without !important.
@@ -14782,7 +16812,8 @@ img#front {
 
      The drop is a MARGIN and not a `top`, because `top` is the hand-placed
      scatter each box carries as --y, and that scatter is what stops the four
-     reading as a grid. Adding to it keeps every one of those drops. */
+     reading as a grid. Adding to it keeps every one of those drops — and the
+     two rules under this one are where the two drops are argued. */
   .wanted-boxes {
     --box-w: 40vw;
     --box-h: 40vw;
@@ -14792,7 +16823,121 @@ img#front {
 
   .wanted-box:nth-child(n + 3) {
     left: calc(var(--box-x) + var(--box-pitch) * (var(--n) - 2));
-    margin-top: 46vw;
+  }
+
+  /* AND THE DROP IS A SHARE OF THE STAGE, WHICH IS WHAT --y ALREADY IS. It was
+     46vw — a share of the WIDTH added to a scatter measured down the HEIGHT,
+     which is two units doing one job. On a 216vw phone the pair landed inside
+     the frame and on a 178vw one box 03 hung 10vw out of the bottom of it and
+     was cropped by the stage, because the sheet had got shorter and the drop had
+     not. In per cent of the stage it is the same arrangement on both.
+
+     TWO FIGURES AND NOT ONE, WHICH IS THE POINT OF SPLITTING THE RULE. The four
+     boxes wrap into two columns — 01 and 03 on the left, 02 and 04 on the right
+     — and 01 sits at 45% while 04 arrives at 24.5%. One drop for both puts 04 at
+     44.5%, half a per cent off 01, so the two land side by side at the same
+     height: a rail of boxes straight across the middle of the sentence, hiding
+     the whole of its lower half at exactly the width where the type is at its
+     largest. The scatter is the reason these four do not read as a grid, and a
+     wrap that flattens it has thrown away the thing it was protecting.
+
+     So 04 falls further than 03 does. What comes out is 02 high on the right,
+     01 across the middle left, 04 stepped down to the right of it, and 03 low on
+     the left — four corners of a diagonal, with the sentence legible between
+     them. The mock's frame catches two of them, which is what a scatter this
+     wide is meant to do on a screen this narrow: the home page's pinning
+     section shows one or two props at a time for the same reason. */
+  .wanted-box:nth-child(3) {
+    margin-top: calc(var(--screen-lg) * 0.2);
+  }
+
+  .wanted-box:nth-child(4) {
+    margin-top: calc(var(--screen-lg) * 0.32);
+  }
+
+  /* THE WAY OUT, RE-AUTHORED AGAINST 390. Every figure in that section is a
+     share of 1440, so on a phone it arrives at a quarter of its size: a 150
+     claim comes in at 41px and the 212 column is 57px of margin down each side
+     of a 390 screen. The three parts are re-drawn at the proportions they have
+     to a phone; the crate is not touched at all, because it is already the
+     sheet's full width and everything about it is a fraction of that.
+
+     THE COLUMN GOES FIRST. 212 of 1440 is a seventh of the sheet either side,
+     which is generous on a desktop and is most of a phone. 6.15vw is 24, the
+     inset the rest of this site's phone blocks stand their copy on, and the
+     claim gets the width back.
+
+     THE CLAIM KEEPS ITS LEADING. 48 on 37 is the drawing's 150 on 115 to within
+     a rounding — the tight setting is what the headline IS, and a phone that
+     opened it up would be showing a different headline.
+
+     THE PILL RESTATES ONE NUMBER, which is the whole reason its parts are ems:
+     4.6vw is 18px, so the pill lands 68 tall with a 55 disc in it, and the
+     label, the air before it and the margin round the disc all follow. It
+     measures about 350 of the 390, which is what stops it reading as a small
+     button adrift in a lot of green.
+
+     AND THE SHEET IS RE-CUT AROUND WHAT IS LEFT. The copy now ends about 284
+     down rather than 722, so the crate's file starts higher (--cta-front-top)
+     and the sheet is shorter (--cta-h) — the two move together, and what they
+     hold constant is the relationship the desktop has: the tape's top edge just
+     clear of the pill's foot, and a little over half the artwork on the sheet.
+     The arc deepens because it is read against a screen a quarter the width. */
+  .about-cta {
+    --cta-h: 131vw; /* 511px */
+    --cta-front-top: 38.7vw; /* 151px */
+    --cta-arc: 6vw;
+  }
+
+  .about-cta-copy {
+    padding-top: 16vw; /* 62px */
+    padding-inline: 6.154vw; /* 24px */
+  }
+
+  .about-cta-kicker {
+    font-size: 3.59vw; /* 14px */
+    line-height: 3.59vw;
+    letter-spacing: -0.036vw;
+  }
+
+  .about-cta-title {
+    margin-top: 3.077vw; /* 12px */
+    font-size: 12.308vw; /* 48px */
+    line-height: 9.487vw; /* 37px */
+    letter-spacing: -0.369vw; /* -1.44px */
+  }
+
+  .about-cta-button {
+    margin-top: 4.103vw; /* 16px */
+    font-size: 4.6vw; /* 18px */
+  }
+}
+
+/* --------------------------------------------------------------------------
+   About — the phone, with the motion off
+   --------------------------------------------------------------------------
+   ONE RULE, AND IT IS LAST IN THE SECTION ON PURPOSE — this is the second place
+   on this site where a phone rule and a reduced-motion rule collide, and order
+   is what decides them. The home page's pinning section is the other, and its
+   own note is where the shape of the problem is argued: a phrase sized to be
+   READ BY A MOVING CAMERA has to fit the window when there is no camera.
+
+   THE SAME THING IS TRUE OF THIS SENTENCE. At 1000 units it is four screens
+   long, which is right while it crawls — the section exists to deliver it a
+   piece at a time — and is nothing at all when it does not. crawl.ts hands a
+   reader who has asked for less motion the finished pose, the line parked with
+   its full stop a quarter of the way in from the right edge, and at four screens
+   long what stands in the window is "E." Everything else is off the left with
+   nothing that will ever bring it back.
+
+   222 IS WHAT FITS. The sentence measures about 6.5 times its own type size and
+   the frame is 1600 units, so anything past about 245 overruns it; 222 is the
+   figure the section is drawn at above the breakpoint, where it has always been
+   a line you can read at a glance. It is small on a phone. It is a whole
+   sentence on a phone, which is the trade this rule exists to make. */
+@media (prefers-reduced-motion: reduce) and (max-width: 767px) {
+  .wanted-text {
+    font-size: 222px;
   }
 }
 
@@ -16056,46 +18201,6 @@ img#front {
   outline-offset: 0.2vw;
 }
 
-#paperclip {
-  position: absolute;
-  top: 74vw;
-  left: 5vw;
-  z-index: 1;
-  width: 8.216vw;
-  height: 9.043vw;
-  /* The site's cast shadow — see --drop-ink in :root. This one was the softest
-     and heaviest on the page: 20px of pure black blur under 14px of offset, a
-     paperclip apparently hovering an inch off the board. Longer than a
-     photograph's because a clip is bent wire standing proud of the paper rather
-     than lying flat on it, so it genuinely does throw further. */
-  filter: drop-shadow(0.24vw 0.62vw var(--drop-blur) var(--drop-ink));
-}
-
-#tape-on-note {
-  position: absolute;
-  top: 58.3vw;
-  left: 14vw;
-  z-index: 5;
-  width: 11vw;
-}
-
-#tape-on-lemon {
-  position: absolute;
-  top: 99vw;
-  left: 22vw;
-  width: 19vw;
-}
-
-#tape-top {
-  position: absolute;
-  top: 60vw;
-  right: -5vw;
-  z-index: 10;
-  width: 42.126vw;
-  height: 8.74vw;
-  object-fit: cover;
-}
-
 /* The hand-written note, in the last clear stretch of green on the left of the
    board: under the sticky note (which ends at 84.9vw) and over the lemon
    painting, whose paper is cut on the diagonal and so leaves the corner it is
@@ -16142,11 +18247,26 @@ img#front {
    * same size of note with a smaller hand in it moves this; one that wants a
    * smaller note moves --hand-w.
    *
-   * 0.648 is the figure the hero was fitted at and is the default for the same
-   * reason every other figure in this rule is one: an instance that says nothing
-   * gets the note the site was drawn with. Any section can override it, and the
-   * ones below do where the setting in hand.ts moved the writing under them. */
-  --hand-ink-w: 0.648;
+   * 0.778 IS 0.648 PLUS A FIFTH, and the fifth is the point: every note on the
+   * site is written a fifth bigger than it was. It is one figure and not five
+   * because no instance overrides this — the hero's note, the pinning section's,
+   * the opening screen's and the news page's all take the default, and each one
+   * is already a share of its own --hand-w. So the hand grows by a fifth
+   * everywhere and every note stays the size it was RELATIVE to the section it
+   * is written on, which is what "bigger" has to mean on a site where the same
+   * note appears at a third the size two screens later.
+   *
+   * WHAT IT COSTS IS WIDTH, and there is one instance to keep an eye on. The
+   * writing starts at 0.205 of --hand-w and is now 0.778 of it wide, so it ends
+   * at 0.983 — inside the note's own box, but only just, and the box is rotated
+   * 353deg on top of that. The hero's is the tight one: its note is 25vw in a
+   * band that ends where the lemon painting's diagonal begins, and its own
+   * comment says going much past 27vw puts the last line on the paper.
+   *
+   * It is the default for the same reason every other figure in this rule is
+   * one: an instance that says nothing gets the note the site is drawn with, and
+   * any section can still override it. */
+  --hand-ink-w: 0.778;
 
   /* PLACEMENT IS NOT HERE, and that is the whole reason the note can appear
      twice. Everything in this rule is what the note IS — its size dial, its
@@ -16160,18 +18280,6 @@ img#front {
   /* Decoration. The readable copy inside it is a .sr-only text node, which is
      unaffected — this only keeps the box from being what a click lands on. */
   pointer-events: none;
-}
-
-/* The hero's copy: on the dark green above the taped-down lemon painting. The
-   25vw is what the band there will take — the writing then runs from 90.6vw to
-   100.7vw, clear of the sticky note above it and inside the painting's diagonal
-   below. Going much past 27vw puts the last line on the paper. */
-.hero-section .hand-note {
-  top: 85vw;
-  left: 3.5vw;
-  /* Above the painting it overhangs — which paints from tree order anyway, but
-     not above the gift (1) by accident. */
-  z-index: 2;
 }
 
 /* The pinning section's copy: under the photograph standing in TO CREATE's gap,
@@ -16494,18 +18602,25 @@ img#front {
     height: 5.4vw;
   }
 
-  /* The tab. See the note above for why the four figures move together. */
+  /* The tab. See the note above for why the figures move together: the torn
+     edge is a stretched viewBox, so the width and --tooth-h are one ratio
+     (100 : 15) and everything else is scaled by the same factor rather than
+     re-chosen. 26vw cleared the touch-target floor and stopped there, which
+     left the one control on the sheet reading as the smallest thing on it —
+     against a 35vw masthead in the opposite corner and a headline that spans
+     the width, a quarter-sheet tab is a detail rather than the way in. This is
+     that tab a third bigger, same shape. */
   .menu-tab {
-    width: 26vw;
+    width: 34vw;
   }
 
   .menu-tab-sheet {
-    --tab-body: 12.4vw;
-    --tooth-h: 3.9vw;
-    --perf-y: 4.4vw;
-    --perf-x: 1.6vw;
-    font-size: 3.9vw;
-    letter-spacing: -0.12vw;
+    --tab-body: 16.22vw;
+    --tooth-h: 5.1vw;
+    --perf-y: 5.75vw;
+    --perf-x: 2.09vw;
+    font-size: 5.1vw;
+    letter-spacing: -0.157vw;
   }
 }
 
@@ -16848,9 +18963,7 @@ img#front {
   --peel-cut: calc(var(--peel-from) + var(--peel) * (var(--peel-to) - var(--peel-from)));
 }
 
-/* The picture, cut off at the fold. clip-path applies AFTER filter, so the
-   shadow is the sticker's own and does not re-draw along the peeled edge —
-   which is correct: that edge is covered by the flap lying on it. */
+/* The picture, cut off at the fold. */
 .peel-face {
   display: block;
   height: 100%;
@@ -16858,15 +18971,13 @@ img#front {
       var(--peel-far) var(--peel-cut),
       var(--peel-far) var(--peel-far),
       var(--peel-shut) var(--peel-far));
-  /* The site's cast shadow, thrown by the FACE — see --drop-ink in :root. Kept
-     a shade tighter than a photograph's because a peel is a strip of tape or a
-     sticker, which lies flatter against the paper than a card does.
-
-     Still overridable, and both overrides matter: the giant tapes take it off
-     entirely (their wrapper casts one shadow for face and lifted flap together)
-     and the preloader's mark sets it to none because it is not on paper at all. */
-  filter: var(--peel-shadow,
-      drop-shadow(0.22vw 0.32vw var(--drop-blur) var(--drop-ink)));
+  /* NO CAST SHADOW, ANYWHERE. Tape and stickers lie flat against the paper and
+     the design reads them as printed onto it rather than standing off it — so
+     every peel on the site is shadowless, and this is the one place that says
+     so. Still routed through --peel-shadow rather than deleted: the hook is
+     what a section would reach for if one ever does want a shadow back, and
+     several rules already set it to none explicitly. */
+  filter: var(--peel-shadow, none);
 }
 
 /* The strip that came off: the same image, upside down, one height above the

@@ -14,13 +14,22 @@ import Stage from "./Stage";
  * load-bearing: the section under this one is pinned, and where a pin begins is
  * decided by how much page is above it.
  *
- * THREE THINGS ON IT. The statement — THREE GENERATION / ONE SHARED BELIEF —
- * the hand-written note down in the bottom right corner, and
+ * THREE THINGS ON IT, AND TWO MORE ON A PHONE. The statement — THREE GENERATION
+ * / ONE SHARED BELIEF — the hand-written note down in the bottom right corner,
+ * and
  * the jack-in-the-box, which is three flat images stacked in one wrapper: the
  * back of the box, the hand coming out of it, and the front of the box printed
  * over the hand so the hand reads as being INSIDE it. The order in the markup is
  * the order they stack, and it is the only reason the illusion works — front is
  * first here and is meant to end up on top; behind and hand sit under it.
+ *
+ * AND THE TWO MORE ARE THE PRESS CUTTING AND THE SHOPHOUSE, which the phone's
+ * drawing puts either side of that box and the desktop's does not have. They
+ * are in this file rather than in a phone-only component because a section has
+ * one markup and the stylesheet decides what is drawn at what width — the same
+ * bargain every other section on this site strikes with @media. See the
+ * .about-clipping / .about-shop rules in global.css, which is also where the
+ * argument for keeping them off the desktop is made.
  *
  * WHAT IT IS NOT is a hero. The masthead is already up there — (frontend)/layout
  * .tsx prints it on every route but the home page. The section turns it lime for
@@ -169,6 +178,38 @@ export default function AboutOpen() {
           .about-note in global.css, which is the only thing about it this file
           does not say. */}
       <HandNote className="about-note" lines={NOTE} />
+
+      {/* THE TWO CUTTINGS, and they are drawn on the phone only — see the
+          .about-clipping / .about-shop rules in global.css, which say why and
+          where.
+
+          THE PRESS CUTTING is the first of the three generations: a column
+          about a tape release, torn out and kept. THE SHOPHOUSE is the last —
+          the building the company still works out of. They stand either side of
+          the box the hand comes out of, so the screen reads as the claim, then
+          what it is made of, then where it happens.
+
+          ALT IS EMPTY ON BOTH. The claim they illustrate is already set on this
+          screen in type a foot high; a photograph of a clipping described in
+          words would be the same sentence twice. They are decoration in the
+          strict sense — remove them and nothing has gone missing from the page.
+
+          PLAIN <img> RATHER THAN next/image, which is what every other flat
+          piece of artwork on this site takes: the stylesheet sets the width in
+          vw, so there is nothing for an optimiser to size and no intrinsic box
+          worth declaring. */}
+      <img
+        className="about-clipping"
+        src="/assets/about-clipping.webp"
+        alt=""
+        draggable={false}
+      />
+      <img
+        className="about-shop"
+        src="/assets/about-shop.webp"
+        alt=""
+        draggable={false}
+      />
 
       <div className="jack-in-box">
         <div className="wrapper">

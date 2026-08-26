@@ -269,6 +269,38 @@ export const REIMAGINE = {
   LENGTH: 2,
 };
 
+/* HOW MUCH SCROLL THE SECTION IS GIVEN, off the section itself — and therefore
+ * WHETHER THE PAPER OPENS AT ALL.
+ *
+ * REIMAGINE.LENGTH above is the fallback and this is what is actually read, the
+ * same bargain AboutOpen/spaceOut.ts strikes with --space-run. At 0 the section
+ * is given no page: there is no pin, no flipbook and no letters flying up, and
+ * what the reader gets is the sheet ALREADY OPEN with the statement written on
+ * it.
+ *
+ * WHICH IS THE PHONE'S, AND IT IS NOT A DEGRADED VERSION OF THIS. The unfold is
+ * a photograph of a hand opening a ball of paper, and it is worth a pinned
+ * screen and four and three quarter seconds when the sheet is a third of a wide
+ * window and the reader can see the whole gesture. On a phone the paper is 95vw
+ * of a sheet two and a half times as tall — it fills the frame edge to edge, the
+ * crumpled frames are a shape flexing in the middle of the screen rather than a
+ * sheet being opened, and the two screens of scroll it costs are two screens the
+ * reader cannot move through. The statement is the point of the section; the
+ * paper is how it is delivered, and on a phone it delivers it better by simply
+ * being open.
+ *
+ * NOTHING HERE ASKS HOW WIDE THE WINDOW IS. It asks what the layout gave this
+ * section, which is a fact the stylesheet owns — give the phone its two screens
+ * back and the flipbook comes back with them, and not one line of this file
+ * changes. The bare number is in screens for the reason --space-run is: an
+ * unregistered custom property comes back as the token as authored, so the unit
+ * has to be decided in one place and that place is here. */
+const runScreens = (root: HTMLElement): number => {
+  const raw = getComputedStyle(root).getPropertyValue("--rei-run");
+  const n = Number.parseFloat(raw);
+  return Number.isFinite(n) ? Math.max(0, n) : REIMAGINE.LENGTH;
+};
+
 /* Fisher–Yates, the hero's and the footer's. The shuffle IS the effect: reveal
    the same letters left to right and it reads as a wipe, which is a different
    thing entirely. */
@@ -307,7 +339,20 @@ export function initReimagine(root: HTMLElement): () => void {
      are already home — the attribute did that — and the stylesheet's own media
      query shows the last frame, so there is nothing to do here but stay out of
      the way. */
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  /* AND THE PHONE TAKES THE SAME EXIT, for a different reason and to the same
+     place — see runScreens above. A section given no page has nothing to spend a
+     flipbook on, and what both readers want from it is the same finished screen:
+     the sheet flat, the statement on it, the tape stuck down.
+
+     ONE BRANCH FOR THE TWO, deliberately. They are not the same decision but
+     they have exactly the same consequence, and writing them apart would be two
+     copies of "do nothing" that could drift. The stylesheet does the work in
+     both cases: its reduced-motion block and its phone block each show the last
+     frame, and data-reveal above has already handed the letters over. */
+  if (
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+    runScreens(root) <= 0
+  ) {
     /* The tape needs nothing either: --peel is never written, so it rests at 0,
        which is the strip lying flat — see from={0} in ./index.tsx. */
     return () => {};
@@ -471,7 +516,7 @@ export function initReimagine(root: HTMLElement): () => void {
        is the one thing here that is a function of the window. screenH() and not
        innerHeight, for the reason components/viewport.ts gives: a retracting
        mobile address bar must not change how long this section is mid-scroll. */
-    end: () => "+=" + Math.round(screenH() * REIMAGINE.LENGTH),
+    end: () => "+=" + Math.round(screenH() * runScreens(root)),
 
     /* THE STAGE AND NOT THE SECTION, AND THAT IS THE ONE STRUCTURAL RULE THIS
      * SITE HAS ABOUT PINNING.

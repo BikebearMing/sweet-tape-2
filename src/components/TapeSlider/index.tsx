@@ -23,6 +23,31 @@ const LIFT = [0.66, 0.54];
    buried in the markup. */
 const SUBHEAD = "MEET THE ONE WHO STICKS";
 
+/* THE PHONE'S STEP ARROW, drawn once and mirrored in CSS for the forward
+ * button — one glyph, so the two can never drift apart in weight or length.
+ *
+ * Not components/Arrow: that mark is a link LEAVING, it points off the page at
+ * 45deg and swings to face what it belongs to. This is a DIRECTION on a
+ * control, which is a different thing to draw — the same call Article's back
+ * link makes when it reaches for a bare chevron instead.
+ *
+ * Round caps and joins, because it is printed at 7vw on a soft disc and a
+ * square cap at that size reads as a chipped edge. currentColor, so the disc's
+ * rule is the only place the tape's palette is named. */
+function NavArrow() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+      <path
+        d="M20.5 12H4.5M11.5 4.5 4 12l7.5 7.5"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 /* The section, server-rendered in the first tape's state.
  *
  * Everything below is markup only. The moment it mounts, the engine takes over
@@ -136,6 +161,30 @@ export default function TapeSlider() {
               <BottomTitle word={first.word} />
             </div>
           </div>
+        </div>
+
+        {/* THE PHONE'S PAIR OF CHEVRONS, and they are the orbit's stand-in
+            rather than a second selector: they step the SAME activeIndex the
+            rolls do, through the same goTo, so a tap here runs the identical
+            swap a click on a roll runs. engine.ts wires them.
+
+            IN THE MARKUP AT EVERY WIDTH and hidden by the stylesheet on the
+            desktop, not rendered conditionally — a media query in JS would
+            have to re-render this section to change its mind about the
+            viewport, and nothing here re-renders after mount by design (see
+            the note at the top of this file).
+
+            OUTSIDE .tape-slide, so the drawing's 8vw wave-band shift is not
+            inherited from it by accident; the phone rule restates that shift
+            here so the pair lives in the same coordinate frame as the copy it
+            sits under. */}
+        <div className="tape-nav">
+          <button type="button" data-step="-1" aria-label="Previous tape">
+            <NavArrow />
+          </button>
+          <button type="button" data-step="1" aria-label="Next tape">
+            <NavArrow />
+          </button>
         </div>
       </div>
     </Stage>

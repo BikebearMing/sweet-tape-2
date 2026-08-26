@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import AboutCta from "@/components/AboutCta";
 import AboutOpen from "@/components/AboutOpen";
 import Conveyor from "@/components/Conveyor";
 import Reason from "@/components/Reason";
@@ -8,7 +9,7 @@ import Reimagine from "@/components/Reimagine";
 
 /* ABOUT — the brand's own page.
  *
- * Five sections so far. The first is a screen of dark green with nothing on
+ * Six sections so far. The first is a screen of dark green with nothing on
  * it, holding the place the page's opening statement will take (components/
  * AboutOpen, which argues why it is empty rather than filled with dummy type).
  * The second is THE BELT — three rows of pills carrying photographs of a shelf
@@ -19,10 +20,15 @@ import Reimagine from "@/components/Reimagine";
  * its own name. The fourth is a lime screen with a ball of paper in the middle
  * of it, which opens as you arrive and has the statement written across it. The
  * fifth is WE WANTED TO BE. — the sentence bent round a wave and crawled in from
- * the right while four boxes pop up under it.
+ * the right while four boxes pop up under it. The sixth is the way out — MORE
+ * COLOUR, MORE HEART, AND YES — BETTER TAPE. over a green curtain, with a pill
+ * under it and the tapes standing in a crate at the foot of the screen
+ * (components/AboutCta).
  *
  * THE ORDER IS AN ARGUMENT: the aisle, the answer to it, what the answer was
- * FOR, and then what we wanted to be while we did it. The belt goes directly
+ * FOR, what we wanted to be while we did it — and then the door out, which can
+ * only be last because it is the only thing on the page that asks the reader to
+ * leave it. The belt goes directly
  * under the opening screen because it is the same dark green sheet, and because
  * the complaint has to be made before anything answers it.
  *
@@ -69,6 +75,11 @@ import Reimagine from "@/components/Reimagine";
  * finished. /products/[id] is open at the foot for exactly this reason. Add it
  * when the last section lands.
  *
+ * AND THE CALL TO ACTION IS NOT THAT SIGN-OFF. It is a section like the five
+ * above it and it keeps its place under them when the missing ones arrive; what
+ * it is not is a substitute for the footer's nav, which every other route on
+ * this site closes with.
+ *
  * THE MENU HAS LINKED HERE ALL ALONG. /about is one of the four routes in the
  * pull-down and in the footer's row, and until now it was the only one of them
  * that 404'd. Nothing in either list changes — the link was already correct.
@@ -93,6 +104,7 @@ export default function AboutPage() {
       <Reason />
       <Reimagine />
       <WeWanted />
+      <AboutCta />
     </>
   );
 }

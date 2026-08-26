@@ -243,11 +243,20 @@ export default function Hero() {
 
               --peel-dir turns the fold a quarter turn so the tab lands
               END-FIRST rather than dropping along its whole top edge at once,
-              and `box` is what that turn has to be told: 11vw by 5.667vw, the
-              size the stylesheet's #tape-on-note rule gives it. Everything the
-              turn costs — how far the clip frame swings off the artwork, and
+              and `box` is what that turn has to be told: the size the
+              stylesheet's #tape-on-note rule gives it. Everything the turn
+              costs — how far the clip frame swings off the artwork, and
               therefore how much it has to be bled back — is worked out from
               those two numbers rather than typed.
+
+              WHICH IS WHY IT IS READ OFF THE RULE rather than typed here. The
+              strip is a different size on a phone, and a literal box in this
+              file is a second copy of that figure that no media query can
+              reach — the fold would go on being bled for a desktop strip and
+              the clip frame would swing off a phone-sized one. #tape-on-note
+              declares --tape-w and derives --tape-h from the artwork's aspect;
+              both this and the rule's own `width` read them, so there is one
+              number and the phone block moves it.
 
               Which is what leaves from/to readable: 0.55 is a little past half
               way along the strip, and 0 is its near edge, nothing folded, stuck
@@ -261,7 +270,7 @@ export default function Hero() {
             back="peel-back-masking"
             drive="scroll"
             direction="90deg"
-            box="11vw 5.667vw"
+            box="var(--tape-w) var(--tape-h)"
             from={0.55}
             to={0}
           />
@@ -276,15 +285,17 @@ export default function Hero() {
               the extra 90deg that swings the fold across the strip so it comes
               away end-first, off the right.
 
-              box is 19vw by 8.997vw — the width #tape-on-lemon sets and the
-              height its 283x134 artwork takes at that width. */}
+              box is #tape-on-lemon's own --tape-w and the height its 283x134
+              artwork takes at that width, for the reason the note's strip reads
+              its box off the stylesheet too: the phone re-sizes both, and a
+              literal box here could not follow. */}
           <Peel
             src="./assets/tape-on-lemon.webp"
             id="tape-on-lemon"
             back="peel-back-masking"
             drive="scroll"
             direction="106.952deg"
-            box="19vw 8.997vw"
+            box="var(--tape-w) var(--tape-h)"
             from={0.55}
             to={0}
           />

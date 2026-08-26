@@ -85,6 +85,14 @@ export function initTapeSlider(root: HTMLElement): () => void {
   const copyBox = left?.querySelector<HTMLElement>(".subtext .h5") ?? null;
   const chips: HTMLElement[] = [];
 
+  /* THE PHONE'S STEP BUTTONS. Optional, like everything else queried here —
+     the pair is markup the stylesheet hides above 767px, and a section without
+     it is still a working section. */
+  const nav = q<HTMLElement>(".tape-nav");
+  const navBtns = nav
+    ? Array.from(nav.querySelectorAll<HTMLButtonElement>("button[data-step]"))
+    : [];
+
   const subhead = q<HTMLElement>(".subhead");
   const sweep = q<HTMLElement>(".sweep-paint");
   const sweepInner = q<HTMLElement>(".sweep-inner");
@@ -350,6 +358,22 @@ export function initTapeSlider(root: HTMLElement): () => void {
     el.style.setProperty("--tag-ink", cs.getPropertyValue("--tag-ink").trim());
   }
 
+  /* THE STEP BUTTONS' PALETTE, and it is the roll's rather than the chip's: the
+     disc is the ring the active roll opens on (--ring) and the arrow is the
+     word mark's gold (--word), which is the pairing the design uses for these.
+     Written as --nav-face / --nav-ink rather than onto background and color
+     directly, the same split .tag makes — the stylesheet owns what the control
+     looks like, this owns which tape's colours it is wearing.
+
+     NOT --word-colour, which the dip writes per letter and leaves stale on the
+     root the moment a word changes. These two are the nav's own. */
+  function paintNav(btn: HTMLElement) {
+    if (!nav) return;
+    const cs = getComputedStyle(btn);
+    nav.style.setProperty("--nav-face", cs.getPropertyValue("--ring").trim());
+    nav.style.setProperty("--nav-ink", cs.getPropertyValue("--word").trim());
+  }
+
   const varOf = (btn: HTMLElement, name: string) =>
     getComputedStyle(btn).getPropertyValue(name).trim();
 
@@ -413,6 +437,10 @@ export function initTapeSlider(root: HTMLElement): () => void {
           // Repaint before parking the copy, or the chip flicks back to the old
           // colour for a frame.
           paintChip(subhead, rolls[index]);
+          /* WITH THE SHEET'S COMMIT AND NOT BEFORE. The pair sits at the very
+             foot of the stage, which is the last thing the colour sweeps over —
+             so the frame the new colour lands is the frame these may wear it. */
+          paintNav(rolls[index]);
           if (sweep) sweep.style.transform = "translateY(-100%)";
         },
       },
@@ -1026,6 +1054,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
       setShowcase(index);
       gsap.set(showcase, { rotationY: 0, z: 0 });
       paintChip(subhead, rolls[index]);
+      paintNav(rolls[index]);
       fillLeft(index);
       return dispatch(index);
     }
@@ -1110,6 +1139,23 @@ export function initTapeSlider(root: HTMLElement): () => void {
   rolls.forEach((btn, i) => {
     gsap.set(btn, { xPercent: -50, yPercent: -50 });
     btn.addEventListener("click", () => goTo(i), { signal });
+  });
+
+  /* THE PHONE'S PAIR. A step and not a selection: the orbit is hidden at this
+     width, so there is no roll under the thumb to aim at and what the buttons
+     offer is the next tape and the previous one. Wrapping, because a circle of
+     rolls has no first or last — and for the same reason there is nothing here
+     to disable at either end.
+
+     Straight into goTo, which is the whole point: the swap a tap runs is the
+     swap a click on a roll runs, interrupt handling and all. */
+  navBtns.forEach((btn) => {
+    const step = Number(btn.dataset.step) || 1;
+    btn.addEventListener(
+      "click",
+      () => goTo((activeIndex + step + rolls.length) % rolls.length),
+      { signal }
+    );
   });
 
   track.addEventListener(
@@ -1255,6 +1301,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
   applyParallax();
   gsap.ticker.add(applyParallax);
   paintChip(subhead, rolls[activeIndex]);
+  paintNav(rolls[activeIndex]);
   buildChips();
   fillLeft(activeIndex);
   /* Hold everything back until the section is reached — see ENTER above.

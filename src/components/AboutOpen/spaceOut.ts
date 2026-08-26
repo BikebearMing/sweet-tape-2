@@ -1,12 +1,34 @@
 /* Sweet Tape — /about's opening screen prising itself open.
  *
- * ONE SCRUBBED TIMELINE AND THAT IS THE WHOLE FILE. ONE SHARED and BELIEF start
- * as an ordinary phrase with an ordinary space in it; a little scroll pulls them
- * apart to 361px and the hand comes up through the gap holding the roll. It is
- * scrubbed rather than played, so the words open exactly as far as the reader
- * scrolls and no further — the point of the move is that the hand looks like it
- * is DOING the opening, and that only reads if the two are on the same clock and
- * that clock is the reader's own hand.
+ * ONE SCRUBBED TIMELINE AND THAT IS MOST OF THE FILE. ONE SHARED and BELIEF
+ * start as an ordinary phrase with an ordinary space in it; a little scroll
+ * pulls them apart to 361px and the hand comes up through the gap holding the
+ * roll. It is scrubbed rather than played, so the words open exactly as far as
+ * the reader scrolls and no further — the point of the move is that the hand
+ * looks like it is DOING the opening, and that only reads if the two are on the
+ * same clock and that clock is the reader's own hand.
+ *
+ * AND ON A PHONE IT IS NOT A MOVE AT ALL, WHICH IS THE OTHER HALF OF THE FILE.
+ * The stylesheet says which by declaring --space-run, the number of screens of
+ * scroll this costs; at 0 there is no scroll to scrub and the screen becomes an
+ * ARRANGEMENT THAT ARRIVES instead — the words stay in their phrase, and the box
+ * opens once, on its own clock, as the cover clears. See runScreens() below, and
+ * the About phone block in global.css, where the composition that asks for it is
+ * drawn.
+ *
+ * THE REASON IS THE SHEET AND NOT THE WIDTH. On a phone the section is 165vw
+ * against a window of 178 to 216, so the whole composition is inside the first
+ * screen: the reader arrives on the finished picture. There is nothing left for
+ * a scrub to reveal, and a scrub would only take the picture APART and ask for
+ * scroll to put it back. The roll also tops out well below the kicker there, so
+ * the gap it is supposed to come up through would open onto nothing — the one
+ * beat that has to happen is the box, and it happens by itself.
+ *
+ * WHICH IS NOT A MOBILE BRANCH, and the distinction is the site's rule rather
+ * than a nicety. Nothing in here asks how wide the window is. It reads one
+ * number off the layout — the same bargain gapVw() strikes, and the same one the
+ * belt strikes when it re-takes its stride — and 0 is a fact about how much page
+ * the composition is given, which is a fact the stylesheet owns.
  *
  * THE HAND IS AHEAD OF THE WORDS ON PURPOSE. It reaches its full height at 0.8
  * of the scrub while the gap is still opening under it — arriving with the words
@@ -44,12 +66,24 @@
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-import { screenH } from "@/components/viewport";
+import { whenRevealed } from "@/components/Preloader/gate";
+import { onViewportChange, screenH } from "@/components/viewport";
 
 export const SPACE_OUT = {
   /* THE GAP THE DESIGN MEASURES: 361px at the 1440 design width. In vw, so the
      arrangement is the same drawing at any window — every length on this site
-     is. Where the halves START is not written here at all; it is measured. */
+     is. Where the halves START is not written here at all; it is measured.
+
+     AND IT IS THE FALLBACK RATHER THAN THE SETTING. The stylesheet declares
+     --space-gap on the section and gapVw() below reads it; this is what the
+     move uses if that is ever dropped. The two agree at the design width.
+
+     WHY THE STYLESHEET OWNS IT. How far the line opens is a fact about the
+     COMPOSITION and not about the mechanism: on the desktop the roll comes up
+     THROUGH the opening and the gap has to be wide enough to hold it, and on a
+     phone the box is on the floor of a screen two and a half times as tall and
+     the roll tops out well below this line. Same move, two drawings — which is
+     the one kind of figure this file should be told rather than hold. */
   GAP: 25.069, // 361 / 1440
 
   /* WHERE THE HAND GOES, in vw, measured as the y of #hand.
@@ -65,7 +99,11 @@ export const SPACE_OUT = {
      which is the thing to know before reaching for this to slow the move down.
      ------------------------------------------------------------------------
      The section is 72.222vw tall against a window that is usually shorter, and
-     the box sits at the bottom of it. So every pixel of this scrub is also a
+     the box sits at the bottom of it. (On a phone the sheet is the WINDOW with a
+     floor under it — see the About phone block — so the two are the same height
+     and the arithmetic below reads a little differently, but the ceiling is the
+     same one and this figure clears it at both widths: the roll tops out around
+     half way up the screen rather than off it.) So every pixel of this scrub is also a
      pixel of the whole screen sliding UP, and the roll is climbing through a
      frame that is itself moving — it rises 493px on its own and the page takes
      away another pixel for every pixel scrolled.
@@ -103,6 +141,33 @@ export const SPACE_OUT = {
   /* The gap is still opening as the hand tops out — see the note above. */
   OPEN_FOR: 0.85,
 
+  /* THE SAME MOVE WITH NO SCROLL UNDER IT — the phone's, and it is only a clock.
+   *
+   * Every distance the box travels is HAND above and is not restated here: the
+   * roll comes out of the carton to the same height, overshoots by the same
+   * couple of vw and settles in the same place. What the phone has to supply is
+   * the one thing a scrub gets for free, which is WHEN.
+   *
+   * DELAY IS THE ONLY FIGURE WITH AN ARGUMENT BEHIND IT. Three things arrive on
+   * this screen when the cover lifts and they have an order: the letters rise
+   * first (0.3 late, a little over two seconds — see ABOUT_REVEAL in ./reveal
+   * .ts), the pen touches down at 1.6 (--hand-delay on .about-note), and the box
+   * is the payoff and goes last. At 1.1 the carton starts opening while the
+   * headline is still landing and tops out just after it, with the pen writing
+   * through — three beats in a row rather than three things happening at once,
+   * which is what an empty lime screen with everything arriving on frame one
+   * looks like.
+   *
+   * RISE and FALL are PEAK and its remainder, in seconds instead of in fractions
+   * of a scrub: four fifths of the move climbing and a fifth settling back, so
+   * the two versions of this have the same shape as well as the same distances.
+   * Move PEAK and these should follow. */
+  LAND: {
+    DELAY: 1.1,
+    RISE: 1,
+    FALL: 0.25,
+  },
+
   /* NOT LINEAR, WHICH IS WHAT A SCRUB DEFAULTS TO. Straight-mapped to scroll,
      the words start apart at full speed on the very first pixel and stop dead on
      the last — honest, and it reads as machinery. Easing at both ends gives the
@@ -118,119 +183,288 @@ export const SPACE_OUT = {
    lengths it was built with. */
 const vw = (n: number) => (window.innerWidth * n) / 100;
 
+/* HOW FAR THE TWO HALVES OPEN, in vw, off the section itself.
+ *
+ * A BARE NUMBER IN THE STYLESHEET AND NOT A LENGTH, which is the one thing to
+ * know before touching --space-gap. An unregistered custom property comes back
+ * from getComputedStyle as the token as authored — "10vw" would parse to 10 and
+ * "10px" would parse to 10 as well, silently meaning something else entirely.
+ * So the property is written unitless and this is the only place that decides
+ * what the unit is. --mark-gain on the belt's mark is declared the same way for
+ * the same reason.
+ *
+ * READ AT CALL TIME rather than closed over, exactly as vw() is: measure() runs
+ * again on every refresh, so a window that crosses the breakpoint re-solves the
+ * travel against the phone's figure without anything having to be rebuilt. */
+const gapVw = (root: HTMLElement): number => {
+  const raw = getComputedStyle(root).getPropertyValue("--space-gap");
+  const n = Number.parseFloat(raw);
+  return Number.isFinite(n) ? n : SPACE_OUT.GAP;
+};
+
+/* HOW MANY SCREENS OF SCROLL THE MOVE COSTS, off the section itself — and
+ * therefore WHETHER IT IS A MOVE AT ALL.
+ *
+ * ZERO IS A REAL ANSWER AND NOT AN OFF SWITCH, which is why the section is asked
+ * this rather than asked what kind of device it is on. "This composition is
+ * given no page to happen over" is a statement about the layout, and everything
+ * that follows from it follows honestly: with no page there is nothing to scrub,
+ * so the screen is handed over finished and the one beat that still has to
+ * happen is played on a clock. A stylesheet that later gives the phone half a
+ * screen back gets the scrub back with it, and nothing here changes.
+ *
+ * SPACE_OUT.LENGTH is the fallback, exactly as GAP is for gapVw. Read at call
+ * time so a window crossing the breakpoint re-answers it — see the rebind at the
+ * foot of initSpaceOut, which is what asks again. */
+const runScreens = (root: HTMLElement): number => {
+  const raw = getComputedStyle(root).getPropertyValue("--space-run");
+  const n = Number.parseFloat(raw);
+  return Number.isFinite(n) ? Math.max(0, n) : SPACE_OUT.LENGTH;
+};
+
 export function initSpaceOut(root: HTMLElement): () => void {
   const halves = Array.from(root.querySelectorAll<HTMLElement>(".h4 .half"));
   const hand = root.querySelector<HTMLElement>("#hand");
   if (halves.length !== 2 || !hand) return () => {};
 
-  /* WHERE THE TWO INNER EDGES SIT WITH NOTHING APPLIED, and the centre of the
-   * screen they are measured against.
-   *
-   * Transforms are cleared first, because a rect read off a half that is already
-   * part-way through the scrub is a rect of where it has got to, not of where it
-   * starts — and on a resize that is exactly the state this is called in.
-   * offsetLeft would sidestep that, but it is measured against whichever ancestor
-   * happens to be positioned, and this needs the same coordinates as the screen's
-   * own centre. */
-  let centre = 0;
-  let restEdge: [number, number] = [0, 0];
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  function measure() {
-    gsap.set(halves, { x: 0 });
-    const box = root.getBoundingClientRect();
-    centre = box.left + box.width / 2;
-    restEdge = [
-      halves[0].getBoundingClientRect().right,
-      halves[1].getBoundingClientRect().left,
-    ];
+  /* --------------------------------------------------------------------------
+     THE SCRUB — the desktop's, and what this file was written for
+     -------------------------------------------------------------------------- */
+  function scrub(): () => void {
+    /* WHERE THE TWO INNER EDGES SIT WITH NOTHING APPLIED, and the centre of the
+     * screen they are measured against.
+     *
+     * Transforms are cleared first, because a rect read off a half that is
+     * already part-way through the scrub is a rect of where it has got to, not
+     * of where it starts — and on a resize that is exactly the state this is
+     * called in. offsetLeft would sidestep that, but it is measured against
+     * whichever ancestor happens to be positioned, and this needs the same
+     * coordinates as the screen's own centre. */
+    let centre = 0;
+    let restEdge: [number, number] = [0, 0];
+
+    function measure() {
+      gsap.set(halves, { x: 0 });
+      const box = root.getBoundingClientRect();
+      centre = box.left + box.width / 2;
+      restEdge = [
+        halves[0].getBoundingClientRect().right,
+        halves[1].getBoundingClientRect().left,
+      ];
+    }
+
+    /* Each half's own distance: from where its inner edge rests to where the
+       open gap needs that edge to be. The two come out unequal whenever the two
+       words are unequal, which is the point — see the note at the top. */
+    const travel = (i: 0 | 1) => {
+      const half = vw(gapVw(root)) / 2;
+      return centre + (i === 0 ? -half : half) - restEdge[i];
+    };
+
+    measure();
+
+    /* Asked for less motion, the screen is simply its finished self: the words
+       apart and the roll held up in the gap. It is an arrangement, not a story,
+       and the reader is not missing anything by being handed it whole. */
+    if (reduced) {
+      gsap.set(halves[0], { x: travel(0) });
+      gsap.set(halves[1], { x: travel(1) });
+      gsap.set(hand, {
+        xPercent: -50,
+        x: 0,
+        y: () => vw(SPACE_OUT.HAND.SETTLE),
+      });
+      return () => {
+        gsap.set([...halves, hand], { clearProps: "transform" });
+      };
+    }
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    const tl = gsap.timeline({ paused: true });
+
+    tl.fromTo(
+      halves[0],
+      { x: 0 },
+      {
+        x: () => travel(0),
+        duration: SPACE_OUT.OPEN_FOR,
+        ease: SPACE_OUT.OPEN_EASE,
+      },
+      0,
+    );
+    tl.fromTo(
+      halves[1],
+      { x: 0 },
+      {
+        x: () => travel(1),
+        duration: SPACE_OUT.OPEN_FOR,
+        ease: SPACE_OUT.OPEN_EASE,
+      },
+      0,
+    );
+
+    /* xPercent rather than leaving the -50% in the CSS transform for GSAP to
+       interpret. The centring and the rise are the same property, and stating
+       both here is what stops the half-width pull being read as pixels and
+       dropped — the hero's badge documents the same hazard from the other
+       side. */
+    tl.fromTo(
+      hand,
+      { xPercent: -50, x: 0, y: () => vw(SPACE_OUT.HAND.REST) },
+      {
+        y: () => vw(SPACE_OUT.HAND.UP),
+        duration: SPACE_OUT.PEAK,
+        /* Fast out of the box and slowing as it clears — a thing being pushed,
+           not a thing being carried. */
+        ease: "power2.out",
+      },
+      0,
+    );
+    tl.to(
+      hand,
+      {
+        y: () => vw(SPACE_OUT.HAND.SETTLE),
+        duration: 1 - SPACE_OUT.PEAK,
+        ease: "power1.inOut",
+      },
+      SPACE_OUT.PEAK,
+    );
+
+    const st = ScrollTrigger.create({
+      /* The section is the honest trigger and `top top` is scroll zero: this is
+         the first thing on the route, so the move begins the moment the reader
+         touches the wheel. */
+      trigger: root,
+      start: "top top",
+      /* Re-read on every refresh, which includes every resize. And it is
+         runScreens() rather than the constant, so a window dragged across the
+         breakpoint that somehow keeps this path alive still ends where the
+         layout says rather than where the module does. */
+      end: () => "+=" + Math.round(screenH() * runScreens(root)),
+      scrub: SPACE_OUT.SCRUB,
+      /* Re-measure BEFORE the refresh re-reads the tweens' function values, so a
+         resize re-solves the travel against the new window and the new type size
+         rather than replaying distances measured at the old one. */
+      onRefreshInit: measure,
+      invalidateOnRefresh: true,
+      animation: tl,
+    });
+
+    return () => {
+      st.kill();
+      tl.kill();
+      /* A teardown mid-scrub must leave the screen readable rather than frozen
+         halfway through its own move. Back to the stylesheet: the words closed
+         up into their phrase and the hand back in the box. */
+      gsap.set([...halves, hand], { clearProps: "transform" });
+    };
   }
 
-  /* Each half's own distance: from where its inner edge rests to where the open
-     gap needs that edge to be. The two come out unequal whenever the two words
-     are unequal, which is the point — see the note at the top. */
-  const travel = (i: 0 | 1) => {
-    const half = vw(SPACE_OUT.GAP) / 2;
-    return (centre + (i === 0 ? -half : half)) - restEdge[i];
-  };
+  /* --------------------------------------------------------------------------
+     THE LANDING — the phone's, and it is one object on one clock
+     --------------------------------------------------------------------------
+     THE WORDS ARE NOT TOUCHED, WHICH IS THE WHOLE OF WHAT IS DIFFERENT. Nothing
+     below reads .half at all: ONE SHARED BELIEF is a centred line of type set by
+     the stylesheet and it stays one, first frame to last. The gap it opens on
+     the desktop is a hole for the roll to come up through, and on the phone's
+     sheet the roll tops out a long way below this line — so opening it would be
+     the sentence coming apart for nothing, on a screen where the reader can
+     already see everything.
 
-  measure();
+     THE BOX STILL OPENS, BECAUSE THAT IS THE SECTION. It is the same rise, the
+     same overshoot and the same resting height as the scrub's — see LAND, which
+     carries only the clock.
 
-  /* Asked for less motion, the screen is simply its finished self: the words
-     apart and the roll held up in the gap. It is an arrangement, not a story,
-     and the reader is not missing anything by being handed it whole. */
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    gsap.set(halves[0], { x: travel(0) });
-    gsap.set(halves[1], { x: travel(1) });
-    gsap.set(hand, { xPercent: -50, x: 0, y: () => vw(SPACE_OUT.HAND.SETTLE) });
-    return () => {};
+     BEHIND THE COVER, and that is not optional. This screen is the first thing
+     on the route, so its first frame is under the preloader: played on mount the
+     carton would open in the dark and be revealed already open, which is exactly
+     the mistake reveal.ts refuses on the headline's behalf and Stage.tsx refuses
+     on the note's. whenRevealed fires on the spot if there is no cover to wait
+     for, so nothing here has to know whether there was one. */
+  function land(): () => void {
+    /* Asked for less motion, the box is simply open. Same finished screen the
+       scrub's reduced branch hands over, minus the words, which do not move on
+       this composition in the first place. */
+    if (reduced) {
+      gsap.set(hand, {
+        xPercent: -50,
+        x: 0,
+        y: () => vw(SPACE_OUT.HAND.SETTLE),
+      });
+      return () => {
+        gsap.set(hand, { clearProps: "transform" });
+      };
+    }
+
+    const { DELAY, RISE, FALL } = SPACE_OUT.LAND;
+
+    /* THE WAIT IS A POSITION IN THE TIMELINE AND NOT A `delay` ON IT, which is
+       the one thing here that is easy to get wrong and silent when it is. A
+       timeline's delay is measured from the moment it is CREATED — it is where
+       the tween sits on its parent, and the root timeline has been running since
+       the page loaded. This one is built on mount and played when the cover
+       clears, which on a first load is a second or more later, so a delay would
+       already have been spent by the time anything asked for it and the carton
+       would open on the frame the sheet lifted. Written as a position, the
+       lead-in is real time inside a playhead that starts at 0. */
+    const tl = gsap.timeline({ paused: true });
+
+    tl.fromTo(
+      hand,
+      { xPercent: -50, x: 0, y: () => vw(SPACE_OUT.HAND.REST) },
+      { y: () => vw(SPACE_OUT.HAND.UP), duration: RISE, ease: "power2.out" },
+      DELAY,
+    );
+    tl.to(
+      hand,
+      { y: () => vw(SPACE_OUT.HAND.SETTLE), duration: FALL, ease: "power1.inOut" },
+      DELAY + RISE,
+    );
+
+    const unsubscribe = whenRevealed(() => tl.play(0));
+
+    return () => {
+      unsubscribe();
+      tl.kill();
+      /* Back to the stylesheet, which is the hand in the box — the same place
+         the scrub's teardown leaves it, and the pose the markup rests on. */
+      gsap.set(hand, { clearProps: "transform" });
+    };
   }
 
-  gsap.registerPlugin(ScrollTrigger);
+  /* --------------------------------------------------------------------------
+     WHICH OF THE TWO, AND ASKING AGAIN WHEN THE ANSWER CAN HAVE CHANGED
+     --------------------------------------------------------------------------
+     The layout decides — runScreens() reads --space-run off the section — and it
+     can change under a live page: turn a phone on its side and 844px is past the
+     breakpoint, so the sheet goes back to 72.222vw, the carton back to its own
+     size and the move back to a scrub. Bound once, the page would keep the
+     landing it was built with and the composition would have no move at all.
 
-  const tl = gsap.timeline({ paused: true });
+     onViewportChange rather than `resize`, for the belt's reason: a retracting
+     address bar must not tear down and rebuild a timeline mid-flick, and a real
+     WIDTH change is the only thing that can have moved this.
 
-  tl.fromTo(
-    halves[0],
-    { x: 0 },
-    { x: () => travel(0), duration: SPACE_OUT.OPEN_FOR, ease: SPACE_OUT.OPEN_EASE },
-    0,
-  );
-  tl.fromTo(
-    halves[1],
-    { x: 0 },
-    { x: () => travel(1), duration: SPACE_OUT.OPEN_FOR, ease: SPACE_OUT.OPEN_EASE },
-    0,
-  );
+     AND ONLY WHEN THE ANSWER ACTUALLY FLIPS. Every teardown here clears the
+     transforms it wrote, so rebuilding on a width change that decided the same
+     thing would put the screen back to its first frame — the carton shut, the
+     roll gone — for no reason the reader can see. */
+  let mode = runScreens(root) > 0;
+  let stop = mode ? scrub() : land();
 
-  /* xPercent rather than leaving the -50% in the CSS transform for GSAP to
-     interpret. The centring and the rise are the same property, and stating both
-     here is what stops the half-width pull being read as pixels and dropped —
-     the hero's badge documents the same hazard from the other side. */
-  tl.fromTo(
-    hand,
-    { xPercent: -50, x: 0, y: () => vw(SPACE_OUT.HAND.REST) },
-    {
-      y: () => vw(SPACE_OUT.HAND.UP),
-      duration: SPACE_OUT.PEAK,
-      /* Fast out of the box and slowing as it clears — a thing being pushed,
-         not a thing being carried. */
-      ease: "power2.out",
-    },
-    0,
-  );
-  tl.to(
-    hand,
-    {
-      y: () => vw(SPACE_OUT.HAND.SETTLE),
-      duration: 1 - SPACE_OUT.PEAK,
-      ease: "power1.inOut",
-    },
-    SPACE_OUT.PEAK,
-  );
-
-  const st = ScrollTrigger.create({
-    /* The section is the honest trigger and `top top` is scroll zero: this is
-       the first thing on the route, so the move begins the moment the reader
-       touches the wheel. */
-    trigger: root,
-    start: "top top",
-    /* Re-read on every refresh, which includes every resize. */
-    end: () => "+=" + Math.round(screenH() * SPACE_OUT.LENGTH),
-    scrub: SPACE_OUT.SCRUB,
-    /* Re-measure BEFORE the refresh re-reads the tweens' function values, so a
-       resize re-solves the travel against the new window and the new type size
-       rather than replaying distances measured at the old one. */
-    onRefreshInit: measure,
-    invalidateOnRefresh: true,
-    animation: tl,
+  const stopVp = onViewportChange(() => {
+    const next = runScreens(root) > 0;
+    if (next === mode) return;
+    mode = next;
+    stop();
+    stop = mode ? scrub() : land();
   });
 
   return () => {
-    st.kill();
-    tl.kill();
-    /* A teardown mid-scrub must leave the screen readable rather than frozen
-       halfway through its own move. Back to the stylesheet: the words closed up
-       into their phrase and the hand back in the box. */
-    gsap.set([...halves, hand], { clearProps: "transform" });
+    stopVp();
+    stop();
   };
 }

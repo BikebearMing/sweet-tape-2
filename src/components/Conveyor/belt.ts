@@ -234,8 +234,15 @@ export const TEXT = {
   EASE: "power3.out",
 } as const;
 
-/** One row's travel and its repeat length, both in vw — see components/Conveyor. */
-type Row = { el: HTMLElement; from: number; to: number; stride: number };
+/** One row's travel and its repeat length, both in vw — see components/Conveyor.
+    `shift` is the correction that puts the mark dead centre; see markShift. */
+type Row = {
+  el: HTMLElement;
+  from: number;
+  to: number;
+  stride: number;
+  shift: number;
+};
 
 /** One repeat of a row, in vw — the distance a row can be shifted by and look
     exactly the same, which is what the idle drift wraps on. */
@@ -244,6 +251,77 @@ function strideOf(el: HTMLElement): number {
   const vw = window.innerWidth / 100;
   const gap = parseFloat(getComputedStyle(el).columnGap) || 0;
   return (el.getBoundingClientRect().width + gap) / repeat / vw;
+}
+
+/* HOW FAR THE MARK'S ROW IS OUT, IN vw — and it is measured, which is the whole
+ * point of the function.
+ *
+ * THE ROW'S `to` IS THE WHOLE COMPOSITION. Everything in this section is aimed
+ * at one pose: the belt stops with the mark standing alone in the middle of the
+ * window, and only then is it grown until it takes the screen. Growing a shape
+ * that is not centred is not the same beat — it is a logo sliding off one edge
+ * and getting bigger while it goes, which is what /about looked like on a phone.
+ *
+ * AND `to` IS A HAND-COMPUTED NUMBER. -284.8vw in components/Conveyor is the sum
+ * of four pill widths and four gaps plus half the mark, worked out at the 1440
+ * design width — a real derivation, and one that stops being true the moment any
+ * of those widths changes. The phone changes all of them: a row goes from
+ * 13.567vw tall to 45 and every pill in it is a multiple of that, so one stride
+ * goes from 200.6vw to about 657 and the mark's own place in the row moves by
+ * three hundred vw. The declared stop then lands somewhere in the middle of the
+ * photograph two pills along.
+ *
+ * SO THE STOP IS TAKEN OFF THE MARKUP INSTEAD. Park the row at zero, measure
+ * where the mark's centre actually sits inside it, and the stop is whatever puts
+ * that centre on 50vw. Nothing in here knows a pill width, a gap or a breakpoint,
+ * and the phone block can re-size the whole belt without a second number in this
+ * file going quietly out of date. At 1440 it returns 0 — the measurement
+ * reproduces -284.8 exactly, which is the check that the derivation and the
+ * measurement are the same statement.
+ *
+ * THE ROW IS PRINTED THREE TIMES, so there are three answers, one stride apart,
+ * and the right one is the one NEAREST the stop that was declared. That is what
+ * keeps this a correction rather than a re-composition: the design says which
+ * way the row travels and roughly how far, and this only says which copy of the
+ * mark is the one that ends up in the middle.
+ *
+ * IT SHIFTS BOTH ENDS. `from` moves with `to` so the row travels exactly as far
+ * as it was drawn to travel — the correction is where the row STOPS, not how
+ * much of it goes past the window on the way.
+ *
+ * MEASURED WITH --x PARKED AT ZERO, and restored after. A rect read off a row
+ * that is part way through its travel is a rect of where it has got to; the
+ * offset wanted here is the mark's place INSIDE the row, which is the one thing
+ * the translate must not be allowed to contribute. AboutOpen/spaceOut.ts clears
+ * its transforms before measuring for the same reason.
+ *
+ * Rotation and scale on the mark are both about its own centre (the stylesheet
+ * leaves transform-origin alone), so the centre of the box this reads back is
+ * the centre of the mark whatever either of them is doing. */
+function markShift(row: Row): number {
+  const mark = row.el.querySelector<SVGSVGElement>(".conveyor-mark");
+  if (!mark) return 0;
+
+  const px = window.innerWidth / 100;
+
+  const held = row.el.style.getPropertyValue("--x");
+  row.el.style.setProperty("--x", "0vw");
+  const m = mark.getBoundingClientRect();
+  const t = row.el.getBoundingClientRect();
+  if (held) row.el.style.setProperty("--x", held);
+  else row.el.style.removeProperty("--x");
+
+  /* The mark's centre measured from the row's own left edge, in vw. Independent
+     of the translate, which is why it was parked. */
+  const centre = (m.left + m.width / 2 - t.left) / px;
+
+  const copies = Number(row.el.dataset.repeat) || 1;
+  let best = 0;
+  for (let k = 0; k < copies; k++) {
+    const stop = 50 - centre - k * row.stride;
+    if (k === 0 || Math.abs(stop - row.to) < Math.abs(best)) best = stop - row.to;
+  }
+  return best;
 }
 
 export function initConveyor(root: HTMLElement): () => void {
@@ -266,6 +344,8 @@ export function initConveyor(root: HTMLElement): () => void {
        Measuring it means the pills can be resized, or a gap retuned in the
        stylesheet, without a number in here going quietly out of date. */
     stride: strideOf(el),
+    /* Filled in below, once the row exists to be measured. */
+    shift: 0,
   }));
 
   if (rows.some((r) => Number.isNaN(r.from) || Number.isNaN(r.to)))
@@ -283,6 +363,21 @@ export function initConveyor(root: HTMLElement): () => void {
      registration is a browser-only concern. Idempotent, so a second mount costs
      nothing. */
   gsap.registerPlugin(ScrollTrigger);
+
+  /* The mark's row, put back on the centre line — see markShift, which is where
+     the argument is. Every other row returns 0 and is untouched.
+
+     BELOW THE REDUCED-MOTION EXIT, and that is placement rather than tidiness.
+     Each call parks a row at zero and reads two rects back, which is a forced
+     layout on a box several windows wide; a reader who has asked for less motion
+     never travels, rests on the pose the markup wrote, and has nothing to
+     correct. Doing the measurement above the exit would be paying for it on
+     every load that cannot use it. */
+  const centreMark = () => {
+    for (const row of rows) row.shift = markShift(row);
+  };
+
+  centreMark();
 
   /* --x IS WRITTEN AS A STRING WITH ITS UNIT, off a plain object, rather than
      tweened as a property — the same way Peel's --peel and the preloader's mark
@@ -303,7 +398,8 @@ export function initConveyor(root: HTMLElement): () => void {
 
   const write = () => {
     for (const row of rows) {
-      const base = row.from + (row.to - row.from) * drive.p;
+      const base =
+        row.shift + row.from + (row.to - row.from) * drive.p;
       /* The crawl, wrapped on one copy and pointed the way the row travels, and
          faded out across the travel so the run always lands on `to` exactly. */
       const dir = Math.sign(row.to - row.from);
@@ -315,9 +411,20 @@ export function initConveyor(root: HTMLElement): () => void {
     }
   };
 
-  /* Harmless now that the markup rests on `from` — this writes the pose that is
-     already there — and kept because it is what makes the first frame after a
-     resize or a re-bind agree with the tween rather than with the stylesheet. */
+  /* AND IT IS NO LONGER HARMLESS, which is worth saying because the line used to
+     be: the markup rests on `from` and this wrote the pose that was already
+     there. It now writes `from` PLUS the mark's correction, so on any sheet
+     where that correction is not zero this is a real move — 106vw of row on a
+     phone — made once, on mount.
+
+     Which is invisible where it happens and would not be anywhere else. This
+     section is the second on the route: the reader is under the preloader's
+     cover on the frame it runs, and a screen and a half of page below the fold
+     after that. A correction applied on ARRIVAL rather than on mount would be
+     the belt jumping under someone watching it.
+
+     It is also still what makes the first frame after a resize or a re-bind
+     agree with the tween rather than with the stylesheet. */
   write();
 
   /* THE STRIDE IS IN vw AND STILL HAS TO BE RE-TAKEN, which is the one claim
@@ -334,6 +441,12 @@ export function initConveyor(root: HTMLElement): () => void {
      can have moved this. */
   const stopVp = onViewportChange(() => {
     for (const row of rows) row.stride = strideOf(row.el);
+    /* AFTER the strides and not before: markShift picks between copies one
+       stride apart, so it is reading the figure the line above just re-took.
+       Re-run from the DECLARED ends rather than from the shifted ones — `shift`
+       is assigned, never accumulated, which is why row.from and row.to are left
+       as the markup wrote them. */
+    centreMark();
     write();
   });
 

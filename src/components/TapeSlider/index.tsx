@@ -66,7 +66,7 @@ export default function TapeSlider() {
             then commits down to it so the pair is ready to swap again. */}
         <div className="bg-overlay" aria-hidden="true">
           <div className="bg-layer bg-layer--base" />
-          <div className="bg-layer bg-layer--next" />
+          <div className="bg-layer bg-layer--next arc-cut" />
         </div>
 
         {/* The word mark is a row of images with no text in them, so the
@@ -80,7 +80,7 @@ export default function TapeSlider() {
             colour sheet with overflow hidden — so it is uncovered along exactly
             the curve the sheet draws. .sweep-inner cancels the outer travel so
             the copy holds still while the box slides past. */}
-        <div className="sweep-paint" aria-hidden="true">
+        <div className="sweep-paint arc-cut" aria-hidden="true">
           <div className="sweep-inner">
             <h6 className="subhead subhead--next">{SUBHEAD}</h6>
           </div>

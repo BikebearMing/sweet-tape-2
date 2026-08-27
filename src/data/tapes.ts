@@ -156,6 +156,31 @@ export type Tape = {
    * See innerModelOf, which is the one place the fallback is decided.
    */
   modelInner?: string;
+  /**
+   * HOW CLEAR THIS TAPE IS, 0..1 — a fact about the product, which is why it
+   * lives here with the rest of one and not as a constant in the renderer.
+   *
+   * It reaches the product page's roll as the see-through-ness of the WOUND
+   * SIDE and nothing else: 0 is a solid roll and is what an absent value means,
+   * so a tape that says nothing here is exactly the roll it was before any of
+   * this existed. See ViewerFilm in components/TapeSlider/tape3d.ts, and GLASS
+   * in components/TapeSlider/film.ts for what the number actually does.
+   *
+   * IT IS NOT A TRANSPARENCY PERCENTAGE, and reading it as one will lead you to
+   * set it far too high. The wound side is a cylinder wall, so everywhere but
+   * the silhouette the light crosses it TWICE — a third of the way through each
+   * face is a tenth of the way through the pair. What that buys is the gradient
+   * a real roll has: the core sensed through the near wall, the rim staying
+   * solid. Push it looking for the page behind the roll and what you will get
+   * is a hollow one.
+   *
+   * THE VALUES ARE READ OFF THE PRODUCT, not tuned to taste: cellophane and
+   * low-noise are clear films, OPP is a clear film with a brown pigment in it,
+   * masking is crepe paper, cloth is cloth, and double-sided is tissue between
+   * two adhesive faces. If one of them is wrong for the drawing, this is the
+   * one number to change and it changes nothing else.
+   */
+  clarity?: number;
   /** The two tilted photographs. Exactly two — the layout places both by hand. */
   showcase: [string, string];
   /** Chips in the left column. */
@@ -333,6 +358,8 @@ export const tapes: Tape[] = [
     roll: "/assets/slider/double/roll.webp",
     card: "/assets/slider/double/card.webp",
     model: "/assets/tapes/Double-Tape.glb",
+    /* Tissue between two adhesive faces — the least clear of the three that are clear at all. */
+    clarity: 0.04,
     showcase: ["/assets/slider/double/shot-1.webp", "/assets/slider/double/shot-2.webp"],
     tags: ["INVISIBLE HOLDING", "SMOOTH MOUNTING", "QUICK PATCHING"],
     copy: "The kind of tape that commits. Strong hold on both sides, easy to use, hard to let go.",
@@ -394,6 +421,8 @@ export const tapes: Tape[] = [
     roll: "/assets/slider/stationery/roll.webp",
     card: "/assets/slider/stationery/card.svg",
     model: "/assets/tapes/Cello-Tape.glb",
+    /* Cellophane. The clearest tape in the family and the one this was built for. */
+    clarity: 0.11,
     showcase: [
       "/assets/slider/stationery/shot-1.webp",
       "/assets/slider/stationery/shot-2.webp",
@@ -536,6 +565,8 @@ export const tapes: Tape[] = [
        one (Hero/engine.ts MODEL_URL), so the object the page opens with is the
        entry below rather than this one. */
     model: "/assets/tapes/header-brown.glb",
+    /* Clear film with a brown pigment in it, so it passes light without ever being colourless. */
+    clarity: 0.09,
     /* THE ONE TAPE SPLIT SO FAR, and it is split because it is the one the inner
        page was designed around — see `modelInner` above.
        IT IS A COPY OF THE LINE ABOVE TODAY, byte for byte, so the page looks
@@ -606,13 +637,22 @@ export const tapes: Tape[] = [
     colours: {
       ring: "#e4f7a8", // placeholder
       bg: "#b6fe00",
-      /* THE ONE COLOUR HERE THAT IS NOT THE SITE'S PAIRING, and it is specified
-         rather than picked: the opening screen's THE / RELIABLE are drawn in
-         this mid green. It has to be its own value — the marks are a stencil
-         punched out of the sheet they lie on, so at #013900 they read as a hole
-         in the lime and at #b6fe00 they vanish into it. This is the step
-         between, which is what makes the word read as printed ON the sheet. */
-      word: "#52AF16",
+      /* THE WORD MARK — the opening screen's THE / RELIABLE, and the headline
+         on /products while this tape is being looked at.
+
+         IT WAS A MID GREEN, #52AF16, and this is now the site's own dark green
+         like every other colour in this block. The argument for the mid step was
+         that the marks are a stencil punched out of the sheet they lie on, so at
+         full dark they read as a hole in the lime rather than as ink printed on
+         it — which is true, and is the effect that was asked for: THE RELIABLE
+         now reads as cut out of the sheet rather than as a third green sitting
+         between the lime and the ink. It is the one tape whose word mark is its
+         ink; the other five keep a step of their own.
+
+         The opp roll is the whole of what this reaches — the closing key visual
+         and the home page's slider both draw this tape's word off the same
+         value, so the two pages say it the same way. */
+      word: "#013900",
       tagBg: "#013900",
       tagInk: "#b6fe00",
       ink: "#013900",
@@ -628,6 +668,8 @@ export const tapes: Tape[] = [
        the slider shows the object the visitor has already been watching rather
        than a second model of it. */
     model: "/assets/tapes/Low-Noise-Tape.glb",
+    /* A clear film like the cello, a shade denser for the low-noise coating. */
+    clarity: 0.10,
     showcase: [
       "/assets/slider/opp-quiet/shot-1.webp",
       "/assets/slider/opp-quiet/shot-2.webp",

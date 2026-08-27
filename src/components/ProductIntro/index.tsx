@@ -73,6 +73,9 @@ export default function ProductIntro({ tape }: { tape: Tape }) {
          obliged to show the same FILE, which is what lets the close-up be
          finished for a close-up. */
       model={innerModelOf(tape)}
+      /* AND HOW CLEAR THE TAPE IS — see `clarity` in src/data/tapes.ts, which
+         is where the value and the argument for it live. */
+      clarity={tape.clarity}
       style={
         {
           ...cssVars(tape.colours),
@@ -94,6 +97,12 @@ export default function ProductIntro({ tape }: { tape: Tape }) {
           It is the opposite: there is nothing to release. */}
 
       <div className="pi-sheet">
+        {/* THE TAPE'S COLOUR, ITS PAPER AND THE CURVE ALONG THE FOOT. A sheet of
+            its own rather than a background on .pi-sheet, because the shape is a
+            mask and a mask clips the box it is on — the roll below has to be
+            free to leave this box on the scroll. See .arc-foot in global.css. */}
+        <div className="arc-foot" data-paper aria-hidden="true" />
+
         {/* The page's one h1, and the mark it names is a row of pictures with
             no text in them — so the words are announced here and the letters
             are taken out of the tree. aria-label is honoured on a heading, but

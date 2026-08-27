@@ -3,16 +3,31 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { letters } from "@/components/letters";
+import Peel from "@/components/Peel";
 import { tapes } from "@/data/tapes";
 import { initPreloader } from "./reveal";
 import { createTransition, type Transition } from "./transition";
 
-/** The mark. A flat SVG — the movement is Preloader/sticker.ts plus the
- *  timeline in Preloader/reveal.ts, where it used to be a components/Peel
- *  assembly and, before that, 1.8 MB of gif with the animation baked into it.
- *  Its own size is 191 x 118, and sticker.ts and global.css both hold that
- *  ratio; the file is named here and nowhere else. */
+/** The mark. A flat SVG — the movement is components/Peel plus the timeline in
+ *  Preloader/reveal.ts, where it used to be 1.8 MB of gif with the animation
+ *  baked into it. Its own size is 191 x 118. */
 const MARK = "/assets/preloader-image.svg";
+
+/* The artwork's aspect, so the peel's box can be given in one number. The
+   wrapper is --pre-mark wide (global.css) and this is what it is tall. */
+const MARK_BOX = "var(--pre-mark) calc(var(--pre-mark)*118/191)";
+
+/* Which edge lifts, measured off the gif this replaces: through its unfold the
+   part still folded over sits at a bearing of about 61deg from the mark's
+   centre — up and to the right — frame after frame. Same convention as the
+   prop's, 0deg being the top. */
+const MARK_PEEL_DIR = "72deg";
+
+/** The line under it — the hero's headline, set on one line rather than the
+ *  two it takes below. Split to letters and revealed with the site's one text
+ *  entrance; see Preloader/reveal.ts. */
+const LINE = "STICK BY YOU";
 
 /* The stack under the sheet: one sheet per tape, in that tape's stage colour,
  * leaving one after another so the cover comes off as bands of colour rather
@@ -84,11 +99,11 @@ const HOME = "/";
  * these by hand — and the transition's whole claim is that it IS the preloader's
  * rainbow, coming the other way.
  *
- * THE OVERTURE IS THE HOME PAGE'S. The mark is the site introducing itself,
- * which is a thing to do once, at the front door: land on /products from a
- * search result and what you want is the page, not a logo you have not asked
- * about. So every other route gets the same cover with nothing printed on it,
- * and it sweeps off after a beat rather than after four seconds
+ * THE OVERTURE IS THE HOME PAGE'S. The mark and the line under it are the site
+ * introducing itself, which is a thing to do once, at the front door: land on
+ * /products from a search result and what you want is the page, not a logo you
+ * have not asked about. So every other route gets the same cover with nothing
+ * printed on it, and it sweeps off after a beat rather than after four seconds
  * (PRELOADER.SWEEP_BARE).
  *
  * Frozen at the first render rather than followed, and that is the point of the
@@ -206,7 +221,7 @@ export default function Preloader() {
             else about these sheets is in the stylesheet. */}
         {STACK.map(({ id, bg }, i) => (
           <div
-            className="preloader-layer arc-cut"
+            className="preloader-layer"
             key={id}
             style={{ background: bg, zIndex: STACK.length - i }}
           />
@@ -217,35 +232,39 @@ export default function Preloader() {
             the cover opens on, the last colour to leave, and the first to
             arrive when the curtain comes back down between pages. Empty, it is
             simply the seventh sheet. */}
-        <div
-          className="preloader-sheet arc-cut"
-          style={{ zIndex: STACK.length + 1 }}
-        >
+        <div className="preloader-sheet" style={{ zIndex: STACK.length + 1 }}>
           {overture && (
-            /* The mark, arriving as a sticker: it springs up off the sheet,
-                  its shape flexes as it settles, a sheen pans across it, and
-                  then it holds until the cover carries it away.
+            <>
+              {/* The mark, unfolding. It was a gif of itself doing this; it is
+                  now the same peel the pinboard's tape uses, run once off the
+                  preloader's own clock — drive="manual" is what keeps
+                  Peel/peel.ts from adopting it into the idle loop.
 
-                  EMPTY IN THE DOCUMENT, and that is the one place the mark
-                  parts company with the rest of this component. Everything else
-                  here is server-rendered because it has to be in the first
-                  painted frame; this box is sixty-four columns carrying about
-                  twenty-five kilobytes of inline style between them, and it is
-                  hidden until its beat a full second later. So the wrapper is
-                  the markup — it holds the layout box, and the artwork is
-                  preloaded in the head — and Preloader/sticker.ts builds the
-                  columns into it on mount. See the note there.
+                  from={0} is the fold at the near edge — nothing folded, the
+                  mark lying flat — and that is the pose --peel: 0 draws, which
+                  is what paints before any JS runs and if none ever does. The
+                  folded pose is the far end, to={1}; the timeline starts there
+                  and comes back.
 
                   Sized by .site-preloader .preloader-mark in global.css,
-                  exactly as the Peel assembly and the bare <img> before it
-                  were: same box, same one number.
+                  exactly as the <img> here was — the wrapper takes over the
+                  layout box. */}
+              <Peel
+                className="preloader-mark"
+                src={MARK}
+                drive="manual"
+                direction={MARK_PEEL_DIR}
+                box={MARK_BOX}
+                from={0}
+                to={1}
+              />
 
-                  IT IS THE WHOLE OVERTURE NOW. STICK BY YOU was set under it
-                  and has gone: the mark arriving as an object says the thing,
-                  and a headline under it was the hero's line arriving twice
-                  within four seconds of itself. What went with it is a beat,
-                  not just an element — see PRELOADER in reveal.ts. */
-            <div className="preloader-mark" data-sticker={MARK} />
+              {/* Parked under their masks by the stylesheet and released by
+                  Preloader/reveal.ts, exactly as the hero's headline is — same
+                  structure, same tween, and it goes back the way it came before
+                  the paper moves. */}
+              <p className="preloader-line">{letters(LINE)}</p>
+            </>
           )}
         </div>
       </div>

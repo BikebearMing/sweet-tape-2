@@ -3,6 +3,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 
 import { initBodyReveal } from "@/components/bodyReveal";
+import { initPickCue } from "./cue";
 import { initPickFan } from "./fan";
 import { initPickRecolour } from "./recolour";
 import { initPickReveal } from "./reveal";
@@ -40,20 +41,31 @@ export default function Stage({ children }: { children: ReactNode }) {
     const stopReveal = initPickReveal(root);
     const stopBody = initBodyReveal(root);
 
-    /* THE ONE PAIR THAT IS WIRED TOGETHER, and it is wired HERE rather than by
-       one importing the other. The fan knows which roll the pointer is over and
-       nothing else; the recolour knows what a tape's colours do to a page and
-       nothing else. Handing the first a callback into the second is what keeps
-       it that way — either can be dropped and the other still runs, and the row
-       can be picked up on a page that never changes colour. */
+    /* THE THREE THAT ARE WIRED TOGETHER, and they are wired HERE rather than by
+       one importing another. The fan knows which roll the pointer is over and
+       nothing else; the recolour knows what a tape's colours do to a page; the
+       cue knows how to write "click me!" onto a roll. Handing the first a
+       callback into the other two is what keeps it that way — any of the three
+       can be dropped and the rest still run, and the row can be picked up on a
+       page that never changes colour and never says a word.
+
+       ONE CALLBACK AND NOT TWO REGISTRATIONS, because both answers are to the
+       same question and must not be able to disagree about it: the page becomes
+       a tape and the cue appears on that tape's roll in the same tick, off the
+       same element. fan.ts still knows about neither. */
     const recolour = initPickRecolour(root);
-    const stopFan = initPickFan(root, recolour.paint);
+    const cue = initPickCue(root);
+    const stopFan = initPickFan(root, (roll) => {
+      recolour.paint(roll);
+      cue.show(roll);
+    });
 
     return () => {
       stopReveal();
       stopBody();
       stopFan();
       recolour.stop();
+      cue.stop();
     };
   }, []);
 

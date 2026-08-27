@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import { bodyCopy } from "@/components/body";
 import { letters } from "@/components/letters";
 import { cssVars, tapes } from "@/data/tapes";
+import ClickMe, { type CueSide } from "./ClickMe";
 import Stage from "./Stage";
 
 /* PICK YOUR PLAYER — the product page's opening screen, and the whole of it.
@@ -64,6 +65,45 @@ const ORDER = [
   "double",
 ] as const;
 
+/* WHICH SHOULDER EACH ROLL'S CUE HANGS OFF — see components/PickYourPlayer/
+ * ClickMe.tsx for what it is, and .pick-cue in global.css for what the choice
+ * does. This is where the arithmetic lives, because it is a fact about where
+ * things stand on THIS page and nothing else.
+ *
+ * THE CUE STANDS OFF THE ROLL, so it needs 8.2vw of clear sheet beside the
+ * shoulder it points from and about 6.8vw of headroom above the row. Every
+ * length here is in vw and every one of them is fixed, so this is arithmetic
+ * rather than a judgement:
+ *
+ *   the rolls stand at 4.9, 19.2, 33.5, 47.8, 62.1 and 76.4vw, each 18.7 wide
+ *   PLAYER, the lower headline, runs 38.51 to 61.49vw and its line box ends
+ *     3.2vw above the top of the row — which is half what the cue needs
+ *   a LEFT cue spans its roll's left edge minus 5.96vw to plus 2.24
+ *   a RIGHT cue spans its roll's left edge plus 16.46vw to plus 24.66
+ *
+ * Run the six through it and three of them cannot go left. Rolls 3 and 4 land
+ * at 41.8-50.0 and 56.1-64.3, both squarely under PLAYER. Roll 0 lands at
+ * -1.1-7.1 and the page's own edge is what it runs off — .pick-player clips, so
+ * that cue would simply lose its first letters. All three go right instead,
+ * where they come to 21.4-29.6, 64.3-72.5 and 78.6-86.8: clear of PLAYER, clear
+ * of PICK YOUR above it, and inside the sheet.
+ *
+ * ROLL 5 STAYS LEFT and it is the one to check if this is ever re-tuned: on the
+ * right it would run to 101.1vw, off the page. The row is symmetrical and so is
+ * the problem — the two ends can each only go one way.
+ *
+ * BY PLACE IN THE LINE AND NOT BY TAPE. It is the position under the headline
+ * that decides this, so reordering ORDER above moves the flip with the slot and
+ * not with the product. */
+const CUE_SIDE: CueSide[] = [
+  "right", // cloth — the page's edge is on its left
+  "left",
+  "left",
+  "right", // low-noise OPP — under PLAYER
+  "right", // stationery — under PLAYER
+  "left",
+];
+
 /* Resolved at module scope, so a typo or a tape renamed in the data file is a
    build that fails with the id in the message rather than a page with a hole in
    the row. */
@@ -121,7 +161,7 @@ export default function PickYourPlayer() {
           simply the colour it always was. */}
       <div className="pick-wash" aria-hidden="true">
         <div className="pick-wash-layer pick-wash-base" />
-        <div className="pick-wash-layer pick-wash-next" />
+        <div className="pick-wash-layer pick-wash-next arc-cut" />
       </div>
 
       {/* The page's one h1. Split to letters for the reveal, which is the hero's
@@ -152,7 +192,7 @@ export default function PickYourPlayer() {
             which is what makes the two arcs read as one line crossing the
             sheet rather than as two curves sweeping past each other. */}
         <div className="pick-rise" aria-hidden="true">
-          <div className="pick-rise-next" />
+          <div className="pick-rise-next arc-cut" />
         </div>
         <div className="pick-guide" aria-hidden="true" />
 
@@ -212,6 +252,21 @@ export default function PickYourPlayer() {
                   draggable={false}
                 />
               </a>
+
+              {/* CLICK ME — the arrow and the note that appear on whichever roll
+                  is being looked at. See ClickMe.tsx, drawn by cue.ts.
+
+                  OUTSIDE THE ANCHOR AND NOT INSIDE IT, which is the same
+                  argument the two boxes above make: the anchor IS the tilt box,
+                  and fan.ts rewrites its transform on every pointer move — a cue
+                  in there would be scattered, straightened and scaled by 1.18
+                  along with the artwork, so the one thing pointing AT the roll
+                  would move with it. Out here it is placed against the <li>,
+                  which is the box in a roll that never moves.
+
+                  It also inherits the tape's palette from this element, which is
+                  what --cue-ink is pointed at in global.css. */}
+              <ClickMe side={CUE_SIDE[i]} />
             </li>
           ))}
         </ul>

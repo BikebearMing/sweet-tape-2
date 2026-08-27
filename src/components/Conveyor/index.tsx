@@ -1,5 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 
+import HandNote from "@/components/HandNote";
+
 import Stage from "./Stage";
 
 /* THE BELT — /about's second screen, and the page's first picture of the problem.
@@ -73,6 +75,8 @@ type Item =
   | { kind: "claim"; size: Size; index: string; lines: [string, string] }
   /** The aside under the second claim — small copy, not a heading. */
   | { kind: "note"; size: Size; lines: [string, string] }
+  /** The roll pill: a hand-written aside with the tape lying beside it. */
+  | { kind: "roll"; size: Size; lines: string[] }
   /** The mark, lying on the belt between two pills. */
   | { kind: "mark" };
 
@@ -140,7 +144,20 @@ const ROWS: RowSpec[] = [
       },
       { kind: "photo", size: "med" },
       { kind: "mark" },
-      { kind: "photo", size: "xl" },
+      /* THE ONE PILL ON THE BELT THAT IS NOT PART OF THE COMPLAINT, and it is
+         the one directly after the mark on purpose. Everything up to here is the
+         aisle — rows of products, choices that blur, the same plain packaging —
+         and the reader has just passed the brand's own silhouette lying in the
+         middle of it. What comes out the other side is the aisle's own line,
+         written in the aisle's hand: same material, same roll, same routine,
+         with the tape itself lying beside the sentence. It is the last thing on
+         the belt before the mark is grown to fill the window, so the complaint
+         finishes on a picture of the product rather than on another shelf. */
+      {
+        kind: "roll",
+        size: "xl",
+        lines: ["same material.", "same roll.", "same routine."],
+      },
     ],
   },
   {
@@ -229,6 +246,46 @@ function Train({ item, echo }: { item: Item; echo?: boolean }) {
             decoding="async"
           />
         ) : null}
+      </div>
+    );
+  }
+
+  /* THE ROLL PILL. Two things placed in one pill and nothing laid out by the
+   * flow: the note is position: absolute by definition (see .hand-note in
+   * global.css — placement belongs to whoever put it there) and the photograph
+   * is placed against the same box, so the pill is a coordinate space and the
+   * two figures in it are set from its own edges. That is how the design draws
+   * it and it is the only arrangement that survives the pill being a stadium:
+   * flow layout would centre the pair as a block and leave the note drifting
+   * into the left-hand curve at one width and off it at another.
+   *
+   * THE PHOTOGRAPH IS NOT A `photo` PILL'S PHOTOGRAPH. Those fill their pill and
+   * are cropped by it — the pill IS the picture. This one is an object lying on
+   * a green ground with room around it, so it takes its own box and keeps its
+   * own proportions; see .conveyor-roll, which has to say so over the blanket
+   * rule for an img on the belt.
+   *
+   * AND THE NOTE IS WRITTEN, NOT SET. It is the site's own hand — the same
+   * component as the board's and the opening screen's — so it arrives by pen
+   * when the pill comes into view. Conveyor/Stage.tsx is what starts it; the
+   * echoes are marked decorative so the sentence is announced once however many
+   * copies of the row are printed. */
+  if (item.kind === "roll") {
+    return (
+      <div className={`${className} is-roll`} aria-hidden={hidden}>
+        <HandNote
+          className="conveyor-hand"
+          lines={item.lines}
+          decorative={echo}
+        />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          className="conveyor-roll"
+          src="/assets/masking tape rolling 1.png"
+          alt="A roll of masking tape with a length of it pulled out flat."
+          loading="lazy"
+          decoding="async"
+        />
       </div>
     );
   }

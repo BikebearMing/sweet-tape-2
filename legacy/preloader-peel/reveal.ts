@@ -7,7 +7,7 @@
  * global.css) and the same family as the wave band. A flat edge travelling up a
  * page reads as a window blind; the arc reads as something being lifted off.
  *
- * Six more sheets are stacked behind the lime one, one per tape and in that
+ * Four more sheets are stacked behind the lime one, one per tape and in that
  * tape's stage colour (the order is set in index.tsx). They leave one after
  * another, a tenth of a second apart, so what crosses the screen is a run of
  * coloured bands with parallel arcs rather than a single wipe — the site's
@@ -15,31 +15,18 @@
  * at all: the hero's own top field is the same lime, so a plain sweep would be
  * lime leaving over lime and show nothing but the mark moving.
  *
- * Three beats, in order:
+ * Four beats, in order:
  *
- *   the mark springs up    a sticker: it pops, its shape flexes as it settles,
- *                          and a sheen pans across it — Preloader/sticker.ts
- *   it is held            long enough to be read as a logo and not a flash
- *   the stack leaves       lime first, then the six tapes behind it, and the
- *                          mark goes up with the lime sheet it is printed on
+ *   the mark lays down     a peel, then a tick of the head — about 0.9s of it
+ *   the line writes itself the hero's letter reveal, imported not copied
+ *   the line drops back    the same letters, back under their masks
+ *   the stack leaves       lime first, then the four tapes behind it
  *
- * THE MARK USED TO COME UNSTUCK AND DROP on its own beat before the sweep, and
- * does not any more. It arrives, it flexes flat, and it stays flat until the
- * paper under it lifts — the pop is the gesture, and a second exit gesture on
- * top of it was one too many. STICKER.FALL and PRELOADER.FALL went with it.
+ * In that order and not overlapping, which is the one thing to know before
+ * moving any of the numbers in PRELOADER: each beat is timed off the end of the
+ * one before it, so a change to an early beat pushes everything after it.
  *
- * STICK BY YOU WAS THE MIDDLE OF THIS and has gone — it was set under the mark,
- * split to letters and revealed with the site's one text entrance. Two beats
- * went with it, which is why the numbers below no longer chain the way the long
- * note at PRELOADER says they once had to: there is nothing between the mark
- * landing and the mark leaving except the hold.
- *
- * In that order, and none of them overlap any more — the fall was the overlap.
- * The one thing to know before moving any of the numbers in PRELOADER is that
- * each beat is timed off the end of the one before it, so a change to an early
- * beat pushes everything after it.
- *
- * On a clock, not on the network. The cover runs its three beats and goes,
+ * On a clock, not on the network. The cover runs its four beats and goes,
  * whatever has or has not arrived — the load is not what this is about, and a
  * bar that jumps to 100 the moment the cache is warm is worse than no bar. What
  * it does buy the page is real all the same: the hero's 1.3 MB roll and the type
@@ -50,10 +37,11 @@
  * Scoped to `root` and released by the returned cleanup, so StrictMode's double
  * mount replays rather than running two sweeps on the same sheet.
  *
- * ALL THREE ARE THE HOME PAGE'S ONLY. The mark is the site introducing itself
- * and index.tsx prints it nowhere else, so on every other route this file finds
- * no mark and runs the sweep alone after a beat — see SWEEP_BARE. What it must
- * not do is wait PRELOADER.SWEEP for something that is not there.
+ * TWO OF THOSE FOUR BEATS ARE THE HOME PAGE'S ONLY. The mark and the line are
+ * the site introducing itself and index.tsx prints them nowhere else, so on
+ * every other route this file finds neither and runs the sweep alone after a
+ * beat — see SWEEP_BARE. What it must not do is wait PRELOADER.SWEEP for two
+ * things that are not there.
  *
  * AND THE SWEEP OUTLIVES THE COVER. The same seven sheets come back down over
  * every route change from here on and lift off the page they land on, which is
@@ -66,63 +54,92 @@
  */
 import gsap from "gsap";
 
+import { REVEAL } from "../Hero/reveal";
 import { isHeld, release, startSweep } from "./gate";
-import { buildSticker, STICKER } from "./sticker";
+
+/* Fisher–Yates, the hero's and the menu's. The shuffle is the effect: reveal a
+   word's letters left to right and it reads as a wipe, which is a different
+   thing. Shuffled again on the way out, so the line does not fall in the order
+   it arrived — the two are separate gestures, not one played backwards. */
+function shuffle<T>(items: T[]): T[] {
+  const out = [...items];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
 
 export const PRELOADER = {
   /* The beats, in seconds from the cover appearing. Absolute rather than
      chained, because this is a fixed piece of choreography on a clock and the
      numbers are easier to read against each other than a chain of "and then".
-   
-     THERE IS ONLY ONE LEFT, and the constraints that used to bind the others
-     are gone with them. STICK BY YOU sat between the mark landing and the mark
-     leaving; SWEEP had to clear the letters going back, LINE_IN had to clear
-     the mark arriving, and the whole thing chained. Then the fall went too.
-     What is left is the mark arriving and the paper leaving, with nothing
-     between them but the hold, so SWEEP is taste rather than arithmetic.
+     Two of them are constrained, and only two:
 
-     The cover is about four and a half seconds. MARK.IN_AT decides the first
-     one, and it is the only number here that is not taste — see its note. The
-     hold after the mark lands is the one to pull if this is too long: the mark
-     is down and still by about 2.6, so there is a second and three quarters of
-     it simply being read before the paper moves. That is the point of an
-     overture and it is also the first thing to spend. */
-  SWEEP: 4.37,
+       LINE_IN must clear the mark's own entrance: MARK.IN_AT plus
+       MARK.IN_DURATION, which is where the peel has finished laying down.
+       Earlier and the line is writing itself while the logo is still landing —
+       two things moving at once in a composition that only has two things in
+       it, and neither of them is watched.
 
-  /* THERE IS NO FALL BEAT ANY MORE. There was: the mark came unstuck at 4.0
-     and dropped, leading the sweep by about six tenths of its own length.
+       SWEEP must clear the line going back: LINE_OUT, plus OUT_DURATION, plus
+       the stagger's spread across however many letters the line has (0.02 x 12
+       at the copy it carries now — the spaces get a box each, so it is the
+       string's whole length and not its letter count). The paper must not start
+       moving while the letters are still falling.
 
-     The reason that number was so fiddly is the reason it is well rid of: THE
-     MARK IS A CHILD OF THE SHEET. When the lime sheet sweeps it takes the mark
-     with it, a whole viewport upwards, while a fall is trying to move it a
-     mark's width down — the sheet wins by a factor of about five, so the drop
-     had to be squeezed into the sliver of hold before the paper moved or it
-     was simply cancelled on screen. Without it the mark holds flat from the
-     settle to SWEEP and then goes up on the paper, which is what the sheet was
-     always going to do to it anyway. */
+     ONE AFTER THE OTHER, and it costs about six tenths of a second against the
+     two overlapping — which is the whole of why they ever overlapped. The line
+     used to open the cover at 0.15 and the mark landed on top of it at 1.0;
+     that was not a decision so much as what was left when the mark's beat had
+     to move back for the frame rate (see MARK.IN_AT). Sequential is the reading
+     the piece was built for and it is worth the six tenths, but the price is
+     real and it is paid twice: the cover is longer, and its first second is now
+     an empty sheet, because the one thing that used to fill it now happens at
+     the end. MARK.IN_AT is the number that decides that opening second, and it
+     cannot come much further forward without being drawn in five frames.
+
+     Everything else is taste. The whole cover is about four and a half seconds;
+     LINE_OUT is the number to pull if that is too long, since the beat between
+     the line landing and it leaving is still the one with nothing happening in
+     it. That beat is down from well over a second to about a quarter of one,
+     which is less generous than it sounds — the letters have been arriving
+     since 1.7 and the line is readable from about 2.3, so what is actually on
+     screen to be read is closer to half a second. */
+  LINE_IN: 1.7,
+  LINE_OUT: 2.85,
+  SWEEP: 3.5,
 
   /* And where the sweep starts when there is nothing to wait for — a cover with
-     no mark on it, which is what every route that is not the home page gets on
-     a cold load (see the note on `overture` in index.tsx). Everything SWEEP is
-     timed against is simply absent there, so the whole of the hold is a beat:
-     long enough that the stack is seen to be a stack before it moves, short
-     enough that it reads as the page arriving rather than as a wait. */
+     no mark and no line on it, which is what every route that is not the home
+     page gets on a cold load (see the note on `overture` in index.tsx).
+     Everything the three numbers above are timed against is simply absent
+     there, so the whole of the hold is a beat: long enough that the stack is
+     seen to be a stack before it moves, short enough that it reads as the page
+     arriving rather than as a wait. */
   SWEEP_BARE: 0.3,
 
-  /* THE MARK'S OWN BEATS — the sticker's, since the peel went. The numbers it
-     is BUILT from live in Preloader/sticker.ts (STICKER), because they describe
-     a surface rather than a schedule and they were tuned as a set at
-     /lab/sticker-pop. What is here is only when the thing starts and when it
-     leaves, which is this file's business.
+  /* THE MARK'S OWN BEATS. Most of them are measured rather than chosen — they
+     are the gif this replaces, read frame by frame. The two that are not say so
+     where they stand: IN_AT, which had to move for the frame rate, and IN_FROM,
+     which had to move because the gif's own value does not survive being slowed
+     down enough to watch.
 
-     The measured beats that used to be here went with the peel: the gif's
-     unfold read frame by frame, its 7.26deg tick of the head, the fitted eases.
-     They are in legacy/preloader-peel, kept whole rather than as a diff —
-     the gif is gone and nobody can take those measurements again. */
+     That gif was 125 frames at 40ms. Its ink is blank for twelve of them, then
+     unfolds over six, then holds dead still for twenty-three, then tilts out
+     and back over eight, then holds unchanged for the remaining seventy-five —
+     three quarters of the file spent on a still image, which is most of why it
+     weighed 1.8 MB.
+
+     The unfold is a PEEL, which is what makes this replaceable at all: through
+     those six frames the ink still folded over sits at a steady bearing of 61
+     degrees from the centre, and what shows of it is flat lime — a flap, lit
+     from the front, exactly what components/Peel draws. The apparent rotation
+     across the same frames is not the mark turning; it is the principal axis of
+     a shape that is still half hidden, and it settles the moment the last of it
+     lies down. */
   MARK: {
-    /* LATER THAN THE GIF, and this is the one beat that survived the peel
-       intact — because the reason for it was never about the peel.
-
+    /* LATER THAN THE GIF, and this is the one beat that had to leave it.
        Measured on the built site, the cover's own frame cadence is:
 
          300-600ms     2 frames    one 334ms stall
@@ -131,18 +148,106 @@ export const PRELOADER = {
          1200ms on    18 frames    a flat 16.7ms
 
        which is hydration and three's first compile landing on top of each
-       other. The gif put its unfold at 0.52s and did not care — it was decoded
-       off the main thread. A timeline is ON it, and a move starting at 0.52s
-       is drawn in five frames. No easing survives that; it is a slideshow, and
-       the sticker has MORE to lose there than the peel did, since its whole
-       first half second is a spring settling.
+       other. The gif put the unfold at 0.52s and did not care — it was decoded
+       off the main thread. A timeline is on it, and a 240ms move starting at
+       0.52s was being drawn in five frames. No easing survives that; it is a
+       slideshow, and no amount of tuning the curve would have fixed it.
 
        So it waits for the page to settle. Which makes this the number the whole
-       cover is built around: everything else follows it, and the second before
-       it is an empty sheet. Bringing it forward buys that second back and
-       spends the pop on a five-frame slideshow to do it. */
+       cover is now built around: everything else follows it (the tilt, then the
+       line, then the sweep), and the second before it is an empty sheet with
+       nothing in it. Bringing it forward buys that second back and spends the
+       unfold on a five-frame slideshow to do it. */
     IN_AT: 1.0,
+
+    /* Six frames, 13 to 19. Taking the fold still to run as (0.92, 0.42, 0.33,
+       0.23, 0.11, 0.01, 0), the progress through the move at each of them is
+       0, .54, .64, .75, .88, .99 — and from the third frame on that is
+       power1.out to within a hundredth (.56, .75, .89, .97). It is NOT
+       power2.out, which is at .875 by the halfway point where the gif is at
+       .75; the mark lands early and then crawls, which reads as a stutter.
+
+       The first frame is the odd one and is left un-fitted: half the move
+       inside the first 40ms is more likely the artwork appearing part-way into
+       an unfold that began on a frame with too little ink to measure than a
+       genuine lurch.
+
+       ALL OF WHICH IS NOW HISTORY, and kept only so the next person does not
+       re-derive it. The measured curve is not what runs: it is 0.5s rather than
+       the gif's 0.24, which is a straight call that the gif's unfold is too
+       quick to watch. Twice the length, and at 60fps thirty frames to draw it
+       in against the five it was getting.
+
+       sine.inOut rather than the measured power1.out, for the same reason. A
+       fitted power1.out starts at full speed from a dead stop, which at 0.24s
+       is over before it registers and at 0.5s is a lurch. This eases out of
+       rest and back into it — a sticker let go and settling, rather than one
+       yanked flat. */
+    IN_DURATION: 0.5,
+    IN_EASE: "sine.inOut",
+
+    /* Where the fold already is when it appears — and this is the one number
+       here that deliberately contradicts the gif.
+
+       The gif starts at 0.92: 92% of the artwork still folded over at the first
+       frame with any ink in it. Reproduced faithfully, that does not read as a
+       peel. At 0.92 there is no sticker on the screen at all, only a sliver at
+       one edge, so what you watch is the mark UNROLLING INTO EXISTENCE — and a
+       peel with nothing to peel off is just a strange way of fading in. The gif
+       got away with it by being over in 240ms; at half a second and 60fps there
+       is time to notice.
+
+       0.4 is the first value going down from there where the badge is legibly
+       itself — the blob, most of the word, a big corner turned back — so the
+       move is a sticker being smoothed down onto the sheet rather than one
+       being conjured. Push it back up toward 0.7 and the flap starts to cover
+       the word again; take it to 0 and there is no fold left to lay down.
+
+       Two things follow from lowering it, both handled below: the fold now
+       travels less than half as far in the same IN_DURATION, which is what
+       makes it read as settling rather than snapping, and the arrival can no
+       longer be a hard cut — see IN_FADE. */
+    IN_FROM: 0.4,
+
+    /* The arrival, which at 0.92 did not need to exist: near enough nothing was
+       on screen at the cut, so the fold itself was the entrance. With a legible
+       badge at IN_FROM this is a third of the artwork appearing between one
+       frame and the next, which reads as a glitch rather than as a beat.
+
+       Short on purpose. Long enough that nothing snaps, short enough to be over
+       while the fold has barely started, so what carries the entrance is still
+       the peel and not a fade. */
+    IN_FADE: 0.14,
+
+    /* Then the tilt, frames 42 to 50: out over four, back over four, and the
+       measured angles are symmetrical to two decimal places (2.20, 3.66, 5.83,
+       7.26, 5.83, 3.66, 2.20). One move out and the same move back. */
+    /* Straight off the back of the unfold, which lands at 1.5. The mark's whole
+       arrival is one continuous action — it lies down, it ticks, it is done —
+       and only then does the line write itself. Given a beat of its own instead
+       (the 1.8 it sat at when the line had already been standing for most of a
+       second) it becomes a third event in a queue of three, and the cover grows
+       by however long that beat is. */
+    TILT_AT: 1.55,
+    TILT: -7.26, // degrees; the shape's own axis, counter-clockwise
+    TILT_DURATION: 0.16, // each way
+
+    /* Linear, which is what the gif measures: through the four frames out the
+       move is 0, .30, .50, .80 of the way there — near enough a straight line,
+       and nowhere near an ease-in-out, which would still be at .15 by the
+       quarter mark. The peak is a corner, not a pause (7.26 with 5.83 either
+       side of it), so the yoyo turning hard at the top is right too. It is a
+       tick of the head, not a swing. */
+    TILT_EASE: "none",
   },
+
+  /* The line's exit. Quicker than its entrance and eased the other way — it
+     arrived under its own steam and it leaves under gravity, which is also why
+     it goes back to exactly where it came from (REVEAL.HIDDEN, below its own
+     mask) rather than fading or rising. */
+  OUT_DURATION: 0.4,
+  OUT_STAGGER: 0.02,
+  OUT_EASE: "power2.in",
 
   /* The sweep. Long for a move this size, deliberately: the sheet is the whole
      viewport, and a full screen of colour leaving in half a second is a flinch.
@@ -208,6 +313,13 @@ export const PRELOADER = {
      Small on purpose. At 0.018 the deepest of seven takes 11% longer than the
      first, which is a lean rather than a lag. */
   STACK_DRAG: 0.018,
+
+  /* The mark's lead. It starts a moment before the sheet and travels a little
+     further, so it lifts OFF the paper rather than being carried away on it —
+     the same trick the pinboard's props use against the scroll, at the size of
+     a gesture. In percent of the mark's own height. */
+  LEAD: 0.12,
+  MARK_TRAVEL: -22,
 
   /* Where in the LAST sheet's sweep the page below is let go, as a fraction of
      DURATION. The hero's title sits at the TOP of the viewport, which a cover
@@ -339,16 +451,31 @@ export function initPreloader(root: HTMLElement): () => void {
   }
 
   const mark = root.querySelector<HTMLElement>(".preloader-mark");
+  const chars = Array.from(
+    root.querySelectorAll<HTMLElement>(".preloader-line .char"),
+  );
+
   /* Front to back, which is the order they leave in. */
   const sheets = sheetsOf(root);
 
-  /* NO MARK, NO HOLD. On every route but the home page the cover is bare —
-     index.tsx prints the overture only where it belongs — and the beats before
-     the sweep have nothing to run. Waiting PRELOADER.SWEEP for a mark that is
-     not there would be four seconds of a blank lime screen, which is the worst
-     version of this component there is. */
-  const bare = !mark;
+  /* NO MARK, NO LINE, NO HOLD. On every route but the home page the cover is
+     bare — index.tsx prints the overture only where it belongs — and the three
+     beats before the sweep have nothing to run. Waiting PRELOADER.SWEEP for
+     them anyway would be three and a half seconds of a blank lime screen, which
+     is the worst version of this component there is. */
+  const bare = !mark && chars.length === 0;
   const sweepAt = bare ? PRELOADER.SWEEP_BARE : PRELOADER.SWEEP;
+
+  /* Hand the letters over from the stylesheet — the hero's manoeuvre exactly,
+     and for the same reason: global.css parks them with a percentage translate,
+     which computes to px, and GSAP would ADD its own yPercent to that and leave
+     every letter a full height low. With the attribute on, the computed
+     transform is `none` and GSAP owns the whole value.
+
+     Nothing is painted in between: the attribute and the timeline are built in
+     the same task, and a fromTo renders its `from` immediately even when it
+     sits a second into the timeline. */
+  root.dataset.reveal = "live";
 
   /* THE COVER IS CHOREOGRAPHY ON A CLOCK, and its clock runs through the worst
      frames of the page's life: hydration, three's first compile, the GLB
@@ -369,150 +496,97 @@ export function initPreloader(root: HTMLElement): () => void {
 
   const tl = gsap.timeline();
 
-  /* THE STICKER'S TWO TEARDOWNS, and they are separate on purpose.
-   *
-   * `stopSticker` takes the draw off the ticker, and the timeline calls it
-   * itself the moment the pose stops moving — the cover's cost must not outlive
-   * the gesture, and there are still nearly two seconds of hold and a whole
-   * sweep to pay for after the mark has settled.
-   *
-   * `killSticker` takes the columns out of the DOM, and only the teardown calls
-   * it. It has to exist and it has to be called: buildSticker APPENDS, so a
-   * second mount over a first one that left its columns behind — which is
-   * StrictMode on every dev reload — would put a hundred and twenty-eight
-   * elements on the sheet with only the newest of them being drawn. */
-  let stopSticker: (() => void) | null = null;
-  let killSticker: (() => void) | null = null;
+  /* The mark, unfolding. Three beats off PRELOADER.MARK, all of them measured
+     off the gif this replaces — see the note there.
 
-  /* THE MARK, AS A STICKER. It springs up off the sheet, its shape flexes as
-     it settles, a sheen pans across it — and then it is done. It holds exactly
-     as it landed until the sheet under it sweeps and takes it up.
-   *
-   * The surface is Preloader/sticker.ts and none of it is here: this writes a
-   * pose and that draws it, the same division the whole component makes. What
-   * is here is the choreography, and it is a straight read of the lab's
-   * timeline (/lab/sticker-pop) as far as the settle — the lab's fall has no
-   * counterpart here any more.
-   *
-   * A ticker rather than a tween on the element, because a pose is nine numbers
-   * and the thing that turns them into a hundred and twenty-eight style writes
-   * has to run once a frame, after all of them have moved. Taken off again the
-   * moment the pose is still — the cover's cost must not outlive the gesture. */
+     --peel is written as a bare number rather than tweened as a property,
+     because that is what it is: no unit for GSAP's CSSPlugin to infer, and
+     Peel/peel.ts writes it the same way. The rotation is a separate matter and
+     goes through GSAP's transform, which composes with the `rotate` the
+     stylesheet uses for --peel-dir rather than fighting it — and with the
+     yPercent the sweep gives this same element later. */
   if (mark) {
-    const src = mark.dataset.sticker;
-    if (src) {
-      const sticker = buildSticker(mark, src);
-      const pose = sticker.pose;
-      gsap.ticker.add(sticker.draw);
-      stopSticker = () => gsap.ticker.remove(sticker.draw);
-      killSticker = sticker.destroy;
+    const fold = { v: PRELOADER.MARK.IN_FROM };
+    const write = () => mark.style.setProperty("--peel", String(fold.v));
+    write();
 
-      const at = PRELOADER.MARK.IN_AT;
-      const pop = STICKER.POP;
-      const flex = STICKER.FLEX;
+    /* Held off the screen until its beat, which is what the gif's first twelve
+       blank frames are. The stylesheet is what hides it for the first paint —
+       see the visibility on .preloader-mark — and this is the release; the set at
+       0 is for the replay, so a StrictMode second run starts hidden again rather
+       than inheriting the first run's visible mark.
 
-      /* Held off the screen until its beat — the stylesheet hides the wrapper
-         for the first paint (see .preloader-mark) and this is the release. The
-         pose's own alpha is 0 at this instant, so nothing flashes; what this
-         hands over is visibility, and the fade below is the entrance. */
-      tl.set(mark, { autoAlpha: 0 }, 0);
-      tl.set(mark, { autoAlpha: 1 }, at);
+       The release is a fade and not a cut, and IN_FADE says why. It runs on the
+       same beat as the fold, so the badge is already on its way down as it
+       resolves — one gesture, not a fade followed by a peel. */
+    tl.set(mark, { autoAlpha: 0 }, 0);
+    tl.to(
+      mark,
+      { autoAlpha: 1, duration: PRELOADER.MARK.IN_FADE, ease: "none" },
+      PRELOADER.MARK.IN_AT,
+    );
 
-      tl.set(
-        pose,
-        {
-          scale: pop.SCALE,
-          rotX: pop.TILT,
-          y: () => pop.RISE * mark.clientWidth,
-          alpha: 0,
-          bend: flex.BEND,
-          fold: flex.FOLD,
-          wave: flex.WAVE,
-          phase: 0,
-          sheen: 0,
-        },
-        at,
-      );
+    tl.to(
+      fold,
+      {
+        v: 0,
+        duration: PRELOADER.MARK.IN_DURATION,
+        ease: PRELOADER.MARK.IN_EASE,
+        onUpdate: write,
+      },
+      PRELOADER.MARK.IN_AT,
+    );
 
-      /* THE POP. One gesture out of four tweens on the same beat: it comes up,
-         it comes forward, it grows, it appears. back.out on the two that carry
-         the shape, so the mark passes its own size and comes back — which is
-         most of what separates a thing that SPRINGS from a thing that is faded
-         in. The rise is plain power3.out; a spring on the position as well
-         reads as a bounce on top of a bounce. */
-      tl.to(pose, { alpha: 1, duration: pop.DURATION * pop.FADE, ease: "none" }, at);
-      tl.to(
-        pose,
-        { scale: 1, duration: pop.DURATION, ease: `back.out(${pop.BACK})` },
-        at,
-      );
-      tl.to(
-        pose,
-        {
-          rotX: 0,
-          duration: pop.DURATION,
-          ease: `back.out(${pop.BACK * pop.BACK_TILT})`,
-        },
-        at,
-      );
-      tl.to(pose, { y: 0, duration: pop.DURATION, ease: "power3.out" }, at);
+    /* The tilt, and back. yoyo rather than two tweens, so the return is
+       guaranteed to be the same move reversed — which is what the measured
+       angles say it is.
 
-      /* THE CORNER LAYING DOWN, and it starts LATE — see FLEX.START. The mark
-         arrives upright and full size with the fold still in it, and only then
-         presses down. The fold and the arc under it go together on one ease,
-         because they are one gesture: the sticker being smoothed onto the
-         sheet. sine.inOut, and FLEX.UNROLL says why it is not the elastic this
-         used to be. */
-      tl.to(
-        pose,
-        { bend: 0, fold: 0, duration: flex.UNROLL, ease: "sine.inOut" },
-        at + pop.DURATION * flex.START,
-      );
+       Written as --mark-tilt and not as GSAP's `rotation`, for the reason
+       global.css gives at the property: the wrapper's rotate already holds
+       --peel-dir, and a rotation tween picks that up as its start and then
+       leaves a copy of it in `transform` — 61deg of turn applied twice, and a
+       mark sitting crooked for the rest of the hold. */
+    const tilt = { deg: 0 };
+    tl.to(
+      tilt,
+      {
+        deg: PRELOADER.MARK.TILT,
+        duration: PRELOADER.MARK.TILT_DURATION,
+        ease: PRELOADER.MARK.TILT_EASE,
+        yoyo: true,
+        repeat: 1,
+        onUpdate: () => mark.style.setProperty("--mark-tilt", `${tilt.deg}deg`),
+      },
+      PRELOADER.MARK.TILT_AT,
+    );
+  }
 
-      /* AND THE WOBBLE, which is where the elastic belongs: the residual flex
-         in a thing that has landed rather than the landing itself. It outlasts
-         the unroll on purpose — the shape is still moving after the mark has
-         stopped, which is the difference between a sticker and a sign. */
-      tl.to(
-        pose,
-        { wave: 0, duration: flex.SETTLE, ease: `elastic.out(1, ${flex.RUBBER})` },
-        at + pop.DURATION * flex.START,
-      );
-      tl.to(
-        pose,
-        { phase: flex.SPIN * flex.SETTLE, duration: flex.SETTLE, ease: "none" },
-        at,
-      );
+  /* The line, in — the site's one text entrance, imported from the hero rather
+     than copied so the two cannot drift apart. */
+  if (chars.length) {
+    tl.fromTo(
+      shuffle(chars),
+      { yPercent: REVEAL.HIDDEN },
+      {
+        yPercent: 0,
+        duration: REVEAL.DURATION,
+        stagger: REVEAL.STAGGER,
+        ease: REVEAL.EASE,
+      },
+      PRELOADER.LINE_IN,
+    );
 
-      /* THE SHEEN, on the pop's own beat rather than after it — see the note
-         in STICKER.SHEEN. */
-      tl.to(
-        pose,
-        {
-          sheen: 1,
-          duration: STICKER.SHEEN.DURATION,
-          ease: "power1.inOut",
-        },
-        at + STICKER.SHEEN.AT,
-      );
-
-      /* AND THAT IS THE WHOLE GESTURE. Nothing moves the mark after the wobble
-         has run out: it holds flat until the sheet it is printed on sweeps, and
-         goes up with it.
-
-         SO THE DRAW STOPS THE MOMENT THE POSE DOES, which is the end of the
-         settle — the last tween on it, and later than both the unroll and the
-         sheen. Every frame after that would write the same 128 transforms
-         again, and it would write them across the sweep, which is the most
-         expensive second of the page's life. The columns keep the styles they
-         were last given and ride the paper off with the wrapper; they stay in
-         the DOM, and the teardown is what removes them. */
-      tl.call(
-        () => stopSticker?.(),
-        undefined,
-        at + pop.DURATION * flex.START + flex.SETTLE,
-      );
-    }
+    /* And back down, under the same masks it came out of. */
+    tl.to(
+      shuffle(chars),
+      {
+        yPercent: REVEAL.HIDDEN,
+        duration: PRELOADER.OUT_DURATION,
+        stagger: PRELOADER.OUT_STAGGER,
+        ease: PRELOADER.OUT_EASE,
+      },
+      PRELOADER.LINE_OUT,
+    );
   }
 
   /* The stack, leaving. -100% of each SHEET, which is a viewport plus the arc's
@@ -539,15 +613,17 @@ export function initPreloader(root: HTMLElement): () => void {
     );
   }
 
-  /* THE MARK RIDES THE PAPER OFF, and it does so with no tween of its own: it
-     is a child of the lime sheet, so the sweep above is the whole of its exit.
-
-     It has had two other exits and neither is here. It used to LEAD the front
-     sheet by PRELOADER.LEAD and travel MARK_TRAVEL further than it, so it
-     lifted OFF the sheet rather than being carried away on it; then it fell
-     instead, on its own beat and in the opposite direction. Both are gone —
-     LEAD and MARK_TRAVEL went with the first, STICKER.FALL with the second.
-     The curtain has its own lead (TRANSITION.LEAD) and never read these. */
+  if (mark) {
+    tl.to(
+      mark,
+      {
+        yPercent: PRELOADER.MARK_TRAVEL,
+        duration: PRELOADER.DURATION,
+        ease: PRELOADER.EASE,
+      },
+      sweepAt - PRELOADER.LEAD,
+    );
+  }
 
   /* Both fractions below are of the last sheet's OWN duration, which is the
      longest of them. */
@@ -565,14 +641,18 @@ export function initPreloader(root: HTMLElement): () => void {
 
   /* THE OVERTURE IS OVER AND THE SHEET IT WAS PRINTED ON IS NOT. That lime
      sheet is the front of the curtain the page transition pulls down from here
-     on (Preloader/transition.ts), and the mark is still sitting on it — the
-     fall takes it out of sight but not out of the box. Come back down without
-     this and the first route change opens with a logo on the curtain, lying
-     wherever the fall left it.
+     on (Preloader/transition.ts), and the mark is still sitting on it, still
+     visible, parked wherever MARK_TRAVEL left it. Come back down without this
+     and the first route change opens with a logo sliding in from off the top of
+     the screen at an angle.
 
-     The one rule about this sheet is that nothing printed on it survives the
-     first sweep, and this is now the whole of enforcing it. */
+     The letters need no such thing — they went back under their masks at
+     LINE_OUT and that is where they stay — but they are named here anyway, so
+     that the one rule about this sheet ("nothing printed on it survives the
+     first sweep") is written in one place rather than half implied by an
+     earlier beat. */
   if (mark) tl.set(mark, { autoAlpha: 0 });
+  if (chars.length) tl.set(chars, { autoAlpha: 0 });
 
   /* Parked off-screen is not the same as gone: the cover is still a fixed box
      over the page, and `visibility` is what stops it being one. Not display —
@@ -595,10 +675,9 @@ export function initPreloader(root: HTMLElement): () => void {
    * no such unmount to have. */
   return () => {
     tl.kill();
-    stopSticker?.();
-    killSticker?.();
+    delete root.dataset.reveal;
     gsap.set(root, { clearProps: "visibility" });
-    gsap.set([...sheets, ...(mark ? [mark] : [])], {
+    gsap.set([...sheets, ...(mark ? [mark] : []), ...chars], {
       /* opacity and visibility as well as the transform, because the sweep's
          last act is to put the mark and the line out for good — and a replay
          that inherited that would run the whole overture on an empty sheet. */

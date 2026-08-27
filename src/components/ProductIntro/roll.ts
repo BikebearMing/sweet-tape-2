@@ -25,36 +25,49 @@
  * ambient down, a fill from behind, the roll turned thirty degrees — was built
  * for a stage this page no longer has.
  *
- * IT LEANS, BUT NOT AT THE CURSOR. The home page's roll is almost never square
- * on screen — it is leaning toward wherever the pointer happens to be, and that
- * tilt is most of what its key visual LOOKS like. This page takes the tilt and
- * throws away the chase: the same lean, at a fixed setting, held. See LEAN
- * below, which is the one number to change if the angle is wrong.
+ * AND IT LEANS AT THE CURSOR, exactly as the home page's key visual does — the
+ * same dial, the same reach, the same ease. See THE CHASE below.
  *
- * WHY NOT THE CHASE TOO. On the slider the lean is a depth cue on an object you
- * are NOT being invited to touch — what you click is the orbit of six rolls
- * beside it. Here the roll is the only thing on the screen, and an angle that
- * drifts with the pointer is an angle nobody chose: it reads as reacting to you
- * without ever being under your control, and it means the pose the journey lands
- * on is only the composed one when the cursor happens to be somewhere
- * particular. It also costs a pointermove listener and a per-frame re-measure of
- * a box the scroll is already moving.
+ * IT DID NOT USED TO, and the argument against is worth keeping because it was
+ * a real one: on the slider the lean is a depth cue on an object you are not
+ * invited to touch, and here the roll is the only thing on the screen, so an
+ * angle that drifts with the pointer is an angle nobody composed. What settles
+ * it the other way is that a roll which does not move AT ALL until you scroll
+ * reads as artwork rather than as an object — a photograph of the thing, on a
+ * page whose whole point is that it is the thing. The lean is what a visitor
+ * arriving from the home page has just had their hands on, and meeting the same
+ * roll gone inert is the one way this page can feel like a step backwards.
  *
- * THE TURN IS THE SLIDER'S FLIP, HANDOFF AND ALL — see addCard in
- * TapeSlider/engine.ts, which this is the scroll-driven version of. Same axis,
- * same direction throughout, same two eases, and the same swap at edge-on. The
- * only difference is what is on the far side of the handoff: the slider trades
- * one model for the next there, and this page has only one, so it hands the roll
- * back to itself.
+ * THE COMPOSED POSE IS NOT LOST, it is where the roll RESTS — see LEAN, which
+ * stopped being a held angle and became a home to come back to. No pointer, no
+ * hover, or reduced motion, and the page is the still one it was before.
  *
- * AND THAT HANDOFF IS NOT A FLOURISH, IT IS THE WHOLE THING THAT MAKES THIS
- * WORK. The exports are single-walled — turned past edge-on you are looking
- * through the back of a shell that has no inside, and what is actually on screen
- * is a flat grey disc where the roll should be. It is why the slider swaps at
- * exactly 90deg and why the origin section's old drag was clamped at 78. So the
- * roll cannot simply be turned through 360: it goes out to edge-on, is picked up
- * again at edge-on from the OTHER side, and comes home. A reader sees a full
- * turn; the renderer never draws a frame past the rim. See TURN below.
+ * THE TURN IS A WHOLE REVOLUTION, AND THE ROLL IS SEEN FROM BEHIND IN THE
+ * MIDDLE OF IT. Face on at the top of the page, edge-on a quarter of the way
+ * down, its open core square to the reader at the half, edge-on again, and back
+ * to its face as it lands. One rotation about one axis, scrubbed by the scroll.
+ *
+ * THE EXPOSED CORE IS THE POINT OF IT rather than something tolerated on the way
+ * round. A roll of tape is a tube, and the half-second where you are looking
+ * into it — the wound edge as a ring, the hollow in the middle — is the frame
+ * that says so. A key visual that only ever presents its label is a photograph;
+ * one that turns over is an object.
+ *
+ * IT USED TO BE A MIRROR, AND THAT IS WORTH KNOWING because the file read as if
+ * it still were. The turn went out to edge-on and was picked up again at edge-on
+ * from the OTHER side — the slider's model handoff (addCard in
+ * TapeSlider/engine.ts), borrowed by a page with only one model to hand, so it
+ * handed the roll back to itself. A reader saw a full turn and the renderer
+ * never drew a frame past the rim.
+ *
+ * The reason given for it was that the exports are single-walled — that past
+ * edge-on you are looking through a shell with no inside, and what lands on
+ * screen is a flat grey disc. THAT IS NO LONGER TRUE OF THESE FILES. Every
+ * material in them is double-sided and the core is modelled and textured; the
+ * roll renders correctly at every angle, which is what made this change a
+ * deletion rather than a re-export. If a future export goes back to a bare
+ * shell, this is the note that says what broke and the mirror above is the
+ * shape of the thing to bring back.
  *
  * DYNAMIC IMPORT, so three.js and the loaders ship as their own chunk fetched
  * after the section is interactive — the same arrangement the slider makes, and
@@ -67,6 +80,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import type { TapeViewer } from "@/components/TapeSlider/tape3d";
+import { onViewportChange, screenH } from "@/components/viewport";
 
 /* ===========================================================================
    THE RESTING LEAN — how square the roll sits, and THE ONE KNOB TO TURN if it
@@ -104,10 +118,24 @@ import type { TapeViewer } from "@/components/TapeSlider/tape3d";
  * a sticker, and not so much that the artwork starts to distort.
  *
  * Turn it up towards ±1 for a more three-quarter roll; set both to 0 for the
- * square-on pose. The angle holds through the whole journey and is what the roll
- * lands in, because the lean composes with the flip rather than competing with
- * it. */
-const LEAN = { x: 100, y: 0 };
+ * square-on pose. The angle composes with the turn rather than competing with
+ * it, so it holds through the whole journey.
+ *
+ * IT IS THE REST POSE AND NO LONGER A HELD ONE. It is what the roll is served
+ * at, what it eases back to when the pointer leaves the window or the section,
+ * and the only angle a touch or reduced-motion visitor ever sees. With a cursor
+ * on the page THE CHASE below is driving, and this is the pose it is driving
+ * away from. */
+const LEAN = { x: 1, y: 0 };
+
+/* THE CHASE — how far the pointer has to be from the roll to lean it as far as
+   it goes, as a share of the viewport's short side. The home page's own figure
+   (TILT_REACH in TapeSlider/engine.ts), and it is the same number for the same
+   reason: at 0.42 the roll is at full travel well before the cursor reaches a
+   corner, so the lean is live across most of the screen rather than only at the
+   extremes. The deflection it produces is MAX_YAW and MAX_PITCH in tape3d.ts,
+   and the ease toward it is that file's too. */
+const REACH = 0.42;
 
 /* THE ROOM — the one thing this page asks the viewer for that the slider does
    not, and it is a correction rather than a look.
@@ -170,10 +198,20 @@ const ROOM = 0.25;
  * THE MOST LIKELY TWO, and they are the reason this page has its own export at
  * all (see `modelInner` in src/data/tapes.ts):
  *
- *   metalness  0.55 on the label today. It is what made the face render dark,
- *              and ROOM above is what pays for it. Take it to 0 and the room
- *              stops mattering; leave it up and the label keeps a sheen that
- *              reads as printed film rather than paper.
+ *   metalness  0.55 as the file was exported, held down to 0.14 below. It is
+ *              what made the face render dark, and ROOM above is what pays for
+ *              it. Take it to 0 and the room stops mattering; leave it up and
+ *              the label keeps a sheen that reads as printed film rather than
+ *              paper.
+ *              THIS IS THE METAL DIAL AND THERE IS ONLY THE ONE. Nothing else
+ *              on the roll has any metalness at all — the flank, the core and
+ *              the discs are fully dielectric — so a roll that reads as metal
+ *              is this number and the film's coat, in that order. It came from
+ *              the export's 0.55 by way of 0.35, and each step took the label
+ *              closer to its own printed colour: metalness tints reflections
+ *              with the albedo and takes the diffuse away, so on a disc whose
+ *              whole job is to be the artwork, less of it is more of the
+ *              artwork.
  *   roughness  0.91 on the label today — nearly matte. DOWN is glossier. This
  *              is the "gloss" dial, and it only does anything visible while
  *              there is a room for the surface to reflect.
@@ -181,35 +219,37 @@ const ROOM = 0.25;
  * NOTHING HERE REACHES THE HOME PAGE. It is an argument to this page's viewer,
  * and this page's viewer now loads this page's own file. */
 const FINISH = {
-  "Face Brown": { metalness: 0.35, roughness: 2 },
+  "Face Brown": { metalness: 0.05, roughness: 2 },
   "Tape": { roughness: 0.4 },
 };
 
-/* THE TURN, and it is the slider's FLIP_SWEEP: how far the roll goes before
-   there is nothing left of it to see. 90 is edge-on, exactly, and it is not a
-   number to round up — see the note at the top on what is behind the rim. */
-const SWEEP = 90;
+/* THE TURN. One whole revolution across the journey, which is the only figure
+   that both shows the reader the back of the roll AND lands it on its face: the
+   slot at the foot of the move is the origin section's key visual and a roll
+   resting there at any other angle is a roll caught mid-move.
 
-/* The two halves of it, and they are TapeSlider/engine.ts's eases verbatim.
- *
- * power2.in out and power2.out back is what puts the fastest motion of the whole
- * move at the moment the roll is thinnest — which is the frame the handoff
- * happens on, so the swap is hidden inside the part of the turn the eye can
- * least follow. Levelled to linear the roll dawdles through edge-on, and the
- * flip stops reading as one continuous turn and starts reading as two.
- *
- * Parsed once, at module scope: place() runs on every scroll frame and
- * gsap.parseEase does a string lookup. */
-const OUT = gsap.parseEase("power2.in");
-const BACK = gsap.parseEase("power2.out");
+   HALF OF IT IS THE PICTURE, and that is what the number is chosen for rather
+   than for being round. At the midpoint the core is square to the reader; the
+   two quarter points either side are edge-on, and the two of them are what give
+   the turn its rhythm. Take it to 720 and the roll spins rather than turns. */
+const TURN = 360;
 
-/* WHERE THE HANDOFF FALLS, as a fraction of the journey. Half way, so the roll
-   is edge-on at the midpoint of its travel — the two halves of the turn take the
-   same amount of scroll, which is what the slider's own symmetrical halves do.
-   The measured landing is what makes the arrival read: at the end of the second
-   half the roll is back at 0, the angle it left the top of the page at and the
-   angle the home page's key visual sits at. */
-const HANDOFF = 0.5;
+/* AND IT TURNS AT THE RATE THE READER SCROLLS, which is to say it is not eased
+ * at all — the one deliberate omission in this file.
+ *
+ * WHAT THE EASES WERE FOR IS GONE. There were two, power2.in out and power2.out
+ * back, lifted from TapeSlider/engine.ts: their job was to put the fastest
+ * motion of the whole move on the frame the roll was thinnest, so that the
+ * model handoff hiding in there was over before the eye could follow it. There
+ * is no handoff now, so all an ease could do is decide which parts of the
+ * rotation the reader gets to see properly — and it would spend its speed in
+ * exactly the middle, which is where the core is.
+ *
+ * LINEAR IS ALSO WHAT THE TRAVEL DOES. The roll's position down the page is
+ * dx * p and dy * p, straight off the progress; a turn on a curve against a
+ * slide on a line is two moves rather than one object moving. And a scrubbed
+ * rotation that keeps pace with the wheel is the thing that makes the roll feel
+ * turned BY the reader instead of played at them. */
 
 export function initProductRoll(root: HTMLElement): () => void {
   /* THE BOX THAT TRAVELS AND THE BOX THAT HOLDS THE CANVAS ARE NOT THE SAME ONE.
@@ -221,6 +261,10 @@ export function initProductRoll(root: HTMLElement): () => void {
   const mount = box?.querySelector<HTMLElement>(".pi-roll-in");
   const card = mount?.querySelector<HTMLImageElement>("img") ?? null;
   const model = root.dataset.model;
+  /* Absent means a solid roll, which is what Number(undefined) would NOT give:
+     the attribute is left off entirely for a tape with no clarity (see Stage),
+     so this reads as 0 rather than NaN. */
+  const clarity = Number(root.dataset.clarity ?? 0) || 0;
   if (!box || !mount || !model) return () => {};
 
   /* WHERE IT IS GOING, AND IT IS IN THE NEXT SECTION. Reached by a document
@@ -248,6 +292,77 @@ export function initProductRoll(root: HTMLElement): () => void {
 
   let viewer: TapeViewer | null = null;
   let gone = false;
+
+  /* --------------------------------------------------------------------- lean */
+
+  /* THE LEAN THAT FOLLOWS THE POINTER. All this side does is say where the
+   * cursor is relative to the roll's own centre and how far out counts as
+   * full; the tilt, its limits and the ease toward it are tape3d.ts's, on a
+   * group ABOVE the turn — so this and the journey run at the same time
+   * instead of overwriting one another. See THE CHASE above.
+   *
+   * SKIPPED ON A DEVICE WITH NO POINTER, where the handler could only ever fire
+   * on a tap and would leave the roll leaning at whatever was last touched, and
+   * under reduced motion, which a lean that chases a cursor is precisely a case
+   * of. Both fall through to the served pose, which is LEAN. */
+  const chase = !reduced && window.matchMedia("(hover: hover)").matches;
+  const ac = new AbortController();
+  const { signal } = ac;
+
+  /* Where the roll is on screen, cached. Read from `box` rather than from the
+     canvas: the stylesheet oversizes the canvas past the slot to give the turn
+     room to swing in, so its centre is the slot's but its box is not, and the
+     bounce lives on `.pi-roll-in` inside it. */
+  let cx = 0;
+  let cy = 0;
+  /* Measured on the next move that needs it rather than the moment it changes.
+     The two things that move the roll are the scroll — which is also the thing
+     moving it down the page — and a viewport change, and both can fire many
+     times between two pointer events. This way a still page costs one
+     measurement and a scrolled one costs at most one per move. */
+  let stale = true;
+  let seen = true;
+
+  function centre() {
+    const b = box!.getBoundingClientRect();
+    cx = b.left + b.width / 2;
+    cy = b.top + b.height / 2;
+    stale = false;
+  }
+
+  function aim(e: PointerEvent) {
+    if (!viewer || !seen) return;
+    if (stale) centre();
+    const reach = Math.min(window.innerWidth, screenH()) * 0.5 * REACH;
+    viewer.point((e.clientX - cx) / reach, (e.clientY - cy) / reach);
+  }
+
+  /* Home, and home is the composed pose rather than square-on — the difference
+     from the home page's restRoll(), which has nothing to come back TO. */
+  const rest = () => viewer?.point(LEAN.x, LEAN.y);
+
+  let watching: IntersectionObserver | null = null;
+  let unwatchViewport: (() => void) | null = null;
+
+  if (chase) {
+    window.addEventListener("pointermove", aim, { signal, passive: true });
+    /* The pointer has left the window, or the tab lost it mid-lean. */
+    document.addEventListener("pointerleave", rest, { signal });
+    window.addEventListener("blur", rest, { signal });
+    window.addEventListener("scroll", () => (stale = true), { signal, passive: true });
+    unwatchViewport = onViewportChange(() => (stale = true));
+
+    /* The roll is one slot on a page several screens long, and the pointer goes
+       on moving after it has been scrolled past. Without this it would keep
+       easing — and the renderer keep drawing frames for it — somewhere nobody is
+       looking. Sent home on the way out, so scrolling back finds it composed
+       rather than holding the last angle it was given. */
+    watching = new IntersectionObserver(([entry]) => {
+      seen = entry.isIntersecting;
+      if (!seen) rest();
+    });
+    watching.observe(box);
+  }
 
   /* ------------------------------------------------------------------- flight */
 
@@ -289,15 +404,12 @@ export function initProductRoll(root: HTMLElement): () => void {
   function place(p: number) {
     gsap.set(box, { x: dx * p, y: dy * p });
     if (!viewer) return;
-    /* Out to edge-on, then back from the other edge — the same direction of
-       travel throughout, which is what makes the two halves one turn. Both are
-       eased across their own half, so the joint at HANDOFF is the fastest point
-       of each and the roll is at its thinnest for the fewest possible frames. */
-    viewer.spin(
-      p < HANDOFF
-        ? SWEEP * OUT(p / HANDOFF)
-        : -SWEEP + SWEEP * BACK((p - HANDOFF) / (1 - HANDOFF))
-    );
+    /* The whole turn, straight off the progress. p is 0 at the top of the page
+       and 1 when the roll is home, so this is 0deg to 360deg with the core
+       facing the reader at the half — and, being a function of the scroll
+       rather than a sequence played through it, it runs backwards for a reader
+       going back up and lands exactly wherever a thrown wheel stops. */
+    viewer.spin(TURN * p);
   }
 
   let trigger: ScrollTrigger | null = null;
@@ -365,7 +477,16 @@ export function initProductRoll(root: HTMLElement): () => void {
          THE FOURTH ARGUMENT IS THE OBJECT RATHER THAN THE STAGE — metalness and
          gloss, overriding this page's own export where a number is being tried
          out. Empty by default; see FINISH. */
-      createTapeViewer(mount, [model], { env: ROOM }, FINISH)
+      /* AND THE FIFTH IS THE SURFACE — the procedural roughness, relief and
+         clear coat, and this tape's own clarity for its wound side. See
+         ViewerFilm in tape3d.ts and components/TapeSlider/film.ts.
+
+         THE CLARITY COMES OFF THE TAPE, not out of this file: `clarity` is a
+         field in src/data/tapes.ts because how see-through a tape is is a fact
+         about the tape. Absent — masking, cloth — is a solid roll, which is
+         both the right answer for crepe paper and the exact roll this page had
+         before any of this. */
+      createTapeViewer(mount, [model], { env: ROOM }, FINISH, { clarity })
     )
     .then((v) => {
       if (gone) return v.dispose();
@@ -376,11 +497,13 @@ export function initProductRoll(root: HTMLElement): () => void {
          overwrites this whenever there is a journey; it is what the roll sits at
          when there is not. */
       v.spin(0);
-      /* AND THEN LEANED, once and for good — see LEAN. Said once rather than
-         held every frame because nothing here ever changes it: point() is a
-         target the viewer eases toward, not a pose it has to be reminded of, so
-         the roll settles into the angle over the same beat the entrance bounce
-         is landing on and then simply stays there. */
+      /* AND THEN LEANED INTO ITS REST POSE — see LEAN. point() is a target the
+         viewer eases toward rather than a pose it has to be reminded of, so the
+         roll settles into the angle over the same beat the entrance bounce is
+         landing on, and stays there until a pointer moves. On a device with no
+         cursor, or under reduced motion, nothing ever does: this is the only
+         angle those visitors are shown, which is why it is set here and not
+         left to the first move. */
       v.point(LEAN.x, LEAN.y);
       // Caught up to wherever the reader has already scrolled to — the chunk may
       // well land after a page has been read past.
@@ -407,6 +530,11 @@ export function initProductRoll(root: HTMLElement): () => void {
      invisible cards and a roll parked half way down the page. */
   return () => {
     gone = true;
+    ac.abort();
+    watching?.disconnect();
+    watching = null;
+    unwatchViewport?.();
+    unwatchViewport = null;
     trigger?.kill();
     trigger = null;
     /* The dispose runs here OR in the loader's then-branch, never both: `gone`

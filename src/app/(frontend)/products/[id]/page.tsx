@@ -104,6 +104,33 @@ export default async function TapePage({
      of them having to know what came before. */
   return (
     <>
+      {/* THE SCROLLBAR, IN THIS TAPE'S COLOURS. The bar is on screen for the
+          whole of every route — the gutter is reserved in global.css — so on a
+          page that is otherwise one product's colour from edge to edge, a bar
+          in the site's default lime-on-green is the last thing left saying
+          "some other page". The site-wide pair and the rules that consume them
+          are in global.css under `html`; this restates the two tokens and
+          nothing else.
+
+          THE SHEET AND THE INK THE WORD IS PUNCHED IN — `bg` is the colour the
+          opening screen floods with and `word` is what THE and the tape's own
+          name are drawn in on top of it, so the bar is the page's own pairing
+          rather than a third colour picked to go with it. Both come from
+          src/data/tapes.ts like everything else on this page, so a colour
+          edited there turns up here with nothing to keep in step.
+
+          A <style> TAG RATHER THAN AN INLINE STYLE, and it has to be: a
+          scrollbar belongs to the SCROLLING ELEMENT, which is <html> — up in
+          (frontend)/layout.tsx, outside anything this file renders. There is no
+          element here to hang the properties on, so the declaration is written
+          at :root instead. Server-rendered with the rest of the markup, so it
+          is in the first paint and the bar is never briefly the wrong colour.
+
+          NOT DANGEROUSLY-SET, AND NOT UNSAFE. The two values are hex literals
+          from a file in this repository, not anything a request can reach —
+          but React escapes the children of <style> anyway, so a stray `<` could
+          not close the tag even if one were ever typed into tapes.ts. */}
+      <style>{`:root{--sb-track:${tape.colours.bg};--sb-thumb:${tape.colours.word}}`}</style>
       <ProductIntro tape={tape} />
       <ProductInfo tape={tape} />
       {/* The same tape in its three grades. Directly under the origin story and

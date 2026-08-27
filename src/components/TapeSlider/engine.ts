@@ -324,14 +324,23 @@ export function initTapeSlider(root: HTMLElement): () => void {
     });
   }
 
-  // Depth of the arc on the sheet's leading edge, capped so it stays a sweep
-  // rather than a deep tongue on tall viewports.
-  function arcDepth(box: DOMRect) {
-    return Math.min(box.height * 0.22, 240);
-  }
+  /* Depth of the curve on the sheet's leading edge.
 
-  function curve(px: number) {
-    return `0 0 50% 50% / 0 0 ${px}px ${px}px`;
+     OFF THE WIDTH, WHICH IS THE WHOLE OF THE CHANGE HERE. It used to be
+     `min(height * 0.22, 240)` — a proportion of the STAGE with a pixel cap, so
+     the arc got shallower on a wide screen and hit a ceiling on a tall one, and
+     it was a different curve from the one the sections around it draw. The site
+     now has one edge (--section-curve in global.css) at one proportion, and this
+     is that proportion in px: 150.5 / 1456 of the width, which is --curve-depth
+     resolved against this box rather than against the viewport.
+
+     Measured rather than read off the computed style: this sheet is deliberately
+     taller than the stage, so a percentage or a vw resolved against it would put
+     the curve somewhere other than where the section's own foot is. */
+  const CURVE_RATIO = 150.5 / 1456;
+
+  function arcDepth(box: DOMRect) {
+    return box.width * CURVE_RATIO;
   }
 
   /* When the sheet's leading edge has finished passing `el` — i.e. when that
@@ -400,13 +409,17 @@ export function initTapeSlider(root: HTMLElement): () => void {
       travel = box.height + depth + 2;
       bgNext!.style.height = `${travel}px`;
       bgNext!.style.background = colour;
-      bgNext!.style.borderRadius = curve(depth);
+      /* The mask's strip. .arc-cut in global.css owns the shape and reads this
+         for how deep to lay it; the default it falls back to is --curve-depth,
+         which is right for a box the height of the section and wrong for this
+         one. */
+      bgNext!.style.setProperty("--arc-h", `${depth}px`);
       bgNext!.style.transform = `translateY(${-travel}px)`;
 
-      // Same numbers on the repaint layer, so its arc is the sheet's arc.
+      // Same numbers on the repaint layer, so its curve is the sheet's curve.
       if (sweep && sweepInner) {
         sweep.style.height = `${travel}px`;
-        sweep.style.borderRadius = curve(depth);
+        sweep.style.setProperty("--arc-h", `${depth}px`);
         sweep.style.transform = `translateY(${-travel}px)`;
         sweepInner.style.height = `${box.height}px`;
         sweepInner.style.transform = `translateY(${travel}px)`;

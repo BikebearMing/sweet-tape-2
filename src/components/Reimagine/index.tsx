@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { letters } from "@/components/letters";
 import Peel from "@/components/Peel";
+import Props from "./props";
 import Stage from "./Stage";
 
 /* TO REIMAGINE AN EVERYDAY ESSENTIAL — /about's fourth section, and the one the
@@ -47,11 +48,19 @@ import Stage from "./Stage";
  * (components/Peel), driven by this section's timeline exactly as the
  * preloader's mark is driven by its own: see TAPE in ./unfold.ts.
  *
- * THE SHEET IS STILL NOT FULLY DRESSED. The design also has strips of tape
- * holding it down at the corners, two product photographs pinned to it, a heart
- * and a squiggle drawn on it in pen, and a rule under the last line. None of
- * those are here yet: they arrive on the open sheet and the sheet has to open
- * first.
+ * AND THEN THE SHEET IS DRESSED. Six strips of tape holding it down at the
+ * edges and two product photographs pinned to it, all of them arriving AFTER the
+ * paper has opened and staggered across each other — see ./props.tsx, which says
+ * what they are, and REIMAGINE.PROPS in ./unfold.ts, which says when. They are a
+ * fourth beat and not a fourth version of the third: the tape rolls down the way
+ * the strip in the sentence does, and the photographs come up off the paper and
+ * settle, because one is a thing being stuck on and the other is a thing being
+ * put down.
+ *
+ * THE HEART AND THE SQUIGGLE ARE STILL TO COME, and the slot for them is open
+ * rather than missing: MARKS in ./props.tsx is an empty list the markup already
+ * maps over, with both boxes already measured in global.css. A rule under the
+ * last line is the one thing in the design that has nothing standing for it.
  *
  * Server-rendered like every other section. Stage is the hair-thin client
  * wrapper that owns the ref; nothing below this line is a client component.
@@ -328,6 +337,32 @@ export default function Reimagine() {
           ))}
         </h2>
       </div>
+
+      {/* AND EVERYTHING ELSE ON THE PAPER — which is a SIBLING of the sheet and
+          not a child of it, and that is the one surprising thing about this
+          section's markup.
+
+          IT IS DRAWN IN THE SHEET'S BOX EITHER WAY. .reimagine-props is given
+          the same box by the stylesheet, restated without the centring
+          transform, so a prop's --px and --py are still measured from the
+          paper's own top left corner and the whole layer still scales with the
+          drawing. Nothing about where the props sit changes.
+
+          WHAT CHANGES IS WHAT THE CLEAR STRIPS CAN SEE. Three of the six are OPP
+          film, whose artwork is a set of highlights meant to be SCREENED onto
+          whatever it is lying on (see props.tsx), and the design has all three
+          half off the paper on the lime and the green — which is where the
+          screen has anything to do. .reimagine-sheet is centred with a transform
+          and a transform makes a stacking context, and a stacking context is an
+          isolated group: a strip inside it blends with the paper and with
+          nothing else, so off the paper its backdrop is transparent and it
+          arrives as the flat grey slab the blending was supposed to dissolve.
+          Out here its backdrop is the section's two grounds AND the sheet, and
+          the film reads as film over both.
+
+          After the sheet in source, so the props still paint over the paper and
+          over the type where they overlap it. */}
+      <Props />
     </Stage>
   );
 }

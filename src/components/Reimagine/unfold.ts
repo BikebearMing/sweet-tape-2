@@ -231,6 +231,91 @@ export const REIMAGINE = {
     FROM: 1,
   },
 
+  /* AND THEN THE SHEET IS DRESSED — the strips of tape holding it down and the
+   * two photographs pinned to it, arriving after the paper has opened.
+   *
+   * THE FOURTH BEAT, AND IT RUNS UNDER THE THIRD. The section is four things in
+   * order: the paper opens, the statement is written on it, a strip of tape is
+   * laid across the third line, and the props land. Read as a queue that is one
+   * beat too many for the time the pin buys — so this one does not queue. It
+   * starts AT the end of the unfold, while the letters are still coming up, and
+   * is finished before the sentence's own strip begins. The reader sees the
+   * paper open and everything on it arrive; they do not see a list being read
+   * out.
+   *
+   * WHICH IS ALSO WHY IT COSTS THE PIN NOTHING. AT 0.2 + nine staggers of 0.08 +
+   * the photographs' 0.62 comes to 3.54s from the first cut, against the
+   * sentence's strip landing at about 4.2 — see LENGTH, whose sum this does not
+   * enter and must not start to. The day these run past the tape, LENGTH is the
+   * figure that follows them.
+   *
+   * TWO MOVES AND NOT ONE, because there are two kinds of thing here. A strip of
+   * tape ROLLS DOWN — the same mechanism and very nearly the same curve as the
+   * strip in the third line, because it is the same gesture on the same roll. A
+   * photograph is PUT DOWN: it comes up off the paper, a little small, and
+   * settles past its size. Giving both the peel would have the photographs
+   * unrolling like film; giving both the bounce would have the tape landing like
+   * a card.
+   *
+   * DOCUMENT ORDER IS ARRIVAL ORDER, off the markup — Reimagine/props.tsx lists
+   * them roughly top-left to bottom-right and this plays them down that list, so
+   * the sequence is stated once, there, and there is no second copy of it here.
+   * It is the same bargain the flipbook's six frames are taken off the markup
+   * under. */
+  PROPS: {
+    /* SECONDS AFTER THE UNFOLD ENDS, and it is measured from the same place
+       TEXT_AT is so the two can be read against each other: the writing starts
+       at 0.67 and this at 0.2, so the first strip is on its way down before the
+       first letter is up. Not 0 — a prop that starts on the frame the last cut
+       lands is a prop that was under the paper rather than one that arrived on
+       it. */
+    AT: 0.2,
+
+    /* BETWEEN ONE PROP AND THE NEXT. Ten of them at 0.08 is three quarters of a
+       second end to end, which is a hand working across the sheet. Wide enough
+       that no two land together and no reader counts them; at 0.15 the last
+       strip is still going down as the sentence is being taped, which reads as
+       the section not knowing when it has finished. */
+    STAGGER: 0.08,
+
+    /* THE STRIPS. Shorter and blunter than the sentence's own — TAPE.DURATION is
+       0.55 on a strip the reader is watching land in a hole left for it, and
+       these are six things happening at the edges of the frame while the
+       statement is being written in the middle of it. The curve is the same
+       sine.inOut for the same reason: a hand smoothing something flat eases out
+       of rest and back into it.
+
+       FROM 1 is rolled right up at the far end, which is a strip that is not on
+       the page yet. See TAPE.FROM, which argues at length why a strip of tape
+       can start from nothing where the preloader's badge could not. */
+    TAPE: { DURATION: 0.42, EASE: "sine.inOut", FROM: 1 },
+
+    /* THE PHOTOGRAPHS. RISE is a fraction of the prop's OWN height rather than a
+       length, so the move is the same move at any window and on the phone — a
+       picture that travels 40px looks thrown at 1440 and dropped at 390.
+       Positive is downward in GSAP's yPercent, so 9 is nine per cent of its own
+       height BELOW where it belongs, coming up into place.
+
+       back.out IS THE BOUNCE and 1.9 is how far past its size it goes before
+       settling. It is the one place on this section something overshoots, and it
+       is the right place: everything else here is paper being flattened or tape
+       being smoothed down, both of which are gestures that do not spring. A
+       photograph being put on a sheet is a hand letting go of something.
+
+       FADE is separate and deliberately linear. Ridden on the same back.out the
+       transform is, the overshoot takes opacity past 1 and the browser clamps
+       it — so the picture reaches full strength early and the tail of the fade
+       does nothing. Short, so what the eye reads is the move and not the
+       arrival. */
+    SHOT: {
+      DURATION: 0.62,
+      EASE: "back.out(1.9)",
+      RISE: 9,
+      SCALE: 0.86,
+      FADE: 0.2,
+    },
+  },
+
   /* Between letters, in shuffled order. Well under the hero's 0.025: there are
      ninety-odd characters here against a headline's twenty, and at the hero's
      pace the last of them would arrive two and a half seconds after the first.
@@ -311,6 +396,55 @@ function shuffle<T>(items: T[]): T[] {
     [out[i], out[j]] = [out[j], out[i]];
   }
   return out;
+}
+
+/* ROLL A STRIP OF TAPE DOWN, on this timeline, at this moment.
+ *
+ * ONE MECHANISM FOR SEVEN STRIPS. The statement's own tape and the six holding
+ * the sheet down are the same gesture on the same roll, and they were the same
+ * fifteen lines of code twice before this existed. What differs between them is
+ * when, how long and from where — which is what the arguments are.
+ *
+ * --peel IS WRITTEN AS A BARE NUMBER off a plain object rather than tweened as a
+ * property, because that is what it is: no unit for GSAP's CSSPlugin to infer,
+ * and Peel/peel.ts writes it the same way. The preloader's mark is driven from
+ * this exact pattern.
+ *
+ * THE FIRST WRITE HAPPENS NOW, OUTSIDE THE TIMELINE, and it is what takes the
+ * strip off the page before its beat. The markup's rest pose is the tape lying
+ * flat — it has to be, so that a page with no script on it has the tape stuck
+ * down rather than missing — so something has to roll it back up again the
+ * moment there IS a script. This is that.
+ *
+ * AND OFF THE PAGE UNTIL ITS BEAT, which rolling it up does not achieve on its
+ * own. A peel at --peel 1 is not a strip that has gone away: it is a strip
+ * folded back on itself, and what is left standing at the fold is a stub of tape
+ * a good fraction of the width of the whole thing. Sitting on a lime field with
+ * the paper still crumpled in the middle of the screen, that stub is a piece of
+ * tape stuck to nothing half a minute before anything else has happened. The
+ * roll is what it looks like once it is there; autoAlpha is what decides WHETHER
+ * it is there, and the peel only answers the first question. The preloader's
+ * mark is held off the same way.
+ *
+ * autoAlpha rather than opacity: visibility goes with it, so the strip is not
+ * merely invisible but out of the way entirely. And it is SHOWN on the frame the
+ * roll starts rather than faded up — a cut, because what appears is the stub at
+ * the fold and it is on its way out from under itself in the same instant. A
+ * fade would be a strip arriving twice. */
+function roll(
+  tl: gsap.core.Timeline,
+  el: HTMLElement,
+  at: number,
+  spec: { DURATION: number; EASE: string; FROM: number },
+): void {
+  const fold = { v: spec.FROM };
+  const write = () => el.style.setProperty("--peel", String(fold.v));
+  write();
+
+  gsap.set(el, { autoAlpha: 0 });
+  tl.set(el, { autoAlpha: 1 }, at);
+
+  tl.to(fold, { v: 0, duration: spec.DURATION, ease: spec.EASE, onUpdate: write }, at);
 }
 
 export function initReimagine(root: HTMLElement): () => void {
@@ -407,18 +541,8 @@ export function initReimagine(root: HTMLElement): () => void {
     );
   }
 
-  /* AND THE TAPE, ROLLED DOWN OVER THE HOLE IN THE THIRD LINE.
-   *
-   * --peel is WRITTEN AS A BARE NUMBER off a plain object rather than tweened as
-   * a property, because that is what it is: no unit for GSAP's CSSPlugin to
-   * infer, and Peel/peel.ts writes it the same way. The preloader's mark is
-   * driven from this exact pattern.
-   *
-   * The first write happens NOW, outside the timeline, and it is what takes the
-   * strip off the page before its beat. The markup's rest pose is the tape lying
-   * flat — it has to be, so that a page with no script on it has the tape stuck
-   * down rather than missing — so something has to roll it back up again the
-   * moment there IS a script. This is that.
+  /* AND THE TAPE, ROLLED DOWN OVER THE HOLE IN THE THIRD LINE. `roll` above is
+   * the mechanism and carries the whole of it — this is only WHEN.
    *
    * WHERE IT STARTS is the end of the WRITING plus LAG, and every part of that
    * is read off the other constants rather than typed. The writing begins at
@@ -435,54 +559,73 @@ export function initReimagine(root: HTMLElement): () => void {
    * A sum that is right only for one value of a constant it does not mention is
    * a sum waiting for that constant to be tuned. */
   if (tape) {
-    const fold = { v: REIMAGINE.TAPE.FROM };
-    const write = () => tape.style.setProperty("--peel", String(fold.v));
-    write();
-
-    /* AND OFF THE PAGE UNTIL ITS BEAT, which rolling it up does not achieve on
-     * its own.
-     *
-     * A peel at --peel 1 is not a strip that has gone away — it is a strip
-     * folded back on itself, and what is left standing at the fold is a stub of
-     * tape a good fraction of the width of the whole thing. Sitting on a lime
-     * field with the paper still crumpled in the middle of the screen, that
-     * stub is a piece of tape stuck to nothing, half a minute before anything
-     * else on the section has happened.
-     *
-     * So the roll is what it looks like once it is there, and this is what
-     * decides WHETHER it is there. The two are separate questions and the
-     * peel only answers the first. The preloader's mark is held off the same
-     * way and for the same reason — see PRELOADER.MARK, where the gif's first
-     * twelve blank frames are what this stands in for.
-     *
-     * autoAlpha rather than opacity: visibility goes with it, so the strip is
-     * not merely invisible but out of the way entirely. */
-    gsap.set(tape, { autoAlpha: 0 });
-
     const written =
       chars.length > 0
         ? REVEAL.DURATION + REIMAGINE.STAGGER * (chars.length - 1)
         : 0;
 
-    const at = unfold + REIMAGINE.TEXT_AT + written + REIMAGINE.TAPE.LAG;
-
-    /* Shown on the frame the roll starts and not before — a cut rather than a
-       fade, because what appears is the stub at the fold and it is on its way
-       out from under itself in the same instant. A fade would be a strip
-       arriving twice. */
-    tl.set(tape, { autoAlpha: 1 }, at);
-
-    tl.to(
-      fold,
-      {
-        v: 0,
-        duration: REIMAGINE.TAPE.DURATION,
-        ease: REIMAGINE.TAPE.EASE,
-        onUpdate: write,
-      },
-      at,
+    roll(
+      tl,
+      tape,
+      unfold + REIMAGINE.TEXT_AT + written + REIMAGINE.TAPE.LAG,
+      REIMAGINE.TAPE,
     );
   }
+
+  /* AND THE SHEET IS DRESSED — see REIMAGINE.PROPS, which argues the beat.
+   *
+   * ONE QUERY AND NOT TWO LISTS, and the ORDER is the whole reason. Every prop
+   * wears .reimagine-prop and querySelectorAll returns them in document order,
+   * so the stagger below is the order Reimagine/props.tsx lists them in — and
+   * that includes the two strips pinned to the photographs, which are nested
+   * INSIDE their pictures and therefore fall immediately after them. A
+   * photograph lands and one stagger later the tape goes over its corner, for
+   * free, because the markup already says the tape is on the picture.
+   *
+   * WHICH OF THE TWO MOVES A PROP GETS IS A FACT ABOUT THE PROP and it is read
+   * off the class rather than off two separate queries kept in step: a strip
+   * rolls down, and everything else comes up off the paper and settles.
+   *
+   * THE BOUNCE IS PUT ON .reimagine-pop AND NOT ON THE PROP ITSELF. The prop's
+   * own rule carries the lean as `transform: rotate(--pr)`, and a translate and
+   * a scale are also transform — one element and GSAP owns the whole property,
+   * decomposing whatever CSS left there and re-composing its own matrix, so the
+   * lean would survive by GSAP's good manners rather than by construction. The
+   * inner box has no transform of its own and nothing to preserve. It is the
+   * same split .reimagine-prop makes between `transform` and .peel's `rotate`,
+   * one level down. */
+  const props = Array.from(root.querySelectorAll<HTMLElement>(".reimagine-prop"));
+  const propsAt = unfold + REIMAGINE.PROPS.AT;
+
+  props.forEach((prop, i) => {
+    const at = propsAt + i * REIMAGINE.PROPS.STAGGER;
+
+    if (prop.classList.contains("reimagine-prop-tape")) {
+      roll(tl, prop, at, REIMAGINE.PROPS.TAPE);
+      return;
+    }
+
+    const pop = prop.querySelector<HTMLElement>(".reimagine-pop");
+    if (!pop) return;
+
+    const { DURATION, EASE, RISE, SCALE, FADE } = REIMAGINE.PROPS.SHOT;
+
+    /* fromTo AND NOT to, on both, because the FROM is what parks the prop out of
+       sight at bind time: a fromTo added to a paused timeline renders its start
+       state immediately, which is the same hand-off the letters take. The rest
+       pose in the stylesheet is the finished section — a phone and a reader who
+       has asked for less motion both get the props simply THERE — so something
+       has to take them away again the moment there is a script to bring them
+       back. */
+    tl.fromTo(pop, { autoAlpha: 0 }, { autoAlpha: 1, duration: FADE, ease: "none" }, at);
+
+    tl.fromTo(
+      pop,
+      { yPercent: RISE, scale: SCALE },
+      { yPercent: 0, scale: 1, duration: DURATION, ease: EASE },
+      at,
+    );
+  });
 
   /* AND HAND THE LAYERS BACK once the sheet is open.
    *
@@ -610,5 +753,24 @@ export function initReimagine(root: HTMLElement): () => void {
       tape.style.removeProperty("--peel");
       gsap.set(tape, { clearProps: "opacity,visibility" });
     }
+
+    /* AND EVERY PROP BACK ON THE SHEET, for the same reason and by the same two
+       moves. A teardown mid-arrival must not leave a photograph parked eight per
+       cent low at 86% of its size with the tape that pins it half rolled up: the
+       stylesheet's rest pose IS the finished section — the props there, flat and
+       stuck down — so handing all three properties back is handing the section
+       to it.
+
+       The tapes are the same pair of statements the strip above makes and the
+       pictures are clearProps on the transform the bounce wrote; --peel is an
+       inline custom property and comes off with removeProperty rather than
+       through GSAP, which never owned it. */
+    props.forEach((prop) => {
+      prop.style.removeProperty("--peel");
+      gsap.set(prop, { clearProps: "opacity,visibility" });
+    });
+    gsap.set(root.querySelectorAll(".reimagine-pop"), {
+      clearProps: "transform,opacity,visibility",
+    });
   };
 }

@@ -131,6 +131,62 @@ html {
   scrollbar-gutter: stable;
 }
 
+/* THE SCROLLBAR, AND IT IS A PIECE OF THE DRAWING RATHER THAN A PIECE OF THE
+ * BROWSER. The gutter above is reserved on every route, so the bar is on screen
+ * for the whole of every page on this site — a grey Chrome default running down
+ * the right-hand edge of a lime sheet is the one bit of furniture the design
+ * never got a say in.
+ *
+ * TWO TOKENS AND NOTHING ELSE. --sb-track is the SHEET the bar runs on and
+ * --sb-thumb is the INK on it, which is the same pairing every field on this
+ * site is built out of: the site's dark green with the site's lime on it. An
+ * inner product page restates the two on :root with the tape's own colours —
+ * see (frontend)/products/[id]/page.tsx — and nothing here has to know that
+ * happened.
+ *
+ * WHY THE PSEUDO-ELEMENTS AND THE STANDARD PROPERTY ARE IN SEPARATE BLOCKS, and
+ * it is the one thing about this rule that is not obvious. `scrollbar-color` is
+ * the standard, and Chrome now honours it — but the moment it is set, Chrome
+ * DROPS the ::-webkit-scrollbar rules entirely, which would take the rounded
+ * thumb and its inset with them. So the standard property is served only to
+ * engines that have no ::-webkit-scrollbar to lose, which is Firefox, and the
+ * `not selector(...)` query is how you ask that question rather than sniffing
+ * for a vendor. Safari and Chrome take the block below. */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--sb-track);
+}
+
+/* The border is what puts AIR either side of the thumb rather than a bar that
+   fills the channel edge to edge, and it has to be a border in the track's own
+   colour: ::-webkit-scrollbar-thumb takes no margin, and padding would be
+   painted in the thumb's colour. background-clip keeps the fill off it. */
+::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb);
+  border: 3px solid var(--sb-track);
+  background-clip: padding-box;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  border-width: 2px;
+}
+
+/* Where a vertical and a horizontal bar meet. Left alone it is white. */
+::-webkit-scrollbar-corner {
+  background: var(--sb-track);
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  html {
+    scrollbar-color: var(--sb-thumb) var(--sb-track);
+  }
+}
+
 /* NO min-height, AND THAT IS A DELETION RATHER THAN AN OMISSION. This carried
    200vh — "scroll room, so the parallax has something to react to" — from a
    time when the pages were one section each. Every route is now several screens
@@ -215,6 +271,103 @@ h6 {
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
+}
+
+/* ==========================================================================
+   The section curve
+   ==========================================================================
+   The shape is --section-curve in :root and the depth is --curve-depth; both
+   are argued at length up there. What is here is the only two ways this site
+   ever puts that edge on a box.
+
+   .arc-cut IS THE EDGE, and nothing else — no colour, no position, no size. Put
+   it on a box and the box's bottom becomes the curve, along with everything the
+   box paints and everything inside it. A mask does that where a border-radius
+   does not: a radius clips descendants only if the box also carries an overflow,
+   and half the sheets on this site deliberately do not (the roll leaves the
+   product page's sheet, the badge drops into the hero's field from above the
+   fold).
+
+   WHICH IS ALSO THE ONE THING TO WATCH. A mask clips the WHOLE box, top edge
+   included. Anything that has to arrive from outside the box must not be inside
+   a masked one — which is what .arc-foot is for.
+
+   .arc-foot IS A SHEET OF PAPER CUT TO THAT EDGE: a full-bleed layer that
+   carries the colour, the grain and the curve, and holds no content. Drop one in
+   as the first child of a box that needs a curved foot but whose contents must
+   be free to leave it. Later positioned siblings paint over it by tree order, so
+   nothing else has to be re-stacked.
+
+   TWO MASK LAYERS, THE FOOTER'S RECIPE. A plain rectangle covering everything
+   above the curve's strip, and the curve itself filling the strip. The 1px is an
+   overlap and not a nudge: --curve-depth is a vw and so almost never a whole
+   device pixel, the two layers are rasterized separately, and a shared edge
+   landing mid-pixel leaves both of them short of opaque there — a hairline of
+   whatever is behind, right across the width. Growing the rectangle a pixel INTO
+   the strip puts the seam under solid mask instead of on it. Alpha clamps, and
+   the strip is opaque along its own top edge anyway, so it costs nothing.
+
+   --arc-h is the escape hatch. It defaults to the site's one depth; the colour
+   wipes override it per run, because they are measured in px against a box that
+   is taller than the section and their arc has to be the section's arc all the
+   same. See TapeSlider/engine.ts and PickYourPlayer/recolour.ts. */
+.arc-cut,
+.arc-foot {
+  --arc-h: var(--curve-depth);
+
+  -webkit-mask-image: linear-gradient(#000 0 0), var(--section-curve);
+  mask-image: linear-gradient(#000 0 0), var(--section-curve);
+  -webkit-mask-size:
+    100% calc(100% - var(--arc-h) + 1px),
+    100% var(--arc-h);
+  mask-size:
+    100% calc(100% - var(--arc-h) + 1px),
+    100% var(--arc-h);
+  -webkit-mask-position:
+    0 0,
+    0 100%;
+  mask-position:
+    0 0,
+    0 100%;
+  -webkit-mask-repeat: no-repeat, no-repeat;
+  mask-repeat: no-repeat, no-repeat;
+}
+
+/* The sheet. Its colour is read from the box it is dropped into rather than
+   written here — --arc-paint is set alongside the section's own background, so
+   a section that recolours (the product pages set --stage-bg per tape) takes its
+   curve's colour with it and there is no second place to keep in step. */
+.arc-foot {
+  position: absolute;
+  inset: 0;
+  background: var(--arc-paint, transparent);
+
+  /* A full-bleed decorative layer must never be what a click lands on. Every
+     grain layer on this site says the same thing. */
+  pointer-events: none;
+}
+
+/* The paper. Opt in with data-paper, because two of these sit under sheets that
+   already carry their own grain and a second copy at 0.2 would double it.
+
+   ON THE FOOT AND NOT ON THE SECTION, which is the whole reason the grain moved
+   here at all: the texture has to stop at the curve, or it runs on over the
+   ground in the two corners and gives the arc a ghost. The foot is masked, and a
+   mask takes its own children with it, so this needs to say nothing about the
+   shape.
+
+   Width-fitted and tiled DOWN rather than stretched — the hero's call, and for
+   its reason: stretching one tile over a box of a different aspect turns paper
+   into vertical streaking. */
+.arc-foot[data-paper]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/paper-overlay.webp");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  opacity: 0.2;
+  pointer-events: none;
 }
 
 /* ==========================================================================
@@ -394,10 +547,20 @@ h6 {
 
   --stage-bg: #fa8005;
 
-  /* THE BITE — the site's one concave edge, used as a mask by any section that
-   * wants its top edge dipped: the footer and the pinning section both take it.
-   * It lives here rather than on either of them because it is a SHAPE, and two
-   * copies of a path is two things to get wrong.
+  /* THE SCROLLBAR'S SHEET AND ITS INK — see the rules under `html` above. The
+     site's dark green with the site's lime running down it, which is the
+     pairing /about and the origin sections are already built out of. A tape's
+     inner page overrides both on :root with its own colours. */
+  --sb-track: #013900;
+  --sb-thumb: #b6fe00;
+
+  /* THE BITE — a half-ellipse, and the shape for the SMALL concave edges: the
+   * menu tab's torn top and the crown on the numbered cards. It used to be the
+   * footer's and the pinning section's too; those are page-wide edges between
+   * two sections and now take --section-bite below, which is the design's own
+   * curve turned over. What is left here is the pair that are components rather
+   * than sections, where an asymmetric page-wide profile squeezed into 135px
+   * reads as a wonky ellipse and not as the artwork.
    *
    * Read it as the paper that SURVIVES the bite: the two lobes either side of
    * the curve. One half-ellipse, rx half the width and ry the arc's depth,
@@ -418,11 +581,87 @@ h6 {
    * The menu tab's torn edge is built out of the same parts for the same
    * reason.
    *
-   * It is CONVEX EVERYWHERE ELSE ON THIS PAGE — the hero's lime field, the
-   * preloader's sheets, the slider's colour wipe are all bulges, and those are
-   * border-radius. This one is not, which is the whole reason it is a mask: a
-   * radius can round a corner off, it cannot take a bite out of an edge. */
+   * CONCAVE, which is the whole reason any of these is a mask: a radius can
+   * round a corner off, it cannot take a bite out of an edge. */
   --edge-bite: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 15' preserveAspectRatio='none'%3E%3Cpath d='M0 0A50 15 0 0 0 50 15A50 15 0 0 0 100 0L100 15L0 15Z' fill='%23000'/%3E%3C/svg%3E");
+
+  /* THE SECTION CURVE — the site's one convex edge, and the shape every sheet
+   * on this page now ends on. It is the artwork: public/assets/curvature-svg.svg,
+   * 1456 x 215, traced off the design rather than approximated.
+   *
+   * IT IS NOT AN ELLIPSE, AND THAT IS THE ENTIRE POINT OF THE CHANGE. Every
+   * arc on this site used to be `border-radius: 0 0 50% 50% / 0 0 Xvw Xvw` —
+   * a half-ellipse, which is symmetric by construction: its lowest point is at
+   * exactly 50% and its two ends leave the corners at matching angles. The
+   * design's curve is a single cubic bezier and does neither. It bottoms out
+   * past centre, it falls away harder on the right than on the left, and the
+   * tangent it leaves each corner on is different at the two ends. No radius
+   * can be tuned into that shape, which is why every one of them read as
+   * nearly-right, and why this is a mask.
+   *
+   * ONLY THE BELLY IS IN HERE. The file's own path carries a 64.5-tall solid
+   * block above the curve — the sheet, in other words — and shipping that as
+   * part of the mask would mean stretching the sheet and the curve by the same
+   * factor, so a tall section would get a curve as deep as it is. What is left
+   * is the artwork's path with 64.5 taken off every y: it starts and ends at
+   * y = 0 and dips to 144.5 in between, inside a 150.5-tall box. Everything
+   * that wants this edge lays it in a strip of exactly --curve-depth at its own
+   * bottom and covers the rest with a plain rectangle; see .arc-cut.
+   *
+   * preserveAspectRatio="none" so the strip stretches to whatever width it is
+   * given — the curve tracks the viewport and the depth is decided by the strip,
+   * which is what the two radii of a border-radius were doing before.
+   *
+   * CONVEX. For the concave reading of this same path — the footer's top edge
+   * and the pinning section's brow — see --section-bite below. */
+  --section-curve: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1456 150.5' preserveAspectRatio='none'%3E%3Cpath d='M1456 0C801.9 272 212.833 113.333 0 0Z' fill='%23000'/%3E%3C/svg%3E");
+
+  /* THE SAME CURVE, READ AS A BITE — the concave version of the edge above, for
+   * the two places on this page that cut their TOP edge instead of their foot:
+   * the footer, which rises into the key visual, and the pinning section's brow,
+   * which rises into the slider.
+   *
+   * WHY IT EXISTS. Both of those took --edge-bite, the half-ellipse further up
+   * this file, at 9vw. That is a different shape AND a different depth from the
+   * one every other sheet on the page ends on, which is exactly what you could
+   * see: the hero's foot was the artwork and the slider's and the footer's were
+   * a squashed ellipse, so the page cut three edges and only one of them was the
+   * design's.
+   *
+   * IT IS --section-curve'S OWN CUBIC WITH TWO CHANGES AND NO THIRD. The path is
+   * written left-to-right rather than right-to-left — a cubic reversed is the
+   * same cubic with its two control points swapped, so the profile across the
+   * width is identical to the line above: still deepest at 48.7% of the width,
+   * still leaving its two corners on different tangents. And the fill closes
+   * DOWN to the strip's bottom instead of along its top, so what survives the
+   * mask is the two corner lobes and what it takes out is the belly. Same
+   * artwork, same proportion, other way up.
+   *
+   * Laid in a band of exactly --curve-depth, like every other use of the curve;
+   * preserveAspectRatio="none" so it tracks the viewport's width.
+   *
+   * --edge-bite is still the shape for the two SMALL bites — the menu tab's torn
+   * edge and the crown on the numbered cards. A page-wide asymmetry read across
+   * 135px reads as a mistake rather than as the artwork, and neither of those is
+   * an edge between two sections. */
+  --section-bite: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1456 150.5' preserveAspectRatio='none'%3E%3Cpath d='M0 0C212.833 113.333 801.9 272 1456 0L1456 150.5L0 150.5Z' fill='%23000'/%3E%3C/svg%3E");
+
+  /* HOW DEEP THE CURVE SITS, AND IT IS THE ARTWORK'S OWN PROPORTION rather than
+   * a number tuned per section: 150.5 / 1456 of the width, which is what makes
+   * the curve on the hero and the curve on the closing key visual the SAME
+   * curve and not two family members. Every --*-arc token further down this
+   * file now reads from this, so the whole site's curvature is this one figure.
+   *
+   * It replaces eight different depths that ranged from 3.5vw to an effective
+   * 16vw. That range is why they never looked related: an ellipse squashed to
+   * 3.5vw and the same ellipse stretched to 16vw share a rule and nothing else.
+   *
+   * SAME FIGURE ON THE PHONE, where the old arcs were deepened by hand (14vw,
+   * 16vw, 8vw). A vw is a proportion of the width and so is this, so the curve
+   * is the artwork at 390 exactly as it is at 1440. If it ever needs more bite
+   * on a narrow screen, this is the one line to override in the phone block —
+   * but doing so is a decision to stop drawing the artwork. */
+  --curve-depth: 10.336vw;
 
   /* THE CAST SHADOW, for everything on this page that lies on the paper —
    * photographs, product tags, tape, the paperclip. One recipe, because they
@@ -597,7 +836,7 @@ h6 {
 
     /* THE PRODUCT PAGE, 2.2 TIMES ITSELF — and the figure is pinned at both
        ends rather than chosen to look right.
-       
+
        The ceiling is the origin section's left column, which is 42.076vw of
        drawing and has to fit inside the phone's sheet less its padding: 92vw
        over 42.076vw is 2.19. The floor is the opening screen, which at 1 is
@@ -605,7 +844,7 @@ h6 {
        a page that on a desktop fills the window. At 2.2 it is 465px, a little
        over half the screen, with the origin section showing under it, which is
        exactly the relationship the desktop has.
-       
+
        Everything the opening drawing is made of is a multiple of this, so it
        arrives re-composed rather than re-authored, and the roll lands in the
        origin section at the size it left — see --product-roll-w. */
@@ -741,18 +980,11 @@ html[data-loading] {
      point sits exactly this far under the viewport and its ends land exactly on
      the bottom edge, which is what stops a sliver of page showing in the
      corners before anything has moved. */
-  --pre-arc: 9vw;
+  --pre-arc: var(--curve-depth);
 
   /* The mark's painted width. The artwork is 390 x 266 and its own aspect is
      kept, so this is the only figure to set. */
   --pre-mark: 15vw;
-
-  /* The line under it. Cut to sit within the mark's own width — twelve
-     condensed capitals run about six times the type size, so much past 2.9vw
-     and the line is wider than the thing it belongs to. */
-  --pre-line: 2.8vw;
-  --pre-gap: 1.4vw;
-  /* mark to line */
 
   position: fixed;
   inset: 0;
@@ -840,135 +1072,133 @@ html[data-loading] {
   width: 100%;
   height: calc(100% + var(--pre-arc));
 
-  /* One wide arc across the full width rather than two corner curves — the
-     horizontal radii are half the width each, so the two meet in the middle
-     and the edge is a single convex sweep, deepest at the centre. The slider's
-     colour wipe is cut the same way and the same way up; see .bg-layer--next.
-     Every sheet carries the same one, so the bands stay parallel all the way
-     off the screen. */
-  border-radius: 0 0 50% 50% / 0 0 var(--pre-arc) var(--pre-arc);
+  /* The trailing edge is .arc-cut in the markup — the site's one curve, taken
+     off the design. It was a half-ellipse cut with a border-radius here; the
+     shape is now the artwork's, which is what makes these sheets leave on the
+     same line the hero underneath them arrives on. Every sheet carries the same
+     one, so the bands stay parallel all the way off the screen, and the slider's
+     colour wipe is cut the same way and the same way up; see .bg-layer--next. */
+  --arc-h: var(--pre-arc);
 }
 
 .site-preloader .preloader-sheet {
   background: #b6fe00;
 
   /* Centred in the VIEWPORT, not in the box: the padding hands back the arc's
-     extra height at the bottom, so the mark and its line sit where the middle
-     of the screen is rather than --pre-arc/2 below it. */
+     extra height at the bottom, so the mark sits where the middle of the screen
+     is rather than --pre-arc/2 below it.
+
+     A grid of one now. STICK BY YOU was set under the mark and has gone, and
+     with it the gap between them — but the centring is the same problem it
+     always was and the padding is still what solves it. */
   display: grid;
   align-content: center;
   justify-items: center;
-  gap: var(--pre-gap);
   padding-bottom: var(--pre-arc);
 }
 
-/* The mark. A components/Peel wrapper since the gif went, so this sizes the
-   whole assembly rather than an <img> — same box, same one number. */
+/* The mark. A wrapper holding the layout box and a perspective, and nothing
+   else — Preloader/sticker.ts builds the columns inside it on mount. It was a
+   components/Peel assembly before the sticker, and a bare <img> before that;
+   all three have been the same box at the same one number. */
 .site-preloader .preloader-mark {
   /* PARKED HERE, RELEASED BY THE TIMELINE — the hand-off the letters make two
-     rules down, and for a sharper version of the same reason. The mark is in the
-     server's HTML, and the pose --peel: 0 draws is the mark FINISHED: flat,
-     landed, nothing left to do. So between the first paint and hydration the
-     answer to the animation was on screen ahead of it, and the peel arrived as a
-     correction to something the reader had already seen.
+     rules down. The mark must not be on the sheet before its beat, and this is
+     what holds it there from the first painted frame rather than from whenever
+     hydration lands.
 
-     visibility rather than opacity, because GSAP's autoAlpha sets both and will
-     take this over cleanly at the mark's own beat (Preloader/reveal.ts). Without
-     JS there is nothing to release it, which is correct: the noscript rule takes
-     the whole cover off the page, and so does reduced motion. */
+     visibility rather than opacity, because GSAP's autoAlpha sets both and
+     takes this over cleanly at the mark's own beat (Preloader/reveal.ts).
+     Without JS there is nothing to release it, which is correct: the noscript
+     rule takes the whole cover off the page, and so does reduced motion — and
+     with no JS there are no columns in here either. */
   visibility: hidden;
 
   width: var(--pre-mark);
-  height: auto;
 
-  /* No drop shadow. Every other peel on the site is an object lying ON the
-     pinboard and casts one; this is a mark on a sheet of paper, and the gif it
-     replaces threw no shadow either. */
-  --peel-shadow: none;
+  /* THE ARTWORK'S OWN ASPECT, and it has to be declared rather than inherited
+     from an image, because there is no image in here — the box is empty until
+     sticker.ts fills it, and `height: auto` on an empty box is zero. The same
+     ratio is in sticker.ts (ART_W / ART_H), which is what the columns are cut
+     against; the two have to agree. */
+  aspect-ratio: 191 / 118;
 
-  /* The artwork is a logo, not a photograph: contain, so the lemon keeps its
-     own proportions inside the box rather than being cropped to fill it. */
-  --peel-fit: contain;
+  /* THE 3D FRAME. The perspective is written by sticker.ts, off the measured
+     width — the mark is 15vw here and 46vw on a phone, and a perspective in
+     fixed px would be a different lens on every screen. Declared here so the
+     property always resolves.
 
-  /* THE TILT, folded into the frame's own turn rather than tweened as a
-     rotation. The wrapper already carries `rotate: var(--peel-dir)` — 61deg of
-     it — and GSAP's `rotation` goes through `transform`, where it reads that
-     61deg as its starting value, tweens away from it, and leaves it written
-     into transform as well. The frame ends up turned twice and the mark sits
-     visibly askew for the rest of the hold.
-
-     Adding a second term here keeps both in the one property that owns them.
-     .peel-turn cancels only --peel-dir, so the artwork keeps the tilt while the
-     fold's axis stays where it was put — which is the right way round: the mark
-     tips, the crease does not move. Preloader/reveal.ts writes it. */
-  rotate: calc(var(--peel-dir, 0deg) + var(--mark-tilt, 0deg));
+     It is on the WRAPPER and the pose is on .preloader-sticker inside it,
+     deliberately: perspective applies to an element's children, so the two
+     cannot live on the same box. */
+  perspective: 1000px;
 }
 
-/* The back of the sticker, where the board's props show unprinted paper. The
-   colour is measured off the gif and not chosen — see BACKS in components/Peel
-   for why it cannot be the lime it looks like it ought to be.
-
-   The brightness ramp is inverted from the props', and this is the one place it
-   has to be: everywhere else a flap lifts off a dark pinboard and catches the
-   light, so it brightens as it rises. Here it lifts off a full screen of lime,
-   the brightest thing on the site, and anything that brightened as it came up
-   would climb straight into the sheet behind it and disappear. It darkens
-   instead — away from the ground, which is the same instinct, upside down. */
-.site-preloader .preloader-mark .peel-flap img {
-  filter: url(#peel-back-mark) brightness(calc(1 - var(--peel) * 0.18));
+/* The 3D frame the columns share. Everything about the mark AS A WHOLE — where
+   it is, how big, how far tipped, how visible — is one transform on this. The
+   columns inside carry only their own place on the curve. */
+.site-preloader .preloader-sticker {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
 }
 
-/* The hero's dark green on lime, which is the pairing the hero sets on exactly
-   this ground. Flex for the same reason every row of split letters on this site
-   is: .clip carries overflow: hidden, and an inline-block whose overflow is not
-   visible takes its baseline from its bottom margin edge rather than from the
-   text inside it, which would drop the whole line by the font's descent. */
-.site-preloader .preloader-line {
-  display: flex;
-  align-items: flex-end;
-  font-family: var(--font-heading);
-  font-size: var(--pre-line);
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: 0.02em;
-  color: #013900;
+/* One column of the mark. Its place on the bend is a transform written every
+   frame; its width, height, offset and the slice of artwork it shows are
+   written once per layout. Nothing about either is in this rule — see
+   Preloader/sticker.ts — because all of it is measured. */
+.site-preloader .preloader-col {
+  position: absolute;
+  top: 0;
+  transform-style: preserve-3d;
+  transform-origin: center center;
 }
 
-/* Split letters. The same two boxes as the hero's and the menu's — .clip holds
-   the letter's place in the line and masks it, .char is the only thing that
-   moves — with the menu's padding rather than the hero's, since this type is
-   set at line-height 1 where the hero's runs under 0.8 and needs far less
-   headroom. The negative margins hand that room straight back, so the line is
-   the width it always was.
-
-   Nothing at the bottom: the mask's lower edge is what the letters slide out
-   through, and back down under at the end, and it wants to sit tight on the
-   baseline. */
-.site-preloader .clip {
-  display: block;
-  flex: 0 0 auto;
-  /* these are letters, not a layout — never shrink one */
-  overflow: hidden;
-  padding: 0.1em 0.06em 0;
-  margin: -0.1em -0.06em 0;
+/* The ink, and the light on it. The image is the whole mark, sized and slid so
+   this column shows its own slice of it; the brightness is the column's own
+   angle to the light and is the only thing here that moves per frame. */
+.site-preloader .preloader-ink {
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  will-change: filter;
 }
 
-/* Parked, and handed over exactly as the hero's are: the stylesheet holds the
-   letters under their masks until Preloader/reveal.ts sets data-reveal, which
-   lifts this and lets GSAP own the whole transform. A percentage translate
-   coming from CSS is reported as resolved px, and GSAP would ADD its yPercent
-   to it and leave every letter a full height low.
+/* THE BLANK SIDE. A sticker has one printed face and one that is not, and a
+   thing that shows the same picture whichever way it is turned is a flag —
+   which is what this read as before the layer existed.
 
-   130 rather than 100 for the reason the hero gives: capitals overshoot their
-   own box, so a letter moved exactly its own height still leaves a hairline of
-   tops showing. REVEAL.HIDDEN is the same figure and the two have to agree. */
-.site-preloader .char {
-  display: block;
-  transform: translateY(130%);
+   Flat colour cut to the artwork's own silhouette, so what shows past a quarter
+   turn is the MARK's shape in unprinted green rather than a rectangle. The
+   colour is written by Preloader/sticker.ts (STICKER.BACK) because it is a fact
+   about the artwork rather than about this rule — and it is components/Peel's
+   "peel-back-mark", measured, not chosen.
+
+   Off until a column turns away, which the ticker decides. */
+.site-preloader .preloader-back {
+  position: absolute;
+  inset: 0;
+  mask-repeat: no-repeat;
+  opacity: 0;
+  pointer-events: none;
 }
 
-.site-preloader[data-reveal="live"] .char {
-  transform: none;
+/* The sheen. One band across the WHOLE mark, offset per column so what crosses
+   the shape is a single continuous highlight rather than sixty-four lit
+   rectangles — and masked by the artwork's own alpha, so it lands on the mark
+   and not on the sheet around it.
+
+   screen rather than plain alpha: the mark is dark green with white letters in
+   it, and a flat white wash lifts the letters as much as the field, which
+   flattens the one part of the artwork the light should slide over. */
+.site-preloader .preloader-sheen {
+  position: absolute;
+  inset: 0;
+  background-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  will-change: background-position;
 }
 
 /* A full screen of colour sliding off the page is exactly what this setting is
@@ -999,20 +1229,20 @@ html[data-loading] {
    same fraction of the width, a third of the presence, and a logo small enough
    to read as a loading spinner rather than as the brand introducing itself.
 
-   So the mark takes about half the sheet and the line under it is cut to sit
-   within the mark's own width — the desktop rule's constraint, restated: twelve
-   condensed capitals run about six times the type size, so 7.5vw of type is
-   45vw of line against 46vw of mark.
+   So the mark takes about half the sheet. It used to have STICK BY YOU set
+   under it, cut to sit within its own width; that has gone and the mark is now
+   the whole composition, alone on the sheet — which is an argument for it being
+   larger here than 46vw rather than smaller, and a thing to look at on a real
+   phone rather than to reason about.
 
-   The arc is the deeper phone bite the rest of the site cuts, in step with
-   --footer-arc, --stick-arc and --giant-arc. It is the sheets' trailing edge and
-   the extra height each one carries, so the one figure moves both. */
+   THE ARC IS NO LONGER DEEPENED HERE. It was 14vw against the desktop's 9 —
+   the phone bite the rest of the site used to cut, in step with --footer-arc,
+   --stick-arc and --giant-arc. Every one of those reads --curve-depth now, the
+   artwork's own proportion of the width, so the curve is the same curve at 390
+   as at 1440 and deepening it here would be drawing something else. */
 @media (max-width: 767px) {
   .site-preloader {
-    --pre-arc: 14vw;
     --pre-mark: 46vw;
-    --pre-line: 7.5vw;
-    --pre-gap: 4vw;
   }
 }
 
@@ -1096,20 +1326,39 @@ html[data-loading] {
   position: relative;
   width: 100%;
   height: 52.083vw;
-  background: #b6fe00;
-  /* Elliptical, not circular: the two radii are set independently so the
-     curve's depth (24vw) holds while its width tracks the viewport. */
-  border-radius: 0 0 100% 100% / 0 0 32vw 32vw;
+
+  /* THE LIME IS ON A SHEET INSIDE THIS BOX, NOT ON THE BOX. It was a background
+     here with the curve cut out of it by a border-radius; both moved down onto
+     .arc-foot, the first child, which is where the colour, the paper and the
+     edge now live together.
+
+     THE BOX ITSELF MUST NOT BE MASKED, and that is the whole reason for the
+     split rather than a matter of tidiness. The badge in the kicker's gap is
+     DROPPED IN FROM ABOVE THE TOP OF THE PAGE once the cover has gone
+     (Hero/mark.ts), the tape is torn across the field, and a mask clips the box
+     it is on at every edge — top included. A border-radius did not, which is
+     the one thing the old version had going for it.
+
+     WHAT THE CURVE USED TO BE IS WORTH RECORDING, because the figure in the
+     stylesheet was never the figure on the screen: 32vw with 100% horizontal
+     radii. When the radii along an edge add up to more than the edge is long,
+     CSS scales every radius on the box — the vertical ones too — by the same
+     factor, and two 100% corners want twice the width. So the 32 arrived as 16,
+     and the comment beside it claimed 24. Three numbers for one curve. It is
+     now --curve-depth like everything else, and there is nothing to reconcile. */
+  --arc-paint: #b6fe00;
 }
 
 /* Paper grain — the same overlay the slider stage carries (Tape slider,
    below), at the same weight, so the two sections read as one printed surface
    rather than as a textured one following a clean one.
    --------------------------------------------------------------------------
-   Two of them because there are two colour fields and the light one is a shaped
-   box: .top's ellipse is a border-radius, so its grain has to inherit that
-   radius to stop at the curve. Both start at the section's own y = 0 — .top is
-   flush with it — and both tile on the same pitch, so the grain runs across the
+   ONE OF THEM NOW, AND IT WAS TWO. There are two colour fields, and the light
+   one used to need its own copy that inherited .top's border-radius so the
+   grain would stop at the curve. .top's paper is on .arc-foot with .top's lime,
+   and the foot is masked — a mask takes its children with it — so the shaped
+   half asks for nothing here any more. Both fields still start at the section's
+   own y = 0 and both still tile on the same pitch, so the grain runs across the
    curve unbroken. One sheet of paper, cut by the colours rather than by itself.
 
    Width-fitted and tiled down, where the slider stretches its copy to the box.
@@ -1124,8 +1373,7 @@ html[data-loading] {
 
    pointer-events: none because a full-bleed decorative layer must never be what
    a click lands on. */
-.hero-section::before,
-.hero-section .top::before {
+.hero-section::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -1134,10 +1382,6 @@ html[data-loading] {
   background-repeat: repeat-y;
   opacity: 0.2;
   pointer-events: none;
-}
-
-.hero-section .top::before {
-  border-radius: inherit;
 }
 
 /* The corner mark — two short lines in the lime field's top-left, perforated
@@ -1674,16 +1918,18 @@ html[data-loading] {
   /* The lime field, deep enough to hold the kicker, the badge and both
      headline lines with the roll straddling its curve. Deeper than it was by
      30vw, and the headline is why: at 32vw of type the second line's outer
-     letters reach within a few vw of the sheet's edges, where the ellipse is
-     at its SHALLOWEST — a field cut to clear the middle of the line leaves the
-     Y and the U of BY YOU sitting on the green.
+     letters reach within a few vw of the sheet's edges, where the curve is at
+     its SHALLOWEST — a field cut to clear the middle of the line leaves the Y
+     and the U of BY YOU sitting on the green.
 
-     The curve's depth comes down from the desktop's 32 to 13vw. A 32vw dip on
-     a 390 sheet is a third of the type's height and reads as a bowl rather
-     than as an edge. */
+     NO DEPTH HERE ANY MORE. It carried a shallower arc of its own (27vw where
+     the desktop said 32, both of them halved by the radius clamping into 13.5
+     and 16) so a phone would not get a bowl. --curve-depth is a proportion of
+     the width, so the curve is the artwork at 390 exactly as it is at 1440 and
+     there is nothing left to correct for. The extra height still matters and
+     stays. */
   .hero-section .top {
-    height: 127vw;
-    border-radius: 0 0 100% 100% / 0 0 13vw 13vw;
+    height: 155vw;
   }
 
   /* Two lines of type that has to fill the width. See the note above for where
@@ -1847,9 +2093,9 @@ html[data-loading] {
      than a paragraph on a piece of card. */
   .hero-section .cardboard-wrapper {
     top: 200vw;
-    right: -3vw;
-    width: 62vw;
-    height: 60vw;
+    right: -48vw;
+    width: 99.7436vw;
+    height: 99.7436vw;
 
     /* THE COPY STARTS WHERE THE STRIP ENDS, and that is the constraint on
        this box rather than the card's own margins. The dispensed strip is
@@ -1863,6 +2109,7 @@ html[data-loading] {
       top: 8vw;
       left: 22vw;
       max-width: 33vw;
+      display: none;
     }
   }
 
@@ -1893,37 +2140,35 @@ html[data-loading] {
      what four lines of handwriting need to still be handwriting at this
      width. */
   .hero-section .hand-note {
-    top: 232vw;
-    left: 4vw;
-    --hand-w: 30vw;
-  }
+    --hand-w: 40vw;
+    top: 246vw;
+    left: -1vw;
+}
 
   /* The painting, and the strip holding it down at 48% across its top edge —
      the desktop's fractions again. */
   #lemon {
-    left: -5vw;
-    bottom: 44vw;
-    width: 50vw;
-  }
+    width: 88vw;
+    bottom: -5vw;
+    left: -37vw;
+}
 
   #tape-on-lemon {
-    --tape-w: 20.9vw;
-    top: 266.3vw;
-    left: 19.2vw;
-  }
+    --tape-w: 24.9vw;
+    top: 274.3vw;
+    left: 14.2vw;
+}
 
   /* The gift, last down the column and clear of the bottom edge — 18vw of
      board under it rather than the flush 0 it had, which put its bottom corner
      behind the wave band's crest instead of on the green. */
   #gift {
-    bottom: 21vw;
-    /* Barely off the edge, where the desktop's copy is bled by a fifth of
-       itself. At 390 that bleed was throwing away the ribbon's right-hand loop
-       — the box reads as a wrapped present because of the bow, and half a bow
-       going off the sheet is a striped rectangle. */
-    right: -3vw;
-    height: 65vw;
-  }
+    width: 100%;
+    height: 146vw;
+    bottom: -40vw;
+    right: -31vw;
+    object-fit: cover;
+}
 }
 
 /* ==========================================================================
@@ -2296,7 +2541,21 @@ html[data-loading] {
 .middle {
   position: relative;
   width: 100%;
-  height: var(--screen);
+
+  /* One screen, plus whatever air the stage has been given — see --stage-air on
+     .tape-slider-parent, which is where the argument for it is.
+
+     IT IS IN STEP WITH THE SECTION'S OWN HEIGHT AND HAS TO BE. Nothing in the
+     drawing is measured against this box: it is what the LEFT COLUMN is centred
+     in (.tape-slider-parent .left, top: 50%), and the left column has to stay
+     centred on the same stage the orbit is. Leave this at --screen while the
+     section grows and the chips ride up against the type while everything else
+     settles.
+
+     The fallback is 0 rather than nothing, because this selector is not scoped
+     to the stage — see the warning by .tape-slider-parent .left — so a .middle
+     somewhere else must not resolve to an invalid height. */
+  height: calc(var(--screen) + var(--stage-air, 0px));
 
   /* The drawing's lift — see "Sitting the drawing where the window can see it"
      above. `translate` as its own property, which is free here: .middle carries
@@ -2435,7 +2694,7 @@ html[data-loading] {
     top: 0;
     width: var(--peel-w);
     height: var(--peel-h);
-    
+
     translate: -50% -46%;
     z-index: 3;
 
@@ -2466,7 +2725,31 @@ html[data-loading] {
        of transform so nothing here can fight the canvas inside it. These are
        separate properties and compose. */
     translate: -50% -50%;
-    z-index: 4;
+
+    /* ON TOP OF EVERYTHING IN THE STAGE, and 11 is what that costs: one above
+     * .showcase, which is the highest thing in this box.
+     *
+     * IT WAS 4, AND THE SHOTS WERE WINNING. The two photographs are z-index 10
+     * and they are placed in vw off the same centre this slot is, so how much
+     * they overlap the roll is decided by the window's ASPECT rather than by
+     * anything in this file: above about 1300 they clear it and the order never
+     * shows, and below that the left one crosses the roll's shoulder and — at 4
+     * — was painted over the product. A photograph of the tape being used,
+     * cutting a bite out of the tape itself. It is the one overlap on this
+     * stage that has a right answer whichever way the window is dragged: the
+     * roll is what the section is about and the shots are what is going on
+     * around it, so the roll is in front, always.
+     *
+     * NOTHING ABOVE THIS BOX CAN REACH IT, which is worth knowing before
+     * reaching for a bigger number. .middle carries a `translate` and is
+     * therefore a stacking context, and so is .tape-slide above it — so this
+     * number is spent entirely against .showcase and the two titles, and no
+     * value here would ever lift the roll over .roll-parent (z-index 10 in the
+     * wrapper). It does not need to: the orbit's track starts at 92vw and the
+     * roll's slot ends at 60.4vw, so the rolls on it cannot reach the middle of
+     * the stage. If the orbit is ever brought inboard, THAT is a z-index on
+     * .tape-slide and not one here. */
+    z-index: 11;
 
     /* Deliberately no --parallax. The roll is the one element here that moves
        in three dimensions on its own — it leans with the pointer inside the
@@ -2768,8 +3051,11 @@ html[data-loading] {
 
 /* --------------------------------------------------------------------------
    Sweep repaint — a duplicate of .bg-layer--next's geometry, set from the same
-   code. overflow: hidden turns it from a colour field into a stencil, so the
-   subhead copy inside is uncovered along literally the sheet's own curve.
+   code, and cut to the same curve by the same .arc-cut. The mask is what turns
+   it from a colour field into a stencil: a mask takes an element's children with
+   it, so the subhead copy inside is uncovered along literally the sheet's own
+   edge. overflow: hidden is still here, but only to keep .sweep-inner — which is
+   taller than this box — from spilling out of the top.
 
    Kept out of .bg-overlay: that carries mix-blend-mode and z-index -1, which
    would blend the copy and paint it behind the real subhead.
@@ -2812,13 +3098,38 @@ html[data-loading] {
   position: relative;
   width: 100%;
 
-  /* A viewport of stage plus room for the wave band's tape, which dips up to
-     ~16vw of tilted valley into this section's top (Wave band, above). The
-     extra height is matched by the content shift below, so everything the
-     stage holds starts clear of the tape; the colour fields (.bg-overlay,
-     inset: 0) stretch over the full box on their own — which is the point:
-     the stage's colour, and its wipes, run all the way up behind the band. */
-  height: calc(var(--screen) + 12vw);
+  /* AIR AT THE FOOT OF THE STAGE, and it is the one dial for how tall this
+   * section is beyond what it has to be.
+   *
+   * WHAT IT MOVES AND WHAT IT DOES NOT, which is the whole of what to know
+   * before turning it. The composition in the middle — the chip, THE, the roll,
+   * CREATIVE — is a RIGID DRAWING hung from this box's top edge in vw (see
+   * "Sitting the drawing where the window can see it" above, and the note by
+   * .bottom-title). Nothing in it is measured against this height, on purpose,
+   * so growing the box does not open the drawing up by a pixel: the pieces stay
+   * exactly as close to each other as the design draws them. What grows is the
+   * stage UNDER the drawing, and with it the two things that are centred on the
+   * box rather than hung from its top — the left column and the orbit, which
+   * both re-centre on the taller stage and so sink by half of this.
+   *
+   * So this is the dial for "the section ends too soon after the word mark". It
+   * is NOT the dial for "the chip, the type and the roll are on top of each
+   * other" — that one is the three `top` figures in the drawing itself, and
+   * moving them is a change to the composition rather than to its frame.
+   *
+   * At 6vw that is 86px of extra stage at the design width, on top of the ~22vw
+   * that already falls below CREATIVE. Set it to 0 to get the section back
+   * exactly as it was. */
+  --stage-air: 6vw;
+
+  /* A viewport of stage, room for the wave band's tape — which dips up to ~16vw
+     of tilted valley into this section's top (Wave band, above) — and the air
+     above. The band's clearance is matched by the content shift below, so
+     everything the stage holds starts clear of the tape; the colour fields
+     (.bg-overlay, inset: 0) stretch over the full box on their own, which is
+     the point: the stage's colour, and its wipes, run all the way up behind
+     the band. */
+  height: calc(var(--screen) + 12vw + var(--stage-air));
   /* clip, not hidden: hidden leaves the box programmatically scrollable, and
      focusing a roll that pokes past an edge (keyboard, or a test runner's
      scrollIntoView) drags the whole stage sideways. clip paints identically
@@ -2847,17 +3158,25 @@ html[data-loading] {
       background: var(--stage-bg);
     }
 
-    /* The incoming colour, parked above and brought down over the old one. The
-       long-horizontal / short-vertical radius turns the leading edge into one
-       wide convex arc rather than two visible corner curves; it holds that shape
-       for the whole sweep. The engine sets the depth and drives the slide. */
+    /* The incoming colour, parked above and brought down over the old one. Its
+       leading edge is the site's curve — .arc-cut in the markup — so the line
+       that crosses the stage during a swap is the same line every sheet on the
+       site ends on, and it holds that shape for the whole sweep. It was a
+       half-ellipse cut with a border-radius, which is what made it read as
+       nearly the section's edge and not it.
+
+       THE DEPTH IS WRITTEN BY THE ENGINE AND NOT INHERITED, and it has to be:
+       --curve-depth is a vw, this box is deliberately TALLER than the stage, and
+       a mask strip sized off the box would put the curve at a different depth
+       from the one the section draws. engine.ts measures the sheet and sets
+       --arc-h in px off its WIDTH, which is the same proportion by another
+       route. See arcDepth() there. */
     & .bg-layer--next {
       /* Release the bottom that .bg-layer's inset:0 pins, so the measured height
          wins — the sheet must be taller than the stage to overshoot without
          exposing a band of the old colour along the top. */
       bottom: auto;
       transform: translateY(-100%);
-      border-radius: 0 0 50% 50% / 0 0 0 0;
       will-change: transform;
     }
   }
@@ -3120,8 +3439,8 @@ html[data-loading] {
   /* CREATIVE, CROSSING BEHIND THE ROLL — which is what it does on the desktop
      (the word's top is 29.9vw and the roll's foot is 40.4vw, so a third of the
      letters is behind it) and what it stopped doing when the phone layout
-     pushed it clear. Nothing in the DOM decides that: .key-visual carries
-     z-index 4 and the word carries none, so the roll is in front wherever the
+     pushed it clear. Nothing in the DOM decides that: .key-visual carries a
+     z-index and the word carries none, so the roll is in front wherever the
      two are put. Overlapping it back buys about 22vw of column, which is most
      of what the shots below need. */
   .tape-slider-parent .middle .bottom-title {
@@ -3273,7 +3592,7 @@ html[data-loading] {
   .tape-slider-parent .tags {
     flex-direction: row;
     align-items: flex-start;
-    gap: 4vw;
+    justify-content: space-between;
   }
 
   .tape-slider-parent .tag {
@@ -3282,7 +3601,7 @@ html[data-loading] {
   }
 
   .tape-slider-parent .subtext {
-    flex: 1 1 auto;
+    /* flex: 1 1 auto; */
     min-width: 0;
   }
 
@@ -3291,7 +3610,7 @@ html[data-loading] {
      a second answer to a question the flex row has already settled. */
   .tape-slider-parent .subtext .h5 {
     font-size: 3.7vw;
-    max-width: none;
+    max-width: 46.9231vw;
   }
 
   /* THE ORBIT, OFF. The header note at the top of this block is the argument;
@@ -3459,16 +3778,20 @@ html[data-loading] {
      section. The corners run up over the slider and the edge sweeps down
      between them, so the stage above is seen through the dip.
 
-     Same depth as the footer's on purpose: two arcs of different sizes on one
-     page read as two different mouths rather than as one way this site cuts an
-     edge. The shape is --edge-bite in :root, shared with the footer.
+     THE SITE'S ONE CURVE, TURNED OVER — --section-bite in :root, which is the
+     hero's own foot read as a concave edge, and the footer's top edge takes the
+     same one. It was --edge-bite, a symmetric half-ellipse, at a depth of its
+     own; that is why the cut at the bottom of the slider never looked like the
+     cut at the bottom of the hero. The depth is --curve-depth for the same
+     reason: the shape and the proportion together are what make two edges the
+     same edge, and an ellipse squashed to 9vw shares neither with the artwork.
 
      The band is added ABOVE the section with padding and taken straight back
      out with a negative margin, so the arc costs the document no height and
      .wrapper's position in the page is unchanged — which matters more here than
      it does in the footer, because .wrapper is what ScrollTrigger pins and its
      start is measured off exactly that position. */
-  --giant-arc: 9vw;
+  --giant-arc: var(--curve-depth);
 
   /* ONE SHEET OF PAPER ACROSS THE BAND AND THE FRAME, and it has to be said as
      a length because two boxes are painting halves of it.
@@ -3547,8 +3870,8 @@ html[data-loading] {
   right: 0;
   height: var(--giant-arc);
   background: var(--giant-bg);
-  -webkit-mask-image: var(--edge-bite);
-  mask-image: var(--edge-bite);
+  -webkit-mask-image: var(--section-bite);
+  mask-image: var(--section-bite);
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
@@ -4366,11 +4689,11 @@ html[data-loading] {
     /* 38.194 x 2.4 */
     --giant-open-gx: 2.4vw;
     --giant-tail: 43vw;
-    /* NOT scaled with the rest — the bite is an edge treatment shared with the
-       footer, not part of the staircase, and both are set for the phone in
-       their own blocks. Kept in step with the footer's by hand: two arcs of
-       different depths on one page read as two different mouths. */
-    --giant-arc: 14vw;
+    /* NO --giant-arc HERE ANY MORE. It was 14vw, hand-deepened for the phone
+       while the desktop ran at 9 — the same hand-tuning every arc on this site
+       used to carry. The bite is --curve-depth now, a proportion of the width,
+       so it draws the artwork at 390 exactly as it does at 1440 and there is
+       nothing left to override. */
   }
 
   /* THE OPENING FRAME. --gy is the staircase figure (16 x 2.4); the type below
@@ -4487,7 +4810,26 @@ html[data-loading] {
      TWO CLASSES DEEP, and needed: .giant-note's own rule is far enough down
      this file that a bare .giant-note here would lose to it on order. */
   .giant-pinning .giant-note {
-    --hand-w: 100.8vw;
+    --hand-w: 80.8vw;
+  }
+
+  .giant-pinning .giant-note {
+    font-size: 20px !important;
+  }
+
+  .menu-arrow {
+    width: 25px !important;
+    height: 25px !important;
+  }
+
+  .reimagine-gap .reimagine-tape {
+    width: 27vw !important; 
+    height: 10vw !important;
+  }
+
+  .menu-arrow svg {
+    width: 8px !important;
+    height: 8px !important;
   }
 
   /* WHERE EACH ONE SITS, one rule per panel — --px / --py are percentages of
@@ -4620,9 +4962,11 @@ html[data-loading] {
 
      IT MUST EQUAL --footer-arc, and the two cannot be one custom property
      because that one lives on .site-footer and this element is not inside it.
-     Change one and change the other; the pinning section pays the same toll
-     with --giant-tail, for the same reason. */
-  --stick-arc: 9vw;
+     IT USED TO BE A NUMBER OF ITS OWN, kept in step with the footer's by hand
+     and re-tuned for the phone in a second place. Both now read --curve-depth,
+     the artwork's own proportion of the width, so there is one figure behind
+     every arc on this site and nothing left to keep in step. */
+  --stick-arc: var(--curve-depth);
 
   position: relative;
   width: 100%;
@@ -5024,10 +5368,6 @@ html[data-loading] {
        below. The width is no longer a column, so this is the only figure that
        decides the card's shape. */
     --stick-card-h: 86vw;
-    /* IN STEP WITH THE FOOTER'S MOBILE ARC, exactly as the desktop pair are —
-       this is the room the footer's rise takes back out of the padding below
-       the row. Change one and change the other. */
-    --stick-arc: 14vw;
   }
 
   .stick-shot {
@@ -5038,7 +5378,7 @@ html[data-loading] {
     display: none;
   }
 
-  
+
 
   /* One column. --stick-shot no longer names anything — the photograph is the
      full width and its own aspect-ratio makes it square. */
@@ -5224,9 +5564,12 @@ html[data-loading] {
 
      IT MUST EQUAL --footer-arc, and the two cannot be one custom property
      because that one lives on .site-footer and this element is not inside it.
-     Change one and change the other; the closing key visual pays the same toll
-     with --stick-arc and the pinning section with --giant-tail. */
-  --pick-arc: 6vw;
+     IT USED TO BE A NUMBER OF ITS OWN, kept in step with the footer's by hand
+     and re-tuned for the phone in a second place. Both now read --curve-depth,
+     the artwork's own proportion of the width, so there is one figure behind
+     every arc on this site and nothing left to keep in step. It was 6vw here against the footer's 9 — out of step
+     with the rule its own note states, and by enough to be sat on. */
+  --pick-arc: var(--curve-depth);
 
   position: relative;
   width: 100%;
@@ -5295,9 +5638,9 @@ html[data-loading] {
 }
 
 /* The incoming colour. Parked a full height above and brought down over the old
-   one — the long-horizontal, short-vertical radius the script writes turns its
-   leading edge into one wide convex arc rather than two visible corner curves,
-   and it holds that shape for the whole slide.
+   one — its leading edge is the site's curve (.arc-cut, and the depth in px from
+   recolour.ts), so the line crossing the page during a recolour is the same line
+   every sheet on the site ends on. It holds that shape for the whole slide.
 
    `bottom: auto` releases the bottom that .pick-wash-layer's inset: 0 pins, so
    the measured height wins: the sheet has to be TALLER than the section to
@@ -5515,13 +5858,13 @@ html[data-loading] {
      matching negative margin are written by the script.
 
      Its parent is that width too, now that the rise runs corner to corner, so
-     stretching to it would give the same answer today. Measured anyway: a
-     percentage corner radius resolves against the box's OWN width, so the
-     moment the rise is ever made wider or narrower than the sheet again, the
-     same `50%` here would describe a different ellipse from the ground sheet's
-     and the two edges would part company toward the sides of the window — a
-     step across the page, tens of pixels deep. Reading the sheet's own width is
-     what makes that impossible rather than merely unlikely. */
+     stretching to it would give the same answer today. Measured anyway: the
+     curve's mask is stretched to the box it is laid on, so the moment the rise
+     is ever made wider or narrower than the sheet again, the same shape here
+     would be drawn at a different scale from the ground sheet's and the two
+     edges would part company toward the sides of the window — a step across the
+     page, tens of pixels deep. Reading the sheet's own width is what makes that
+     impossible rather than merely unlikely. */
   left: 50%;
   background: var(--pick-rise-colour);
   transform: translateY(-100%);
@@ -5639,6 +5982,177 @@ html[data-loading] {
   outline: 0.28vw solid var(--pick-roll-rise);
   outline-offset: 0.4vw;
   border-radius: 50%;
+}
+
+/* CLICK ME — the cue on the roll being looked at.
+   --------------------------------------------------------------------------
+   An arrow ruled in off the roll's shoulder with a note written above it, both in
+   that tape's own ink. Markup in PickYourPlayer/ClickMe.tsx, drawn by
+   PickYourPlayer/cue.ts, and the pen is HandNote's — see the note at the top of
+   that component.
+
+   PLACED OFF THE <li> AND NOT OFF THE TILT, which is why it is a sibling of the
+   anchor rather than a child of it: fan.ts scatters, straightens and scales the
+   tilt on every pointer move, and a cue riding that would be pointing at a roll
+   from a position that moves with the roll. This box never moves.
+
+   IT STANDS OFF THE ROLL AND NOT ON IT. The tip is hung a little beyond the
+   circle's upper-left shoulder — the lifted roll is 1.18 of its box and rises
+   7% out of the row, so its edge at 45deg is at about (8%, 1%) of the box, and
+   the figures below put the tip just outside that with a sliver of daylight.
+   The whole cue is therefore on the sheet, pointing AT the label rather than
+   written across it.
+
+   WHICH LEAVES ONE PROBLEM, AND IT IS THE HEADLINE. Standing off the roll, the
+   cue is 6.8vw of box above the top of the row, and there are only 3.2vw
+   between PLAYER's line box and the rolls — so for the rolls that sit UNDER the
+   headline there is nothing above them to stand in. Those flip to the other
+   shoulder; see [data-side] below and CUE_SIDE in PickYourPlayer/index.tsx,
+   which is where the arithmetic for which ones is written down.
+
+   z-index above the artwork all the same. The cue clears its OWN roll, but it
+   reaches over the neighbour on that side — the rolls lap, and 8.2vw of note
+   hung off one of them lands on the next. It is inside .pick-roll, which fan.ts
+   lifts clear of the whole row while it is picked, so the cue goes over the
+   neighbour with it rather than under. */
+.pick-cue {
+  /* THE ONLY DIAL. Everything below is a fraction of it, so the cue is resized
+     with one number — the same bargain .hand-note strikes with --hand-w. */
+  --cue-w: 8.2vw;
+
+  /* THE PEN, AND IT IS THE TAPE'S OWN. --ink is the colour that tape's small
+     print is set in (src/data/tapes.ts, on this element via cssVars), which is
+     to say a colour already chosen to read on that tape's sheet — and the sheet
+     is what the page has become by the time the cue is drawn (see CUE.DELAY in
+     cue.ts). cue.ts reads this back off the box for the writing; the arrow's
+     strokes take it here. One value, both halves.
+
+     The fallback is the section's own ink, for a roll whose palette never
+     arrived. */
+  --cue-ink: var(--ink, var(--pick-ink));
+
+  position: absolute;
+  z-index: 2;
+
+  /* THE DEFAULT SHOULDER IS THE LEFT ONE. The box's bottom right corner sits
+     12% across the roll and a hair below its top edge, which — with the tip at
+     (81%, 83%) of the box, see the viewBox note in ClickMe.tsx — puts the
+     arrowhead just off the circle at about (4%, -3%) of the roll. Outside it,
+     and close enough to be pointing at it. */
+  right: 88%;
+  bottom: 96%;
+  width: var(--cue-w);
+  height: calc(var(--cue-w) * 0.92);
+
+  /* Decoration, and it lies over the artwork — so it must never be what a click
+     on the roll lands on. The roll is a link and the cue is the thing telling
+     you so. */
+  pointer-events: none;
+
+  /* PARKED AT NOTHING, because there is no hover yet and the arrow is real
+     markup that would otherwise be on screen from the first paint. cue.ts drives
+     both properties from here on (GSAP's autoAlpha), and its teardown clears
+     them rather than writing a value back — so a torn-down section falls back to
+     exactly this rule.
+
+     visibility as well as opacity: a fully transparent box still answers
+     getComputedStyle and still paints, and this one holds an svg per roll. */
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* THE OTHER SHOULDER, for the rolls that have no room above them on the left —
+   the ones standing under PLAYER, and the first in the row, which has the page's
+   edge there instead. Chosen per roll in PickYourPlayer/index.tsx, where the
+   measurements are; this rule is only what the choice DOES.
+
+   MIRRORED RATHER THAN REDRAWN. The arrow is three strokes in a viewBox that is
+   this box exactly, so scaleX(-1) turns it into the same arrow pointing the
+   other way with nothing to keep in step — a second set of path data would be
+   the same shape written twice and would drift the day either is retuned. It
+   reads as a left hand's arrow, which is what an arrow drawn from the other side
+   of a thing looks like.
+
+   THE WRITING IS NOT MIRRORED, obviously, and it is not re-leant either: it
+   moves to the box's right edge and keeps the same rise, because a note leaning
+   the other way is a different hand rather than the same one writing on the
+   other side. */
+.pick-cue[data-side="right"] {
+  right: auto;
+  left: 88%;
+}
+
+.pick-cue[data-side="right"] .pick-cue-arrow {
+  transform: scaleX(-1);
+}
+
+.pick-cue[data-side="right"] .pick-cue-ink {
+  left: auto;
+  right: 2%;
+  transform-origin: right top;
+}
+
+/* The arrow. viewBox 0 0 200 184 is this box exactly at 200 units to its width,
+   which is what lets the path data in ClickMe.tsx and the figures here be read
+   against each other.
+
+   overflow visible because the round caps sit half a stroke outside the box at
+   both ends of all three strokes. */
+.pick-cue-arrow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* 5.2 units of 200, so 0.22vw at the design width — a shade heavier than the
+   note's own pen, because an arrow at this size has no counters and no repeated
+   strokes to build up weight the way a word does.
+
+   The dash pattern that hides them is written by cue.ts on mount and never
+   here: undrawn is a state this stylesheet must not park them in, or the
+   reduced-motion cue would be a note with no arrow. */
+.pick-cue-stroke {
+  fill: none;
+  stroke: var(--cue-ink);
+  stroke-width: 5.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Where the writing sits: across the top of the box, clear of the arrow that
+   comes out from under it. Its WIDTH is what sets the size of the hand — cue.ts
+   fits the finished artwork to this box, exactly as hand.ts fits a note to
+   .hand-ink — so the longer of the two lines is this long and every other figure
+   follows from it.
+
+   0.66 of an 8.2vw cue is 5.4vw, which is 78px at the design width. "click" is
+   five glyphs of the drawn alphabet, so that comes out at about a 14px x-height
+   — the smallest this hand can be set at and still read as writing rather than
+   as a squiggle.
+
+   ROTATED HERE AND NOT ON THE BOX, which is the same call .hand-ink makes: the
+   arrow's geometry is stated in a viewBox against the cue's own edges, and
+   turning the whole cue would turn the tip off the shoulder it is aimed at.
+   Only the words lean — and the mirrored cue above leans them the same way,
+   from the other edge. */
+.pick-cue-ink {
+  position: absolute;
+  top: 0;
+  left: 2%;
+  width: calc(var(--cue-w) * 0.66);
+  transform: rotate(354deg);
+  transform-origin: left top;
+}
+
+/* cue.ts gives the svg a viewBox and no width or height of its own, so the box
+   above is the only thing that decides the size. */
+.pick-cue-ink svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
 }
 
 /* The artwork, and the only thing that slides when a NEIGHBOUR is picked up.
@@ -5771,8 +6285,6 @@ html[data-loading] {
     /* Two thirds of a roll, as on the desktop — the crest crosses the BACK
        row's lower third and the front row stands wholly on the green. */
     --pick-rise-crest: 20vw;
-    --pick-arc: 14vw;
-    /* in step with --footer-arc's own phone figure */
 
     padding-bottom: calc(8vw + var(--pick-arc));
   }
@@ -5941,10 +6453,17 @@ html[data-loading] {
   --pi-word-scale: var(--product-scale);
 
   /* THE BOTTOM EDGE'S BULGE — how far the sheet's middle hangs below its own
-     corners. Elliptical, not circular: the two radii are set independently
-     below so this depth holds while the curve's width tracks the viewport,
-     which is the same call .hero-section .top makes with its own 32vw. */
-  --pi-arc: calc(9.6vw * var(--product-scale));
+     corners, and it is now the site's one figure rather than this page's.
+
+     NOT TIMES --product-scale, WHICH EVERY OTHER LENGTH IN THIS BLOCK IS. That
+     multiplier is the phone's argument with this page and it is right for
+     everything it touches: the roll, the type and the sheet's own height all
+     grow together, so the composition holds. The curve is not part of the
+     composition — it is the site's edge, drawn at the artwork's proportion of
+     the WIDTH on every section of every page, and multiplying it by 2.2 here
+     would draw a different curve on the phone from the one the section above
+     and the section below draw. It was calc(9.6vw * --product-scale). */
+  --pi-arc: var(--curve-depth);
 
   position: relative;
   width: 100%;
@@ -5968,9 +6487,9 @@ html[data-loading] {
    * half at the arc and delete it entirely a moment later.
    *
    * Nothing is lost by removing it, which is worth stating rather than leaving
-   * to be checked. The sheet's shaped bottom edge is the SHEET's own
-   * border-radius and the grain inherits it, so the arc is drawn with or without
-   * this. Both word marks clip themselves — THE walks its own mask out of its
+   * to be checked. The sheet's shaped bottom edge is drawn by the mask on
+   * .arc-foot inside it, which carries the grain too, so the curve is there with
+   * or without this. Both word marks clip themselves — THE walks its own mask out of its
    * box and the tape's word moves inside .glyph's overflow — so neither can spill
    * during a dip. And with no clip there is no scroll container either, so the
    * focus-drag the old comment guarded against has nothing to drag.
@@ -5988,57 +6507,31 @@ html[data-loading] {
   z-index: 1;
 }
 
-/* The sheet — the tape's own colour, and the shaped box everything on the page
-   is placed inside. Its radius is what the grain and the arc both take. */
+/* The sheet — the box everything on the page is placed inside. The tape's colour
+   and the curve along its foot are both on .arc-foot, the first child, and this
+   box paints nothing itself.
+
+   THE SPLIT IS NOT TIDINESS. The roll rolls down OUT of this sheet and into the
+   origin section below as the page is scrolled (ProductIntro/roll.ts), and it is
+   inside this box. The curve is a mask now, and a mask clips the box it is on at
+   every edge — put it here and the roll is cut in half at the foot and gone a
+   moment later, which is exactly the failure the section's own `overflow: clip`
+   was removed to avoid. On a content-free sheet inside, it clips nothing but the
+   paint it is there to shape. */
 .pi-sheet {
   position: absolute;
   inset: 0;
-  background: var(--stage-bg);
+  --arc-paint: var(--stage-bg);
+  --arc-h: var(--pi-arc);
 
-  /* 50% AND NOT 100% ON THE HORIZONTAL, and it is not a matter of taste — it is
-     the difference between the arc being --pi-arc deep and being HALF that.
-     When the radii along one edge add up to more than the edge is long, CSS
-     scales every radius on the box by the same factor to make them fit, and
-     that factor applies to the VERTICAL radii too. Two 100% corners on a
-     1440px edge want 2880px of it, so everything is multiplied by 0.5 and a
-     9.6vw depth silently arrives as 4.8vw. Two 50% corners want exactly the
-     width, nothing is scaled, and the depth is the number written here.
-
-     (.hero-section .top is declared the other way and is therefore drawing half
-     of what its own comment claims. It has been tuned by eye at that value and
-     looks the way it is meant to, so it is left alone — but it is why this
-     block does not simply copy it.)
-
-     Elliptical, not circular: the two radii are independent, so the depth holds
-     while the curve's width tracks the viewport. */
-  border-radius: 0 0 50% 50% / 0 0 var(--pi-arc) var(--pi-arc);
 }
 
-/* Paper grain — the same overlay every other sheet on this site carries, at the
-   same weight, because that is the only thing making the sections read as one
-   printed surface rather than a textured one following a clean one.
-
-   border-radius: inherit, which is the whole reason this is on the sheet rather
-   than on the section: the texture has to stop at the curve, or the grain runs
-   on over the green in the corners and gives the arc a ghost.
-
-   Width-fitted and tiled DOWN rather than stretched — the hero's call, and for
-   its reason: stretching one tile over a box of a different aspect turns paper
-   into vertical streaking.
-
-   pointer-events: none, because a full-bleed decorative layer must never be
-   what a click lands on. */
-.pi-sheet::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background-image: url("/assets/paper-overlay.webp");
-  background-size: 100% auto;
-  background-repeat: repeat-y;
-  opacity: 0.2;
-  pointer-events: none;
-}
+/* THE GRAIN MOVED ONTO THE FOOT. It was .pi-sheet::before here, inheriting the
+   sheet's border-radius so the texture would stop at the curve — the arc gets a
+   ghost otherwise, the paper running on over the green in the two corners. The
+   foot is masked and a mask takes its children with it, so the shared
+   .arc-foot[data-paper] rule is the whole of it now and there is nothing on this
+   page that has to know about the shape. */
 
 /* --------------------------------------------------------------------------
    The chip, the two marks and the roll
@@ -9079,10 +9572,10 @@ html[data-loading] {
    * --bg is the sheet the tape's own stage floods with, and --word is the
    * colour that tape's display type is printed in ON that sheet. That pairing is
    * already resolved per tape in src/data/tapes.ts and already tuned to read —
-   * the note by OPP's --word is the long version of why it is neither the sheet
-   * nor the ink but the step between them — so the name on this panel inherits
-   * a relationship that has been argued once rather than a contrast this section
-   * has to guess at.
+   * five of the six sit a step between the sheet and the small print's ink, and
+   * OPP's is the ink itself, which its own note explains — so the name on this
+   * panel inherits a relationship that has been argued once rather than a
+   * contrast this section has to guess at.
    *
    * THE FALLBACKS ARE THE DESIGN'S ORIGINAL YELLOW, and they are not dead code:
    * they are what the panel is if it is ever rendered outside a product page,
@@ -9395,12 +9888,20 @@ html[data-loading] {
   --rolling-pad-x: 4vw;
   --rolling-pad-bottom: 5vw;
 
-  /* How far the sheet's bottom edge bulges over the section under it. Shallow:
-     the design draws this edge as very nearly straight, and the arc is here to
-     stop the join reading as two blocks stacked rather than to be a feature of
-     its own. It is also what the next section's top padding has to clear — see
-     --stick-pad-y on .top-story, which is the one relationship between them. */
-  --rolling-arc: 3.5vw;
+  /* How far the sheet's bottom edge bulges over the section under it, and it is
+     the site's one depth now rather than this section's own.
+
+     IT WAS 3.5VW AND IT IS DELIBERATELY NO LONGER THAT. The old note said the
+     design draws this edge as very nearly straight and the arc was here only to
+     stop the join reading as two blocks stacked. That was true of an ellipse
+     squashed to a twenty-fifth of the width; it is not a reason to draw a
+     different curve from every other section on the site. --curve-depth is the
+     artwork's proportion and this takes it.
+
+     IT IS WHAT THE NEXT SECTION'S TOP PADDING HAS TO CLEAR — see --stick-pad-y
+     on .top-story, which is the one relationship between them and which moved
+     with this. */
+  --rolling-arc: var(--curve-depth);
 
   /* The hero's pairing, and the preloader's: dark green written on lime. A
      fourth green nearly like the other three would read as a mistake rather than
@@ -9421,21 +9922,28 @@ html[data-loading] {
   text-align: center;
 }
 
-/* THE ARC, HUNG BELOW THE SHEET RATHER THAN CUT OUT OF IT — and the difference
+/* THE CURVE, HUNG BELOW THE SHEET RATHER THAN CUT OUT OF IT — and the difference
    is not stylistic, it is the only version of this that works.
 
-   The obvious way is a border-radius on the box: 0 0 50% 50% with the vertical
-   radii at the arc's depth, which is exactly how the preloader's sheets and the
-   slider's colour wipe are cut. Those are FIXED boxes lying over the page, so
-   what shows through the two rounded-off corners is the page — which is the
-   point of them. This is a section in flow, and what shows through is the
-   document's own background: two white notches either side of a lime sheet.
+   The obvious way is to cut the shape out of the box, which is exactly how the
+   preloader's sheets and the slider's colour wipe are done. Those are FIXED
+   boxes lying over the page, so what shows through either side of the curve is
+   the page — which is the point of them. This is a section in flow, and what
+   would show through is the document's own background: two white notches either
+   side of a lime sheet.
 
    So the sheet stays a rectangle and the bulge is a separate box hanging off its
-   bottom edge, painted in the same lime and overlapping the section below. The
-   radii here are 100% rather than the depth because this element IS the arc — it
-   is --rolling-arc tall, so half its own height in each corner is the whole of
-   it, and the two meet in the middle as one convex sweep.
+   bottom edge, painted in the same lime and overlapping the section below. This
+   element IS the curve — it is --rolling-arc tall and the shape fills it — so it
+   takes --section-curve on its own and not the two-layer .arc-cut recipe, which
+   exists to put a strip of that shape along the foot of a much taller box.
+
+   THE 1PX LIFT is the seam. --rolling-arc is a vw and so almost never a whole
+   device pixel; the sheet above and this box are rasterized separately, and a
+   shared edge landing mid-pixel leaves both short of opaque there — a hairline
+   of the section below, right across the width. Overlapping the sheet by a pixel
+   puts the join under solid paint. The extra pixel of height keeps the curve's
+   own depth exactly --rolling-arc.
 
    It paints over the lead story because .whats-rolling carries z-index: 1 and is
    therefore a stacking context of its own; everything inside it, this included,
@@ -9450,9 +9958,15 @@ html[data-loading] {
   top: 100%;
   left: 0;
   right: 0;
-  height: var(--rolling-arc);
+  margin-top: -1px;
+  height: calc(var(--rolling-arc) + 1px);
   background: var(--rolling-bg);
-  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  -webkit-mask-image: var(--section-curve);
+  mask-image: var(--section-curve);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
   pointer-events: none;
 }
 
@@ -9683,9 +10197,10 @@ html[data-loading] {
     --rolling-pad-top: calc(var(--masthead) + 9vw);
     --rolling-pad-x: 5vw;
     --rolling-pad-bottom: 10vw;
-    /* The lip that laps the section below — deeper here in proportion, the same
-       way every other arc on this site is. */
-    --rolling-arc: 8vw;
+    /* THE LIP IS NOT DEEPENED HERE ANY MORE. It was 8vw against the desktop's
+       3.5 — the phone proportion every arc on this site used to be given. The
+       depth is --curve-depth now, a proportion of the width, so the curve is the
+       artwork at 390 exactly as it is at 1440. */
   }
 
   /* THE 14PX CHIP, RE-SET. The chip's whole phone restatement is up with the
@@ -9783,12 +10298,22 @@ html[data-loading] {
      last thing on its page and is meant to breathe, this one has two more screens
      under it and a page that pauses this long in the middle reads as ending.
 
-     AND IT HAS TO CLEAR THE ARC. The title card's bottom edge bulges
-     --rolling-arc (3.5vw) over the top of this section, so the air above the row
-     is this figure minus that at the deepest point and this figure at the edges.
-     Keep it comfortably clear of 3.5 — at 7 there is half of it left in the
-     middle, which is where the photograph's corner is. */
-  --stick-pad-y: 7vw;
+     AND IT HAS TO CLEAR THE CURVE, WHICH IS WHY IT IS NO LONGER A BARE 7VW. The
+     title card's bottom edge bulges --rolling-arc over the top of this section,
+     so the air above the row is this figure MINUS that at the deepest point and
+     this figure at the edges — and the deepest point is where the photograph's
+     corner is.
+
+     The lip was 3.5vw and this was 7, leaving 3.5vw of clearance in the middle.
+     The lip is --curve-depth now, three times as deep, and a flat 7 would put the
+     lime a good 3vw INSIDE the row. What is preserved here is the CLEARANCE and
+     not the figure: the same 3.5vw of air over the photograph's corner, however
+     deep the site's curve is set.
+
+     Written off --curve-depth and not off --rolling-arc, which is the same
+     figure but declared on .whats-rolling — a custom property inherits, and a
+     sibling section is not a descendant. */
+  --stick-pad-y: calc(var(--curve-depth) + 3.5vw);
 }
 
 /* Landscape, where the key visual's frame is square — the two figures it is cut
@@ -10154,7 +10679,9 @@ html[data-loading] {
 @media (max-width: 767px) {
   .top-story {
     --stick-pad-x: 5vw;
-    --stick-pad-y: 12vw;
+    /* The same clearance sum as the desktop's, at this page's own figure: the
+       lip above is --curve-depth here too, and 12vw was set against an 8vw one. */
+    --stick-pad-y: calc(var(--curve-depth) + 4vw);
     --stick-gap: 3vw;
     --stick-radius: 8vw;
     /* THE CARD, AND IT IS CUT TO WHAT IS ON IT. 78vw here was the desktop's
@@ -10274,11 +10801,13 @@ html[data-loading] {
   width: 100%;
   /* The footer rises into whatever is above it — margin-top: calc(--footer-arc *
      -1) — so its corners would otherwise land --footer-arc above this section's
-     bottom edge, inside the last row of cards. This is that depth handed back, and
-     IT MUST EQUAL --footer-arc; the key visual pays the same toll with --stick-arc
-     and the pinning section with --giant-tail, for the same reason and with the
-     same warning. */
-  --index-arc: 9vw;
+     bottom edge, inside the last row of cards. This is that depth handed back,
+     and IT MUST EQUAL --footer-arc.
+     IT USED TO BE A NUMBER OF ITS OWN, kept in step with the footer's by hand
+     and re-tuned for the phone in a second place. Both now read --curve-depth,
+     the artwork's own proportion of the width, so there is one figure behind
+     every arc on this site and nothing left to keep in step. */
+  --index-arc: var(--curve-depth);
   padding: var(--index-pad-y) var(--index-pad-x) calc(var(--index-pad-y) + var(--index-arc));
   background: var(--index-bg);
   color: var(--index-ink);
@@ -10813,9 +11342,6 @@ li::marker {
     --index-gutter: 7vw;
     /* now the gap ABOVE the wall, not beside it */
     --index-gap: 3vw;
-    /* In step with --footer-arc's own phone figure, exactly as the desktop
-       pair are. Change one and change the other. */
-    --index-arc: 14vw;
   }
 
   .index-row {
@@ -11608,11 +12134,13 @@ li::marker {
   /* The footer rises into whatever is above it — margin-top: calc(--footer-arc *
      -1) — so its corners would otherwise land --footer-arc above this section's
      bottom edge, inside the last row of cards. This is that depth handed back,
-     and IT MUST EQUAL --footer-arc; the index pays the same toll with
-     --index-arc and the key visual with --stick-arc, for the same reason and
-     with the same warning. The story above this one used to pay it and no
-     longer does — see .news-article. */
-  --related-arc: 9vw;
+     and IT MUST EQUAL --footer-arc. The story above this one used to pay it and
+     no longer does — see .news-article.
+     IT USED TO BE A NUMBER OF ITS OWN, kept in step with the footer's by hand
+     and re-tuned for the phone in a second place. Both now read --curve-depth,
+     the artwork's own proportion of the width, so there is one figure behind
+     every arc on this site and nothing left to keep in step. */
+  --related-arc: var(--curve-depth);
 
   position: relative;
   width: 100%;
@@ -11820,8 +12348,6 @@ li::marker {
     --related-pad-x: 5vw;
     --related-pad-y: 10vw;
     --index-gap: 3vw;
-    /* In step with --footer-arc's own phone figure. */
-    --related-arc: 14vw;
   }
 
   .related-row {
@@ -11968,27 +12494,34 @@ li::marker {
 
      IT MUST EQUAL --footer-arc, and the two cannot be one custom property
      because that one lives on .site-footer and this element is not inside it.
-     Change one and change the other; the row at /products pays the same toll
-     with --pick-arc and the closing key visual with --stick-arc. */
-  --contact-arc: 9vw;
+
+     IT USED TO BE A NUMBER OF ITS OWN, kept in step with the footer's by hand
+     and re-tuned for the phone in a second place. Both now read --curve-depth,
+     the artwork's own proportion of the width, so there is one figure behind
+     every arc on this site and nothing left to keep in step. */
+  --contact-arc: var(--curve-depth);
 
   /* HOW FAR THE SHEET RUNS DOWN INTO THE FOOTER, measured from the footer's own
    * top edge — so this figure IS the overlap, not a margin that produces one.
    *
-   * The two numbers it has to be read against, both off the bite's geometry
-   * (--edge-bite is a half-ellipse, 0 deep at the corners and --contact-arc
-   * deep at the centre):
+   * The two numbers it has to be read against, both off the bite's geometry.
+   * The shape is --section-bite now — the site's curve turned over — and it is
+   * 0 deep at the corners, deepest at 48.7% of the width, and asymmetric, so
+   * the sheet's two ends no longer see the same depth:
    *
-   *   5.98vw — the green's top edge where the SHEET'S corners are. Under this
-   *            the sheet hangs in lime and never meets the green at all.
-   *   9.00vw — the deepest point of the bite. Over this the sheet's whole
-   *            bottom edge is on solid green.
+   *   5.07vw — the green's top edge at the sheet's LEFT corner (x = 12.6vw).
+   *   4.54vw — the same at its RIGHT corner (x = 87.4vw), which is the shallower
+   *            of the two: the curve falls away harder on the right. Under this
+   *            figure the sheet hangs in lime and never meets the green at all.
+   *  10.34vw — the deepest point of the bite, which is --curve-depth. Over this
+   *            the sheet's whole bottom edge is on solid green.
    *
-   * 12vw clears both, so the paper sits on the green by 3vw at the centre and
-   * about 6 at its corners, and the curve still reads in the 12.6vw of lime
-   * either side of the sheet. Take it under 6 and the overlap disappears; take
-   * it much further and the bite is hidden behind the paper across three
-   * quarters of the window, which is most of the reason the curve exists. */
+   * 12vw clears all three, so the paper sits on the green by about 1.7vw at the
+   * bite's deepest and 7 at its corners, and the curve still reads in the 12.6vw
+   * of lime either side of the sheet. Take it under 5 and the overlap disappears
+   * at the right-hand corner first; take it much further and the bite is hidden
+   * behind the paper across three quarters of the window, which is most of the
+   * reason the curve exists. */
   --contact-overlap: 12vw;
 
   position: relative;
@@ -12161,28 +12694,31 @@ li::marker {
   transform: none;
 }
 
-/* AND THE TWO BLOCKS THAT ARE NOT TYPE — the paper and the note. Held at
-   nothing by the same attribute that holds the letters, and released by the same
-   line in reveal.ts.
+/* AND THE ONE BLOCK THAT IS NOT TYPE — the paper. Held at nothing by the same
+   attribute that holds the letters, and released by the same line in reveal.ts.
 
    PARKED AT NOTHING RATHER THAN UNDER A MASK, which is the index's cards'
-   reasoning and applies here word for word: their entrance begins by blurring
-   them, and an entrance that begins by blurring something the reader can
-   already see is a page correcting itself. It is also what covers the window
-   before hydration, when the stylesheet is holding them on its own.
+   reasoning and applies here word for word: its entrance begins by blurring it,
+   and an entrance that begins by blurring something the reader can already see
+   is a page correcting itself. It is also what covers the window before
+   hydration, when the stylesheet is holding it on its own.
 
    visibility as well as opacity, because that is what GSAP's autoAlpha writes
    and the two have to describe the same state — a box at opacity 0 is still in
-   the way of a pointer, and a third of the note's slot is transparent bleed
-   hanging over the sheet. */
-.contact-sheet,
-.contact-note {
+   the way of a pointer.
+
+   THE NOTE IS NOT PARKED WITH IT ANY MORE. It used to be held here and given the
+   paper's blur-up a beat later; it is now simply on the board from the first
+   frame, fluttering while everything else arrives, which is what a thing that
+   was stuck there beforehand looks like. Nothing holds .contact-note at all —
+   which also means nothing has to release it, so a load where reveal.ts never
+   runs still has its note. */
+.contact-sheet {
   opacity: 0;
   visibility: hidden;
 }
 
-.contact-section[data-reveal="live"] .contact-sheet,
-.contact-section[data-reveal="live"] .contact-note {
+.contact-section[data-reveal="live"] .contact-sheet {
   opacity: 1;
   visibility: visible;
 }
@@ -12592,7 +13128,8 @@ li::marker {
        See --arc-drop in the desktop block for why it is deeper than the site's. */
     --arc-drop: 2.3vw;
 
-    --contact-arc: 14vw;
+    /* No --contact-arc: it reads --curve-depth, a proportion of the width, so
+       the toll is right at every size on its own. */
     --contact-overlap: 18vw;
   }
 
@@ -12767,7 +13304,27 @@ li::marker {
   position: relative;
   width: 100%;
   height: 72.222vw;
-  background: #C6FD00;
+
+  /* THE GROUND, AND THE LIME IS NOT ON THIS BOX ANY MORE — the opening screen
+     ends on the site's curve like every other opening screen does, and this is
+     what is seen in the two corners the curve cuts away. The green is the
+     origin story's own, so the corners hand over to WE WANTED TO BE. below in
+     the colour that section is already painted in.
+
+     IT WAS A FLAT EDGE, and that was the whole of the problem: the hero's lime
+     field, the product page's intro sheet and WHAT'S ROLLING all end on
+     --section-curve, and this one ended on a straight line across the width.
+
+     THE LIME IS ON .arc-foot, the first child — a full-bleed sheet that carries
+     the colour and the edge and nothing else. It has to be a separate box and
+     not a mask on this one: the carton hangs out of the bottom of the section
+     and is cropped by `overflow: clip` below, and a mask clips the box it is on
+     at EVERY edge, so masking this element would take the drawing with it. The
+     hero splits itself the same way and for the same reason — see .arc-foot in
+     global.css, and .hero-section .top. */
+  background: var(--about-bg);
+  --arc-paint: #C6FD00;
+
   padding-top: 9.097vw;
 
   /* HOW BIG THE JACK-IN-THE-BOX IS, AS ONE FIGURE, and it is a scale rather
@@ -12822,6 +13379,14 @@ li::marker {
   overflow: clip;
 
   & .title {
+    /* ABOVE THE LIME SHEET. .arc-foot is absolutely positioned, and a
+       positioned box paints over the in-flow text of its siblings whatever the
+       source order says. Everything else on this screen is absolutely
+       positioned already — the carton's wrapper, the note, the two phone
+       cuttings — so this is the one thing that has to say it. The hero's
+       .title does it for the same reason. */
+    position: relative;
+
     display: flex;
     flex-direction: column;
     gap: 4.639vw;
@@ -12844,7 +13409,18 @@ li::marker {
 /* Paper grain — the same sheet the rest of the site is printed on, at the same
    weight. Width-fitted and tiled down rather than stretched, which is the
    hero's call: stretching one tile over a box of a different aspect turns paper
-   into vertical streaking. */
+   into vertical streaking.
+
+   ONE LAYER ACROSS BOTH COLOURS, AND IT IS NOT ON .arc-foot. The lime sheet
+   below carries no data-paper, so this is the only grain on the screen: it runs
+   across the curve unbroken, over the lime and over the green in the two
+   corners alike — one sheet of paper, cut by the colours rather than by itself,
+   which is what the hero says about its own pair.
+
+   AND IT STAYS AN ::after. It is later in tree order than .about-note, which is
+   what puts the page's paper OVER the handwriting rather than under it; moving
+   the grain onto the foot would put it below the note and take that away. See
+   the note at .about-note. */
 .about-open::after {
   content: "";
   position: absolute;
@@ -13542,6 +14118,54 @@ img#front {
   text-align: center;
 }
 
+/* THE ROLL PILL — the last shape on the mark's row, and the only one on the
+ * belt with two things in it.
+ *
+ * A COORDINATE SPACE AND NOT A LAYOUT. position: relative and nothing else: the
+ * note is position: absolute by definition (see .hand-note, where placement is
+ * deliberately left to whoever put the note somewhere) and the photograph is
+ * placed against the same box, so both figures are set from the pill's own
+ * edges. Flow would centre the pair as one block, which is a different drawing
+ * — the note would sit tight against the tape instead of standing off in the
+ * pill's left-hand curve where the design puts it.
+ *
+ * IT INHERITS THE PILL'S overflow: hidden, which is the safety net rather than
+ * the composition: nothing here is meant to reach an edge, and if a narrow
+ * window ever pushes the tape past the right-hand curve it is cropped to the
+ * stadium like a photograph rather than hung outside it. */
+.conveyor-train.is-roll {
+  position: relative;
+}
+
+/* THE TAPE, LYING ON THE GREEN. Not the pill's own photograph — those fill the
+ * shape and are cropped by it, because there the pill IS the picture (see
+ * .conveyor-train>img, which this has to answer). This is an object with room
+ * around it, so it takes a box of its own and keeps the file's proportions:
+ * width is the fact and height follows from it, which is the only way a 480x160
+ * cut-out stays a roll of tape rather than a squashed one.
+ *
+ * 24.7vw is 355.7px at the 1440 design width against the pill's own 742 — a
+ * shade under half of it — and the 8.233vw of height that comes with it leaves
+ * 2.667vw of green above and below. Set from the top rather than centred by
+ * translate, because the row already writes translate: on itself for the belt's
+ * travel and the two would be reaching for the same property one box apart.
+ *
+ * AND 14.306vw IS THE FIGURE OFF THE DESIGN, not a margin: 206px from the
+ * pill's leading edge is where the torn end of the strip starts, which is what
+ * leaves the note its own air. The width is set from the same drawing — the
+ * roll's outer edge lands at 555px, and the file's own 480 x 160 does the rest.
+ *
+ * LEFT AND NOT RIGHT. The tape is placed against the pill's leading edge, the
+ * same edge the note is measured from, so the pair hold their arrangement
+ * whatever the shape's right-hand end is doing — and the right-hand end is the
+ * one that goes off screen first, since this pill is the last thing on the row
+ * and the row runs right. */
+.conveyor-train.is-roll > .conveyor-roll {
+    object-fit: contain;
+    position: absolute;
+    right: -100px;
+}
+
 /* THE MARK, LYING ON THE BELT. Not a pill — it is not given the pill's height
    and it is not one of the shapes; it is the same colour as one, at an angle,
    between two of them. See components/Conveyor for why it is a silhouette and
@@ -13566,12 +14190,13 @@ img#front {
   height: 15.482vw;
   color: var(--conveyor-pill);
   transform: rotate(-5deg);
+  z-index: 100;
 
   /* --mark-scale IS THE TIMELINE'S (Conveyor/belt.ts writes it on the section,
      0 to MARK.SCALE) AND --mark-gain IS THE SHEET'S. The belt's figure says how
      the mark GROWS; the gain says how big the thing being grown was to start
      with, which is a composition decision and belongs here.
-     
+
      It is 1 everywhere but the phone, where the resting mark has to fill a row
      three times its desktop share and the grown one would otherwise end up five
      screens across. See the About phone block, where the pair are set.
@@ -13660,7 +14285,7 @@ img#front {
      on the bottom edge, which is what stops a sliver of green showing in the
      corners once the sheet is down. The preloader's cover is cut from the same
      pair of figures and is where this one comes from. */
-  --reason-arc: 9vw;
+  --reason-arc: var(--curve-depth);
 
   /* THE HAIR THE PARKED SHEET IS LIFTED BY, AND IT IS AN ANTIALIASING FIX.
      Parked, the sheet's bottom edge lands EXACTLY on .reason-stage's clip edge —
@@ -13768,7 +14393,12 @@ img#front {
   width: 100%;
   height: calc(100% + var(--reason-arc));
   background: var(--reason-sheet);
-  border-radius: 0 0 50% 50% / 0 0 var(--reason-arc) var(--reason-arc);
+
+  /* The curtain's leading edge, and it is the site's one curve — .arc-cut in the
+     markup. It was a half-ellipse cut with a border-radius; this is the shape the
+     design draws, so the line that sweeps down the page is the line every sheet
+     under it ends on. */
+  --arc-h: var(--reason-arc);
   translate: 0 calc((var(--reason-fall, 1) - 1) * (100% + var(--reason-park)));
   will-change: translate;
 
@@ -13796,9 +14426,9 @@ img#front {
  *
  * ::before AND NOT ::after, so the grain is the first child and the composition
  * — .reason-wrapper, positioned and later in the markup — paints over it. The
- * type is printed on the paper rather than under it. The sheet's own
- * overflow: clip is what cuts this to the arc, border-radius and all, so the
- * grain has the curtain's curved edge and not a square one.
+ * type is printed on the paper rather than under it. The sheet's own mask is what
+ * cuts this to the curve — a mask takes an element's children with it — so the
+ * grain has the curtain's shaped edge and not a square one.
  *
  * IT TRAVELS WITH THE SHEET, which is right rather than merely unavoidable: the
  * curtain is a piece of paper coming down, and a piece of paper brings its own
@@ -14374,6 +15004,23 @@ img#front {
    * where it has to be written without spaces to survive being split). */
   --rei-u: min(1vw, calc(var(--screen-lg) / 55.052));
 
+  /* AND THE UNIT THE PROPS ARE DRAWN IN, which is the same one until the phone.
+   *
+   * IT IS A SECOND NAME FOR --rei-u AND NOT A SECOND MEASUREMENT. Everything
+   * lying on the sheet — the strips of tape, the two photographs, the pen marks
+   * — is written as a bare count of these (see the props block below), so a prop
+   * is four numbers and the unit is decided in one place.
+   *
+   * THE PLACE IT STOPS AGREEING IS THE PHONE, and that is the whole reason it
+   * has a name of its own. Down there .reimagine-sheet is re-declared in vw with
+   * a different box AND a different aspect, and the paper inside it is CROPPED
+   * (object-fit: cover) rather than fitted — so a position measured against the
+   * desktop drawing is not a position on the phone's sheet at all. .reimagine-copy
+   * makes the same move by hand, restating its offsets in vw; this lets the props
+   * make it by turning one line, and their own four figures are then the only
+   * thing a phone block has to say about them. */
+  --prop-u: var(--rei-u);
+
   /* HOW MUCH SCROLL THE PIN IS GIVEN, in screens — and therefore whether there
      is a pin. Reimagine/unfold.ts reads this the way AboutOpen/spaceOut.ts reads
      --space-run, and 0 means the section is given no page: no pin, no flipbook,
@@ -14862,6 +15509,324 @@ img#front {
 }
 
 /* --------------------------------------------------------------------------
+   THE THINGS LYING ON THE SHEET — tape, photographs, pen marks
+   --------------------------------------------------------------------------
+   components/Reimagine/props.tsx says WHAT they are and what order they arrive
+   in; everything below is WHERE they sit and how big they are. That split is the
+   hero's, and it is the reason the phone block at the foot of this file can move
+   all of them without touching a line of markup.
+
+   FOUR NUMBERS A PROP, AND THEY ARE THE ONLY THING THAT DIFFERS BETWEEN THEM.
+   Every prop rule below sets --px, --py, --pw and --pr and nothing else; the
+   base rule turns those into left, top, width, height and a lean. So a prop is
+   moved by editing four figures in one place, and a prop that is added is one
+   rule of four figures — no positioning, no stacking, no repetition of the
+   mechanism.
+
+   THE FIGURES ARE UNIT COUNTS AND NOT LENGTHS, which is what makes them
+   editable. --prop-u carries the unit, so `--px: 14.9` reads as "14.9 of the
+   section's units from the box's left edge" — the same figures .reimagine-copy
+   and .reimagine-sheet are written in, and at the design's own proportions the
+   same figures the drawing was measured in.
+
+   AND THEY ARE MEASURED OFF THE DESIGN AND MEANT TO BE TURNED. What is below is
+   a reading of the comp, prop by prop, to the nearest tenth of a unit — close
+   enough that the section is the drawing and not close enough to be the last
+   word on any of them. Nothing in the markup or the script moves when they do.
+   -------------------------------------------------------------------------- */
+
+/* THE LAYER. inset: 0 of .reimagine-sheet, so a prop's --px and --py are
+   measured from the same box's top left corner that the paper is drawn into and
+   the statement is offset from — one origin for the whole drawing.
+
+   NO z-index AND NO POSITION IN THE STACK OF ITS OWN. It is a positioned sibling
+   after .reimagine-copy in source, which paints it over the type where the two
+   overlap; that is what the design has the photographs doing at the foot of the
+   sentence. A z-index here would make this a stacking context and trap the
+   statement's own strip (.reimagine-gap .reimagine-tape, z-index 5) below the
+   whole layer rather than above the letters it is stuck to.
+
+   pointer-events: none for the frames' reason — none of this should ever be
+   what a click lands on, and two of them lie across a line of the statement. */
+.reimagine-props {
+  position: absolute;
+
+  /* THE SHEET'S BOX, RESTATED WITHOUT THE CENTRING TRANSFORM — and the two have
+   * to agree to the decimal, because a prop's --px and --py are measured from
+   * this box's top left corner and .reimagine-copy's offsets are measured from
+   * the same corner of the other one.
+   *
+   * WHY IT IS RESTATED RATHER THAN INHERITED. This layer is a SIBLING of
+   * .reimagine-sheet and not a child of it (see components/Reimagine), because
+   * the three clear strips are drawn to be SCREENED onto the ground they lie on
+   * and a transform makes a stacking context, which is an isolated group: inside
+   * the sheet they can blend with the paper and with nothing else, so the two
+   * thirds of each strip that hang off it onto the lime and the green arrive as
+   * a flat grey slab. Out here their backdrop is the stage's own two grounds.
+   * Every centring form there is — translate, a negative margin, a percentage
+   * transform — is a transform, so the box has to be arrived at by arithmetic
+   * instead.
+   *
+   * THE ARITHMETIC, so it can be checked rather than trusted. The sheet is
+   * 94.993 units wide on the last frame's 1378 x 950, so it is 94.993 x 950/1378
+   * = 65.489 tall; centred, its left edge is half its width left of the middle,
+   * which is 47.497. Its own centre sits 2.131 units above the stage's (the
+   * design's 47.2% — .reimagine-sheet argues it), so its TOP edge is 2.131 +
+   * 65.489/2 = 34.875 above. Turn any of those figures there and turn them here.
+   *
+   * A PERCENTAGE MINUS UNITS FOR THE SAME REASON --rei-split IS ONE: the stage's
+   * centre is a fraction of the window and the offset is a fraction of the
+   * drawing, and there is no single unit both can be written in. */
+  left: calc(50% - 47.497 * var(--rei-u));
+  top: calc(50% - 34.875 * var(--rei-u));
+  width: calc(94.993 * var(--rei-u));
+  height: calc(65.489 * var(--rei-u));
+
+  pointer-events: none;
+}
+
+/* ONE PROP — the box, wherever it is and whatever is in it.
+ *
+ * TWO CLASSES, AND THE SECOND ONE IS LOAD-BEARING for the same reason
+ * .reimagine-gap .reimagine-tape says it is: the Peel section is filed below
+ * this one and .peel sets `position: relative`, one class against one class, so
+ * a single-class rule here loses and every strip stays in flow. Descendant and
+ * not child, because the two strips that pin the photographs are a level deeper
+ * — they live inside their photograph's box, which is what makes them ride its
+ * arrival instead of watching it.
+ *
+ * --px AND --py NAME THE PROP'S CENTRE, not its corner, and `translate` is what
+ * makes that true. A lean about a corner swings the far end of a strip halfway
+ * across the sheet, so every time --pr were touched --px and --py would have to
+ * be re-found; about the centre, the two are independent and the lean is a knob
+ * that can be turned on its own.
+ *
+ * THE LEAN IS `transform` AND THE PEEL'S DIRECTION IS `rotate`, AND THAT IS WHY
+ * THIS WORKS AT ALL. .peel writes `rotate: var(--peel-dir)` on this same element
+ * — the turn that lets the fold come off an arbitrary edge, undone again on the
+ * artwork by .peel-turn. Written as `rotate` here it would be overwritten and
+ * the fold would come off the top of every strip; written as `transform` the two
+ * compose, the individual properties resolving translate → rotate → scale →
+ * transform, so the strip peels from its own right end and is then leant. Same
+ * three-properties-that-compose call .reimagine-gap .reimagine-tape makes.
+ *
+ * --ph IS DERIVED AND NOT MEASURED. Every prop below writes it as its width
+ * times the artwork's own aspect, so a strip re-cropped tomorrow is one figure
+ * and a strip re-sized is one figure — and Peel is handed the same pair through
+ * `box` (see BOX in props.tsx), which its turned clip frame has to be told. */
+.reimagine-props .reimagine-prop {
+  position: absolute;
+  left: calc(var(--px) * var(--prop-u));
+  top: calc(var(--py) * var(--prop-u));
+  width: calc(var(--pw) * var(--prop-u));
+  height: calc(var(--ph) * var(--prop-u));
+  translate: -50% -50%;
+  transform: rotate(var(--pr, 0deg));
+}
+
+/* THE CLEAR FILM, AND IT IS THE ONE PROP THAT IS PAINTED DIFFERENTLY.
+ *
+ * stationery-silent-opp-tape.svg is drawn with mix-blend-mode: screen INSIDE the
+ * file: it is a set of highlights meant to be ADDED to whatever it is lying on
+ * rather than a picture of a strip. Composited normally it has nothing to add
+ * itself to and arrives as the flat mid-grey slab the blending was supposed to
+ * turn into clear tape. Screening it at page level is what the artwork expects,
+ * and it is the same call TapeSlider makes on the same file.
+ *
+ * WHICH IS ALSO WHY THESE THREE ARE AT THE EDGES OF THE SHEET. Screen against
+ * off-white paper is very nearly nothing; against the lime above --rei-split and
+ * the dark green below it, it is a strip of tape catching the light. A clear
+ * strip moved into the middle of the paper will disappear, and the fix is to
+ * take this line off that prop rather than to make it bigger.
+ *
+ * ON THE WRAPPER AND NOT ON THE IMAGE, so the peeled flap is screened with the
+ * face — a flap painted normally over a face that is screened is a strip that
+ * changes material halfway through coming off. isolation is left alone: the
+ * strips are meant to blend with the section's grounds, which is exactly what a
+ * stacking context here would prevent. */
+.reimagine-prop-clear {
+  mix-blend-mode: screen;
+}
+
+/* THE PHOTOGRAPH ITSELF, filling the box its rule gives it.
+ *
+ * cover AND NOT contain: the two files are 204 x 210 and the boxes below are
+ * squarer than that by a hair, so contain would letterbox a photograph by two
+ * pixels and cover crops it by two. Neither is visible; cover is the one that
+ * cannot leave a seam of paper along an edge.
+ *
+ * THE CORNERS ARE ROUNDED BECAUSE THE DESIGN'S ARE — about 12px at the 1440
+ * width, which is 0.85 units. It is on the image and not on the box so the strip
+ * of tape pinned over the corner is not clipped by it. */
+.reimagine-shot-img,
+.reimagine-mark {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: calc(0.85 * var(--prop-u));
+}
+
+/* THE PEN MARKS ARE INK ON PAPER AND HAVE NO EDGE TO ROUND. Same box, same
+   arrival, different material — they are transparent gifs drawn onto the sheet
+   rather than photographs laid on it. */
+.reimagine-mark {
+  object-fit: contain;
+  border-radius: 0;
+}
+
+/* WHAT ACTUALLY MOVES WHEN A PHOTOGRAPH LANDS — a second box inside the prop's,
+   filling it exactly, and it exists so that GSAP has a transform of its own to
+   write.
+
+   THE PROP'S transform IS THE LEAN and the arrival is a translate and a scale,
+   which are also transform. One element and GSAP owns the whole property: it
+   decomposes whatever the stylesheet left there and re-composes its own matrix,
+   so the lean survives by GSAP's good manners rather than by construction.
+   Split, the two facts live in two places and neither has to be inferred.
+
+   position: relative so the strip pinned to the photograph is positioned against
+   THIS and not against the sheet — see the nesting in props.tsx, which is what
+   makes the tape ride the bounce instead of watching it. */
+.reimagine-pop {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   AND THE EIGHT OF THEM, ONE RULE EACH
+   --------------------------------------------------------------------------
+   Read off the comp against the sheet's box — 94.993 units wide and 65.489 tall
+   (see .reimagine-sheet) — so a --px of 0 is the box's left edge and 94.993 its
+   right, and a prop sitting a little outside either is a prop hanging off the
+   paper onto the ground, which several of these do on purpose.
+
+   The aspect on each --ph is the file's own: 428 x 173 for the brown roll,
+   141 x 92 for the clear film, 204 x 210 for the photographs.
+   -------------------------------------------------------------------------- */
+
+/* THE TWO BROWN STRIPS AT THE TOP LEFT — the pair that reads as the sheet having
+   been put up rather than having landed. They overlap each other slightly and
+   neither is level. */
+.rei-kraft-a {
+  --px: 14.9;
+  --py: 4.2;
+  --pw: 13.9;
+  --ph: calc(var(--pw) * 0.4042);
+  --pr: -4deg;
+}
+
+.rei-kraft-b {
+  --px: 26.1;
+  --py: 7.9;
+  --pw: 10;
+  --ph: calc(var(--pw) * 0.4042);
+  --pr: -14deg;
+}
+
+/* THE THREE CLEAR STRIPS, at the top right, the left edge and the bottom left.
+   All three are steeply leant and all three are half off the paper — see
+   .reimagine-prop-clear, which is why being on the coloured ground rather than
+   on the sheet is the whole of what makes them visible. */
+.rei-clear-a {
+  --px: 93;
+  --py: 10.2;
+  --pw: 11;
+  --ph: calc(var(--pw) * 0.6525);
+  --pr: 62deg;
+}
+
+.rei-clear-b {
+  --px: 1;
+  --py: 42.3;
+  --pw: 10.5;
+  --ph: calc(var(--pw) * 0.6525);
+  --pr: 72deg;
+}
+
+.rei-clear-c {
+  --px: 10.7;
+  --py: 65.8;
+  --pw: 10.5;
+  --ph: calc(var(--pw) * 0.6525);
+  --pr: -12deg;
+}
+
+/* AND THE BROWN STRIP AT THE FOOT, which is the last prop to arrive and closes
+   the diagonal the other five make across the sheet. */
+.rei-kraft-c {
+  --px: 88.1;
+  --py: 62.1;
+  --pw: 13.5;
+  --ph: calc(var(--pw) * 0.4042);
+  --pr: 12deg;
+}
+
+/* THE TWO PHOTOGRAPHS. The masking roll sits high on the right, clear of the
+   sentence; the tissue roll sits low and central and DOES lie across the foot of
+   it, which is why the whole layer is filed after .reimagine-copy in the markup.
+   204 x 210, so --ph is a shade taller than --pw. */
+.rei-shot-a {
+  --px: 83.2;
+  --py: 31.7;
+  --pw: 21;
+  --ph: calc(var(--pw) * 1.0294);
+  --pr: 4deg;
+}
+
+.rei-shot-b {
+  --px: 57.7;
+  --py: 53.3;
+  --pw: 27;
+  --ph: calc(var(--pw) * 1.0294);
+  --pr: -3deg;
+}
+
+/* THE STRIP PINNING EACH PHOTOGRAPH, and its --px and --py are measured from the
+   PHOTOGRAPH'S top left corner rather than the sheet's — it is inside
+   .reimagine-pop, which is the containing block. Same four numbers, same unit,
+   different origin, and that is the price of the tape riding the bounce.
+
+   The consequence worth knowing: these do not follow when the photograph's --pw
+   is changed. Re-size a shot and its strip wants re-placing. */
+.rei-shot-a-tape {
+  --px: 6.5;
+  --py: 0.5;
+  --pw: 8;
+  --ph: calc(var(--pw) * 0.4042);
+  --pr: -22deg;
+}
+
+.rei-shot-b-tape {
+  --px: 7;
+  --py: 0.6;
+  --pw: 9;
+  --ph: calc(var(--pw) * 0.4042);
+  --pr: 14deg;
+}
+
+/* THE HEART AND THE SQUIGGLE — boxes measured, files not yet drawn. MARKS in
+   props.tsx is the empty list that fills these; add a src there and the rule is
+   already here waiting for it. The heart sits above the photograph on the right,
+   the squiggle low and left under the last line of the statement. */
+.rei-mark-a {
+  --px: 71.5;
+  --py: 12.5;
+  --pw: 5.5;
+  --ph: calc(var(--pw) * 0.9);
+  --pr: 6deg;
+}
+
+.rei-mark-b {
+  --px: 22.5;
+  --py: 47.5;
+  --pw: 6.5;
+  --ph: calc(var(--pw) * 0.75);
+  --pr: -5deg;
+}
+
+/* --------------------------------------------------------------------------
    Parking
    -------------------------------------------------------------------------- */
 
@@ -14924,6 +15889,7 @@ img#front {
 
   .reimagine-paper:last-of-type {
     opacity: 1;
+
   }
 }
 
@@ -15537,13 +16503,18 @@ img#front {
      own middle — the dark green in the corners of the drawing is the section
      showing past it.
 
-     A RADIUS AND NOT --edge-bite, and the difference is which way the curve
-     bends. The footer's top edge and the pinning section's brow are BITTEN
-     into — concave, corners standing proud of a valley — and that shape can
-     only be a mask. This one bulges DOWNWARD, which is what a corner radius
-     already is; the hero's lime field, the preloader's sheets and the slider's
-     colour wipe are all the same call. Set it to 0 for a square foot. */
-  --cta-arc: 3.333vw; /* 48px */
+     --section-curve AND NOT --section-bite, and the difference is which way
+     the same curve is read. The footer's top edge and the pinning section's brow
+     are BITTEN into — concave, corners standing proud of a valley. This one
+     bulges DOWNWARD, which is the site's own edge; the hero's lime field, the
+     preloader's sheets and the slider's colour wipe are all the same shape at
+     the same depth. Set it to 0 for a square foot.
+
+     IT WAS 3.333VW (48px on the drawing) AND IS NOW --curve-depth. That figure
+     came off this section's own artwork and nothing else's, which is exactly
+     what stopped this foot and the foot of the sheet above it reading as one
+     edge. */
+  --cta-arc: var(--curve-depth);
 
   /* THE CURTAIN'S OVERHANG — how much taller than the sheet the photograph is
      cut, half of it hanging above and half below.
@@ -15639,11 +16610,11 @@ img#front {
  *
  * ITS OWN BOX RATHER THAN THE SECTION'S, for three reasons that arrive
  * together. The crate hangs out of the bottom and has to be cropped by the same
- * edge the curtain is, so the two belong in one box; that edge is an arc, which
- * on the section would round off the dark green as well and show whatever is
- * behind the page through the corners; and a picture that drifts needs
- * something with an edge to drift INSIDE, or it is just a picture moving down
- * the page.
+ * edge the curtain is, so the two belong in one box; that edge is the site's
+ * curve, which on the section would cut the dark green away as well and show
+ * whatever is behind the page through the corners; and a picture that drifts
+ * needs something with an edge to drift INSIDE, or it is just a picture moving
+ * down the page.
  *
  * IT NEVER MOVES, AND THAT IS THE POINT OF IT. Everything on this section is
  * measured against this box's edges — the copy's 174, the crate's top, the arc
@@ -15653,8 +16624,16 @@ img#front {
 .about-cta-sheet {
   position: absolute;
   inset: 0;
+
+  /* The curve is .arc-cut in the markup and the depth is this section's token,
+     which now reads the site's. A mask cuts the box's own paint AND everything
+     inside it, so the curtain and the crate are both cropped by the foot with
+     nothing else to say — where the border-radius this replaced needed the clip
+     below to reach the children at all. The clip stays: .about-cta-front hangs a
+     third of itself past the bottom edge and the mask is only the shape, not a
+     licence for the box to grow. */
+  --arc-h: var(--cta-arc);
   overflow: clip;
-  border-radius: 0 0 50% 50% / 0 0 var(--cta-arc) var(--cta-arc);
 }
 
 /* THE CURTAIN, CUT TALLER THAN ITS WINDOW AND CENTRED IN IT. The overhang is
@@ -16359,12 +17338,41 @@ img#front {
     font-size: 3vw;
   }
 
+  /* THE ROLL PILL, AT THE PHONE'S SCALE. Every figure here is the desktop's
+     multiplied by 3.317, which is what the row grew by: 45vw of height against
+     13.567 and 171 of width against 51.528 are the same number twice, because
+     the pills are a set of proportions and not a set of sizes. So the note
+     stands in the same place in the shape, the tape lies the same distance off
+     its leading edge, and the pill is the drawing it is at 1440 — read on a
+     screen a quarter of the width.
+
+     THE NOTE'S RULE IS TWO CLASSES DEEP AND HAS TO BE. .conveyor-hand is with
+     the other .hand-note instances near the foot of this file — an instance has
+     to outrank the base rule's dials, which is what puts it there — so it is
+     LATER in the source than this block and a bare .conveyor-hand here would
+     lose to it on order however specific the block looks. Match the shape and
+     win on count, exactly as .about-hero .about-note does above.
+
+     The tape does not need it: the belt's own rules are five thousand lines
+     earlier, so the ordinary selector already wins here. */
+  .conveyor-train .conveyor-hand {
+    --hand-w: 24.88vw;
+    left: 15.8vw;
+    top: 14.33vw;
+  }
+
+  .conveyor-train.is-roll>.conveyor-roll {
+    left: 47.46vw;
+    top: 8.847vw;
+    width: 81.93vw;
+  }
+
   /* THE MARK RESTS AT ONE ROW'S HEIGHT and grows to cover the screen, and on a
      phone those two are not the same multiplier they are at 1440.
-     
+
      Resting: it is a pill in a row of pills, so it fills the row — 45.8vw tall
      at the artwork's 1.528 aspect is 70vw across.
-     
+
      Grown: MARK.SCALE is 8 in belt.ts and that figure is the SHAPE of the beat
      rather than a size, so it is not something a stylesheet should be reaching
      into. 70 x 8 is 560vw, which is five and a half screens of lemon and reads
@@ -16379,7 +17387,7 @@ img#front {
      drawn above whatever this is set to. This figure was chosen for the grown
      mark and it used to shrink the resting one by the same third; see that rule,
      where the correction is argued.
-     
+
      A portrait screen cannot also be covered in WIDTH at that gain: 403vw is
      four windows across, so what fills the screen is the middle of the
      lemon rather than most of it. That is the shape of the phone rather than a
@@ -16432,7 +17440,10 @@ img#front {
      bites only on the shortest screens, which is what a guard is for. */
   .reason {
     --reason-type: min(24vw, var(--screen-lg) * 0.137);
-    --reason-arc: 16vw;
+    /* NOT DEEPENED HERE ANY MORE. It was 16vw against the desktop's 9 — the
+       phone proportion every arc on this site used to be given. --reason-arc
+       reads --curve-depth, a proportion of the width, so the curve is the
+       artwork at 390 exactly as it is at 1440. */
   }
 
   /* AND THE MEASURE IS THE THING BEING BROKEN AGAINST. Without it the sentence
@@ -16557,6 +17568,67 @@ img#front {
     aspect-ratio: 505.299 / 757.949;
   }
 
+  /* AND THE PROP LAYER FOLLOWS IT, because it is the same box stated twice —
+     see .reimagine-props, which is a sibling of the sheet rather than a child so
+     the clear strips have the section's grounds to screen onto. There is no
+     transform to undo down here and the height is written out rather than left
+     to aspect-ratio: 129.564 x 757.949/505.299 = 194.346. */
+  .reimagine-props {
+    left: 2vw;
+    top: 4vw;
+    width: 129.564vw;
+    height: 194.346vw;
+  }
+
+  /* AND THE PROPS' OWN PLACES, WHICH ARE A DIFFERENT DRAWING AND NOT A SCALED
+     ONE. Four numbers a prop, the same four the props block above sets, and the
+     unit under them is already 1vw — see --prop-u on .reimagine.
+
+     WHY THEY CANNOT SIMPLY COME DOWN WITH EVERYTHING ELSE. The sheet is a
+     different shape here: 129.564 x 194.346 against the desktop's 94.993 x
+     65.489, so a landscape composition is being laid on a portrait one. The
+     statement takes the top half of it — eight lines at 0.8em from 24 down,
+     ending a little past 105 — and the phone block's own note says the lower
+     half is what is left for what the design lays on the sheet. The desktop's
+     figures scaled put both photographs across the middle of the sentence.
+
+     SO THE TAPE STAYS AT THE EDGES AND THE PHOTOGRAPHS GO UNDER THE TYPE. The
+     two brown strips still hold the head of the sheet down, the three clear
+     strips still run off the left and right onto the ground — which is where a
+     screen blend has anything to do (see .reimagine-prop-clear) — and the two
+     pictures sit in the empty lower half with the last brown strip at the foot.
+
+     Read off nothing: there is no phone comp for this section yet, and these are
+     a composition that holds rather than a measurement. Every one of them is
+     four figures and they are meant to be turned. */
+  .rei-kraft-a { --px: 30; --py: 6; --pw: 34; --pr: -4deg; }
+  .rei-kraft-b { --px: 62; --py: 12; --pw: 26; --pr: -14deg; }
+
+  .rei-clear-a { --px: 94; --py: 20; --pw: 26; --pr: 62deg; }
+  .rei-clear-b { --px: 3; --py: 96; --pw: 26; --pr: 72deg; }
+  .rei-clear-c { --px: 22; --py: 186; --pw: 26; --pr: -12deg; }
+
+  .rei-kraft-c { --px: 84; --py: 178; --pw: 32; --pr: 12deg; }
+
+  /* THE RIGHT-HAND EDGE OF THE SHEET IS NOT THE RIGHT-HAND EDGE OF THE SCREEN,
+     and it is the one trap in this block. The paper is 129.564vw wide from 2vw,
+     so a third of the box is off the window — the phone block above CROPS the
+     photograph rather than fitting it — and a prop given a --px in the nineties
+     is a prop nobody ever sees. Roughly 96 is the last column that is wholly on
+     screen, less half the prop's own width. */
+  .rei-shot-a { --px: 70; --py: 140; --pw: 52; --pr: 4deg; }
+  .rei-shot-b { --px: 34; --py: 162; --pw: 62; --pr: -3deg; }
+
+  /* Measured from their own photograph's corner and not from the sheet's — see
+     the pair in the props block, which is where that origin is argued. They do
+     not follow a --pw changed above, so a re-sized picture wants its strip
+     re-placed. */
+  .rei-shot-a-tape { --px: 16; --py: 1.5; --pw: 20; --pr: -22deg; }
+  .rei-shot-b-tape { --px: 17; --py: 2; --pw: 22; --pr: 14deg; }
+
+  .rei-mark-a { --px: 84; --py: 118; --pw: 15; --pr: 6deg; }
+  .rei-mark-b { --px: 26; --py: 124; --pw: 17; --pr: -5deg; }
+
   /* cover AND NOT contain, WHICH IS A PLACEHOLDER AND ALSO NOT ONE. The frames
      are 1378 x 950 and the box above is 2:3, so `contain` letterboxes the
      landscape sheet into the top of a tall box and draws back the empty field
@@ -16589,8 +17661,9 @@ img#front {
      down the paper, so the statement ends a little under half way and the lower
      half of the sheet is left for what the design lays on it. */
   .reimagine-copy {
-    left: 6vw;
-    top: 12vw;
+            top: 24vw;
+        left: 12vw;
+
     width: 105vw;
     font-size: 12.821vw;
     /* 50 / 390 */
@@ -16658,6 +17731,19 @@ img#front {
      comes back with them. */
   .reimagine {
     --rei-run: 0;
+
+    /* AND THE PROPS ARE MEASURED AGAINST THE WINDOW DOWN HERE, because the box
+       they lie in is: .reimagine-sheet below is 129.564vw on a different aspect
+       and the paper in it is cropped rather than fitted, so the desktop's unit
+       is not a fraction of anything the phone draws. One line, and every prop's
+       own figures below go on meaning what they say — see --prop-u above.
+
+       THEIR PLACES ARE STILL THE DESKTOP'S AND THAT IS THE OUTSTANDING WORK. The
+       props are on the phone (the section is handed over already open, so they
+       are simply THERE — no pin, no timeline, nothing to arrive), but where they
+       sit is a reading of a 1440 comp scaled into a 390 one. Every one of them
+       is four numbers in the props block above, and the overrides go here. */
+    --prop-u: 1vw;
   }
 
   /* THE LAST FRAME AND ONLY THE LAST FRAME — the flat sheet. The stylesheet
@@ -16681,6 +17767,8 @@ img#front {
 
   .reimagine-paper:last-of-type {
     opacity: 1;
+    object-fit: cover;
+    object-position: left;
   }
 
   /* --------------------------------------------------------------------------
@@ -16855,6 +17943,44 @@ img#front {
     margin-top: calc(var(--screen-lg) * 0.32);
   }
 
+  /* AND ON THE CANVAS THE SCATTER IS RE-DRAWN, THREE OF THE FOUR.
+
+     THE DESKTOP'S DROPS ARE ABOUT A ROW AND THIS IS NOT A ROW. Above the
+     breakpoint the four stand together in one frame and --y is what stops them
+     reading as a line of boxes — the figures are chosen against EACH OTHER. On
+     the phone the canvas strings them a quarter of the run apart, so no two are
+     ever in the window at once and none of that holds: what each --y now
+     decides is where ONE box sits against the one thing beside it, which is a
+     sentence set at 1000px lying across the middle of the screen. A box at 45%
+     is a box on top of the words.
+
+     SO THEY GO TO THE EDGES, and which edge is the composition: 02 and 04 up
+     under the crest, 01 and 03 down at the floor, and the type reads clean
+     between them the whole way along. 02 is already high enough at 4.5 and is
+     left alone — the only one of the four whose desktop figure means the same
+     thing here.
+
+     `top` AND NOT --y, for the reason the wrap's `left` is restated rather than
+     --n: --y arrives as an inline style from the component and no stylesheet
+     rule outranks that without !important. What is overridden is the thing --y
+     feeds, which is the stylesheet's own.
+
+     UNDER data-pan BECAUSE IT IS ABOUT THE CANVAS. The stacked arrangement two
+     rules up is still what a reader who asked for less motion gets, and it is
+     the one place the four ARE in a frame together — its own drops are argued
+     there and these would put box 03 through the bottom of it. */
+  .we-wanted[data-pan="live"] .wanted-box[data-box="clearer"] {
+    top: calc(68 / 100 * var(--screen-lg));
+  }
+
+  .we-wanted[data-pan="live"] .wanted-box[data-box="recognisable"] {
+    top: calc(69.5 / 100 * var(--screen-lg));
+  }
+
+  .we-wanted[data-pan="live"] .wanted-box[data-box="human"] {
+    top: calc(10.5 / 100 * var(--screen-lg));
+  }
+
   /* THE WAY OUT, RE-AUTHORED AGAINST 390. Every figure in that section is a
      share of 1440, so on a phone it arrives at a quarter of its size: a 150
      claim comes in at 41px and the 212 column is 57px of margin down each side
@@ -16882,11 +18008,13 @@ img#front {
      and the sheet is shorter (--cta-h) — the two move together, and what they
      hold constant is the relationship the desktop has: the tape's top edge just
      clear of the pill's foot, and a little over half the artwork on the sheet.
-     The arc deepens because it is read against a screen a quarter the width. */
+
+     THE ARC IS NO LONGER RE-CUT HERE. It was 6vw against the desktop's 3.333,
+     deepened because it was read against a screen a quarter the width.
+     --curve-depth is a proportion of that width, so it already is. */
   .about-cta {
     --cta-h: 131vw; /* 511px */
     --cta-front-top: 38.7vw; /* 151px */
-    --cta-arc: 6vw;
   }
 
   .about-cta-copy {
@@ -16974,16 +18102,23 @@ img#front {
      the whole reason it is a mask below and not a border-radius: a radius can
      round a corner off, it cannot take a bite out of an edge.
 
+     AND IT IS THE SAME CURVE AS THOSE, which it was not before: this was 9vw of
+     a symmetric half-ellipse while the hero's foot was the design's cubic at
+     --curve-depth, so the page's two biggest edges were plainly two different
+     shapes. It is --curve-depth here too now — see --footer-bite below.
+
      The band it is drawn in is added ABOVE the section and taken straight back
      out with a negative margin, so the arc costs the document no height, and
      everything inside still starts at the deepest point of the dip — which is
      the line the layout below is measured from. */
-  --footer-arc: 9vw;
+  --footer-arc: var(--curve-depth);
 
-  /* The shape itself is --edge-bite in :root — the pinning section's top edge
-     takes the same one, and the path is documented there. Stretched here to
-     100% x --footer-arc, which is what picks this section's depth. */
-  --footer-bite: var(--edge-bite);
+  /* The shape itself is --section-bite in :root — the site's one curve read as
+     a concave edge, and the pinning section's brow takes the same one. The path
+     is documented there. Stretched here to 100% x --footer-arc, which is what
+     picks this section's depth, and that depth is now the artwork's own
+     proportion rather than a figure of the footer's. */
+  --footer-bite: var(--section-bite);
 
   /* The hero's pairing, reversed — #0d470c is the hero's own ground and #b6fe00
      the lime it puts overhead. */
@@ -17014,7 +18149,7 @@ img#front {
      positioning is a proportion of the SLACK rather than of the box, so `0 100%`
      puts the rectangle's top edge on the band's bottom.
 
-     The 1px is an overlap, not a nudge. --footer-arc is 9vw and so almost never
+     The 1px is an overlap, not a nudge. --footer-arc is a vw and so almost never
      a whole device pixel; the two layers are rasterized separately — the bite as
      its own bitmap, the rectangle as a gradient — and a shared edge landing mid
      pixel leaves each of them short of opaque there. The layers composite with
@@ -17433,9 +18568,10 @@ img#front {
     /* Tall and narrow — see above. Deep enough for three rows of discs at the
        scale below, plus the sign-off they lie over. */
     --footer-bottom-h: 128vw;
-    /* In step with --stick-arc and --giant-arc, which are the same bite at the
-       other two places this page cuts an edge. */
-    --footer-arc: 14vw;
+    /* NO --footer-arc HERE ANY MORE. It was 14vw against a desktop 9. The bite
+       is --curve-depth now, a proportion of the width, so it is the artwork at
+       390 exactly as it is at 1440 — and the sections above it drop their own
+       phone figures for the same reason. */
     --footer-gutter: 5vw;
   }
 
@@ -18465,6 +19601,59 @@ img#front {
 .about-hero[data-note="live"] .about-note {
   opacity: 1;
   visibility: visible;
+}
+
+/* THE BELT'S COPY: inside the roll pill, on the pill green, beside the tape.
+ *
+ * IT IS WITH THE OTHER INSTANCES AND NOT WITH ITS SECTION for the reason
+ * .about-note's comment sets out at length — .hand-note above sets --hand-w,
+ * --hand-ink and --hand-ink-w at the same specificity this rule has, so an
+ * instance written earlier in the file (and the conveyor's block is five
+ * thousand lines earlier) keeps only the properties the base does not name. The
+ * pill's own geometry is up there with the belt; the note's dials are here.
+ *
+ * THE SIZE. 7.5vw is 108px at the 1440 design width, which puts the writing —
+ * 0.778 of the note's width, see --hand-ink-w — at 84px across for three lines,
+ * and leaves 31px of green between the last letter and the torn end of the tape
+ * beside it. That is small, and it is meant to be: this is an aside muttered on
+ * the belt, not one of the three claims, and it shares its pill with a
+ * photograph that has to stay the thing the eye lands on. The 5.156vw of height
+ * that comes with it is the note's own aspect and not a choice — see the note
+ * on .giant-note, which makes the same point.
+ *
+ * WHERE IT SITS, AND WHY NEITHER FIGURE IS A ROUND ONE. The design measures the
+ * INK and this rule places the BOX around it, so both numbers are the design's
+ * own minus the offset of the drawing inside the artwork.
+ *
+ * Across: the design puts the ruled margin's down-stroke 83.83px in from the
+ * pill's leading edge. That stroke stands at x = 45 of the artwork's 320
+ * (HandNote/index.tsx), which at this size is 15.2px, so the box starts at
+ * 68.6px and the stroke lands where the drawing says.
+ *
+ * Down: the design leaves 75.06px between the foot of that stroke and the
+ * pill's floor. The stroke ends at y = 172 of the same artwork — 58.05px here —
+ * and the pill is 195.36px tall, so the box starts at 62.2px. Which is a little
+ * below centre, and that is the drawing rather than a rounding: the writing
+ * hangs under its own margin, so a note centred by its BOX reads high in the
+ * pill.
+ *
+ * THE PEN IS THE PAGE'S LIME on the pill's dark green — the same pairing the
+ * hero writes in, and the reverse of .about-note two screens up, which writes
+ * the green ink on the lime sheet. var(--about-ink) rather than the literal so
+ * the belt's note and the masthead over it are one colour and stay one.
+ *
+ * AND IT WRITES QUICKLY. The pill crosses the window on the belt's own travel
+ * and is gone; a pen tuned for the hero's screenful of scrolling would still be
+ * on the second line when the shape leaves. 0.75 is a shade under the opening
+ * screen's — see `pace` in HandNote/hand.ts, where these are multiples and not
+ * durations. No --hand-delay: the beat this waits for is the pill arriving,
+ * which its own observer already is. */
+.conveyor-hand {
+    --hand-w: 11.5vw;
+    --hand-ink: var(--about-ink);
+    --hand-draw: .75;
+    top: 3.32vw;
+    left: 1.764vw;
 }
 
 /* Ten units to the vw at the default width: the markup's viewBox is 0 0 320 200

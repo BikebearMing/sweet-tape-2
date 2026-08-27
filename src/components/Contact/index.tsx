@@ -73,12 +73,16 @@ export default function Contact() {
           row at /products, the closing key visual and the footer all carry the
           same escape.
 
-          THE PAPER AND THE NOTE ARE HELD THE SAME WAY, and they are held at
-          nothing rather than under a mask — their entrance resolves them out of
-          a blur, and a blur has to start from something the reader has not seen
-          standing. So the whole page, form included, is behind this one escape:
-          without it a scriptless load is a lime sheet with a headline missing,
-          a blank space where the form is and no note at all.
+          THE PAPER IS HELD THE SAME WAY, and it is held at nothing rather than
+          under a mask — its entrance resolves it out of a blur, and a blur has
+          to start from something the reader has not seen standing. So the whole
+          page, form included, is behind this one escape: without it a scriptless
+          load is a lime sheet with a headline missing and a blank space where
+          the form is.
+
+          THE NOTE IS NOT IN THE ESCAPE because it is not held in the first
+          place — it is on the board from the first frame rather than arriving,
+          so there is nothing to let go of.
 
           THE FORM ITSELF HAS NO ENTRANCE, which is worth saying rather than
           leaving to be noticed: five fields and a button arriving one after
@@ -87,8 +91,7 @@ export default function Contact() {
       <noscript>
         <style>{`.contact-section .char { transform: none }
           .contact-section .contact-chip,
-          .contact-section .contact-sheet,
-          .contact-section .contact-note { opacity: 1; visibility: visible }`}</style>
+          .contact-section .contact-sheet { opacity: 1; visibility: visible }`}</style>
       </noscript>
 
       <header className="contact-head">
@@ -216,6 +219,12 @@ export default function Contact() {
       {/* THE NOTE, PINNED ACROSS THE JOIN between the lime and the paper — the
           one object on the page that belongs to neither sheet, which is what
           makes it read as put there afterwards.
+
+          AND IT HAS NO ENTRANCE, which is the one thing about it worth stating.
+          It is on the board and already fluttering when the cover lifts, while
+          the chip turns and the paper is laid down around it — nothing parks it
+          in the stylesheet and nothing plays it in reveal.ts. A note that
+          arrives is a note being placed; this one was stuck there beforehand.
 
           The slot is EMPTY BY DESIGN: Hero/note.ts appends the canvas into it,
           and the slot is deliberately bigger than the sheet — the note rests at

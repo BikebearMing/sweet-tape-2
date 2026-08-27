@@ -116,6 +116,16 @@ export default function AboutOpen() {
         <style>{`.about-hero .char { transform: none }`}</style>
       </noscript>
 
+      {/* THE LIME SHEET, AND THE CURVE ALONG ITS FOOT. The colour is on a sheet
+          of its own rather than on the section, because the shape is a mask and
+          a mask clips the box it is on at every edge — the carton hangs out of
+          the bottom of this screen and is cropped by the section's own
+          overflow, so the section must stay unmasked. The hero's opening field
+          is built exactly this way. No data-paper: the grain here is
+          .about-open::after, one layer over both colours, so it runs across the
+          curve unbroken and stays above the note. See .arc-foot in global.css. */}
+      <div className="arc-foot" aria-hidden="true" />
+
       <div className="title">
         {/* .warped-text carries the arc's two numbers for both lines; the lines
             themselves override them, because a five-letter word and a

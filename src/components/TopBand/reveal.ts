@@ -73,12 +73,12 @@ function shuffle<T>(items: T[]): T[] {
 /**
  * The masthead's arrival. Returns a teardown.
  *
- * Both halves are parked by the stylesheet until the gate clears, and handed
- * over in the task that clears it: whenRevealed fires synchronously there, and
- * a fromTo renders its `from` immediately even when paused or delayed, so the
- * computed transform is `none` by the time GSAP reads it and there is no frame
- * in which either piece is anywhere unintended. The menu tab arrives the same
- * way.
+ * Both halves are parked by the stylesheet from the first byte and taken over
+ * by an inline transform HERE, at mount — the claim's letters before the
+ * attribute that releases them, the badge before the sweep that releases it.
+ * Neither hand-over leaves a gap for a frame to land in, which is the whole
+ * arrangement and the reason both parks are written before anything is tweened
+ * rather than inside the gate's callback. The menu tab arrives the same way.
  *
  * @param root the <div class="top-band">
  */
@@ -87,28 +87,32 @@ export function initTopBand(root: HTMLElement): () => void {
   const perf = root.querySelector<HTMLElement>(".top-perf");
   const chars = Array.from(root.querySelectorAll<HTMLElement>(".char"));
 
-  /* Hand the letters over from the stylesheet.
+  /* PARKED INLINE FIRST, AND THE ATTRIBUTE SECOND — the hero's manoeuvre
+   * exactly, and Hero/reveal.ts carries the long version of the argument.
    *
-   * global.css holds them under their masks until this attribute lands, and
-   * setting it first is what makes the timeline's numbers mean what they say:
-   * GSAP reads the computed transform as its starting point, and a percentage
-   * translate coming from CSS is reported as resolved px — which GSAP would
-   * then ADD to the yPercent below, leaving every letter parked a full height
-   * low. With the attribute on, the computed transform is `none` and GSAP owns
-   * the whole value.
+   * global.css holds these letters under their masks until data-reveal lands.
+   * The attribute used to go first, because GSAP reads the computed transform
+   * as its starting point and a percentage translate coming from CSS is
+   * reported as resolved px — 130% on top of a CSS 130% renders at 260%. `y: 0`
+   * writes that px half explicitly instead of inheriting it, so this set means
+   * HIDDEN whether the stylesheet's park is still applied or already lifted.
    *
-   * Before the reduced-motion return, because on that path it is the whole
-   * arrival: the attribute alone puts the copy where it belongs. Nothing paints
-   * in between either way — the attribute and the timeline's immediate render
-   * happen in the same task. */
+   * Which is what lets it run BEFORE the hand-off. An inline transform outranks
+   * the rule, so the attribute below lifts a park that is no longer holding
+   * anything, and there is no instant — paint or no paint — in which the claim
+   * is standing before it has been written. */
+  if (chars.length) gsap.set(chars, { y: 0, yPercent: REVEAL.HIDDEN });
   root.dataset.reveal = "live";
 
-  /* Nothing to undo. The badge's park and the perforation's are both inside a
-     no-preference media query, so with this asked for neither was lifted in the
-     first place, and the attribute above has already stood the letters up. A
-     badge springing down the middle of the screen is close to the top of the
-     list of things that setting exists to stop. */
+  /* Nothing to animate, so the park above is handed straight back. The badge's
+     hold and the perforation's are both inside a no-preference media query, so
+     with this asked for neither was lifted in the first place; the letters are
+     the only thing here that was, and clearing the inline transform under a
+     live attribute stands them up. A badge springing down the middle of the
+     screen is close to the top of the list of things that setting exists to
+     stop. */
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (chars.length) gsap.set(chars, { clearProps: "transform" });
     return () => {};
   }
 
@@ -141,7 +145,10 @@ export function initTopBand(root: HTMLElement): () => void {
        shuffle exists to avoid. */
     printed.fromTo(
       shuffle(chars),
-      { yPercent: REVEAL.HIDDEN },
+      /* `y: 0` for the reason the park above carries it — the `from` pose has
+         to mean HIDDEN and not "HIDDEN on top of whatever CSS had". The letters
+         are already sitting there, so this render changes nothing. */
+      { y: 0, yPercent: REVEAL.HIDDEN },
       {
         yPercent: 0,
         duration: REVEAL.DURATION,
@@ -153,23 +160,41 @@ export function initTopBand(root: HTMLElement): () => void {
   }
 
   /* THE BADGE — its own tween, its own clock, its own idea of what arriving
-     means. Nothing about it belongs in the timeline above. */
+   * means. Nothing about it belongs in the timeline above.
+   *
+   * AND ITS PARK IS TAKEN OVER HERE, AT MOUNT, rather than at the gate. This is
+   * the one piece of the masthead whose stylesheet hold hangs off data-loading
+   * instead of data-reveal, so it is the SWEEP that lifts it — and release()
+   * clears the attribute one statement before it announces itself. Left to be
+   * parked inside the callback, the badge spends that gap held up by nothing at
+   * all, and any frame that lands in it is a logo standing in the middle of the
+   * band a moment before it drops in from above.
+   *
+   * Held from here instead, it is parked by the stylesheet up to this line and
+   * by an inline transform from this line on, with no gap between the two — the
+   * sweep then lifts a rule that is no longer holding anything. `y: 0` for the
+   * reason the letters' park carries it: the value means what it says whether
+   * the CSS park is still applied or already gone.
+   *
+   * After the reduced-motion return above, deliberately — that park is inside a
+   * no-preference media query, so a reader who asked for less motion never had
+   * the badge lifted and must not be handed one hanging off the top edge. */
+  if (mark) gsap.set(mark, { y: 0, yPercent: TOP_BAND.HIDDEN });
+
   let drop: gsap.core.Tween | null = null;
   let startPrint: gsap.core.Tween | null = null;
 
   const unsubscribe = whenRevealed(() => {
     /* The beat is the tween's own `delay` and NOT a delayedCall around it, and
-       the difference is a visible jump. The stylesheet's park is keyed on the
-       attribute this gate has just cleared, so from this instant nothing is
-       holding the badge up but GSAP — and a fromTo renders its `from` the
-       moment it is created, delay and all. Created now, the badge is already
-       back above the edge before the frame is painted. Created half a second
-       later inside a delayedCall, it stands on the page for that half second
-       and is then snatched up to start. */
+       the difference is a visible jump. A fromTo renders its `from` the moment
+       it is created, delay and all, so the badge stays exactly where the set
+       above put it. Created half a second later inside a delayedCall, it would
+       stand on the page for that half second and then be snatched up to
+       start. */
     if (mark) {
       drop = gsap.fromTo(
         mark,
-        { yPercent: TOP_BAND.HIDDEN },
+        { y: 0, yPercent: TOP_BAND.HIDDEN },
         {
           yPercent: 0,
           duration: TOP_BAND.DURATION,

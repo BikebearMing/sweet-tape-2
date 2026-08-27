@@ -58,18 +58,21 @@ export function initPickReveal(root: HTMLElement): () => void {
   );
   if (!chars.length) return () => {};
 
-  /* Hand the letters over from the stylesheet.
+  /* PARKED INLINE FIRST, AND THE ATTRIBUTE SECOND. Hero/reveal.ts carries the
+   * long version of this and it is the same manoeuvre here.
    *
-   * global.css holds them under their masks until this attribute lands, and
-   * setting it first is what makes the tween's numbers mean what they say: GSAP
-   * reads the computed transform as its starting point, and a percentage
-   * translate coming from CSS is reported as resolved px — which GSAP would
-   * then ADD to the yPercent below, leaving every letter parked a full height
-   * low. With the attribute on, the computed transform is `none` and GSAP owns
-   * the whole value.
+   * global.css holds these letters under their masks until data-reveal lands.
+   * The attribute used to go first, because GSAP reads the computed transform
+   * as its starting point and a percentage translate coming from CSS is
+   * reported as resolved px — 130% on top of a CSS 130% renders at 260%. `y: 0`
+   * writes that px half explicitly rather than inheriting it, so this set means
+   * HIDDEN whether the stylesheet's park is still applied or already lifted.
    *
-   * Nothing paints in between: the attribute and the fromTo happen in the same
-   * task, and a fromTo renders its `from` immediately even when paused. */
+   * Which is what lets it run BEFORE the hand-off. An inline transform outranks
+   * the rule, so the attribute below lifts a park that is no longer holding
+   * anything, and there is no instant — paint or no paint, and whatever throws
+   * further down — in which the headline is standing before its entrance. */
+  gsap.set(chars, { y: 0, yPercent: REVEAL.HIDDEN });
   root.dataset.reveal = "live";
 
   /* THE SECOND ATTRIBUTE, and it is a hand-off to recolour.ts rather than to
@@ -88,8 +91,11 @@ export function initPickReveal(root: HTMLElement): () => void {
   root.dataset.arrived = "";
 
   /* Sixteen letters flying in from nowhere is exactly what the setting is
-     asking about. The attribute alone has already put them where they belong. */
+     asking about. What is wanted is the headline standing, so the park above is
+     handed back — under a live attribute the stylesheet's home for these
+     letters is where they belong rather than where they started. */
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    gsap.set(chars, { clearProps: "transform" });
     return () => {};
   }
 
@@ -99,16 +105,18 @@ export function initPickReveal(root: HTMLElement): () => void {
 
   const tween = gsap.fromTo(
     shuffle(chars),
-    { yPercent: REVEAL.HIDDEN },
+    /* `y: 0` for the reason the park above carries it — the `from` pose means
+       HIDDEN and not "HIDDEN on top of whatever CSS had". The letters are
+       already sitting there, so this render changes nothing. */
+    { y: 0, yPercent: REVEAL.HIDDEN },
     {
       yPercent: 0,
       duration: REVEAL.DURATION,
       stagger: PICK_REVEAL.STAGGER,
       ease: REVEAL.EASE,
       /* Built parked, played once the page is uncovered. Paused costs the
-         letters nothing: a fromTo renders its `from` immediately either way,
-         which is what keeps them under their masks with nothing painted in
-         between (see the attribute above). */
+         letters nothing: they were put under their masks by the set above, and
+         a fromTo renders its `from` immediately either way. */
       paused: true,
 
       /* The letters are GSAP's no longer, so the recolour's dip may have them.

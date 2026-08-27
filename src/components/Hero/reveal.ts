@@ -87,23 +87,49 @@ export function initReveal(root: HTMLElement): () => void {
   const chars = Array.from(root.querySelectorAll<HTMLElement>(".title .char"));
   if (!chars.length) return () => {};
 
-  /* Hand the letters over from the stylesheet.
+  /* EVERY letter in the section, not only the title's. The three entrances
+     here are built one after another by Stage.tsx, and the attribute below
+     releases all of their letters at once — so all of them have to be parked
+     before it lands, not just the ones this function tweens. The corner mark's
+     and the cardboard's own inits then find their letters already down and
+     build against that. */
+  const all = Array.from(root.querySelectorAll<HTMLElement>(".char"));
+
+  /* PARKED INLINE FIRST, AND THE ATTRIBUTE SECOND — the order matters and it
+   * is the opposite of what it used to be.
    *
-   * global.css holds them under their masks until this attribute lands, and
-   * setting it first is what makes the tween's numbers mean what they say:
-   * GSAP reads the computed transform as its starting point, and a percentage
-   * translate coming from CSS is reported as resolved px — which GSAP would
-   * then ADD to the yPercent set here, leaving every letter parked a full
-   * height low. With the attribute on, the computed transform is `none` and
-   * GSAP owns the whole value.
+   * global.css holds these letters under their masks until data-reveal lands.
+   * The attribute used to go first, on the reasoning that GSAP reads the
+   * computed transform as its starting point: a percentage translate coming
+   * from CSS is reported as resolved px, and GSAP would ADD its own yPercent
+   * to that and leave every letter a full height low. Measured, it is worse
+   * than that — 130% on top of a CSS 130% renders at 260%.
    *
-   * Nothing is painted in between: the attribute and the fromTo happen in the
-   * same task, so the browser has no chance to show the letters home. */
+   * `y: 0` is what settles it. It writes the px half of GSAP's translate
+   * explicitly rather than inheriting whatever it read out of the stylesheet,
+   * so `{ y: 0, yPercent: HIDDEN }` lands at exactly HIDDEN whether the CSS
+   * park is still applied or already lifted. That makes this set safe to run
+   * BEFORE the hand-off, which is the whole point:
+   *
+   *   the stylesheet parks the letter → this line parks it inline, and an
+   *   inline transform outranks the rule → the attribute lifts a rule that is
+   *   no longer holding anything.
+   *
+   * There is no longer an instant, paint or no paint, in which the letter is
+   * home before its entrance has run. The old order had one — a zero-width
+   * window between the two statements, which is zero-width only for as long as
+   * nothing interrupts, and which was the one state in this file where being
+   * hidden was nobody's job. It also survives a throw further down: whatever
+   * fails after this line, the letters are still under their masks. */
+  gsap.set(all, { y: 0, yPercent: REVEAL.HIDDEN });
   root.dataset.reveal = "live";
 
   /* Letters flying in from nowhere is exactly what the setting is asking
-     about. The attribute alone has already put them where they belong. */
+     about. What is wanted is the copy standing, so the park above is handed
+     back — with the attribute on, the stylesheet's home for these letters is
+     where they belong rather than where they started. */
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    gsap.set(all, { clearProps: "transform" });
     return () => {};
   }
 
@@ -115,7 +141,11 @@ export function initReveal(root: HTMLElement): () => void {
      twenty-three permanent layers behind. */
   const tween = gsap.fromTo(
     shuffle(chars),
-    { yPercent: REVEAL.HIDDEN },
+    /* `y: 0` for the reason the set above carries it: the `from` pose has to
+       mean the same thing whatever the computed transform happens to be when
+       this is built. It is already exactly where the set left it, so this
+       renders no change at all — which is the point. */
+    { y: 0, yPercent: REVEAL.HIDDEN },
     {
       yPercent: 0,
       duration: REVEAL.DURATION,
@@ -123,9 +153,9 @@ export function initReveal(root: HTMLElement): () => void {
       ease: REVEAL.EASE,
       /* Built parked, played once the page is uncovered — the headline is the
          first thing on the site and it must not be spent behind the preloader's
-         sheet. Paused costs the letters nothing: a fromTo renders its `from`
-         immediately either way, which is what keeps them under their masks with
-         nothing painted in between (see the attribute above). */
+         sheet. Paused costs the letters nothing: they were put under their
+         masks by the set above, and a fromTo renders its `from` immediately
+         either way. */
       paused: true,
     }
   );
@@ -147,9 +177,15 @@ export function initReveal(root: HTMLElement): () => void {
     unsubscribe();
     start?.kill();
     tween.kill();
-    // Back to the stylesheet — which, with the attribute still set, is home
-    // rather than hidden. A teardown mid-flight leaves the copy readable.
-    gsap.set(chars, { clearProps: "transform" });
+    /* Back to the stylesheet — which, with the attribute still set, is home
+       rather than hidden. A teardown mid-flight leaves the copy readable.
+
+       ALL of them, not just this tween's: the park above reaches every letter
+       in the section, so a teardown that cleared only the title's would leave
+       the corner mark and the cardboard copy under masks this function put
+       them behind. The other two inits clear their own as well, which is
+       harmless — clearProps on a letter already handed back does nothing. */
+    gsap.set(all, { clearProps: "transform" });
   };
 }
 
@@ -160,10 +196,13 @@ export function initReveal(root: HTMLElement): () => void {
  * the whole top-left corner of the hero is one cascade rather than three things
  * that each start when their own code happens to run.
  *
- * The letters are parked by the fromTo's own immediate render, in the same task
- * initReveal set data-reveal — Stage.tsx calls the two together, and nothing is
- * painted in between. The dots are parked by the stylesheet instead, since they
- * carry a clip-path rather than a transform and an inline value simply wins.
+ * The letters are already under their masks before this runs: initReveal parks
+ * every .char in the section inline, ahead of the attribute that releases the
+ * stylesheet's hold on them, and Stage.tsx calls it first for exactly that
+ * reason. All this adds is the tween. The dots are parked by the stylesheet
+ * instead, on a rule of their own that no attribute lifts — they carry a
+ * clip-path rather than a transform, and the fromTo's inline value simply wins
+ * when it lands.
  */
 export function initCornerMark(root: HTMLElement): () => void {
   const el = root.querySelector<HTMLElement>(".corner-mark");
@@ -174,7 +213,8 @@ export function initCornerMark(root: HTMLElement): () => void {
   if (!perf && !chars.length) return () => {};
 
   /* Nothing to undo: the stylesheet only parks the dots where motion is
-     welcome, and the attribute initReveal has already set has the letters
+     welcome, and initReveal takes the same branch a moment before this one —
+     it hands its own park back and leaves every letter in the section
      standing. Asked for less motion, the mark is simply there. */
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     return () => {};
@@ -202,7 +242,10 @@ export function initCornerMark(root: HTMLElement): () => void {
   if (chars.length) {
     tl.fromTo(
       shuffle(chars),
-      { yPercent: REVEAL.HIDDEN },
+      /* `y: 0` alongside it, the same guard initReveal's park carries: the
+         `from` pose then means HIDDEN and not "HIDDEN on top of whatever the
+         stylesheet had", whichever of the two got here first. */
+      { y: 0, yPercent: REVEAL.HIDDEN },
       {
         yPercent: 0,
         duration: REVEAL.DURATION,
@@ -248,8 +291,9 @@ export function initCopyReveal(root: HTMLElement): () => void {
   const chars = Array.from(el.querySelectorAll<HTMLElement>(".char"));
   if (!chars.length) return () => {};
 
-  // The attribute (set by initReveal) has already released the letters; with
-  // reduced motion asked for, released — standing, readable — is the reveal.
+  // initReveal takes the same branch a moment before this one and hands its
+  // park back, leaving every letter in the section standing; with reduced
+  // motion asked for, standing — readable — is the reveal.
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     return () => {};
   }
@@ -263,19 +307,29 @@ export function initCopyReveal(root: HTMLElement): () => void {
      shuffled — the reveal walks down the copy at the scroll's pace and
      sparkles as it goes.
 
-     Same rise, ease and hidden figure as the title, so the two are one voice;
-     immediateRender parks the letters at HIDDEN in the same task that the
-     attribute freed them, so nothing paints in between. */
+     Same rise, ease and hidden figure as the title, so the two are one voice.
+     The letters are already under their masks when this is built — initReveal
+     parks every .char in the section before it releases the stylesheet's hold
+     — so these fromTos change nothing on their immediate render, which is what
+     makes it safe for them to be built at any point after it. */
   const SPREAD = 1; // the walk down the copy, in timeline-time
   const JITTER = 0.35; // the local shuffle, as a fraction of that
-  const tops = chars.map((c) => c.getBoundingClientRect().top);
+
+  /* WHICH LINE A LETTER IS ON, measured off the .clip and never the .char.
+     The clip holds the letter's place in the line and does not move; the char
+     is the thing being translated, and it is sitting a full height and a third
+     below its line right now — asking it where it is would be asking about the
+     park rather than about the copy. bodyLines() in bodyReveal.ts makes the
+     same distinction and its note is the long version. */
+  const boxOf = (c: HTMLElement) => c.parentElement ?? c;
+  const tops = chars.map((c) => boxOf(c).getBoundingClientRect().top);
   const minTop = Math.min(...tops);
   const rowSpan = Math.max(Math.max(...tops) - minTop, 1);
   const tl = gsap.timeline({ paused: true });
   chars.forEach((c, i) => {
     tl.fromTo(
       c,
-      { yPercent: REVEAL.HIDDEN },
+      { y: 0, yPercent: REVEAL.HIDDEN },
       { yPercent: 0, duration: REVEAL.DURATION, ease: REVEAL.EASE },
       ((tops[i] - minTop) / rowSpan) * SPREAD + Math.random() * SPREAD * JITTER
     );

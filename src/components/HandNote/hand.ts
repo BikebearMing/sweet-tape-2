@@ -28,6 +28,22 @@
  *
  * Scoped to `root` and released by the returned cleanup, so StrictMode's double
  * mount rebuilds rather than stacking a second note on the first.
+ *
+ * FIVE THINGS ARE EXPORTED THAT USED TO BE PRIVATE — setCopy, park, unpark,
+ * write and DRAW — and it is worth saying why rather than leaving it to be
+ * noticed. The product row's hover cue (PickYourPlayer/cue.ts) writes "click
+ * me!" beside a roll in the same hand, and everything about that note is this
+ * note except WHAT RELEASES IT: this one is written once when it is scrolled to
+ * and left standing, and that one is written on every hover and taken away on
+ * every leave. That is a different `initOne` and nothing else. Copying the
+ * setting, the masking and the timeline over to get a different trigger would be
+ * two implementations of one hand, and the day the alphabet is re-exported only
+ * one of them would be corrected.
+ *
+ * So the DRAWING is shared and the RELEASE is not. Nothing exported here knows
+ * about an element's placement, its colour or its cue — all three arrive as
+ * arguments — which is what keeps this file the note it always was rather than a
+ * library with a note in it.
  */
 import gsap from "gsap";
 
@@ -122,7 +138,7 @@ const SET = {
  * the next one starts before the last has finished. That is the difference
  * between ruling a line and writing, and it is the model the lab settled on;
  * PER and OVERLAP are its figures. */
-const DRAW = {
+export const DRAW = {
   RULE: 0.75, // both ruled strokes, end to end
   LIFT: 0.14, // the pen off the page between the margin and the first word
 
@@ -199,7 +215,7 @@ let seq = 0;
    in some engines, and the extra unit of offset keeps the pen off the page until
    the tween moves it. On a mask path that dot is worse than a stray mark — it is
    a speck of the letter showing through before the pen has touched down. */
-function park(path: SVGPathElement): void {
+export function park(path: SVGPathElement): void {
   const len = path.getTotalLength();
   path.style.strokeDasharray = `${len} ${len + 2}`;
   path.style.strokeDashoffset = `${len + 1}`;
@@ -209,14 +225,14 @@ function park(path: SVGPathElement): void {
    which stands in ink rather than being written. The dash has to GO rather than
    be set to zero — a mask path parked behind its own length hides the letter
    completely, so a note left parked is a note that is simply not there. */
-function unpark(path: SVGPathElement): void {
+export function unpark(path: SVGPathElement): void {
   path.style.strokeDasharray = "none";
   path.style.strokeDashoffset = "0";
 }
 
 /* Lay a set of paths end to end on the timeline at a constant pen speed, and
    return the time the last one finishes at. */
-function write(
+export function write(
   tl: gsap.core.Timeline,
   paths: SVGPathElement[],
   at: number,
@@ -256,7 +272,7 @@ function el<K extends keyof SVGElementTagNameMap>(
  *          what the timeline staggers, and the inner one is a glyph that takes
  *          more than one pass of the pen.
  */
-function setCopy(
+export function setCopy(
   mount: HTMLElement,
   lines: string[],
   glyphs: Map<string, Glyph>,

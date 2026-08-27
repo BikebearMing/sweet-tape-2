@@ -131,21 +131,28 @@ export function initRollingReveal(root: HTMLElement): () => void {
   const tag = root.querySelector<HTMLElement>(".rolling-tag");
   if (!chars.length && !tag) return () => {};
 
-  /* Hand the letters over from the stylesheet.
+  /* PARKED INLINE FIRST, AND THE ATTRIBUTE SECOND. Hero/reveal.ts carries the
+   * long version of this and it is the same manoeuvre here.
    *
-   * global.css holds them under their masks until this attribute lands, and
-   * setting it first is what makes the tween's numbers mean what they say: GSAP
-   * reads the computed transform as its starting point, and a percentage
-   * translate coming from CSS is reported as resolved px — which GSAP would then
-   * ADD to the yPercent below, leaving every letter parked a full height low.
-   * With the attribute on, the computed transform is `none` and GSAP owns the
-   * whole value.
+   * global.css holds these letters under their masks until data-reveal lands.
+   * The attribute used to go first, because GSAP reads the computed transform
+   * as its starting point and a percentage translate coming from CSS is
+   * reported as resolved px — 130% on top of a CSS 130% renders at 260%. `y: 0`
+   * writes that px half explicitly rather than inheriting it, so this set means
+   * HIDDEN whether the stylesheet's park is still applied or already lifted.
    *
-   * IT LIFTS THE TAG'S PARK TOO, and that one is not a transform: the chip is
+   * Which is what lets it run BEFORE the hand-off. An inline transform outranks
+   * the rule, so the attribute below lifts a park that is no longer holding
+   * anything, and there is no instant — paint or no paint, and whatever throws
+   * further down — in which the headline is standing before its entrance.
+   *
+   * THE TAG IS PARKED HERE TOO, and that one is not a transform: the chip is
    * held at opacity 0 by the same attribute, because a flip that begins from a
-   * standing chip is a chip that jumps to edge-on and then turns. Nothing paints
-   * in between either way — the attribute and both fromTos happen in the same
-   * task, and a fromTo renders its `from` immediately even when paused. */
+   * standing chip is a chip that jumps to edge-on and then turns. autoAlpha is
+   * an absolute value with no CSS half to be added to, so it needs no `y: 0` of
+   * its own — only the same place in the order. */
+  if (chars.length) gsap.set(chars, { y: 0, yPercent: REVEAL.HIDDEN });
+  if (tag) gsap.set(tag, { autoAlpha: 0 });
   root.dataset.reveal = "live";
 
   /* WHEN THE HEADLINE IS DONE, published for the note to wait on.
@@ -186,9 +193,12 @@ export function initRollingReveal(root: HTMLElement): () => void {
   );
 
   /* Thirteen letters flying in from nowhere and a chip turning over are exactly
-     what the setting is asking about. The attribute alone has already put both
-     where they belong. */
+     what the setting is asking about. What is wanted is both standing, so the
+     parks above are handed straight back — under a live attribute the
+     stylesheet's home for them is where they belong. */
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (chars.length) gsap.set(chars, { clearProps: "transform" });
+    if (tag) gsap.set(tag, { clearProps: "opacity,visibility" });
     return () => {};
   }
 
@@ -198,7 +208,9 @@ export function initRollingReveal(root: HTMLElement): () => void {
   const title = chars.length
     ? gsap.fromTo(
         shuffle(chars),
-        { yPercent: REVEAL.HIDDEN },
+        /* `y: 0` for the reason the park above carries it — the `from` pose
+           means HIDDEN and not "HIDDEN on top of whatever CSS had". */
+        { y: 0, yPercent: REVEAL.HIDDEN },
         {
           yPercent: 0,
           duration: REVEAL.DURATION,

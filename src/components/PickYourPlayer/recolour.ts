@@ -63,12 +63,16 @@ export const PICK_WASH = {
   SHEET: 0.55,
   SHEET_EASE: "power2.out",
 
-  /* The leading edge's curve, as a fraction of the section's height and then
-     capped. The slider's own numbers are 0.22 and 240px; this section is
-     shorter and a curve that deep would read as a circle passing over the page
-     rather than as a sheet with a rounded edge. */
-  ARC: 0.16,
-  ARC_MAX: 220,
+  /* THE LEADING EDGE'S DEPTH, AS THE ARTWORK'S OWN PROPORTION OF THE WIDTH.
+     150.5 / 1456, which is --curve-depth in global.css arrived at in px — the
+     one figure every curve on the site is drawn to.
+
+     It was 0.16 of the section's HEIGHT, capped at 220px, against the slider's
+     0.22 and 240. Two sections, two depths, both of them a fraction of a box
+     that has nothing to do with the shape; that is why this edge and the edge
+     of the sheet it was passing over never looked like the same line. The shape
+     itself is --section-curve and the mask geometry is .arc-cut. */
+  ARC_RATIO: 150.5 / 1456,
 
   /* A beat after the letters start dropping, so the sheet is not already
      changing the ground while the ink is still standing on it. */
@@ -351,12 +355,15 @@ export function initPickRecolour(root: HTMLElement): PickRecolour {
        cut for the old size leaves a wedge of the old colour in the corners. It
        is two rects on a pointer crossing, which is nothing. */
     const box = wash!.getBoundingClientRect();
-    const depth = Math.min(box.height * PICK_WASH.ARC, PICK_WASH.ARC_MAX);
+    const depth = box.width * PICK_WASH.ARC_RATIO;
     /* Taller than the section by the arc's depth, and the reason is the arc: the
        edge has to finish `depth` BELOW the bottom or its shallow ends leave
        wedges of the old colour in the two corners. The +2 is for the subpixel. */
     const travel = box.height + depth + 2;
-    const curve = `0 0 50% 50% / 0 0 ${depth}px ${depth}px`;
+    /* How deep the mask lays the curve's strip. .arc-cut owns the shape and
+       falls back to --curve-depth; that default is right for a box the height of
+       the section and wrong for these two, which are taller than it on purpose. */
+    const curve = `${depth}px`;
 
     /* HOW FAR DOWN THE SECTION THE RISE STARTS. The rise's own sheet is offset
        by this, which is the whole trick that makes the two arcs one line: both
@@ -367,18 +374,18 @@ export function initPickRecolour(root: HTMLElement): PickRecolour {
 
     next!.style.height = `${travel}px`;
     next!.style.background = p.bg;
-    next!.style.borderRadius = curve;
+    next!.style.setProperty("--arc-h", curve);
     next!.style.transform = `translateY(${-travel}px)`;
 
     /* THE SAME BOX WIDTH AS THE GROUND'S SHEET, which is what makes the two
-       arcs the same arc: a percentage corner radius resolves against the
-       element's own width, and this one's parent is a page-width and a bit
-       wider than the section. See .pick-rise-next in global.css. */
+       curves the same curve: the mask's strip is stretched to the box it is on,
+       and this one's parent is a page-width and a bit wider than the section.
+       See .pick-rise-next in global.css. */
     riseNext!.style.width = `${box.width}px`;
     riseNext!.style.marginLeft = `${-box.width / 2}px`;
     riseNext!.style.height = `${travel}px`;
     riseNext!.style.background = p.rise;
-    riseNext!.style.borderRadius = curve;
+    riseNext!.style.setProperty("--arc-h", curve);
     riseNext!.style.transform = `translateY(${-travel - riseTop}px)`;
 
     const state = { p: 0 };

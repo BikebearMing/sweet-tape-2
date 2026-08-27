@@ -115,7 +115,7 @@ export default function AboutCta() {
           page's own sheet, seen past the curve; and the curtain drifts inside
           it, which needs a box with an edge to be cropped by. See --cta-arc and
           --cta-drift in global.css. */}
-      <div className="about-cta-sheet">
+      <div className="about-cta-sheet arc-cut">
         {/* THE CURTAIN. An element rather than a background-image, and the
             parallax is the whole reason: a background can be positioned but it
             cannot be given a transform of its own, and the drift has to be a

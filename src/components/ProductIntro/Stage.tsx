@@ -27,10 +27,12 @@ import { initProductRoll } from "./roll";
 export default function Stage({
   children,
   model,
+  clarity,
   style,
 }: {
   children: ReactNode;
   model: string;
+  clarity?: number;
   style?: CSSProperties;
 }) {
   const ref = useRef<HTMLElement>(null);
@@ -49,7 +51,18 @@ export default function Stage({
   }, []);
 
   return (
-    <section ref={ref} className="product-intro" data-model={model} style={style}>
+    /* THE TAPE ARRIVES AS TWO ATTRIBUTES AND NOT AS PROPS OF roll.ts, which is
+       the seam every 3D section on this site is built on: roll.ts is plain DOM
+       and is handed the section, not a tape. `data-clarity` is omitted rather
+       than written as 0 when a tape has none, so the attribute's absence and a
+       solid roll are the same thing all the way down. */
+    <section
+      ref={ref}
+      className="product-intro"
+      data-model={model}
+      data-clarity={clarity}
+      style={style}
+    >
       {children}
     </section>
   );

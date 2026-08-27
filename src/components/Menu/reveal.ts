@@ -94,11 +94,10 @@ export const MENU_TAB = {
   EASE: "back.out(1.9)",
 };
 
-/* Returns a teardown. Parked by the stylesheet until the gate clears, and
-   handed over in the task that clears it: whenRevealed fires synchronously
-   there, and a fromTo renders its `from` immediately even with a delay on it,
-   so the computed transform is `none` by the time GSAP reads it and there is no
-   frame in which the tab is anywhere unintended. */
+/* Returns a teardown. Parked by the stylesheet from the first byte and taken
+   over by an inline transform at mount, so the sweep clears a rule that is no
+   longer holding anything — see the note on the set below, and TopBand's badge,
+   which is the same hand-over on the same attribute. */
 export function initTabEntrance(root: HTMLElement): () => void {
   const tab = root.querySelector<HTMLElement>(".menu-tab");
   if (!tab) return () => {};
@@ -116,11 +115,31 @@ export function initTabEntrance(root: HTMLElement): () => void {
      On for the arrival only, which is why it is a class and not a rule. */
   tab.classList.add("is-arriving");
 
+  /* HELD FROM HERE, not from the gate. The stylesheet's park hangs off
+   * data-loading — the tab sits ON the viewport's edge and cannot be uncovered
+   * by the sweep passing over it, so it is the sweep that releases it rather
+   * than a reveal attribute. And release() clears data-loading one statement
+   * before it announces itself: a tab parked only inside the callback below
+   * spends that gap held up by nothing, and any frame landing in it shows the
+   * tab already sitting in the corner a moment before it drops in.
+   *
+   * This closes the gap by holding it at both ends — the stylesheet up to this
+   * line, an inline transform from this line on. `y: 0` is what makes the value
+   * safe to write while the CSS park is still applied: GSAP reads a percentage
+   * translate out of the stylesheet as resolved px and would otherwise add its
+   * own yPercent on top of it, which is a tab parked twice as far up as it
+   * should be.
+   *
+   * After the reduced-motion return above, deliberately — that park is inside a
+   * no-preference media query, so a reader who asked for less motion never had
+   * the tab lifted and must not be handed one hanging off the top edge. */
+  gsap.set(tab, { y: 0, yPercent: MENU_TAB.HIDDEN });
+
   let tween: gsap.core.Tween | null = null;
   const unsubscribe = whenRevealed(() => {
     tween = gsap.fromTo(
       tab,
-      { yPercent: MENU_TAB.HIDDEN },
+      { y: 0, yPercent: MENU_TAB.HIDDEN },
       {
         yPercent: 0,
         duration: MENU_TAB.DURATION,

@@ -1,5 +1,11 @@
 /* Sweet Tape — the contact page arriving: the chip turns, the line writes
- * itself, the paper is laid down and the note is stuck on it.
+ * itself and the paper is laid down.
+ *
+ * THE NOTE IS NOT IN ANY OF IT. It is already stuck to the board when the cover
+ * lifts, fluttering from the first frame — the one object on the page that is
+ * not put there by this file. It was given the paper's blur-up while the two
+ * were one gesture, and the gesture was wrong: a note that arrives is a note
+ * being placed, and this one is meant to have been there all along.
  *
  * PLAYED OFF THE COVER AND NOT OFF THE SCROLL, which is the rule every opening
  * screen on this site follows and the reason none of them uses a ScrollTrigger:
@@ -18,11 +24,11 @@
  *
  * ALMOST NOTHING HERE IS NEW. The letters are the hero's — same duration, same
  * ease, same hidden figure, same shuffle. The chip's turn is the news index's
- * title card's, imported whole. The paper and the note resolve out of a blur:
- * parked at nothing, a little low and out of focus, arriving in place. They are
- * rectangles rather than type, and rectangles do not get the letter treatment —
- * nine of them doing it at once is nine arrivals competing, which is the
- * argument NewsIndex/reveal.ts makes about its wall.
+ * title card's, imported whole. The paper resolves out of a blur: parked at
+ * nothing, a little low and out of focus, arriving in place. It is a rectangle
+ * rather than type, and rectangles do not get the letter treatment — nine of
+ * them doing it at once is nine arrivals competing, which is the argument
+ * NewsIndex/reveal.ts makes about its wall.
  *
  * THAT BLUR-UP WAS THE INDEX'S AND IS NOW THIS PAGE'S. It was imported from
  * NewsIndex/reveal.ts while the two were one entrance; the index's cards have
@@ -33,11 +39,11 @@
  * What is this page's besides is the ORDER, which is below.
  *
  * THE ORDER IS THE ORDER THE THING WAS MADE IN. The label goes on, the line is
- * written, the paper is laid over it, and the note is stuck to the paper last —
- * so the screen assembles the way a hand would have assembled it. The two later
- * beats overlap what they follow rather than queueing behind it: waiting for
- * each move to finish before starting the next put the last of it near three
- * seconds out, which is a page being watched rather than a page arriving.
+ * written, and the paper is laid over it — so the screen assembles the way a
+ * hand would have assembled it. The later beats overlap what they follow rather
+ * than queueing behind it: waiting for each move to finish before starting the
+ * next put the last of it near three seconds out, which is a page being watched
+ * rather than a page arriving.
  *
  * THE FORM IS NOT IN ANY OF IT, and that is deliberate. Five fields and a button
  * sliding in one after another is a page assembling itself in front of somebody
@@ -47,7 +53,7 @@ import gsap from "gsap";
 
 import { whenRevealed } from "@/components/Preloader/gate";
 import { REVEAL } from "../Hero/reveal";
-import { NOTE, TAG } from "../WhatsRolling/reveal";
+import { TAG } from "../WhatsRolling/reveal";
 
 export const CONTACT_REVEAL = {
   /* Between letters, in shuffled order. Tighter than the hero's 0.025 — this is
@@ -72,17 +78,10 @@ export const CONTACT_REVEAL = {
      its headline onto its nav row for the same reason, and its note says so. */
   SHEET_AT: 0.6,
 
-  /* And the note goes on after the paper is down rather than with it, because
-     that is the one ordering on this screen that is physically true: a note is
-     stuck TO something. NOTE.GAP is the beat the title card and the story page
-     both pause for — not because this is the same gesture, but because it is
-     the same PAUSE, and a site with two ideas of how long a beat is stutters. */
-  NOTE_GAP: NOTE.GAP,
-
-  /* THE PAPER AND THE NOTE ARRIVING — parked at nothing, a little low and out of
-     focus, resolving in place. It is the entrance the news index's cards used to
-     wear, and these four numbers were imported from that file rather than
-     written here.
+  /* THE PAPER ARRIVING — parked at nothing, a little low and out of focus,
+     resolving in place. It is the entrance the news index's cards used to wear,
+     and these four numbers were imported from that file rather than written
+     here.
 
      THEY MOVED HERE WHEN THE CARDS STOPPED USING THEM. The wall now bounces up on
      a back ease instead, and a back ease is the one curve this entrance cannot
@@ -136,33 +135,46 @@ export function initContactReveal(root: HTMLElement): () => void {
   );
   const chip = root.querySelector<HTMLElement>(".contact-chip");
   const sheet = root.querySelector<HTMLElement>(".contact-sheet");
-  const note = root.querySelector<HTMLElement>(".contact-note");
   if (!title.length && !sheetChars.length && !chip) return () => {};
 
-  /* Hand everything over from the stylesheet.
+  /* PARKED INLINE FIRST, AND THE ATTRIBUTE SECOND. Hero/reveal.ts carries the
+   * long version of this and it is the same manoeuvre here.
    *
-   * global.css holds the letters under their masks until this attribute lands,
-   * and setting it first is what makes the tweens' numbers mean what they say:
-   * GSAP reads the computed transform as its starting point, and a percentage
-   * translate coming from CSS is reported as resolved px — which GSAP would
-   * then ADD to the yPercent below, leaving every letter parked a full height
-   * low. With the attribute on, the computed transform is `none` and GSAP owns
-   * the whole value.
+   * global.css holds these letters under their masks until data-reveal lands.
+   * The attribute used to go first, because GSAP reads the computed transform
+   * as its starting point and a percentage translate coming from CSS is
+   * reported as resolved px — 130% on top of a CSS 130% renders at 260%. `y: 0`
+   * writes that px half explicitly rather than inheriting it, so this set means
+   * HIDDEN whether the stylesheet's park is still applied or already lifted.
    *
-   * IT LIFTS THREE PARKS THAT ARE NOT TRANSFORMS TOO — the chip, the paper and
-   * the note are all held at opacity 0 by the same attribute. They are parked at
-   * nothing rather than under a mask for the reason the index's cards are: an
-   * entrance that begins by blurring something the reader can already see is a
-   * page correcting itself.
+   * Which is what lets it run BEFORE the hand-off. An inline transform outranks
+   * the rule, so the attribute below lifts a park that is no longer holding
+   * anything, and there is no instant — paint or no paint, and whatever throws
+   * further down — in which any of this is standing before its entrance.
    *
-   * Nothing paints in between: the attribute and every fromTo happen in the same
-   * task, and a fromTo renders its `from` immediately even when paused. */
+   * TWO OF THE PARKS ARE NOT TRANSFORMS — the chip and the paper are both held
+   * at opacity 0. They are parked at nothing rather than under a mask for the
+   * reason the index's cards are: an entrance that begins by blurring something
+   * the reader can already see is a page correcting itself. autoAlpha is an
+   * absolute value with no CSS half to be added to, so neither needs a `y: 0`
+   * of its own — only the same place in the order. The note is not among them:
+   * it is stuck to the board before the cover lifts and is never held at all. */
+  const masked = [...title, ...sheetChars];
+  if (masked.length) gsap.set(masked, { y: 0, yPercent: REVEAL.HIDDEN });
+  if (chip) gsap.set(chip, { autoAlpha: 0 });
+  if (sheet) gsap.set(sheet, { autoAlpha: 0 });
   root.dataset.reveal = "live";
 
-  /* Nineteen letters flying in from nowhere, a chip turning over and two blocks
-     resolving out of a blur are exactly what the setting is asking about. The
-     attribute alone has already put all four where they belong. */
+  /* Nineteen letters flying in from nowhere, a chip turning over and a sheet of
+     paper resolving out of a blur are exactly what the setting is asking about.
+     What is wanted is all three standing, so the parks above are handed straight
+     back — under a live attribute the stylesheet's home for them is where they
+     belong. */
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (masked.length) gsap.set(masked, { clearProps: "transform" });
+    for (const el of [chip, sheet]) {
+      if (el) gsap.set(el, { clearProps: "opacity,visibility" });
+    }
     return () => {};
   }
 
@@ -170,27 +182,27 @@ export function initContactReveal(root: HTMLElement): () => void {
     chars.length
       ? gsap.fromTo(
           shuffle(chars),
-          { yPercent: REVEAL.HIDDEN },
+          /* `y: 0` for the reason the park above carries it — the `from` pose
+             means HIDDEN and not "HIDDEN on top of whatever CSS had". */
+          { y: 0, yPercent: REVEAL.HIDDEN },
           {
             yPercent: 0,
             duration: REVEAL.DURATION,
             stagger,
             ease: REVEAL.EASE,
             /* Built parked and played on the cue. Paused costs the letters
-               nothing: a fromTo renders its `from` immediately either way,
-               which is what keeps them under their masks with nothing painted
-               in between (see the attribute above). */
+               nothing: they were put under their masks by the set above, and a
+               fromTo renders its `from` immediately either way. */
             paused: true,
           },
         )
       : null;
 
-  /* The paper and the note arriving — parked at nothing, a tenth of their own
-     height low and out of focus, resolving in place. CONTACT_REVEAL above argues
-     every one of these numbers, including why the filter is cleared at the end
-     rather than left at blur(0px): a declared filter keeps the element on its own
-     compositor layer for the rest of the page's life, and one of these two is a
-     1076px sheet. */
+  /* The paper arriving — parked at nothing, a tenth of its own height low and
+     out of focus, resolving in place. CONTACT_REVEAL above argues every one of
+     these numbers, including why the filter is cleared at the end rather than
+     left at blur(0px): a declared filter keeps the element on its own compositor
+     layer for the rest of the page's life, and this is a 1076px sheet. */
   const block = (el: HTMLElement | null) =>
     el
       ? gsap.fromTo(
@@ -215,7 +227,6 @@ export function initContactReveal(root: HTMLElement): () => void {
   const head = letters(title, CONTACT_REVEAL.STAGGER);
   const sub = letters(sheetChars, CONTACT_REVEAL.SHEET_STAGGER);
   const paper = block(sheet);
-  const stuck = block(note);
 
   /* The chip's turn, imported whole from the title card — see the note at the
      top of this file, and TAG in WhatsRolling/reveal.ts for what every one of
@@ -245,9 +256,9 @@ export function initContactReveal(root: HTMLElement): () => void {
      where they were. */
   const headSpan = spanOf(title.length, CONTACT_REVEAL.STAGGER);
   const sheetAt = REVEAL.DELAY + CONTACT_REVEAL.SHEET_AT * headSpan;
-  /* The paper is down, so what is written on it may be written and what is
-     stuck to it may be stuck on. The heading needs the blur off before its
-     letters start, or they slide up through a sheet that is still resolving. */
+  /* The paper is down, so what is written on it may be written. The heading
+     needs the blur off before its letters start, or they slide up through a
+     sheet that is still resolving. */
   const landed = sheetAt + CONTACT_REVEAL.BLOCK_DURATION;
 
   /* delayedCalls rather than the tweens' own delays, for the reason the hero
@@ -264,24 +275,21 @@ export function initContactReveal(root: HTMLElement): () => void {
     at(TAG.DELAY, flip);
     at(sheetAt, paper);
     at(landed, sub);
-    at(landed + CONTACT_REVEAL.NOTE_GAP, stuck);
   });
 
   return () => {
     unsubscribe();
     starts.forEach((s) => s.kill());
-    [head, sub, paper, stuck, flip].forEach((t) => t?.kill());
+    [head, sub, paper, flip].forEach((t) => t?.kill());
     /* A teardown mid-arrival must leave the page readable — both headings
-       standing, the chip face on, and the paper and the note in focus and
-       visible. Back to the stylesheet, which with the attribute still set is
-       home rather than hidden. */
+       standing, the chip face on, and the paper in focus and visible. Back to
+       the stylesheet, which with the attribute still set is home rather than
+       hidden. */
     if (title.length) gsap.set(title, { clearProps: "transform" });
     if (sheetChars.length) gsap.set(sheetChars, { clearProps: "transform" });
     if (chip) gsap.set(chip, { clearProps: "transform,opacity,visibility" });
-    for (const el of [sheet, note]) {
-      if (el) {
-        gsap.set(el, { clearProps: "transform,opacity,visibility,filter" });
-      }
+    if (sheet) {
+      gsap.set(sheet, { clearProps: "transform,opacity,visibility,filter" });
     }
   };
 }

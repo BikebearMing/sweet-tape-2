@@ -78,11 +78,20 @@ export default function Hero() {
 
       <div className="hero-wrapper">
         <div className="top">
+          {/* THE LIME FIELD, AND THE CURVE ALONG ITS FOOT. A sheet of its own
+              rather than a background on .top, because the shape is a mask now
+              and a mask clips the box it is on at every edge — the badge that
+              drops in from above the fold and the tape torn across the field
+              both have to be free to leave. It carries the paper as well, so
+              the texture stops at the curve instead of running on over the
+              green in the corners. See .arc-foot in global.css. */}
+          <div className="arc-foot" data-paper aria-hidden="true" />
+
           {/* The corner mark, out of flow in the lime field's top-left. After
-              .top's grain in source, which is what keeps it over the texture —
-              positioned siblings paint in tree order and the grain is a
-              positioned ::before. .title holds itself above the same layer the
-              same way, with position: relative.
+              the lime sheet in source, which is what keeps it over the texture —
+              positioned siblings paint in tree order and the sheet is one.
+              .title holds itself above the same layer the same way, with
+              position: relative.
 
               Split to letters and given an arrival of its own — the
               perforation is punched down the edge and the two lines write

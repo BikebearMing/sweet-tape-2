@@ -2,6 +2,8 @@
 
 import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
 
+import { initHandNote } from "@/components/HandNote/hand";
+
 import { initConveyor } from "./belt";
 
 /* The section's only client component — the same thin boundary the band, the
@@ -38,7 +40,31 @@ export default function Stage({ children }: { children: ReactNode }) {
   useEffect(() => {
     const root = ref.current;
     if (!root) return;
-    teardown.current = initConveyor(root);
+
+    /* THE ROLL PILL'S NOTE IS WRITTEN BY THE SAME PEN as the board's and the
+     * opening screen's, and like both of those the section that carries one is
+     * what starts it — initHandNote scans this root for .hand-note and builds
+     * each one it finds on its own IntersectionObserver.
+     *
+     * IT FINDS THREE, and that is correct rather than a leak. The row is printed
+     * REPEAT times (see components/Conveyor), so there are three copies of the
+     * pill on the belt and each has to be able to write when ITS OWN copy comes
+     * past the window — a single build shared between them would leave two
+     * ruled corners with nothing beside them. Only the first is in the
+     * accessibility tree; the other two are marked decorative in the markup.
+     *
+     * NOTHING WAITS ON THE BELT. The note is released by being seen, which on a
+     * row that travels is exactly the beat wanted: the pen touches down as the
+     * pill arrives from the right rather than on a clock the belt knows nothing
+     * about. So this is a plain second init beside the first and not something
+     * belt.ts has to hand off to. */
+    const stop_note = initHandNote(root);
+    const stop_belt = initConveyor(root);
+
+    teardown.current = () => {
+      stop_belt();
+      stop_note();
+    };
     return () => {
       teardown.current?.();
       teardown.current = null;

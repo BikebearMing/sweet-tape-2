@@ -21,6 +21,7 @@ import {
   DirectionalLight,
   Group,
   Mesh,
+  MeshPhysicalMaterial,
   MeshStandardMaterial,
   NoToneMapping,
   PMREMGenerator,
@@ -31,6 +32,8 @@ import {
   WebGLRenderer,
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+import { applyFilm, classify, cutMaps, disposeMaps, FILM } from "./film";
 
 const FOV = 35;
 /* Mouse parallax. Applied to the stage the flip groups hang off — NOT to the
@@ -46,6 +49,7 @@ const FOV = 35;
    it left, which is what the eye expects from a thing sitting in a scene. */
 const MAX_YAW = 0.3; // rad at full deflection, ~17deg
 const MAX_PITCH = 0.2; // ~11deg; less than the yaw, as a head moves less vertically
+
 /* World units — the roll is ~1.0 across inside a canvas 1.3 wide, so there is
    0.15 of margin each side and the yaw's own foreshortening gives a little
    back. Held under that: past it the roll starts clipping at full deflection. */
@@ -184,6 +188,82 @@ export type MaterialFinish = {
 /** Per-material overrides, keyed by the GLB's material name. `*` = all of them. */
 export type MaterialFinishes = Record<string, MaterialFinish>;
 
+/**
+ * THE SURFACE TREATMENT — procedural roughness, relief and a clear coat, and on
+ * a clear tape a see-through wound side. See components/TapeSlider/film.ts,
+ * which is where all of it lives and where every knob is.
+ *
+ * OPTIONAL, AND THE ABSENCE OF IT IS THE HOME PAGE. The slider's orbit does not
+ * pass this, so its six rolls render off the export exactly as they always
+ * have; the product pages do. That is not a staging decision waiting to be
+ * finished — the two stages want different things. The orbit is six rolls at
+ * 7vw being swapped between, where a grain nobody can resolve is three extra
+ * texture fetches per model and a second shader program; the product page is
+ * one roll at half the screen, turned slowly, and it is the only page where the
+ * roll is the subject rather than the choice.
+ */
+export type ViewerFilm = {
+  /**
+   * HOW SEE-THROUGH THIS TAPE'S WOUND SIDE IS, 0..1, and 0 is a solid roll.
+   *
+   * It is per TAPE rather than a constant here because it is a fact about the
+   * product: cellophane is clear, masking tape is paper, cloth tape is cloth.
+   * The value lives with the rest of the tape in src/data/tapes.ts and arrives
+   * through ProductIntro/roll.ts.
+   *
+   * ONLY EVER THE WOUND SIDE. The printed label is picked out by geometry
+   * before this is spent and is never handed it — see classify() in film.ts,
+   * and the second, independent guard in the shader patch there.
+   */
+  clarity?: number;
+};
+
+/* THE RIG THE FILM IS LIT BY, and it is a different room from the one above.
+ *
+ * LIGHT's key at 0.7 against an ambient at pi * 0.82 is a deliberately FLAT
+ * stage — see the note there: it exists so that flat artwork leaves the
+ * renderer at its own colour, which is exactly right for six thumbnails on an
+ * orbit and exactly wrong for a surface that has just been given relief. A
+ * normal map lit by ambient is a normal map nobody can see: ambient carries no
+ * direction, so it cannot catch a slope, and at pi * 0.82 it was most of the
+ * light in the scene.
+ *
+ * So the key comes up by a factor of well over two and the ambient comes down,
+ * which is what puts the tooth and the mottle on screen. The artwork survives
+ * it because the maps multiply rather than replace — the label is still the
+ * label, just lit by something with a direction in it.
+ *
+ * AND THEN THE KEY CAME BACK DOWN A LITTLE, from 1.0, which is the correction
+ * for a roll that reads as too bright. This is the right place for that and the
+ * material is not: a surface returns the light it is given, so brightness is a
+ * lighting number, and every attempt to fix it in film.ts costs the surface its
+ * character instead. Contrast is preserved rather than traded away — the ambient
+ * goes UP by the smaller step as the key comes down — so the tooth keeps a
+ * direction to catch and the roll gets darker without getting flatter.
+ *
+ * KICK is the face's own light and it is small. The label is a flat disc whose
+ * mirror direction points right and level, some ninety degrees away from the
+ * key, so it takes no highlight from it at any roughness — the wound side goes
+ * glossy and the face stays matte, which reads as a sticker on a tape rather
+ * than one object. This is aimed at where the face actually reflects, and it
+ * SLIDES across the label as the roll turns, which is the whole read: a
+ * highlight that moves when the surface turns is a highlight, and a fixed one
+ * is printed on. See FACE_LIGHT in Hero/heroTape.ts, where it was worked out.
+ *
+ * ITS POWER IS WHERE "THE LABEL IS TOO BRIGHT" IS ACTUALLY FIXED, and the
+ * reason is worth stating because the obvious fix is the wrong one. The tempting
+ * move is to roughen the label — but roughness only spreads the highlight, so a
+ * blown-out spot becomes a blown-out smear and the printed face stops looking
+ * laminated into the bargain. Less LIGHT is what makes a highlight dimmer. This
+ * is that light, it points at nothing but the face, and it is down from 0.3 by
+ * way of 0.2 for exactly that reason — with FACE_GLOSS free to go back down and
+ * make the surface plastic again.
+ *
+ * Overridable by the caller like any other: a `light` passed alongside a `film`
+ * wins over these, so a page can still say something about its own room. */
+const FILM_LIGHT: Required<ViewerLight> = { key: 0.85, ambient: 0.6, fill: 0, env: 0 };
+const KICK = { x: 2.7, y: 2.0, z: 1.0, power: 0.14 };
+
 export type TapeViewer = {
   /** True once this model is resident and can be flipped to. */
   ready(url: string): boolean;
@@ -201,9 +281,13 @@ export function createTapeViewer(
   container: HTMLElement,
   urls: string[],
   light?: ViewerLight,
-  finish?: MaterialFinishes
+  finish?: MaterialFinishes,
+  film?: ViewerFilm
 ): Promise<TapeViewer> {
-  const lit = { ...LIGHT, ...light };
+  /* The film brings its own room with it — see FILM_LIGHT. A caller that passes
+     both still wins: `light` is spread last either way, so a page can take the
+     treatment and light it its own way. */
+  const lit = { ...(film ? FILM_LIGHT : LIGHT), ...light };
   const scene = new Scene();
 
   const camera = new PerspectiveCamera(FOV, 1, 0.01, 100);
@@ -228,6 +312,15 @@ export function createTapeViewer(
   const dir = new DirectionalLight(0xffffff, lit.key);
   dir.position.set(2, 3, 4);
   scene.add(dir, new AmbientLight(0xffffff, Math.PI * lit.ambient));
+
+  /* The face's own kicker, and only where there is a film to light — see KICK.
+     Built rather than dialled to zero for the same reason the fill is: an unused
+     light is still a light every material has to be shaded against. */
+  if (film && FILM.AMOUNT > 0) {
+    const kick = new DirectionalLight(0xffffff, KICK.power);
+    kick.position.set(KICK.x, KICK.y, KICK.z);
+    scene.add(kick);
+  }
 
   /* The fill, and it is only built when it is asked for — an unused light is
      still a light every material has to be shaded against. Placed opposite and
@@ -370,6 +463,11 @@ export function createTapeViewer(
        off the scene rather than off a mesh, and it outlives the renderer. */
     envTex?.dispose();
     envTex = null;
+    /* The film's canvases, which the traverse above does not reach: it disposes
+       `map`, and these hang off roughnessMap and normalMap and are SHARED by
+       every material in the viewer, so disposing them per material would be
+       right once and a double free five times. */
+    disposeMaps();
     scene.environment = null;
     renderer.dispose();
     canvas.remove();
@@ -396,9 +494,48 @@ export function createTapeViewer(
                grazes the view — a grey sheet along the rim mid-flip on real
                GPUs. */
             const maxAniso = renderer.capabilities.getMaxAnisotropy();
+            /* Cut once for the whole viewer rather than once per material or
+               once per model: the maps are 256px of noise and six models sharing
+               one set is one upload instead of thirty. Only when there is a film
+               to wear them. */
+            const maps = film && FILM.AMOUNT > 0 ? cutMaps(maxAniso) : null;
             model.traverse((o) => {
               if ((o as Mesh).isMesh) {
-                const mat = (o as Mesh).material as MeshStandardMaterial;
+                const mesh = o as Mesh;
+                let mat = mesh.material as MeshStandardMaterial;
+
+                /* PROMOTED TO PHYSICAL, and only for the film. The loader hands
+                 * back MeshStandardMaterial for these exports — none of them
+                 * carries a KHR extension that would have three build a physical
+                 * one — and clearcoat and anisotropy are physical's alone.
+                 * Setting them on a standard material is a silent no-op: the
+                 * property lands on the object, no #define is raised, and the
+                 * shader never hears about it. That failure looks exactly like
+                 * "the coat is too subtle", which is the wrong thing to go and
+                 * tune.
+                 *
+                 * HAND-COPIED rather than through .copy(), because
+                 * MeshPhysicalMaterial.copy() reads physical fields off its
+                 * source and a standard material has none — the undefineds land
+                 * as NaN uniforms and the surface renders black. These six
+                 * fields are every one these exports actually use; the
+                 * enumeration above tape3d's FINISH notes is where that was
+                 * checked. `name` comes along because the finish overrides are
+                 * keyed on it. */
+                if (maps) {
+                  const phys = new MeshPhysicalMaterial({
+                    name: mat.name,
+                    map: mat.map,
+                    color: mat.color,
+                    roughness: mat.roughness,
+                    metalness: mat.metalness,
+                    side: mat.side,
+                  });
+                  mat.dispose();
+                  mesh.material = phys;
+                  mat = phys as unknown as MeshStandardMaterial;
+                }
+
                 if (mat.map) {
                   mat.map.anisotropy = maxAniso;
                   mat.map.needsUpdate = true;
@@ -431,6 +568,33 @@ export function createTapeViewer(
                    traded off against each other. Anything metal takes it in
                    full and the intensity is set once, at the scene. */
                 if (lit.env > 0) mat.envMapIntensity = mat.metalness > 0 ? 1 : 0;
+
+                /* AND THE FILM LAST, so it reads a material the caller has
+                   already had its say about rather than the export. */
+                if (maps) {
+                  /* WHICH SURFACE THIS IS, measured off its own geometry —
+                     see classify() in film.ts for why it is not a name. The box
+                     is the primitive's own, in the model's space, so the roll's
+                     axis is y here whatever the stage does with it later. */
+                  mesh.geometry.computeBoundingBox();
+                  const bb = mesh.geometry.boundingBox!;
+                  const size = bb.getSize(new Vector3());
+                  const surface = classify(size, (bb.min.y + bb.max.y) / 2);
+
+                  /* THE CLARITY GOES TO THE WOUND SIDE AND NOWHERE ELSE. This
+                     is the first of the two guards named in film.ts: the label
+                     is a disc and never reaches the branch that would flag it
+                     transparent. The core and the end take the finish — they
+                     are tape too, and the core is what shows THROUGH a clear
+                     wound side — but they stay solid, because a see-through
+                     core is a hole in the roll rather than a clear roll. */
+                  applyFilm(
+                    mat,
+                    maps,
+                    surface,
+                    surface === "wound" ? (film?.clarity ?? 0) : 0
+                  );
+                }
               }
             });
             // Centre on the geometry, not the export's origin — the flip has

@@ -188,7 +188,7 @@ export default function Reason() {
             by it, and .reason-wrapper cancels the sheet's own travel so that being
             carried does not mean being moved — see the pair of translates in
             global.css, which have to be read together. */}
-        <div className="reason-sheet" aria-hidden="true">
+        <div className="reason-sheet arc-cut" aria-hidden="true">
           <div className="reason-wrapper">
             <p className="subhead reason-kicker">{KICKER}</p>
 

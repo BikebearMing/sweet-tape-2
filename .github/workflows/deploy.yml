@@ -55,6 +55,16 @@ jobs:
 
       # Dokploy exposes a per-application deploy URL. It pulls :latest and
       # swaps the container. Set DOKPLOY_DEPLOY_WEBHOOK in repo secrets.
+      #
+      # Skips rather than fails when the secret is unset, so the image still
+      # builds and publishes before the Dokploy side exists. A red run here
+      # would say the build broke when it didn't.
       - name: Trigger Dokploy deploy
-        if: ${{ github.event_name != 'pull_request' }}
-        run: curl -fsSL -X POST "${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}"
+        env:
+          WEBHOOK: ${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}
+        run: |
+          if [ -z "$WEBHOOK" ]; then
+            echo "DOKPLOY_DEPLOY_WEBHOOK not set — image published, deploy not triggered."
+            exit 0
+          fi
+          curl -fsSL -X POST "$WEBHOOK"

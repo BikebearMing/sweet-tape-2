@@ -3,6 +3,8 @@ import { getPayload } from "payload";
 import config from "@/payload.config";
 import type { News as NewsDoc } from "@/payload-types";
 
+import { withVersion } from "./media-url";
+
 /* Sweet Tape — what the newsroom has in it.
  *
  * THE SEAM, NOW PLUGGED IN. This file used to hold the stories themselves and
@@ -86,15 +88,6 @@ const MONTHS = [
   "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
   "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
 ];
-
-/** Hangs the record's own updatedAt off the URL as a version, so replacing a
- *  file busts every cached copy of it. Base 36 to keep it short; it is an
- *  opaque token and nothing reads it back. */
-function withVersion(url: string, updatedAt: string): string {
-  const v = Date.parse(updatedAt);
-  if (Number.isNaN(v)) return url;
-  return `${url}${url.includes("?") ? "&" : "?"}v=${v.toString(36)}`;
-}
 
 /* One Payload document, as the components have always expected a story.
  *

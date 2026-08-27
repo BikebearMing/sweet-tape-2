@@ -23,6 +23,21 @@
  * and stickyNote.ts redraws on document.fonts.ready — so this has to be a pure
  * function of the module's constants and nothing else. No caching, no state.
  *
+ * THE WRITING ARRIVES AS AN ARGUMENT AND IS NOT IMPORTED, which is the one
+ * thing that changed when the page moved into the CMS. This module is reached
+ * from a client component, and the module that reads the CMS pulls the Postgres
+ * adapter in with it — so the address cannot be fetched anywhere near here. It
+ * is read on the server, handed to Stage as a prop, and arrives as a parameter.
+ * That also keeps the purity this file needs (see above): the drawing is a
+ * function of its argument, so a redraw on document.fonts.ready draws the same
+ * face rather than whatever a module-level cache happens to hold.
+ *
+ * TWO STRINGS AND NOT THE WHOLE RECORD. What the page holds is a label and an
+ * href for each of the two, and an href is not written on the paper — it is
+ * what a browser dials. Taking only what is drawn is what lets the caller's
+ * effect depend on exactly these two and rebuild the sheet when one of them
+ * changes, rather than whenever the record it came in on was rebuilt.
+ *
  * IT IMPORTS noteFace.ts AND NEVER stickyNote.ts, which matters more than it
  * looks: this file is reached by a static import from the page's client
  * component, so anything it pulls in lands in the main bundle. Reaching into
@@ -30,7 +45,6 @@
  * of loading the engine dynamically.
  */
 import { noteCanvas, type NoteFace } from "@/components/Hero/noteFace";
-import { CONTACT } from "@/data/contact";
 
 /* The note's own palette, and it is the note's OWN — the one place on the site
    that is not written in the page's ink.
@@ -153,8 +167,11 @@ function rule(g: CanvasRenderingContext2D, y: number, W: number) {
   g.globalAlpha = 1;
 }
 
+/** What is written on the note: the two values, as they are read. */
+export type NoteWriting = { email: string; phone: string };
+
 /** The face, drawn fresh. Pure — see the note at the top of the file. */
-export function drawContactFace(): HTMLCanvasElement {
+export function drawContactFace(writing: NoteWriting): HTMLCanvasElement {
   /* 1024 rather than the placeholder's 512: this face carries a twenty-
      character address at a tenth of the sheet's width, where the hero's carries
      three short phrases, and small type is the only thing on a texture that
@@ -171,8 +188,8 @@ export function drawContactFace(): HTMLCanvasElement {
   g.fillRect(0, 0, W, H);
 
   const blocks = [
-    { tag: "EMAIL", value: CONTACT.email.label },
-    { tag: "PHONE", value: CONTACT.phone.label },
+    { tag: "EMAIL", value: writing.email },
+    { tag: "PHONE", value: writing.phone },
   ];
 
   blocks.forEach(({ tag, value }, i) => {
@@ -193,5 +210,12 @@ export function drawContactFace(): HTMLCanvasElement {
 
 /* The face as stickyNote.ts wants it. url: null and not omitted — omitting it
    would be indistinguishable from "I forgot", and what is meant here is that
-   this note has NO artwork waiting to supersede the drawing and never will. */
-export const CONTACT_FACE: NoteFace = { draw: drawContactFace, url: null };
+   this note has NO artwork waiting to supersede the drawing and never will.
+
+   A FUNCTION NOW RATHER THAN A CONSTANT, because the words on the paper are the
+   CMS's and a constant would have had to be built before they arrived. Called
+   once on mount with what the server read; the closure is what carries the
+   details into the redraw, which is where a pure `draw()` needed them. */
+export function contactFace(writing: NoteWriting): NoteFace {
+  return { draw: () => drawContactFace(writing), url: null };
+}

@@ -9,6 +9,7 @@ import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
 import { Tapes } from "./collections/Tapes";
 import { News } from "./collections/News";
+import { Contact } from "./globals/Contact";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -33,21 +34,38 @@ export default buildConfig({
        the listening half and explains why it refreshes rather than re-rendering
        from client state.
        
-       Only news has one. A preview is a URL a document can be seen at, and
-       tapes has no page of its own — the rolls are drawn by the slider on the
-       home page, not addressed individually. Giving it a preview pane would
-       mean pointing every roll at "/" and calling it a preview of the edit. */
+       NEWS AND CONTACT HAVE ONE; TAPES STILL DOES NOT. A preview is a URL a
+       document can be seen at, and tapes has no page of its own — the rolls are
+       drawn by the slider on the home page, not addressed individually. Giving
+       it a preview pane would mean pointing every roll at "/" and calling it a
+       preview of the edit. */
     livePreview: {
       collections: ["news"],
+
+      /* AND THE CONTACT PAGE, which is a global rather than a collection and so
+         is listed separately — Payload keys the two by different names because
+         a global has no id to build a URL from. It gets a pane for the reason
+         news does and tapes still does not: it is one document with one page of
+         its own, so "the page this document is" is a question with an answer. */
+      globals: ["contact"],
+
       /* SERVER_URL, not NEXT_PUBLIC_SERVER_URL. This runs on the server when
          the admin builds the preview pane's iframe src, so it is read at
          runtime and a deployment can be pointed at a new domain by editing an
          environment variable. Anything NEXT_PUBLIC_ is inlined at build time
          and would need a rebuild instead. Falls back to a relative URL, which
          is right whenever the site and the admin are the same origin — they
-         are, unless the front end is ever split off. */
-      url: ({ data }) =>
-        `${process.env.SERVER_URL ?? ""}/news/${data?.slug ?? ""}`,
+         are, unless the front end is ever split off.
+
+         THE BRANCH IS HOW THE TWO ARE TOLD APART. Payload hands a
+         collectionConfig when it is previewing a document out of a collection
+         and nothing when it is previewing a global — and there is exactly one
+         of each here, so the presence of it is the whole test. A second global
+         would want a switch on its slug instead. */
+      url: ({ collectionConfig, data }) =>
+        `${process.env.SERVER_URL ?? ""}${
+          collectionConfig ? `/news/${data?.slug ?? ""}` : "/contact"
+        }`,
 
       /* The sizes the design is actually drawn to. The editor gets a dropdown
          of these plus whatever the pane happens to be. */
@@ -60,6 +78,8 @@ export default buildConfig({
   },
 
   collections: [Users, Media, Tapes, News],
+
+  globals: [Contact],
 
   editor: lexicalEditor(),
 

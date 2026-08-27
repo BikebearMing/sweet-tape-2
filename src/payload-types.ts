@@ -91,8 +91,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    contact: Contact;
+  };
+  globalsSelect: {
+    contact: ContactSelect<false> | ContactSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -304,6 +308,10 @@ export interface Tape {
      * One sentence, under the mark. Sentence case here — the caps on the page are the section's setting, so this stays readable in a screen reader.
      */
     copy: string;
+    /**
+     * The drawing that drops onto the card. An SVG — and it may be an ANIMATED one: an export that carries its own motion keeps it, and the page only decides when it plays. A flat SVG is dropped on by the section's own bounce instead, so either kind works. Optional: leave it empty and the card wears the stock box.
+     */
+    mark?: (number | null) | Media;
     id?: string | null;
   }[];
   /**
@@ -588,6 +596,7 @@ export interface TapesSelect<T extends boolean = true> {
         titleTop?: T;
         titleBottom?: T;
         copy?: T;
+        mark?: T;
         id?: T;
       };
   colours?:
@@ -664,6 +673,135 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * Everything /contact says. The layout is drawn in code; the words are here.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact".
+ */
+export interface Contact {
+  id: number;
+  /**
+   * The chip above the title. Set in capitals — the page does not transform it, so what is typed is what is drawn.
+   */
+  kicker: string;
+  /**
+   * The page's h1, on the two lines the design breaks it on. Exactly two: each line is set on its own arc and a third has nowhere to go.
+   */
+  heading: {
+    text: string;
+    id?: string | null;
+  }[];
+  /**
+   * The heading on the paper, over the form. Two lines, same as above.
+   */
+  sheetHeading: {
+    text: string;
+    id?: string | null;
+  }[];
+  /**
+   * Exactly four, in the order they are read. The grid is drawn two-by-two and a fifth would have nowhere to sit.
+   */
+  fields: {
+    /**
+     * Which field this is. Picks the input's type and what the browser autofills into it — not shown to a reader.
+     */
+    key: 'name' | 'company' | 'phone' | 'email';
+    /**
+     * What it is called on the page, and what a screen reader announces. The design's second field was labelled NAME, the same as the first, which is almost certainly a placeholder — this is where that gets corrected.
+     */
+    label: string;
+    id?: string | null;
+  }[];
+  /**
+   * The big box under the four.
+   */
+  messageLabel: string;
+  /**
+   * The tall block down the right. Short — it is set vertically and a sentence would not fit.
+   */
+  sendLabel: string;
+  email: {
+    /**
+     * As it is written on the note. Capitals, because that is how the note is drawn.
+     */
+    label: string;
+    /**
+     * What clicking it opens: mailto: and then the address, lower case. Separate from the line above because the note is drawn in capitals and a mailto: cannot carry them.
+     */
+    href: string;
+  };
+  phone: {
+    /**
+     * As it is read aloud, spaces and all.
+     */
+    label: string;
+    /**
+     * What a phone dials: tel: and then the number with no spaces in it. A tel: href cannot carry the spaces the number is read with, which is why this is its own box.
+     */
+    href: string;
+  };
+  /**
+   * The strip holding the note to the board. Optional — without it the note is simply unpinned, which is a page rather than a hole in one.
+   */
+  tape?: (number | null) | Media;
+  /**
+   * The browser tab and the search result's blue line. Not shown on the page.
+   */
+  metaTitle: string;
+  /**
+   * The grey line under it in a search result. A sentence, about 150 characters — longer is cut off mid-word.
+   */
+  metaDescription: string;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact_select".
+ */
+export interface ContactSelect<T extends boolean = true> {
+  kicker?: T;
+  heading?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  sheetHeading?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  fields?:
+    | T
+    | {
+        key?: T;
+        label?: T;
+        id?: T;
+      };
+  messageLabel?: T;
+  sendLabel?: T;
+  email?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  phone?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+      };
+  tape?: T;
+  metaTitle?: T;
+  metaDescription?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

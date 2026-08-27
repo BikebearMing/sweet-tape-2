@@ -3,7 +3,8 @@
 import { useEffect, useRef, type ReactNode } from "react";
 
 import { initNote } from "@/components/Hero/note";
-import { CONTACT_FACE } from "./face";
+import type { ContactDetails } from "@/data/contact-types";
+import { contactFace } from "./face";
 import { initContactReveal } from "./reveal";
 
 /* The only client component on the contact page.
@@ -13,6 +14,12 @@ import { initContactReveal } from "./reveal";
  * that need one on mount. Keeping the boundary this thin means the copy stays
  * on the server and none of it ships in the client bundle twice. The hero, the
  * slider and the footer are all built the same way.
+ *
+ * THE DETAILS COME THROUGH AS A PROP and are the one piece of content that
+ * does. Everything else on this page is server-rendered markup passed as
+ * children; the address is not markup — it is painted into a canvas texture, so
+ * it has to reach the client as a value. Two plain strings and their two hrefs,
+ * which is the smallest thing that could cross the line.
  *
  * THE NOTE IS THE HERO'S, called with this page's face. Everything about being
  * a sticky note — the stock, the wind, the light, the shadow, the resting curl,
@@ -30,15 +37,26 @@ import { initContactReveal } from "./reveal";
  * cleanly and re-binds rather than stacking a second tween on the same letters
  * or running two engines over one canvas.
  */
-export default function Stage({ children }: { children: ReactNode }) {
+export default function Stage({
+  children,
+  details,
+}: {
+  children: ReactNode;
+  details: ContactDetails;
+}) {
   const ref = useRef<HTMLElement>(null);
+
+  /* Pulled out of the record here rather than read inside the effect, so the
+     dependency list below is these two strings and nothing else. */
+  const email = details.email.label;
+  const phone = details.phone.label;
 
   useEffect(() => {
     const root = ref.current;
     if (!root) return;
 
     const stopReveal = initContactReveal(root);
-    const stopNote = initNote(root, CONTACT_FACE);
+    const stopNote = initNote(root, contactFace({ email, phone }));
 
     /* THE FORM HAS NOWHERE TO GO YET, and this is the one line standing between
      * that and a page reload.
@@ -66,7 +84,18 @@ export default function Stage({ children }: { children: ReactNode }) {
       stopReveal();
       stopNote();
     };
-  }, []);
+    /* THE TWO LABELS ARE THE DEPENDENCY, AND NOT `details`.
+     *
+     * The note is drawn once on mount from what is passed in, so a change to
+     * what is written on it has to re-run this or the old address stays painted
+     * on the paper — which is the case live preview creates on every save.
+     *
+     * But `details` is a fresh object on every server render, and depending on
+     * it would tear down and rebuild a three.js scene any time this component
+     * re-rendered for a reason that had nothing to do with the address. What is
+     * actually drawn is these two strings; the hrefs are markup and are not this
+     * effect's business. So the dependency is what the drawing reads. */
+  }, [email, phone]);
 
   return (
     <section ref={ref} className="contact-section">

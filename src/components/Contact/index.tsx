@@ -2,7 +2,7 @@
 import type { CSSProperties } from "react";
 
 import { letters } from "@/components/letters";
-import { CONTACT } from "@/data/contact";
+import { getContact } from "@/data/contact";
 import Stage from "./Stage";
 
 /* LET'S STICK TOGETHER — /contact, and the whole of it.
@@ -29,41 +29,41 @@ import Stage from "./Stage";
  * wrapper that owns the ref; nothing below this line is a client component.
  */
 
-/* Section-level copy — the obvious CMS fields, so they are named constants
-   rather than strings buried in the markup, the same call the hero, the slider
-   and the footer make. The headline's break is set by DESIGN and not by
-   wrapping, which is why it is two strings and not one. */
-const KICKER = "GET IN TOUCH";
-const HEADING = ["LET’S STICK", "TOGETHER"];
-const SHEET_HEADING = ["DROP US A", "MESSAGE"];
-
-/* The strip of tape holding the note to the board. The hero's own roll, at the
-   hero's own size — one board, one roll. */
-const TAPE = "/assets/tape-on-note.webp";
-
-/* THE FORM'S FIELDS ARE DATA and not markup, which is what makes the row below
- * four lines instead of forty — and, more to the point, what makes changing one
- * a one-line change rather than an edit in three places.
+/* THE COPY IS THE CMS'S NOW, all of it — the kicker, both headlines, the four
+ * field labels, the words on the button, and the address and number written on
+ * the note. It arrives from src/data/contact.ts, which reads one global and
+ * falls back to exactly what this file used to hold if nobody has saved it yet.
  *
- * THE DESIGN LABELS THE SECOND FIELD "NAME", the same as the first, and that is
- * almost certainly a placeholder that did not get updated: two fields with one
- * name is a form nobody can fill in and a screen reader cannot announce. COMPANY
- * is the reading taken here — it is the pairing a business enquiry form wants
- * beside PHONE NUMBER and EMAIL — and it is one string away from being whatever
- * the design meant instead.
+ * THE BREAKS ARE STILL BREAKS AND NOT WRAPPING. Each headline comes back as two
+ * strings because the design breaks it where it breaks it — the CMS holds two
+ * boxes for the same reason this file held two constants, and a .split(" ") at
+ * render time would be the page inferring a drawing decision from a space.
  *
- * `autoComplete` on every one of them: this is a contact form, the browser
- * already knows all five answers, and the tokens are the standard ones. */
-const FIELDS = [
-  { name: "name", label: "NAME", type: "text", complete: "name" },
-  { name: "company", label: "COMPANY", type: "text", complete: "organization" },
-  { name: "phone", label: "PHONE NUMBER", type: "tel", complete: "tel" },
-  { name: "email", label: "EMAIL", type: "email", complete: "email" },
-] as const;
+ * WHAT DID NOT MOVE: the arrangement. Which corner the chip sits in, how the
+ * paper is perforated, where the note is pinned across the join. Those are
+ * drawings, and a drawing does not become editable by being turned into a field.
+ *
+ * AND NOT THE FIELDS' TYPES. The CMS holds what each box is CALLED; what each
+ * box IS — its input type and what a browser autofills into it — is a contract
+ * with the browser rather than copy, and lives in FIELD_KINDS over in
+ * src/data/contact-types.ts. See the note there, which argues it: a phone field
+ * that quietly stopped being one still looks perfectly right.
+ */
 
-export default function Contact() {
+export default async function Contact() {
+  const {
+    kicker,
+    heading,
+    sheetHeading,
+    fields,
+    messageLabel,
+    sendLabel,
+    details,
+    tape,
+  } = await getContact();
+
   return (
-    <Stage>
+    <Stage details={details}>
       {/* WITHOUT JAVASCRIPT THE TYPE NEVER ARRIVES. Both the headline's letters
           and the sheet's are parked by global.css and released by the section's
           own script, and the chip is held out of sight by the same hold — so a
@@ -105,7 +105,7 @@ export default function Contact() {
             page is already named by the h1 under it — announced, it would read
             as a first heading saying nearly what the second says. */}
         <p className="subhead contact-chip" aria-hidden="true">
-          {KICKER}
+          {kicker}
         </p>
 
         {/* The page's one h1. Split to letters for the reveal, which is the
@@ -122,11 +122,11 @@ export default function Contact() {
             aria-label rather than a second hidden copy of the words: it is
             honoured on a heading, so the line is announced whole and the rows
             of letter boxes are never read out a fragment at a time. */}
-        <h1 className="contact-title" aria-label={HEADING.join(" ")}>
-          {HEADING.map((line) => (
+        <h1 className="contact-title" aria-label={heading.join(" ")}>
+          {heading.map((line, i) => (
             <span
               className="line"
-              key={line}
+              key={i}
               aria-hidden="true"
               style={{ "--letters": line.length } as CSSProperties}
             >
@@ -150,9 +150,9 @@ export default function Contact() {
 
             An h2 and not an h1: the page is named above, and this names the
             form inside it. */}
-        <h2 className="contact-sheet-head" aria-label={SHEET_HEADING.join(" ")}>
-          {SHEET_HEADING.map((line) => (
-            <span className="line" key={line} aria-hidden="true">
+        <h2 className="contact-sheet-head" aria-label={sheetHeading.join(" ")}>
+          {sheetHeading.map((line, i) => (
+            <span className="line" key={i} aria-hidden="true">
               {letters(line)}
             </span>
           ))}
@@ -166,21 +166,21 @@ export default function Contact() {
             exactly where the call goes when there is one to make. */}
         <form className="contact-form" noValidate>
           <div className="contact-fields">
-            {FIELDS.map((field) => (
+            {fields.map((field) => (
               /* The label is real and hidden rather than absent, with the
                  placeholder carrying the same words. A placeholder alone is a
                  name that disappears the moment anyone types into the field,
                  which is the oldest bug in form design; the site's own idiom
                  for this is .sr-only, used the same way by the footer's legal
                  line and the hero's corner mark. */
-              <p className="contact-field" key={field.name}>
-                <label className="sr-only" htmlFor={`contact-${field.name}`}>
+              <p className="contact-field" key={field.key}>
+                <label className="sr-only" htmlFor={`contact-${field.key}`}>
                   {field.label}
                 </label>
                 <input
                   className="contact-input"
-                  id={`contact-${field.name}`}
-                  name={field.name}
+                  id={`contact-${field.key}`}
+                  name={field.key}
                   type={field.type}
                   placeholder={field.label}
                   autoComplete={field.complete}
@@ -194,13 +194,13 @@ export default function Contact() {
                 middle of it for that reason alone. */}
             <p className="contact-field contact-field--message">
               <label className="sr-only" htmlFor="contact-message">
-                MESSAGE
+                {messageLabel}
               </label>
               <textarea
                 className="contact-input contact-textarea"
                 id="contact-message"
                 name="message"
-                placeholder="MESSAGE"
+                placeholder={messageLabel}
                 rows={4}
               />
             </p>
@@ -211,7 +211,7 @@ export default function Contact() {
               the thing the whole sheet is pointed at. A real <button> inside the
               form, so Enter in any field submits it. */}
           <button className="contact-send" type="submit">
-            SEND
+            {sendLabel}
           </button>
         </form>
       </div>
@@ -238,12 +238,12 @@ export default function Contact() {
           indexes, and what is left if three.js never arrives. */}
       <div className="contact-note" aria-hidden="true">
         <div className="sticky-note" />
-        <img className="contact-note-tape" src={TAPE} alt="" />
+        <img className="contact-note-tape" src={tape} alt="" />
       </div>
 
       <p className="sr-only">
-        <a href={CONTACT.email.href}>{CONTACT.email.label}</a>{" "}
-        <a href={CONTACT.phone.href}>{CONTACT.phone.label}</a>
+        <a href={details.email.href}>{details.email.label}</a>{" "}
+        <a href={details.phone.href}>{details.phone.label}</a>
       </p>
     </Stage>
   );

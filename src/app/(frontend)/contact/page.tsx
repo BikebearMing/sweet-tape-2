@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
+import { getContact } from "@/data/contact";
 
 /* LET'S STICK TOGETHER — /contact.
  *
@@ -29,11 +30,16 @@ import Footer from "@/components/Footer";
  * that 404'd. Nothing in either list changes — the link was already correct.
  */
 
-export const metadata: Metadata = {
-  title: "Contact — Sweet Tape",
-  description:
-    "Get in touch with Sweet Tape — S.B. Importer & Exporter (M) Sdn. Bhd.",
-};
+/* THE TAB AND THE SEARCH RESULT come off the same record the page does — a
+   function rather than a constant, because it is read at request time now.
+   Next calls this and the component separately, so the global is fetched twice
+   per request; both hit the same connection pool for one small row, which is
+   cheaper than threading a cache through two entry points that do not otherwise
+   know about each other. */
+export async function generateMetadata(): Promise<Metadata> {
+  const { meta } = await getContact();
+  return { title: meta.title, description: meta.description };
+}
 
 export default function ContactPage() {
   return (

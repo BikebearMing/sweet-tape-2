@@ -19,10 +19,11 @@ import type { Tape, TapeColours, Power } from "./tape-types";
  * so that a server component can carry on importing everything from "@/data/tapes"
  * as it always has.
  *
- * ARTWORK IS STILL A PATH. The collection stores /assets/... strings rather than
- * uploads for now; toTape hands them through untouched. When they become uploads
- * this mapper is the only thing that changes, because nothing downstream knows
- * where a path came from.
+ * ARTWORK IS A MEDIA RECORD NOW, and this is where that stops being visible.
+ * Every picture field comes back as an uploaded document; urlOf turns one into
+ * the string the components have always been handed, stamped with the record's
+ * updatedAt so replacing a file busts every cache of it. Nothing downstream
+ * knows any of that happened — which was the point of the shape.
  */
 
 export type { Tape, TapeColours, Power };
@@ -45,10 +46,36 @@ async function fetchAll(): Promise<Tape[]> {
     collection: "tapes",
     limit: 100,
     sort: "order",
-    depth: 0,
+    /* depth 1 resolves every upload to its Media document. It used to be 0,
+       when the artwork was a string and there was nothing to resolve. */
+    depth: 1,
   });
 
   return docs.map(toTape);
+}
+
+/** An uploaded Media document, as the URL the markup wants.
+ *
+ *  STAMPED WITH updatedAt, the same trick the newsroom's images use and for the
+ *  same reason: /api/media/file/... is cached for a year (see next.config.mjs),
+ *  which is only safe because swapping the file moves this timestamp and so
+ *  changes the URL. An editor replaces a roll and every browser sees the new one
+ *  at once rather than whenever its copy happens to expire.
+ *
+ *  Empty string when the field is unset or came back as a bare id — a depth of 0
+ *  would do the latter, and rendering src="" is a visible hole rather than a
+ *  crash, which is the right failure for a missing picture. */
+function urlOf(image: unknown): string {
+  if (!image || typeof image !== "object") return "";
+
+  const m = image as { url?: string | null; updatedAt?: string };
+  if (!m.url) return "";
+  if (!m.updatedAt) return m.url;
+
+  const v = Date.parse(m.updatedAt);
+  if (Number.isNaN(v)) return m.url;
+
+  return `${m.url}${m.url.includes("?") ? "&" : "?"}v=${v.toString(36)}`;
 }
 
 /** One Payload document, as the components have always expected a tape.
@@ -61,29 +88,31 @@ async function fetchAll(): Promise<Tape[]> {
 function toTape(doc: TapeDoc): Tape {
   const texts = (rows: { text: string }[] | null | undefined) =>
     (rows ?? []).map((r) => r.text);
-  const srcs = (rows: { src: string }[] | null | undefined) =>
-    (rows ?? []).map((r) => r.src);
+  const images = (rows: { image: unknown }[] | null | undefined) =>
+    (rows ?? []).map((r) => urlOf(r.image));
 
   return {
     id: doc.slug,
     label: doc.label,
     word: doc.wordmark,
 
-    roll: doc.roll,
-    card: doc.card,
-    hero: doc.hero ?? undefined,
+    roll: urlOf(doc.roll),
+    card: urlOf(doc.card),
+    /* undefined rather than "" when unset, because heroOf falls back on the card
+       and `??` is what does it — an empty string is a value and would win. */
+    hero: urlOf(doc.hero) || undefined,
 
     /* Back into the Record the components index by variant id. Empty for every
        tape today, which is why siblingFaceOf still falls back to the card. */
     faces: Object.fromEntries(
-      (doc.faces ?? []).map((f) => [f.variant, f.src]),
+      (doc.faces ?? []).map((f) => [f.variant, urlOf(f.image)]),
     ),
 
     model: doc.model,
     modelInner: doc.modelInner ?? undefined,
     clarity: doc.clarity ?? undefined,
 
-    showcase: srcs(doc.showcase) as [string, string],
+    showcase: images(doc.showcase) as [string, string],
     tags: texts(doc.tags),
     copy: doc.copy,
     origin: texts(doc.origin) as [string, string],
@@ -92,7 +121,7 @@ function toTape(doc: TapeDoc): Tape {
     reel: {
       headline: texts(doc.reel?.headline),
       note: texts(doc.reel?.note),
-      shots: srcs(doc.reel?.shots) as [string, string, string, string],
+      shots: images(doc.reel?.shots) as [string, string, string, string],
     },
 
     /* titleTop/titleBottom become the pair the card draws. Two fields in the

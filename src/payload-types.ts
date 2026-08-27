@@ -202,20 +202,20 @@ export interface Tape {
   /**
    * Thumbnail on the orbit, made from the card at 108px.
    */
-  roll: string;
+  roll: number | Media;
   /**
    * Hang tag at the centre of the stage.
    */
-  card: string;
+  card: number | Media;
   /**
    * The inner page's key visual — the roll shot square-on. Optional: leave it empty and the page falls back to the card, which is a working page rather than a hole in one.
    */
-  hero?: string | null;
+  hero?: (number | null) | Media;
   /**
    * Exactly two. The layout places each by hand, so a third would have nowhere to go.
    */
   showcase: {
-    src: string;
+    image: number | Media;
     id?: string | null;
   }[];
   /**
@@ -224,7 +224,7 @@ export interface Tape {
   faces?:
     | {
         variant: string;
-        src: string;
+        image: number | Media;
         id?: string | null;
       }[]
     | null;
@@ -280,7 +280,7 @@ export interface Tape {
      * Exactly four. The grid is drawn for four and a fifth has nowhere to go.
      */
     shots: {
-      src: string;
+      image: number | Media;
       id?: string | null;
     }[];
   };
@@ -527,14 +527,14 @@ export interface TapesSelect<T extends boolean = true> {
   showcase?:
     | T
     | {
-        src?: T;
+        image?: T;
         id?: T;
       };
   faces?:
     | T
     | {
         variant?: T;
-        src?: T;
+        image?: T;
         id?: T;
       };
   model?: T;
@@ -577,7 +577,7 @@ export interface TapesSelect<T extends boolean = true> {
         shots?:
           | T
           | {
-              src?: T;
+              image?: T;
               id?: T;
             };
       };

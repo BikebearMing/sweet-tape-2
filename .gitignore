@@ -14,3 +14,8 @@ next-env.d.ts
 *.tsbuildinfo
 
 .DS_Store
+
+# One-time migration artefacts: the path→media-id map and the pre-migration
+# snapshot of the tapes. Kept on disk as a safety net, not history.
+scripts/.tape-backup.json
+scripts/.tape-media-map.json

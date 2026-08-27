@@ -6,12 +6,12 @@ import type { CollectionConfig } from "payload";
  * every field is argued properly — this file says what an editor sees, that one
  * says why the field exists at all. Read them together before changing either.
  *
- * ARTWORK IS STILL TEXT, deliberately and for now. Every path here points into
- * /public/assets and is typed rather than uploaded, which is the one piece of
- * this migration left to do: the copy, the colours and the powers become
- * editable today, and the 33 files follow as their own pass. An upload field
- * swapped in later changes this file and the mapper in src/data/tapes.ts and
- * nothing else, because nothing downstream knows where a path came from.
+ * ARTWORK IS UPLOADS NOW. Every picture a tape wears is a Media record rather
+ * than a path typed into a box: an editor swaps a roll by dropping a file on it,
+ * the delete guard stops anyone removing one still in use, and each URL carries
+ * the record's updatedAt so a replacement busts every cache the moment it is
+ * saved. A typed path could do none of those and could be wrong in a way nothing
+ * noticed until the page was looked at.
  *
  * THE MODELS STAY STATIC. Media accepts GLBs, but the slider preloads these on
  * the home page and three.js loads them by URL — a wrong path there breaks the
@@ -80,19 +80,22 @@ export const Tapes: CollectionConfig = {
       fields: [
         {
           name: "roll",
-          type: "text",
+          type: "upload",
+          relationTo: "media",
           required: true,
           admin: { description: "Thumbnail on the orbit, made from the card at 108px." },
         },
         {
           name: "card",
-          type: "text",
+          type: "upload",
+          relationTo: "media",
           required: true,
           admin: { description: "Hang tag at the centre of the stage." },
         },
         {
           name: "hero",
-          type: "text",
+          type: "upload",
+          relationTo: "media",
           admin: {
             description:
               "The inner page's key visual — the roll shot square-on. Optional: leave it empty and the page falls back to the card, which is a working page rather than a hole in one.",
@@ -108,7 +111,9 @@ export const Tapes: CollectionConfig = {
             description:
               "Exactly two. The layout places each by hand, so a third would have nowhere to go.",
           },
-          fields: [{ name: "src", type: "text", required: true }],
+          fields: [
+            { name: "image", type: "upload", relationTo: "media", required: true },
+          ],
         },
         {
           name: "faces",
@@ -119,7 +124,7 @@ export const Tapes: CollectionConfig = {
           },
           fields: [
             { name: "variant", type: "text", required: true },
-            { name: "src", type: "text", required: true },
+            { name: "image", type: "upload", relationTo: "media", required: true },
           ],
         },
       ],
@@ -234,7 +239,9 @@ export const Tapes: CollectionConfig = {
                 description:
                   "Exactly four. The grid is drawn for four and a fifth has nowhere to go.",
               },
-              fields: [{ name: "src", type: "text", required: true }],
+              fields: [
+                { name: "image", type: "upload", relationTo: "media", required: true },
+              ],
             },
           ],
         },

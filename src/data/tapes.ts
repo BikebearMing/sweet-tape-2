@@ -156,7 +156,16 @@ export async function getTapeOf(id: string): Promise<Tape | undefined> {
     collection: "tapes",
     where: { slug: { equals: id } },
     limit: 1,
-    depth: 0,
+    /* depth 1, AND IT IS LOAD-BEARING. It was 0, which was correct for exactly
+       as long as the artwork was a string typed into a box — there was nothing
+       to resolve, so resolving nothing was free. The moment every picture became
+       an upload, depth 0 started handing this function a row of BARE IDS, urlOf
+       turned each one into "", and the inner page rendered its hero, its two
+       showcase shots and all four reel frames as images with no source.
+       Nothing threw and nothing logged; the page was simply blank where the
+       product should be. fetchAll above was already at 1, which is why /products
+       looked right and /products/<slug> did not. */
+    depth: 1,
   });
 
   return docs[0] ? toTape(docs[0]) : undefined;

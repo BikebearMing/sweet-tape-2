@@ -8334,8 +8334,22 @@ html[data-loading] {
   opacity: 1;
 }
 
-/* And the mark itself. */
-.powers-mark-jump path {
+/* And the mark itself.
+ *
+ * :not([fill]) IS WHAT LETS AN UPLOADED DRAWING KEEP ITS OWN COLOURS, and it is
+ * the whole of the difference. The stock mark's paths carry no fill of their own
+ * — the export's were stripped, and this rule is what has always coloured them —
+ * so they still match and are still set in the card's ink. A file an editor
+ * uploads arrives with the fills its designer gave it, does not match, and is
+ * drawn as drawn. A presentation attribute loses to any CSS rule at all, so
+ * without the :not() every uploaded mark would be flattened to one colour, and
+ * the flattening would look deliberate.
+ *
+ * It reads the ATTRIBUTE and not the computed value, which is the one case it
+ * gets wrong: a path with no fill of its own inside a <g fill="…"> takes the
+ * ink here rather than the group's colour. There is no selector for "has no
+ * inherited fill", and the exports this is for put the fill on the path. */
+.powers-mark-jump path:not([fill]) {
   fill: var(--pow-card-ink);
 }
 
@@ -8435,6 +8449,70 @@ html[data-loading] {
 }
 
 /* --------------------------------------------------------------------------
+   A MARK THAT MOVES ITSELF
+   --------------------------------------------------------------------------
+   Everything above drives the mark the SECTION animates: the stock box, and any
+   flat file uploaded in its place, both of which are wrapped in
+   .powers-mark-jump and dropped by @keyframes powers-mark-drop.
+
+   An uploaded file can also arrive carrying its OWN motion — that is what the
+   design's own export is, and what this section's keyframes were lifted out of
+   by hand when there was one mark to lift. Once there is a mark per claim that
+   lift is a ritual to repeat per file, so the file is used as it comes and the
+   section stops animating it. What is left for the section to do is decide WHEN,
+   which is the only part it was ever the authority on.
+
+   THE SWITCH IS THE SAME SWITCH, and that matters: one attribute on the slot,
+   set and unset by reveal.ts, means the same thing for both kinds of mark. What
+   differs is only which direction it works in. For .powers-mark-jump the
+   stylesheet DECLARES an animation under [data-mark="go"]; here the animation is
+   declared by the file and always would be, so the stylesheet TAKES IT OFF until
+   the turn comes.
+
+   AND IT TAKES IT OFF RATHER THAN PAUSING IT, for the reason dropMark gives in
+   SuperPowers/reveal.ts: a paused animation resumes from where it stopped, so a
+   mark that had already landed would be asked to play the frames after the last
+   one — which is no frames at all. Undeclared and re-declared, it starts again
+   from the first, which is what a second turn on a card has to look like.
+
+   `* ` AND !important, both of which are blunt and both of which are the point:
+   this has to beat whatever a file arrived declaring, at whatever specificity,
+   on however many elements, without knowing anything about it. It is the one
+   place on this site where that is the correct instrument.
+   -------------------------------------------------------------------------- */
+
+/* Where it waits — and where it waits is exactly where it lands. With no
+   animation declared the drawing sits at its own resting position rather than
+   at the first frame of a fall, so this is the mark standing on the card, held
+   invisible until its turn. */
+.powers-mark--live {
+  opacity: 0;
+}
+
+.powers-slot:not([data-mark]) .powers-mark--live,
+.powers-slot:not([data-mark]) .powers-mark--live * {
+  animation: none !important;
+}
+
+.powers-slot[data-mark="go"] .powers-mark--live {
+  opacity: 1;
+}
+
+/* THE WAY OUT IS ON THE ROOT, and it has to be: the file's own animations are
+   still running on the elements inside, and a fade declared over one of them
+   would be a second animation on the same property. The root carries nothing of
+   the file's, so fading it takes the whole drawing off at once — and because
+   [data-mark="out"] is not [data-mark], the rule above does not strip it.
+
+   An animation and not a transition, for the reason .powers-mark-jump's exit
+   gives at length: a transition compares before-change and after-change styles
+   with animation-derived values excluded, and both sides of that comparison
+   here are the base rule's 0. It would never once fire. */
+.powers-slot[data-mark="out"] .powers-mark--live {
+  animation: powers-mark-fade var(--pow-mark-out) linear 1 both;
+}
+
+/* --------------------------------------------------------------------------
    Parking
    -------------------------------------------------------------------------- */
 
@@ -8496,6 +8574,19 @@ html[data-loading] {
   .powers-slot[data-mark="go"] .powers-mark-jump,
   .powers-slot[data-mark="out"] .powers-mark-jump {
     animation: none;
+    opacity: 1;
+  }
+
+  /* And a mark that animates itself is stopped the same way — including whatever
+     it declared on its own insides, which is what the universal selector is for.
+     It stands on the card rather than falling onto it, which is the same
+     settlement the rule above makes for the section's own bounce. */
+  .powers-mark--live,
+  .powers-mark--live * {
+    animation: none !important;
+  }
+
+  .powers-mark--live {
     opacity: 1;
   }
 
@@ -8813,6 +8904,20 @@ html[data-loading] {
    about. Stated, the mark holds exactly where it landed and only its opacity
    moves, which is what makes this read as the box being taken off the card
    rather than as one last small fall. */
+/* And the way out for a mark that moves itself. Opacity alone: the drawing is
+   holding whatever pose its own animation left it in, and restating a transform
+   here would be this stylesheet overwriting a file it knows nothing about. The
+   pose is why powers-mark-leave restates one and this does not. */
+@keyframes powers-mark-fade {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
 @keyframes powers-mark-leave {
   0% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);

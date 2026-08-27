@@ -424,8 +424,8 @@ export function initSuperPowersReveal(root: HTMLElement): () => void {
    * removal to be resolved before the addition is queued. Nothing paints in
    * between, so there is no frame in which the mark is not declared.
    *
-   * getBoundingClientRect and not offsetWidth: this is an element in an SVG, and
-   * SVG elements are not HTMLElements — they have no offsetWidth to read, so the
+   * getBoundingClientRect and not offsetWidth: this is an SVG element, and SVG
+   * elements are not HTMLElements — they have no offsetWidth to read, so the
    * usual spelling of this trick is a silent undefined and no reflow at all.
    *
    * The delete also covers a slot caught mid-EXIT at data-mark="out" — a reader
@@ -433,10 +433,17 @@ export function initSuperPowersReveal(root: HTMLElement): () => void {
    * takes the leave animation off before the drop is declared, so the mark
    * restarts from the ceiling rather than fighting a fade on its way down. */
   const dropMark = (slot: HTMLElement) => {
-    const jump = slot.querySelector<SVGGElement>(".powers-mark-jump");
-    if (!jump) return;
+    /* THE ROOT AND NOT THE BOUNCING GROUP, which it used to be. A mark that
+       animates ITSELF has no .powers-mark-jump in it — the group is something
+       this section wraps around a flat drawing, and a file carrying its own
+       motion is left exactly as it came. Querying for it meant this returned
+       early on those cards and the attribute was never set, so the one kind of
+       mark that brings its own animation was the one kind that never played.
+       .powers-mark is on the root of every mark there is. */
+    const mark = slot.querySelector<SVGSVGElement>(".powers-mark");
+    if (!mark) return;
     delete slot.dataset.mark;
-    jump.getBoundingClientRect();
+    mark.getBoundingClientRect();
     slot.dataset.mark = "go";
   };
 

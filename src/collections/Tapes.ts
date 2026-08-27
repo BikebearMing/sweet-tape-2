@@ -295,6 +295,15 @@ export const Tapes: CollectionConfig = {
               "One sentence, under the mark. Sentence case here — the caps on the page are the section's setting, so this stays readable in a screen reader.",
           },
         },
+        {
+          name: "mark",
+          type: "upload",
+          relationTo: "media",
+          admin: {
+            description:
+              "The drawing that drops onto the card. An SVG — and it may be an ANIMATED one: an export that carries its own motion keeps it, and the page only decides when it plays. A flat SVG is dropped on by the section's own bounce instead, so either kind works. Optional: leave it empty and the card wears the stock box.",
+          },
+        },
       ],
     },
 

@@ -1,30 +1,45 @@
+import type { MarkFile } from "@/data/tape-types";
+import { markArt } from "./markSvg";
+
 /* THE MARK — the drawing on a superpower card, and the thing that bounces.
  *
- * An isometric box: a dark plate holding still and a lime mark that DROPS onto
- * it, squashes on impact and settles. It is the design's own export
- * (public/assets/svgviewer-output.svg), inlined here rather than pointed at with
- * an <img> — and that is the whole reason this file exists.
+ * TWO OF THEM NOW: whatever the claim carries, and the one below for a claim
+ * that carries nothing. The uploaded kind is read off disk, made safe to inline
+ * three times on one page, and handed back as markup — all of which happens in
+ * ./markSvg.ts, which argues every part of it. This file only chooses.
  *
- * WHY IT IS INLINE AND NOT AN <img>. The bounce has to fire when the card takes
- * its turn in the stack, which is a moment only this page knows about. An
- * external SVG is a document of its own: nothing in the host page can reach
- * inside it to start, stop or restart an animation, and CSS does not cross that
- * boundary either. So the file's own <style> would have to run the bounce on
- * page load, in every card at once, whether or not any of them was on screen —
- * which is the one behaviour the section is built to avoid. Inline, the mark is
- * ordinary DOM: the stylesheet holds it and SuperPowers/reveal.ts releases it.
+ * THE STOCK MARK, below, is an isometric box: a dark plate holding still and a
+ * lime mark that DROPS onto it, squashes on impact and settles. It is the
+ * design's own export (public/assets/svgviewer-output.svg), inlined here rather
+ * than pointed at with an <img> — for the reason just given.
  *
- * THE KEYFRAMES ARE NOT HERE. They are in global.css with the rest of the
+ * WHY NEITHER KIND IS AN <img>, and it is the reason markSvg.ts exists at all.
+ * The bounce has to fire when the card takes its turn in the stack, which is a
+ * moment only this page knows about. An external SVG is a document of its own:
+ * nothing in the host page can reach inside it to start, stop or restart an
+ * animation, and CSS does not cross that boundary either. So the file's own
+ * <style> would have to run the bounce on page load, in every card at once,
+ * whether or not any of them was on screen — which is the one behaviour the
+ * section is built to avoid. Inline, the mark is ordinary DOM: the stylesheet
+ * holds it and SuperPowers/reveal.ts releases it.
+ * That is as true of an uploaded file as of the one below, which is why an
+ * upload is read and inlined rather than pointed at.
+ *
+ * THE KEYFRAMES ARE NOT HERE — for THIS mark, which is the one the section
+ * itself drops. An uploaded file keeps its own and has them renamed per file
+ * instead; see markSvg.ts. These are in global.css with the rest of the
  * section, because three cards carry three copies of this markup and three
  * identical @keyframes blocks in three <style> tags is the same animation
  * defined three times. What is left here is geometry and two class names.
  *
- * THE IDS ARE GONE for the same reason. The export names every path — Vector_2,
- * Group_650 — and nothing references any of them: no <use>, no url(#…), no
- * gradient. Three copies of this component on one page would be three copies of
- * every one of those ids, which is invalid and, the first time somebody adds a
- * gradient, silently wrong. Classes are what the stylesheet needs and classes
- * are what is left.
+ * THE IDS ARE GONE for the same reason — again, from THIS one, which could
+ * simply have them stripped because it is checked in and nobody will change it.
+ * An uploaded file cannot be, so its ids are suffixed per file instead. The
+ * export names every path — Vector_2, Group_650 — and nothing here references
+ * any of them: no <use>, no url(#…), no gradient. Three copies of this component
+ * on one page would be three copies of every one of those ids, which is invalid
+ * and, the first time somebody adds a gradient, silently wrong. Classes are what
+ * the stylesheet needs and classes are what is left.
  *
  * THE PLATE IS KEPT AND IT IS NOT THE CARD. .powers-mark-plate is the box's own
  * dark silhouette — an isometric cube reads as a hexagon — and the lime faces
@@ -35,7 +50,7 @@
  * Server-rendered, like letters() and bodyCopy(): the markup is static and
  * nothing here ships to the client.
  */
-export default function Mark() {
+function StockMark() {
   return (
     /* aria-hidden, and not a title or a role. The card already says BOX SEALER
        in a heading and says what it does in the sentence under this — the
@@ -44,7 +59,7 @@ export default function Mark() {
        of artwork on this site is labelled where it carries information the copy
        does not; this one does not. */
     <svg
-      className="powers-mark"
+      className="powers-mark powers-mark--stock"
       viewBox="0 0 438 418"
       fill="none"
       aria-hidden="true"
@@ -85,5 +100,62 @@ export default function Mark() {
         </g>
       </g>
     </svg>
+  );
+}
+
+/* THE CARD'S MARK, whichever kind it is.
+ *
+ * ASYNC BECAUSE IT READS A FILE, which is worth a line: this is a server
+ * component and nothing here reaches the browser, so a disk read on the render
+ * path is a disk read on the server — and markSvg.ts caches per file, so it is
+ * one read per drawing per process rather than one per card per request.
+ *
+ * FALLS BACK TO THE STOCK BOX on anything at all: no upload, a file that is not
+ * on this disk, a file that does not parse. A card with the old drawing on it is
+ * a page that works, and this is a product page.
+ *
+ * THREE CLASSES AND WHAT EACH IS FOR:
+ *
+ *   .powers-mark is the frame — the size the card gives the drawing, and the
+ *   overflow that lets it start its fall above it. Every mark carries it.
+ *
+ *   .powers-mark--live says the file animates ITSELF, which changes who is
+ *   driving: global.css takes every animation off it until the slot says its
+ *   turn has come, rather than declaring the section's own bounce over it.
+ *
+ *   The third is the file's own tag, and it is what its stylesheet was scoped
+ *   under — without it on this element, none of the file's own CSS matches.
+ *
+ * aria-hidden, and not a title or a role, for the reason the stock mark gives:
+ * the card already says what it does in a heading and says it again in the
+ * sentence underneath. An uploaded drawing does not change that — it is those
+ * same words drawn, and a third announcement is the same claim read out twice.
+ */
+export default async function Mark({ file }: { file?: MarkFile }) {
+  const art = await markArt(file ?? null);
+  if (!art) return <StockMark />;
+
+  const className = [
+    "powers-mark",
+    art.live ? "powers-mark--live" : "",
+    art.scope,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <svg
+      className={className}
+      viewBox={art.viewBox}
+      aria-hidden="true"
+      focusable="false"
+      xmlns="http://www.w3.org/2000/svg"
+      /* The markup came off disk, and everything done to it before it got here
+         — the sanitising, the id suffixes, the scoping — is in ./markSvg.ts.
+         Payload refuses an upload carrying a script, an event handler or a
+         foreignObject in the first place; that module does the same pass again
+         at the point of inlining, which is where it actually matters. */
+      dangerouslySetInnerHTML={{ __html: art.inner }}
+    />
   );
 }

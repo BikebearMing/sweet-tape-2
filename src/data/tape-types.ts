@@ -63,12 +63,29 @@ export type TapeColours = {
  * in this file and in a screen reader. The sentence under the mark is set as
  * written.
  *
- * NO ARTWORK FIELD, AND THAT IS DELIBERATE. Every card is currently drawn with
- * the same mark — the box in components/SuperPowers/Mark.tsx — because it is the
- * only one of the three that has been drawn. The moment a second exists this
- * type grows an `icon` and the section reads it; adding the field today would be
- * eighteen copies of one path, which is a worse lie than one honest placeholder.
+ * EVERY CARD CARRIED THE SAME MARK, and this type said that the moment a second
+ * one existed it would grow a field and the section would read it. It has, and
+ * this is it. `mark` is a file an editor uploads rather than a path a developer
+ * types, and it is OPTIONAL: a claim with nothing on it gets the built-in box
+ * (components/SuperPowers/Mark.tsx), which is the drawing every card wore until
+ * now. So a tape whose marks have not been drawn yet is the page it always was.
+ *
+ * IT IS A FILE AND NOT A URL, which is the one surprising thing here. The mark
+ * has to be INLINED — the bounce is CSS and CSS does not reach inside an <img>
+ * — so what the section needs is the file's CONTENTS, read off the disk the
+ * uploads live on. See components/SuperPowers/markSvg.ts, which does that and
+ * argues the whole of why. The name and the timestamp are what it needs: one to
+ * find the file, one to know when a replacement has been dropped on it.
  */
+
+/** An uploaded drawing, as the thing that has to go and read it. */
+export type MarkFile = {
+  filename: string;
+  /** Moves when the file is replaced. Used as a cache key, not shown. */
+  updatedAt: string;
+};
+
+/** One claim on one card. See the note above. */
 export type Power = {
   /** Stable key, and the React key the stack is rendered on. */
   id: string;
@@ -76,6 +93,8 @@ export type Power = {
   title: [string, string];
   /** The line under the mark. One sentence. */
   copy: string;
+  /** The drawing that drops onto the card. Absent for the built-in box. */
+  mark?: MarkFile;
 };
 
 export type Tape = {

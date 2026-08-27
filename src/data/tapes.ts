@@ -3,7 +3,8 @@ import { getPayload } from "payload";
 import config from "@/payload.config";
 import type { Tape as TapeDoc } from "@/payload-types";
 
-import type { Tape, TapeColours, Power } from "./tape-types";
+import { urlOf } from "./media-url";
+import type { Tape, TapeColours, Power, MarkFile } from "./tape-types";
 
 /* Sweet Tape — the six rolls.
  *
@@ -20,10 +21,11 @@ import type { Tape, TapeColours, Power } from "./tape-types";
  * as it always has.
  *
  * ARTWORK IS A MEDIA RECORD NOW, and this is where that stops being visible.
- * Every picture field comes back as an uploaded document; urlOf turns one into
- * the string the components have always been handed, stamped with the record's
- * updatedAt so replacing a file busts every cache of it. Nothing downstream
- * knows any of that happened — which was the point of the shape.
+ * Every picture field comes back as an uploaded document; urlOf (./media-url)
+ * turns one into the string the components have always been handed, stamped
+ * with the record's updatedAt so replacing a file busts every cache of it.
+ * Nothing downstream knows any of that happened — which was the point of the
+ * shape.
  */
 
 export type { Tape, TapeColours, Power };
@@ -54,28 +56,14 @@ async function fetchAll(): Promise<Tape[]> {
   return docs.map(toTape);
 }
 
-/** An uploaded Media document, as the URL the markup wants.
- *
- *  STAMPED WITH updatedAt, the same trick the newsroom's images use and for the
- *  same reason: /api/media/file/... is cached for a year (see next.config.mjs),
- *  which is only safe because swapping the file moves this timestamp and so
- *  changes the URL. An editor replaces a roll and every browser sees the new one
- *  at once rather than whenever its copy happens to expire.
- *
- *  Empty string when the field is unset or came back as a bare id — a depth of 0
- *  would do the latter, and rendering src="" is a visible hole rather than a
- *  crash, which is the right failure for a missing picture. */
-function urlOf(image: unknown): string {
-  if (!image || typeof image !== "object") return "";
-
-  const m = image as { url?: string | null; updatedAt?: string };
-  if (!m.url) return "";
-  if (!m.updatedAt) return m.url;
-
-  const v = Date.parse(m.updatedAt);
-  if (Number.isNaN(v)) return m.url;
-
-  return `${m.url}${m.url.includes("?") ? "&" : "?"}v=${v.toString(36)}`;
+/** An upload, as the two things a file has to be read off disk: what it is
+ *  called and when it last changed. Undefined for an unset field or for a bare
+ *  id — the latter is what a query at depth 0 returns, and a mark that silently
+ *  became the built-in one would be the harder bug of the two to notice. */
+function markFileOf(file: unknown): MarkFile | undefined {
+  if (!file || typeof file !== "object") return undefined;
+  const m = file as { filename?: string | null; updatedAt?: string | null };
+  return m.filename ? { filename: m.filename, updatedAt: m.updatedAt ?? "" } : undefined;
 }
 
 /** One Payload document, as the components have always expected a tape.
@@ -131,6 +119,14 @@ function toTape(doc: TapeDoc): Tape {
       id: p.key,
       title: [p.titleTop, p.titleBottom] as [string, string],
       copy: p.copy,
+      /* THE FILE ITSELF AND NOT ITS URL, which is the one field on a tape that
+         does not become a src. The mark is INLINED into the card — a bounce
+         written in CSS cannot reach inside an <img> — so what the section needs
+         is the file's contents, and to fetch those it needs the name on disk.
+         The timestamp rides along as the cache key: it moves when an editor
+         drops a replacement on the field, and nothing else does.
+         See components/SuperPowers/markSvg.ts. */
+      mark: markFileOf(p.mark),
     })) as [Power, Power, Power],
 
     colours: doc.colours as TapeColours,

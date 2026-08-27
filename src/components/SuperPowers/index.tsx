@@ -48,6 +48,12 @@ import Stage from "./Stage";
  * records the arrangement this replaced — every card written all the time — and
  * why it turned out to be the weaker one.
  *
+ * THE MARK IS THE CLAIM'S NOW, not the section's. Every card wore the same box
+ * until there was more than one drawn; each claim can carry its own, uploaded
+ * rather than checked in, and a claim that carries none still gets that box. It
+ * is a file rather than a path because it is INLINED — see ./Mark.tsx, and
+ * ./markSvg.ts under it, which is where all of that is argued.
+ *
  * THE COPY IS THE TAPE'S AND NOT THIS SECTION'S. THE SIBLINGS above it is three
  * GRADES of one tape and its three names live in that component, because they
  * are a fact about the RANGE; what a tape is good at is a fact about the TAPE,
@@ -123,14 +129,21 @@ export default function SuperPowers({ tape }: { tape: Tape }) {
           bounce is a CSS animation that is only declared once reveal.ts sets an
           attribute — and no script means no attribute, which means a drawing
           that is never asked for. Shown outright here, exactly as the
-          reduced-motion rule in global.css shows it. */}
+          reduced-motion rule in global.css shows it.
+
+          AN UPLOADED MARK THAT MOVES ITSELF is the third line, and it is held
+          off the same way for the opposite reason: its animation is declared by
+          the file and the stylesheet TAKES IT OFF until the attribute lands, so
+          with no script it is a drawing standing still — and standing still is
+          exactly where it would have landed. Showing it is the whole fix. */}
       <noscript>
         <style>{`.super-powers .char { transform: none }
           .super-powers .body-rise { transform: none }
           .super-powers .powers-slot { --pow-shown: 1 }
           .super-powers .powers-card { --pow-fill: 1 }
           .super-powers .powers-mark-jump,
-          .super-powers .powers-mark-plate { opacity: 1 }`}</style>
+          .super-powers .powers-mark-plate,
+          .super-powers .powers-mark--live { opacity: 1 }`}</style>
       </noscript>
 
       {/* THE NAME'S FIRST HALF. A heading rather than two decorative words: the
@@ -200,7 +213,7 @@ export default function SuperPowers({ tape }: { tape: Tape }) {
                 ))}
               </h3>
 
-              <Mark />
+              <Mark file={power.mark} />
 
               {/* The sentence, split to words for the line reveal. The class is
                   the opt-in — bodyReveal.ts finds a block by .body-copy — and it

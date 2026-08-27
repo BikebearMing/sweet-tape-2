@@ -70,6 +70,7 @@ export interface Config {
     users: User;
     media: Media;
     tapes: Tape;
+    news: News;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -80,6 +81,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     tapes: TapesSelect<false> | TapesSelect<true>;
+    news: NewsSelect<false> | NewsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -236,6 +238,56 @@ export interface Tape {
   createdAt: string;
 }
 /**
+ * Stories and events. Exactly one story is featured; ticking a new one unticks the old.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "news".
+ */
+export interface News {
+  id: number;
+  /**
+   * Written exactly as it paints. The lead story is set in caps because it is display type; a card's title is sentence case because it is a sentence. Neither is text-transform doing it.
+   */
+  title: string;
+  /**
+   * The route's last segment: /news/<slug>. Changing it breaks any link already published to the old one.
+   */
+  slug: string;
+  /**
+   * The filter tab this sits under, and what the card wears at its top edge. The tabs are counted off these values — there is no second list to keep in step.
+   */
+  kind: 'event' | 'news';
+  /**
+   * Prints as the large day and the small month beneath it. Both are derived from this, so they cannot disagree.
+   */
+  date: string;
+  /**
+   * The story the newsroom leads on — an editorial choice, not the newest date. Ticking this unticks whichever story held it before.
+   */
+  featured?: boolean | null;
+  /**
+   * Converted to WebP on upload. The featured shot runs full-bleed off the top corner of the inner page, so it wants to be the largest of them.
+   */
+  image: number | Media;
+  /**
+   * Leave empty where the picture is decoration beside a title that already says it — the grid cards. The featured shot and the inner page carry a real one. Falls back to the alt set on the image itself.
+   */
+  alt?: string | null;
+  /**
+   * The heading at the head of the article's own sheet. Not a summary and not a standfirst — display type doing a heading's job, written in the case it paints.
+   */
+  deck: string;
+  /**
+   * One entry per paragraph. The read time is counted from these, so it comes right on its own as the writing grows.
+   */
+  body: {
+    text: string;
+    id?: string | null;
+  }[];
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -270,6 +322,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'tapes';
         value: number | Tape;
+      } | null)
+    | ({
+        relationTo: 'news';
+        value: number | News;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -382,6 +438,28 @@ export interface TapesSelect<T extends boolean = true> {
   tagBg?: T;
   tagInk?: T;
   ink?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "news_select".
+ */
+export interface NewsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  kind?: T;
+  date?: T;
+  featured?: T;
+  image?: T;
+  alt?: T;
+  deck?: T;
+  body?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }

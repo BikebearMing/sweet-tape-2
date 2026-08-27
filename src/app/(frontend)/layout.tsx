@@ -15,6 +15,7 @@ import "@/styles/global.css";
 import "@/styles/letters-tuning.css";
 
 import Cursor from "@/components/Cursor";
+import LivePreview from "@/components/LivePreview";
 import Menu from "@/components/Menu";
 import { PeelDefs } from "@/components/Peel";
 import Preloader from "@/components/Preloader";
@@ -71,6 +72,10 @@ export default function FrontendLayout({ children }: { children: ReactNode }) {
         <link rel="stylesheet" href="https://use.typekit.net/wyl5nhy.css" />
       </head>
       <body>
+        {/* Listens for the admin's save message when the site is being previewed
+            in an iframe, and does nothing at all otherwise. Position in the tree
+            does not matter — it renders no markup. */}
+        <LivePreview />
         {/* Before <SmoothScroll />, and that order is load-bearing: effects run
             in tree order, and the preloader's first act is to put the scroll
             back to the top (a reload would otherwise restore it, and the cover

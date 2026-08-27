@@ -1,6 +1,6 @@
 import { letters } from "@/components/letters";
 import StoryCard from "@/components/StoryCard";
-import { relatedTo, type Story } from "@/data/news";
+import { getRelatedTo, type Story } from "@/data/news";
 
 import Stage from "./Stage";
 
@@ -17,7 +17,7 @@ import Stage from "./Stage";
  * thing to do with each of them and the whole card is the link to it; see
  * components/StoryCard, which is the same component the index's nine are.
  *
- * WHICH THREE IS THE DATA'S BUSINESS. relatedTo in src/data/news.ts picks them —
+ * WHICH THREE IS THE DATA'S BUSINESS. getRelatedTo in src/data/news.ts picks them —
  * same kind first, topped up so the row is always three, and never the story
  * being read — and it argues the rule properly. Nothing about the choice is
  * decided here: this section knows how to draw three cards and nothing else,
@@ -40,8 +40,8 @@ import Stage from "./Stage";
    the site's convention: the copy reads in the markup exactly as it paints. */
 const HEADING = ["RELATED", "NEWS"];
 
-export default function RelatedNews({ story }: { story: Story }) {
-  const stories = relatedTo(story);
+export default async function RelatedNews({ story }: { story: Story }) {
+  const stories = await getRelatedTo(story);
   /* Nothing to show is a section that does not exist, rather than a heading over
      an empty row. It cannot happen with the newsroom as it stands — there are
      ten stories and this asks for three — but a newsroom with one story in it is

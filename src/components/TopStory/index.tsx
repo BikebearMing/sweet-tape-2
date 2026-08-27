@@ -2,7 +2,7 @@
 import Arrow from "@/components/Arrow";
 import Peel from "@/components/Peel";
 import { words } from "@/components/letters";
-import { featured, hrefOf } from "@/data/news";
+import { getFeatured, hrefOf } from "@/data/news";
 import Stage from "./Stage";
 
 /* THE LEAD STORY — the news page's second screen, and the same object as the
@@ -72,7 +72,14 @@ const TAPE = {
 const TAPE_L = 15.4;
 const TAPE_BOX = `${TAPE_L}vw ${(TAPE_L / TAPE.ratio).toFixed(3)}vw`;
 
-export default function TopStory() {
+export default async function TopStory() {
+  const featured = await getFeatured();
+
+  /* Nothing ticked as the lead. The section is the top of the newsroom and a
+     lead slot rendered against no story is a crash in the middle of the markup,
+     so it draws nothing at all and the grid below carries the page. */
+  if (!featured) return null;
+
   return (
     <Stage>
       {/* WITHOUT JAVASCRIPT THE TAPE NEVER GOES ON. A scrubbed peel rests at

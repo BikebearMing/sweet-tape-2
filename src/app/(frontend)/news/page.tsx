@@ -29,6 +29,12 @@ import WhatsRolling from "@/components/WhatsRolling";
  * which is why the title card's top padding is measured to clear the badge and is
  * the only relationship between them.
  */
+/* RENDERED ON DEMAND, for the same reason as the story pages beneath it: the
+   wall and the lead story are a Payload query now, so this page cannot be built
+   before the stories exist. It is also what live preview needs — a page frozen
+   at build time has nothing to show an editor mid-edit. */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "What’s Rolling — Sweet Tape",
   description: "News and events from Sweet Tape.",

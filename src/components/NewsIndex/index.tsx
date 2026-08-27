@@ -1,6 +1,6 @@
 import { letters } from "@/components/letters";
 import StoryCard from "@/components/StoryCard";
-import { countOf, KINDS, stories } from "@/data/news";
+import { countOf, getStories, KINDS } from "@/data/news";
 import Stage from "./Stage";
 
 /* THE INDEX — the rest of the newsroom, and the page's last screen before the
@@ -39,7 +39,9 @@ import Stage from "./Stage";
  * hands the section to filter.ts and reveal.ts; nothing below this line is a
  * client component.
  */
-export default function NewsIndex() {
+export default async function NewsIndex() {
+  const stories = await getStories();
+
   return (
     <Stage>
       {/* WITHOUT JAVASCRIPT NOTHING HERE ARRIVES. The tabs' letters are parked
@@ -80,7 +82,7 @@ export default function NewsIndex() {
               <button
                 className="index-tab"
                 type="button"
-                aria-label={`${label}, ${countOf(id)} stories`}
+                aria-label={`${label}, ${countOf(id, stories)} stories`}
                 {...(id ? { "data-kind": id } : {})}
               >
                 <span className="index-tab-label" aria-hidden="true">
@@ -92,7 +94,7 @@ export default function NewsIndex() {
                     rather than in the KINDS list. It is inside the label for a
                     screen reader, which is why this copy is hidden. */}
                 <span className="index-tab-count" aria-hidden="true">
-                  ({countOf(id)})
+                  ({countOf(id, stories)})
                 </span>
               </button>
 

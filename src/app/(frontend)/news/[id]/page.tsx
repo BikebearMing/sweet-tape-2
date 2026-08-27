@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import Article from "@/components/Article";
 import Footer from "@/components/Footer";
 import RelatedNews from "@/components/RelatedNews";
-import { all, storyOf } from "@/data/news";
+import { getStoryOf } from "@/data/news";
 
 /* A STORY — /news/[id], the news page's inner page.
  *
@@ -18,9 +18,9 @@ import { all, storyOf } from "@/data/news";
  * somewhere a reader stops into somewhere they carry on from, and it is the
  * section that pays the footer's toll now that it is the last on the page.
  *
- * TEN ROUTES, ONE COMPONENT, AND NO COPY HERE. Everything a story is lives in
- * src/data/news.ts and arrives as one object — so a story added there is a page
- * that exists, generated, titled and linked to from the index, with nothing in
+ * ONE COMPONENT, AND NO COPY HERE. Everything a story is comes through
+ * src/data/news.ts and arrives as one object — so a story published in the CMS
+ * is a page that exists, titled and linked to from the index, with nothing in
  * this folder to touch. That is the same seam the index and the lead story are
  * built on and the reason this file is as short as it is.
  *
@@ -36,25 +36,21 @@ import { all, storyOf } from "@/data/news";
  * is measured to clear its badge, which is the only relationship between them.
  */
 
-/* Every story, built at build time. The set is a file in the repository rather
-   than a table somewhere, so there is nothing to fetch and no reason to leave
-   any of them to be rendered on demand. */
-export async function generateStaticParams() {
-  return all.map((story) => ({ id: story.id }));
-}
-
-/* Anything NOT in that list is a 404 rather than a page rendered on the fly.
-   The ids are a closed set — see generateStaticParams — so a request for one
-   that is not here is a stale link or a guess, and neither should be answered
-   with an empty article. */
-export const dynamicParams = false;
+/* RENDERED ON DEMAND, and it has to be now that the stories are in the CMS.
+   This page used to name every route at build time and refuse anything else,
+   on the reasoning that the ids were a closed set in a file in this repository.
+   They are not any more: an editor publishes a story and it has to resolve
+   without a rebuild, so the set is open and the page is dynamic. It is also
+   what makes live preview possible at all — there is nothing to preview against
+   a page that was rendered before the edit was made. */
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
-  const story = storyOf((await params).id);
+  const story = await getStoryOf((await params).id);
   if (!story) return {};
 
   return {
@@ -81,11 +77,10 @@ export default async function StoryPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const story = storyOf((await params).id);
-  /* Belt and braces beside dynamicParams above: that setting is what stops an
-     unknown id ever reaching here, and this is what happens if it does. A page
-     rendered with no story is a crash in the middle of the markup; a page
-     rendered with notFound() is a 404. */
+  const story = await getStoryOf((await params).id);
+  /* The only guard now that the route is open. A page rendered with no story is
+     a crash in the middle of the markup; a page rendered with notFound() is a
+     404, which is the right answer for a stale link or a guess. */
   if (!story) notFound();
 
   return (

@@ -25,6 +25,16 @@ export const Media: CollectionConfig = {
     staticDir:
       process.env.MEDIA_DIR || path.resolve(dirname, "../../public/media"),
     mimeTypes: ["image/*"],
+
+    /* Everything becomes WebP on the way in, whatever gets uploaded. sharp
+       does the conversion; quality 80 is the usual point where the artefacts
+       stop being visible and the file is still a fraction of a PNG.
+       Note this only touches CMS uploads — the hand-placed art in
+       public/assets is served as-is and is unaffected. */
+    formatOptions: {
+      format: "webp",
+      options: { quality: 80 },
+    },
   },
   fields: [
     {

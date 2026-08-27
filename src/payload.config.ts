@@ -10,6 +10,7 @@ import { Media } from "./collections/Media";
 import { Tapes } from "./collections/Tapes";
 import { News } from "./collections/News";
 import { Contact } from "./globals/Contact";
+import { Homepage } from "./globals/Homepage";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -42,12 +43,12 @@ export default buildConfig({
     livePreview: {
       collections: ["news"],
 
-      /* AND THE CONTACT PAGE, which is a global rather than a collection and so
-         is listed separately — Payload keys the two by different names because
-         a global has no id to build a URL from. It gets a pane for the reason
-         news does and tapes still does not: it is one document with one page of
-         its own, so "the page this document is" is a question with an answer. */
-      globals: ["contact"],
+      /* AND THE TWO PAGES THAT ARE GLOBALS, listed separately because Payload
+         keys globals by a different name — a global has no id to build a URL
+         from. Both get a pane for the reason news does and tapes still does
+         not: each is one document with one page of its own, so "the page this
+         document is" is a question with an answer. */
+      globals: ["contact", "homepage"],
 
       /* SERVER_URL, not NEXT_PUBLIC_SERVER_URL. This runs on the server when
          the admin builds the preview pane's iframe src, so it is read at
@@ -57,14 +58,17 @@ export default buildConfig({
          is right whenever the site and the admin are the same origin — they
          are, unless the front end is ever split off.
 
-         THE BRANCH IS HOW THE TWO ARE TOLD APART. Payload hands a
-         collectionConfig when it is previewing a document out of a collection
-         and nothing when it is previewing a global — and there is exactly one
-         of each here, so the presence of it is the whole test. A second global
-         would want a switch on its slug instead. */
-      url: ({ collectionConfig, data }) =>
+         THE BRANCH IS HOW THEY ARE TOLD APART. Payload hands a collectionConfig
+         when it is previewing a document out of a collection and a globalConfig
+         when it is previewing a global, so the first decides which of the two
+         kinds this is and the second decides which global. */
+      url: ({ collectionConfig, globalConfig, data }) =>
         `${process.env.SERVER_URL ?? ""}${
-          collectionConfig ? `/news/${data?.slug ?? ""}` : "/contact"
+          collectionConfig
+            ? `/news/${data?.slug ?? ""}`
+            : globalConfig?.slug === "homepage"
+              ? "/"
+              : "/contact"
         }`,
 
       /* The sizes the design is actually drawn to. The editor gets a dropdown
@@ -79,7 +83,7 @@ export default buildConfig({
 
   collections: [Users, Media, Tapes, News],
 
-  globals: [Contact],
+  globals: [Homepage, Contact],
 
   editor: lexicalEditor(),
 

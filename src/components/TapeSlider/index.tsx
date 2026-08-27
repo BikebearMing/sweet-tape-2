@@ -2,7 +2,7 @@
 import type { CSSProperties } from "react";
 
 import Peel from "@/components/Peel";
-import { getTapes } from "@/data/tapes";
+import { getHomepage } from "@/data/homepage";
 import Stage from "./Stage";
 import RollPicker from "./RollPicker";
 import { stripOf } from "./strips";
@@ -17,11 +17,6 @@ import { TopTitle, BottomTitle, wordmarkText } from "./WordMarks";
  * The two differ so the pair does not read as one mechanism — the same reason
  * the photographs themselves turn over a beat apart (SHOW_LAG in engine.ts). */
 const LIFT = [0.66, 0.54];
-
-/* Section-level copy. Not per tape, so it does not live in tapes.ts — but it is
-   the other obvious CMS field, so it is a named constant rather than a string
-   buried in the markup. */
-const SUBHEAD = "MEET THE ONE WHO STICKS";
 
 /* THE PHONE'S STEP ARROW, drawn once and mirrored in CSS for the forward
  * button — one glyph, so the two can never drift apart in weight or length.
@@ -48,7 +43,15 @@ function NavArrow() {
   );
 }
 
-/* The section, server-rendered in the first tape's state.
+/* The section, server-rendered in the first roll's state.
+ *
+ * THE ROLLS ARE THE HOME PAGE'S OWN RECORD, not the tapes collection. This read
+ * the tapes until the two were separated: what a product IS and what the front
+ * door is showing are different decisions, and one record answering both meant
+ * that adding a product put it on the home page and taking it off the home page
+ * meant editing the product. Each slide carries its own artwork and copy, so
+ * this page can differ from the product page it points at. See
+ * src/globals/Homepage.ts, which argues the whole of it.
  *
  * Everything below is markup only. The moment it mounts, the engine takes over
  * the DOM and swaps sources, colours and copy in place — so the initial values
@@ -57,9 +60,16 @@ function NavArrow() {
  * replace nodes GSAP is holding transforms on.
  */
 export default async function TapeSlider() {
-  const tapes = await getTapes();
+  const { slider } = await getHomepage();
+  const { subhead: SUBHEAD, rolls } = slider;
 
-  const first = tapes[0];
+  /* NOTHING TO SHOW IS A PAGE, NOT A CRASH. The orbit is the home page's own
+     record now and a global holds nothing until somebody saves it, so a fresh
+     database has a home page with no rolls on it. Everything below reads the
+     first one, so without this that is a page that 500s rather than a page an
+     editor can go and fill in. */
+  const first = rolls[0];
+  if (!first) return null;
 
   return (
     <Stage>
@@ -88,7 +98,7 @@ export default async function TapeSlider() {
           </div>
         </div>
 
-        <RollPicker />
+        <RollPicker rolls={rolls} />
 
         <div className="tape-slide">
           <div id="creative" className="wrapper">

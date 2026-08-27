@@ -84,7 +84,6 @@ function toTape(doc: TapeDoc): Tape {
     label: doc.label,
     word: doc.wordmark,
 
-    roll: urlOf(doc.roll),
     card: urlOf(doc.card),
     /* undefined rather than "" when unset, because heroOf falls back on the card
        and `??` is what does it — an empty string is a value and would win. */

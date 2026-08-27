@@ -108,9 +108,13 @@ export type Tape = {
    * the stencils are generated per word into letters.css and selected by it.
    */
   word: string;
-  /** Thumbnail on the orbit. The card at 108px; scripts made it from the card. */
-  roll: string;
-  /** Hang tag at the centre of the stage. */
+  /* THE ORBIT THUMBNAIL IS NOT HERE ANY MORE. It was the one field on a tape
+     that only the home page's slider ever read, and it moved with the slider
+     when the two were separated — a roll on the orbit is a fact about what the
+     front page is showing, not about what a product is. See
+     src/globals/Homepage.ts. */
+
+  /** Hang tag at the centre of the stage, and on the row at /products. */
   card: string;
   /**
    * THE INNER PAGE'S KEY VISUAL — the roll at /products/<id>, shot square-on and

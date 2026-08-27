@@ -6,6 +6,13 @@ import type { CollectionConfig } from "payload";
  * every field is argued properly — this file says what an editor sees, that one
  * says why the field exists at all. Read them together before changing either.
  *
+ * WHAT A PRODUCT IS, AND NOT WHAT THE HOME PAGE IS SHOWING. The orbit used to
+ * be this collection — an `order` and a `roll` thumbnail that only the slider
+ * ever read — which made one record the authority on two unrelated decisions.
+ * Adding a tape put it on the front page. They are separate now: see
+ * src/globals/Homepage.ts. `order` remains because the row at /products and the
+ * NEXT UP link still walk this collection in a running order of its own.
+ *
  * ARTWORK IS UPLOADS NOW. Every picture a tape wears is a Media record rather
  * than a path typed into a box: an editor swaps a roll by dropping a file on it,
  * the delete guard stops anyone removing one still in use, and each URL carries
@@ -30,7 +37,7 @@ export const Tapes: CollectionConfig = {
     useAsTitle: "label",
     defaultColumns: ["label", "slug", "order", "updatedAt"],
     description:
-      "The six rolls, in orbit order. Artwork is still referenced by path; the copy, colours and powers are live.",
+      "The products themselves — what each tape IS. The home page's orbit is a separate record (Globals → Homepage), so adding a tape here does not put it on the front page.",
   },
 
   access: { read: () => true },
@@ -61,7 +68,7 @@ export const Tapes: CollectionConfig = {
       defaultValue: 0,
       admin: {
         description:
-          "Position on the orbit, low to high. The first one is selected on load.",
+          "Position in the row at /products, low to high — and the order NEXT UP walks at the foot of a product page. NOT the home page's orbit, which is set on the Homepage global and ordered by dragging the rolls there.",
       },
     },
     {
@@ -78,13 +85,6 @@ export const Tapes: CollectionConfig = {
       type: "collapsible",
       label: "Artwork",
       fields: [
-        {
-          name: "roll",
-          type: "upload",
-          relationTo: "media",
-          required: true,
-          admin: { description: "Thumbnail on the orbit, made from the card at 108px." },
-        },
         {
           name: "card",
           type: "upload",

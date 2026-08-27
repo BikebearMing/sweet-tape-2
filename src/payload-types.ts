@@ -92,9 +92,11 @@ export interface Config {
   };
   fallbackLocale: null;
   globals: {
+    homepage: Homepage;
     contact: Contact;
   };
   globalsSelect: {
+    homepage: HomepageSelect<false> | HomepageSelect<true>;
     contact: ContactSelect<false> | ContactSelect<true>;
   };
   locale: null;
@@ -180,7 +182,7 @@ export interface Media {
   focalY?: number | null;
 }
 /**
- * The six rolls, in orbit order. Artwork is still referenced by path; the copy, colours and powers are live.
+ * The products themselves — what each tape IS. The home page's orbit is a separate record (Globals → Homepage), so adding a tape here does not put it on the front page.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "tapes".
@@ -196,7 +198,7 @@ export interface Tape {
    */
   slug: string;
   /**
-   * Position on the orbit, low to high. The first one is selected on load.
+   * Position in the row at /products, low to high — and the order NEXT UP walks at the foot of a product page. NOT the home page's orbit, which is set on the Homepage global and ordered by dragging the rolls there.
    */
   order: number;
   /**
@@ -204,9 +206,9 @@ export interface Tape {
    */
   wordmark: string;
   /**
-   * Thumbnail on the orbit, made from the card at 108px.
+   * TEMPORARY — being removed.
    */
-  roll: number | Media;
+  roll?: (number | null) | Media;
   /**
    * Hang tag at the centre of the stage.
    */
@@ -675,6 +677,102 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   createdAt?: T;
 }
 /**
+ * The home page. The tape slider's rolls are set here, in the order they orbit — independently of the Tapes collection, which describes the products themselves.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage".
+ */
+export interface Homepage {
+  id: number;
+  slider: {
+    /**
+     * The line above the stage. Capitals — the page does not transform it, so what is typed is what is drawn.
+     */
+    subhead: string;
+    /**
+     * The orbit, in the order it turns. Drag to reorder; the first one is selected on load. Adding a roll here does not create a product, and removing one does not delete anything.
+     */
+    rolls: {
+      /**
+       * Stable id for this roll. Not shown to a reader — it identifies the slide to the engine and picks which tape the photographs are held down with (see strips.ts). Match the product's slug where there is one, so the right strip is chosen; anything unrecognised gets the masking strip.
+       */
+      key: string;
+      /**
+       * What the roll's button is called for somebody who cannot see it. The only text on this slide a screen reader announces.
+       */
+      label: string;
+      /**
+       * The roll on the orbit, drawn at 108px. Usually the card shot cropped square.
+       */
+      thumb: number | Media;
+      /**
+       * Hang tag at the centre of the stage.
+       */
+      card: number | Media;
+      /**
+       * Exactly two. The stage places each by hand, so a third would have nowhere to go.
+       */
+      showcase: {
+        image: number | Media;
+        id?: string | null;
+      }[];
+      /**
+       * Path to the 3D roll under /public/assets/tapes. The slider PRELOADS these, so a wrong one breaks the home page rather than one product. Geometry rather than content, which is why it is a path and not an upload.
+       */
+      model: string;
+      /**
+       * Which word the bottom title spells. Its letterforms are generated per word into letters.css, so this is a fixed list rather than free text.
+       */
+      wordmark: 'creative' | 'trusty' | 'buddy' | 'fixer' | 'reliable' | 'silent';
+      /**
+       * Chips beside the stage. Four is the ceiling — the tilt angles run out at five.
+       */
+      tags?:
+        | {
+            text: string;
+            id?: string | null;
+          }[]
+        | null;
+      /**
+       * The paragraph under the chips.
+       */
+      copy: string;
+      /**
+       * Reaches the page as custom properties on the roll button; the stage floods from them when this roll is picked.
+       */
+      colours: {
+        /**
+         * Band behind the roll when selected.
+         */
+        ring: string;
+        /**
+         * Colour the stage floods with.
+         */
+        bg: string;
+        /**
+         * THE and the tape's own word.
+         */
+        word: string;
+        /**
+         * Chip fill.
+         */
+        tagBg: string;
+        /**
+         * Chip text. Check it against tagBg — 4.5:1 or better.
+         */
+        tagInk: string;
+        /**
+         * Body copy beside the stage.
+         */
+        ink: string;
+      };
+      id?: string | null;
+    }[];
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Everything /contact says. The layout is drawn in code; the words are here.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -756,6 +854,54 @@ export interface Contact {
   metaDescription: string;
   updatedAt?: string | null;
   createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage_select".
+ */
+export interface HomepageSelect<T extends boolean = true> {
+  slider?:
+    | T
+    | {
+        subhead?: T;
+        rolls?:
+          | T
+          | {
+              key?: T;
+              label?: T;
+              thumb?: T;
+              card?: T;
+              showcase?:
+                | T
+                | {
+                    image?: T;
+                    id?: T;
+                  };
+              model?: T;
+              wordmark?: T;
+              tags?:
+                | T
+                | {
+                    text?: T;
+                    id?: T;
+                  };
+              copy?: T;
+              colours?:
+                | T
+                | {
+                    ring?: T;
+                    bg?: T;
+                    word?: T;
+                    tagBg?: T;
+                    tagInk?: T;
+                    ink?: T;
+                  };
+              id?: T;
+            };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

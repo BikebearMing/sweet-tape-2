@@ -87,6 +87,15 @@ const MONTHS = [
   "JUL", "AUG", "SEP", "OCT", "NOV", "DEC",
 ];
 
+/** Hangs the record's own updatedAt off the URL as a version, so replacing a
+ *  file busts every cached copy of it. Base 36 to keep it short; it is an
+ *  opaque token and nothing reads it back. */
+function withVersion(url: string, updatedAt: string): string {
+  const v = Date.parse(updatedAt);
+  if (Number.isNaN(v)) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}v=${v.toString(36)}`;
+}
+
 /* One Payload document, as the components have always expected a story.
  *
  * THE DATE BECOMES TWO STRINGS HERE and nowhere else. The collection stores one
@@ -112,8 +121,16 @@ function toStory(doc: NewsDoc): Story {
     /* Payload's own file route, not /media/<name>. In production the upload
        volume is mounted at /app/media — outside public/ on purpose, so that a
        redeploy cannot wipe it — which means Next never sees these as static
-       files and this route is the only thing that serves them. */
-    image: image?.url ?? "",
+       files and this route is the only thing that serves them.
+
+       STAMPED WITH THE RECORD'S OWN updatedAt, which is what makes it safe to
+       cache the route for a year (see next.config.mjs). Swapping the file in the
+       admin moves updatedAt, which changes this URL, which is a cache miss
+       everywhere at once — the new picture appears immediately rather than when
+       somebody's copy happens to expire. It is the same trick /_next/static
+       plays by hashing its filenames, done with a timestamp because the filename
+       here belongs to the editor rather than the build. */
+    image: image?.url ? withVersion(image.url, image.updatedAt) : "",
     /* The story's own alt wins; the image's is the fallback. A card wants an
        empty one where the picture is decoration, and "" is a real answer here
        rather than a missing value — hence the ?? rather than a truthiness

@@ -10,7 +10,8 @@
     "letters": "node scripts/gen-letters.mjs",
     "payload": "payload",
     "generate:types": "payload generate:types",
-    "tapes": "node scripts/shrink-tapes.mjs"
+    "tapes": "node scripts/shrink-tapes.mjs",
+    "media:pull": "bash scripts/pull-media.sh"
   },
   "dependencies": {
     "@fontsource-variable/inter-tight": "^5.3.0",

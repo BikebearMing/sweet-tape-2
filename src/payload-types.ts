@@ -148,12 +148,21 @@ export interface User {
   collection: 'users';
 }
 /**
+ * Every swappable file on the site. Replacing one here replaces it everywhere it appears.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
   id: number;
+  /**
+   * What the picture says, for a reader who cannot see it. Leave the story's own alt empty to use this one.
+   */
   alt: string;
+  /**
+   * Site furniture — a cursor, a texture, a 3D roll. Tick this and the file cannot be deleted until it is unticked.
+   */
+  protected?: boolean | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -398,6 +407,7 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  protected?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;

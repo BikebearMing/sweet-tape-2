@@ -53,6 +53,29 @@ const nextConfig = {
         ],
       },
       {
+        /* CMS UPLOADS. Payload serves these itself and sets no cache headers at
+           all — not even an ETag — so a 67KB photograph was being re-downloaded
+           in full on every page view, which is worse than the /assets default
+           this file already fixes.
+
+           A year, and safely, because these URLs carry a version: every media
+           URL is stamped with the record's updatedAt (see withVersion in
+           src/data/news.ts), so replacing a file changes its URL and misses
+           every cache at once. The editor swaps a picture and it is the new one
+           immediately — the thing a long cache normally costs you.
+
+           An unstamped request still hits this rule, so anything linking to a
+           bare /api/media/file/... URL will go stale for a year. Stamp it, or
+           do not link it. */
+        source: "/api/media/file/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
         /* Fonts genuinely never change — a face is recut under a new name, not
            edited in place — so these get the treatment the bundles get. */
         source: "/fonts/:path*",

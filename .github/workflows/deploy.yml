@@ -1,0 +1,60 @@
+name: Build and deploy
+
+# Builds the image on GitHub's runners, never on the VPS. That box has 2GB of
+# RAM; a Next + Payload build peaks well past it and would be OOM-killed. The
+# VPS only ever pulls a finished image.
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # GITHUB_TOKEN is enough for GHCR — no PAT to create or rotate.
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          # latest is what Dokploy pulls; the sha tag is how you roll back to a
+          # specific commit without rebuilding it.
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # The VPS is x86_64. Building arm64 as well would double build time
+          # for an image nothing pulls.
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Dokploy exposes a per-application deploy URL. It pulls :latest and
+      # swaps the container. Set DOKPLOY_DEPLOY_WEBHOOK in repo secrets.
+      - name: Trigger Dokploy deploy
+        if: ${{ github.event_name != 'pull_request' }}
+        run: curl -fsSL -X POST "${{ secrets.DOKPLOY_DEPLOY_WEBHOOK }}"

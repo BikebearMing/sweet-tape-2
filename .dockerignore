@@ -1,0 +1,29 @@
+# The build context is uploaded to the builder before anything runs, so
+# anything listed here is bandwidth and time saved on every single build.
+# .next alone is 2.4GB locally and is rebuilt from scratch in the image anyway.
+node_modules
+.next
+out
+build
+*.tsbuildinfo
+
+.git
+.gitignore
+
+# Secrets never belong in an image layer. Runtime env comes from Dokploy.
+.env
+.env.local
+.env*.local
+
+# Working material — none of it is imported by the app.
+legacy
+scripts/__pycache__
+glb-test-shots
+glb-test.html
+hero.html
+hero.css
+*.zip
+*.md
+!README.md
+
+.DS_Store

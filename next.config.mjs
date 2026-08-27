@@ -2,6 +2,13 @@ import { withPayload } from "@payloadcms/next/withPayload";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  /* Traces the server down to just the files it actually imports, so the
+     container ships ~300MB instead of the whole node_modules tree — three,
+     sharp and Payload's admin bundle make that difference enormous. The
+     tradeoff is that the runner stage has to copy .next/static and public in
+     by hand; standalone deliberately leaves both out. See the Dockerfile. */
+  output: "standalone",
+
   /* On in dev, where it mounts every component twice. That is exactly the case
      the slider has to survive — initTapeSlider returns a teardown so the second
      mount rebinds rather than doubling every listener and ticker callback. If

@@ -8,7 +8,7 @@ import ProductIntro from "@/components/ProductIntro";
 import ProductReel from "@/components/ProductReel";
 import Siblings from "@/components/Siblings";
 import SuperPowers from "@/components/SuperPowers";
-import { tapeOf, tapes } from "@/data/tapes";
+import { getTapeOf } from "@/data/tapes";
 
 /* A TAPE — /products/[id], the family's inner page.
  *
@@ -43,25 +43,19 @@ import { tapeOf, tapes } from "@/data/tapes";
  * built from; neither is drawn by this page.
  */
 
-/* Every tape, built at build time. The set is a file in the repository rather
-   than a table somewhere, so there is nothing to fetch and no reason to leave
-   any of them to be rendered on demand. */
-export async function generateStaticParams() {
-  return tapes.map((tape) => ({ id: tape.id }));
-}
-
-/* Anything NOT in that list is a 404 rather than a page rendered on the fly.
-   The ids are a closed set — see generateStaticParams — so a request for one
-   that is not here is a stale link or a guess, and neither should be answered
-   with a page about no tape. */
-export const dynamicParams = false;
+/* RENDERED ON DEMAND, and it has to be now that the tapes are in the CMS.
+   This page used to name every route at build time and refuse anything else, on
+   the reasoning that the ids were a closed set in a file in this repository.
+   They are not: a roll added or re-slugged in the admin has to resolve without a
+   rebuild, and the container is built with no database to ask. */
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
-  const tape = tapeOf((await params).id);
+  const tape = await getTapeOf((await params).id);
   if (!tape) return {};
 
   return {
@@ -78,8 +72,8 @@ export default async function TapePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const tape = tapeOf((await params).id);
-  /* Belt and braces beside dynamicParams above: that setting is what stops an
+  const tape = await getTapeOf((await params).id);
+  /* The only guard now that the route is open: that setting used to stop an
      unknown id ever reaching here, and this is what happens if it does. A page
      rendered with no tape is a crash in the middle of the markup; a page
      rendered with notFound() is a 404. */

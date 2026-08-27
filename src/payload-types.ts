@@ -176,7 +176,7 @@ export interface Media {
   focalY?: number | null;
 }
 /**
- * Not yet live. The site reads src/data/tapes.ts until this is wired up.
+ * The six rolls, in orbit order. Artwork is still referenced by path; the copy, colours and powers are live.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "tapes".
@@ -184,15 +184,23 @@ export interface Media {
 export interface Tape {
   id: number;
   /**
-   * Position on the orbit, low to high. The first one is selected on load.
-   */
-  order: number;
-  /**
    * Screen-reader name for the roll button.
    */
   label: string;
   /**
-   * Thumbnail on the orbit, e.g. /assets/rolling/roll-mask.webp
+   * The route's last segment: /products/<slug>, and the artwork folder's name. Changing it breaks both.
+   */
+  slug: string;
+  /**
+   * Position on the orbit, low to high. The first one is selected on load.
+   */
+  order: number;
+  /**
+   * Which word the bottom title spells — a key of `words` in src/data/wordmarks.json, where its letterforms are. Not free text: the stencils are generated per word into letters.css and selected by this.
+   */
+  wordmark: string;
+  /**
+   * Thumbnail on the orbit, made from the card at 108px.
    */
   roll: string;
   /**
@@ -200,12 +208,35 @@ export interface Tape {
    */
   card: string;
   /**
+   * The inner page's key visual — the roll shot square-on. Optional: leave it empty and the page falls back to the card, which is a working page rather than a hole in one.
+   */
+  hero?: string | null;
+  /**
    * Exactly two. The layout places each by hand, so a third would have nowhere to go.
    */
   showcase: {
     src: string;
     id?: string | null;
   }[];
+  /**
+   * The siblings' printed labels, one per variant id. Optional and empty for every tape today — each card falls back to the card artwork above, so the row works rather than showing three broken images.
+   */
+  faces?:
+    | {
+        variant: string;
+        src: string;
+        id?: string | null;
+      }[]
+    | null;
+  model: string;
+  /**
+   * A second mesh for the inner page where the slider's is not right for it. Optional.
+   */
+  modelInner?: string | null;
+  /**
+   * How see-through the tape is, 0 to 1. A fact about the tape rather than a rendering setting, which is why it lives here.
+   */
+  clarity?: number | null;
   /**
    * Chips in the left column. Four is the ceiling — the tilt angles run out at five.
    */
@@ -220,29 +251,90 @@ export interface Tape {
    */
   copy: string;
   /**
-   * Band behind the roll when selected.
+   * Exactly two lines, broken where the design breaks them rather than wherever the measure lands.
    */
-  ring: string;
+  origin: {
+    text: string;
+    id?: string | null;
+  }[];
   /**
-   * Colour the stage floods with.
+   * One entry per line.
    */
-  bg: string;
+  character: {
+    text: string;
+    id?: string | null;
+  }[];
+  reel: {
+    /**
+     * Broken by hand: where display type this size turns is a drawing decision, not something to infer from the string at render time.
+     */
+    headline: {
+      text: string;
+      id?: string | null;
+    }[];
+    note: {
+      text: string;
+      id?: string | null;
+    }[];
+    /**
+     * Exactly four. The grid is drawn for four and a fifth has nowhere to go.
+     */
+    shots: {
+      src: string;
+      id?: string | null;
+    }[];
+  };
   /**
-   * THE and CREATIVE.
+   * Exactly three — the section is a stack of three cards. Per tape rather than per range: a masking tape and a cloth tape are not good at the same things.
    */
-  word: string;
+  powers: {
+    /**
+     * Stable key. Not shown on the page.
+     */
+    key: string;
+    /**
+     * First line of the claim.
+     */
+    titleTop: string;
+    /**
+     * Second line. Exactly two: the card is a fixed shape and a third would overflow it.
+     */
+    titleBottom: string;
+    /**
+     * One sentence, under the mark. Sentence case here — the caps on the page are the section's setting, so this stays readable in a screen reader.
+     */
+    copy: string;
+    id?: string | null;
+  }[];
   /**
-   * Chip fill.
+   * Reaches the page as custom properties on the roll button; the animation reads them from there.
    */
-  tagBg: string;
-  /**
-   * Chip text. Check it against tagBg — 4.5:1 or better.
-   */
-  tagInk: string;
-  /**
-   * Body copy in the left column.
-   */
-  ink: string;
+  colours: {
+    /**
+     * Band behind the roll when selected.
+     */
+    ring: string;
+    /**
+     * Colour the stage floods with.
+     */
+    bg: string;
+    /**
+     * THE and the tape's own word.
+     */
+    word: string;
+    /**
+     * Chip fill.
+     */
+    tagBg: string;
+    /**
+     * Chip text. Check it against tagBg — 4.5:1 or better.
+     */
+    tagInk: string;
+    /**
+     * Body copy in the left column.
+     */
+    ink: string;
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -425,16 +517,29 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "tapes_select".
  */
 export interface TapesSelect<T extends boolean = true> {
-  order?: T;
   label?: T;
+  slug?: T;
+  order?: T;
+  wordmark?: T;
   roll?: T;
   card?: T;
+  hero?: T;
   showcase?:
     | T
     | {
         src?: T;
         id?: T;
       };
+  faces?:
+    | T
+    | {
+        variant?: T;
+        src?: T;
+        id?: T;
+      };
+  model?: T;
+  modelInner?: T;
+  clarity?: T;
   tags?:
     | T
     | {
@@ -442,12 +547,59 @@ export interface TapesSelect<T extends boolean = true> {
         id?: T;
       };
   copy?: T;
-  ring?: T;
-  bg?: T;
-  word?: T;
-  tagBg?: T;
-  tagInk?: T;
-  ink?: T;
+  origin?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  character?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  reel?:
+    | T
+    | {
+        headline?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        note?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        shots?:
+          | T
+          | {
+              src?: T;
+              id?: T;
+            };
+      };
+  powers?:
+    | T
+    | {
+        key?: T;
+        titleTop?: T;
+        titleBottom?: T;
+        copy?: T;
+        id?: T;
+      };
+  colours?:
+    | T
+    | {
+        ring?: T;
+        bg?: T;
+        word?: T;
+        tagBg?: T;
+        tagInk?: T;
+        ink?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }

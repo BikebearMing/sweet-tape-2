@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 
 import { letters } from "@/components/letters";
-import { cssVars, nextTape, type Tape } from "@/data/tapes";
+import { cssVars, getNextTape, type Tape } from "@/data/tapes";
 import Stage from "./Stage";
 
 /* NEXT UP — the last thing on a product page, and the way out of it.
@@ -51,8 +51,8 @@ import Stage from "./Stage";
 const KICKER = "MEET THE NEXT FAMILY";
 const HEADING = "NEXT UP";
 
-export default function NextUp({ tape }: { tape: Tape }) {
-  const next = nextTape(tape);
+export default async function NextUp({ tape }: { tape: Tape }) {
+  const next = await getNextTape(tape);
 
   return (
     <Stage style={cssVars(next.colours) as CSSProperties}>

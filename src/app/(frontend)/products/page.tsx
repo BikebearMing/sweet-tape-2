@@ -24,6 +24,11 @@ import Footer from "@/components/Footer";
  * Everything site-wide — the preloader, the smooth scroll, the cursor and the
  * pull-down menu — is in (frontend)/layout.tsx and arrives here untouched.
  */
+/* RENDERED ON DEMAND. The row below is the six rolls out of the CMS now, so
+   this page cannot be built before they exist — and an editor changing a roll's
+   colour has to see it without a rebuild. */
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Our Family — Sweet Tape",
   description: "Six tapes, one for every job. Pick your player.",

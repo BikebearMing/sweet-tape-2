@@ -2,7 +2,7 @@
 import type { CSSProperties } from "react";
 
 import Peel from "@/components/Peel";
-import { tapes } from "@/data/tapes";
+import { getTapes } from "@/data/tapes";
 import Stage from "./Stage";
 import RollPicker from "./RollPicker";
 import { stripOf } from "./strips";
@@ -56,7 +56,9 @@ function NavArrow() {
  * step. Nothing re-renders after mount, by design: a re-render mid-tween would
  * replace nodes GSAP is holding transforms on.
  */
-export default function TapeSlider() {
+export default async function TapeSlider() {
+  const tapes = await getTapes();
+
   const first = tapes[0];
 
   return (

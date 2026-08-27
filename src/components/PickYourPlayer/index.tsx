@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 
 import { bodyCopy } from "@/components/body";
 import { letters } from "@/components/letters";
-import { cssVars, tapes } from "@/data/tapes";
+import { cssVars, getTapes, type Tape } from "@/data/tapes";
 import ClickMe, { type CueSide } from "./ClickMe";
 import Stage from "./Stage";
 
@@ -104,15 +104,33 @@ const CUE_SIDE: CueSide[] = [
   "left",
 ];
 
-/* Resolved at module scope, so a typo or a tape renamed in the data file is a
-   build that fails with the id in the message rather than a page with a hole in
-   the row. */
-const ROLLS = ORDER.map((id) => {
-  const tape = tapes.find((t) => t.id === id);
-  if (!tape)
-    throw new Error(`PickYourPlayer: no tape "${id}" in src/data/tapes`);
-  return tape;
-});
+/* The row, in the order above, resolved against whatever the CMS holds.
+ *
+ * IT USED TO THROW, and at module scope, so a renamed tape was a build that
+ * failed with the id in the message. It cannot be either of those now: the
+ * tapes are rows in Postgres, so this is a request rather than a build, and an
+ * editor changing a slug would take the whole page down with a 500 rather than
+ * lose one roll from a row of six.
+ *
+ * So it does what the preloader does with the same problem — loud in
+ * development, where the person who broke it is looking, and a shorter row in
+ * production, where the reader would rather have five rolls than an error page.
+ * The failure is still visible; it is just no longer fatal to everything around
+ * it. */
+function rollsOf(tapes: Tape[]): Tape[] {
+  return ORDER.flatMap((id) => {
+    const tape = tapes.find((t) => t.id === id);
+
+    if (!tape && process.env.NODE_ENV !== "production") {
+      console.warn(
+        `[PickYourPlayer] ORDER names "${id}", which is not a tape slug in the ` +
+          `CMS. That roll is missing from the row.`,
+      );
+    }
+
+    return tape ? [tape] : [];
+  });
+}
 
 /* Section copy — the obvious CMS fields, so they are named constants rather than
    strings buried in the markup. The heading's break is set by design and not by
@@ -122,7 +140,9 @@ const NOTE_LEFT = "Not all tape is created for the same task.";
 const NOTE_RIGHT =
   "We’ve made it easy to choose the right tape — so you don’t have to guess.";
 
-export default function PickYourPlayer() {
+export default async function PickYourPlayer() {
+  const ROLLS = rollsOf(await getTapes());
+
   return (
     <Stage>
       {/* WITHOUT JAVASCRIPT THE TYPE NEVER ARRIVES. Both entrances are parked by

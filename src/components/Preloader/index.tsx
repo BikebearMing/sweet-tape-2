@@ -1,9 +1,9 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import { tapes } from "@/data/tapes";
+
 import { initPreloader } from "./reveal";
 import { createTransition, type Transition } from "./transition";
 
@@ -49,22 +49,37 @@ const STACK_ORDER = [
   "cloth", // deep blue
 ];
 
-const STACK = STACK_ORDER.flatMap((id) => {
-  const tape = tapes.find((t) => t.id === id);
-  /* LOUDLY, because the quiet version of this has already happened once: the
-     tapes were re-keyed from "mask-1" to real slugs, every id here stopped
-     resolving, and what shipped was a stack of nothing — the cover still swept,
-     in one colour, and the only sign was that the bands were gone. A missing
-     tape is a content edit and must not take the animation with it, but it must
-     not be silent either. */
-  if (!tape && process.env.NODE_ENV !== "production") {
-    console.warn(
-      `[Preloader] STACK_ORDER names "${id}", which is not an id in src/data/tapes.ts. ` +
-        `That sheet is missing from the sweep.`,
-    );
-  }
-  return tape ? [{ id, bg: tape.colours.bg }] : [];
-});
+/** One sheet per tape named above, in that order, coloured from the palette the
+ *  layout hands down.
+ *
+ *  THE PALETTE IS A PROP NOW, not an import. The tapes live in Postgres and this
+ *  is a client component: importing src/data/tapes would pull the database
+ *  adapter into the browser bundle. The root layout does the query and passes
+ *  six ids and six colours, which is all this ever wanted from a tape.
+ *
+ *  STILL LOUD ABOUT A MISSING ONE, because the quiet version has already
+ *  happened once: the tapes were re-keyed from "mask-1" to real slugs, every id
+ *  here stopped resolving, and what shipped was a stack of nothing — the cover
+ *  still swept, in one colour, and the only sign was that the bands were gone. A
+ *  missing tape is a content edit and must not take the animation with it, but it
+ *  must not be silent either. Which now includes the palette arriving empty
+ *  because the database was unreachable. */
+function stackOf(palette: Palette): { id: string; bg: string }[] {
+  return STACK_ORDER.flatMap((id) => {
+    const tape = palette.find((t) => t.id === id);
+
+    if (!tape && process.env.NODE_ENV !== "production") {
+      console.warn(
+        `[Preloader] STACK_ORDER names "${id}", which is not a tape slug in the ` +
+          `CMS. That sheet is missing from the sweep.`,
+      );
+    }
+
+    return tape ? [{ id, bg: tape.bg }] : [];
+  });
+}
+
+export type Palette = { id: string; bg: string }[];
 
 /** The one route the overture belongs to. */
 const HOME = "/";
@@ -109,8 +124,13 @@ const HOME = "/";
  * sweep and put back by the transition (gate.ts) — so the page is held from the
  * first byte rather than from whenever hydration happens to land.
  */
-export default function Preloader() {
+export default function Preloader({ palette }: { palette: Palette }) {
   const ref = useRef<HTMLDivElement>(null);
+  /* Computed once from the prop rather than on every render: the stack is seven
+     divs whose colours do not change for the life of the page, and re-deriving
+     them on each render of a component that re-renders on every navigation
+     would be work for nothing. */
+  const STACK = useMemo(() => stackOf(palette), [palette]);
   const here = usePathname();
   const router = useRouter();
   const [overture] = useState(() => here === HOME);

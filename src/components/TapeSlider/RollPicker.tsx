@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { tapes, cssVars } from "@/data/tapes";
+import { getTapes, cssVars } from "@/data/tapes";
 import { stripAttr } from "./strips";
 
 /* The orbit. Server-rendered: the buttons are static, only their position is
@@ -16,7 +16,9 @@ import { stripAttr } from "./strips";
  * rather than authored, so it rides along here with everything else the engine
  * reads. See strips.ts.
  */
-export default function RollPicker() {
+export default async function RollPicker() {
+  const tapes = await getTapes();
+
   return (
     <div className="roll-parent">
       <div className="rail-track">

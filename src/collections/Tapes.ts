@@ -1,27 +1,59 @@
 import type { CollectionConfig } from "payload";
 
-/* The tapes, as the CMS will eventually hold them.
+/* The tapes, as the CMS holds them.
  *
- * NOTHING READS THIS YET. The front end runs off src/data/tapes.ts; this is the
- * schema that file will be swapped for, kept deliberately field-for-field
- * identical to the Tape type so the swap is a query and a mapper, not a
- * redesign.
+ * Kept shape-for-shape with the Tape type in src/data/tapes.ts, which is where
+ * every field is argued properly — this file says what an editor sees, that one
+ * says why the field exists at all. Read them together before changing either.
  *
- * Artwork is `text` (a path under /public/assets) rather than an upload
- * relationship on purpose — the brief is local files for now. Changing these
- * four fields to `upload` later is the one migration this collection needs.
+ * ARTWORK IS STILL TEXT, deliberately and for now. Every path here points into
+ * /public/assets and is typed rather than uploaded, which is the one piece of
+ * this migration left to do: the copy, the colours and the powers become
+ * editable today, and the 33 files follow as their own pass. An upload field
+ * swapped in later changes this file and the mapper in src/data/tapes.ts and
+ * nothing else, because nothing downstream knows where a path came from.
+ *
+ * THE MODELS STAY STATIC. Media accepts GLBs, but the slider preloads these on
+ * the home page and three.js loads them by URL — a wrong path there breaks the
+ * centrepiece of the site rather than showing a broken image. They are geometry,
+ * not content, and they move when there is a reason rather than because
+ * everything else did.
+ *
+ * COLOURS ARE A GROUP, not six loose fields. `word` is a tape's wordmark key AND
+ * the colour THE is set in; flat, one has to be renamed and the type stops
+ * matching the schema. Nested, both keep the name the design calls them.
  */
 export const Tapes: CollectionConfig = {
   slug: "tapes",
+
   admin: {
     useAsTitle: "label",
-    defaultColumns: ["label", "order", "updatedAt"],
+    defaultColumns: ["label", "slug", "order", "updatedAt"],
     description:
-      "Not yet live. The site reads src/data/tapes.ts until this is wired up.",
+      "The six rolls, in orbit order. Artwork is still referenced by path; the copy, colours and powers are live.",
   },
+
   access: { read: () => true },
   defaultSort: "order",
+
   fields: [
+    {
+      name: "label",
+      type: "text",
+      required: true,
+      admin: { description: "Screen-reader name for the roll button." },
+    },
+    {
+      name: "slug",
+      type: "text",
+      required: true,
+      unique: true,
+      index: true,
+      admin: {
+        description:
+          "The route's last segment: /products/<slug>, and the artwork folder's name. Changing it breaks both.",
+      },
+    },
     {
       name: "order",
       type: "number",
@@ -33,11 +65,15 @@ export const Tapes: CollectionConfig = {
       },
     },
     {
-      name: "label",
+      name: "wordmark",
       type: "text",
       required: true,
-      admin: { description: "Screen-reader name for the roll button." },
+      admin: {
+        description:
+          "Which word the bottom title spells — a key of `words` in src/data/wordmarks.json, where its letterforms are. Not free text: the stencils are generated per word into letters.css and selected by this.",
+      },
     },
+
     {
       type: "collapsible",
       label: "Artwork",
@@ -46,13 +82,21 @@ export const Tapes: CollectionConfig = {
           name: "roll",
           type: "text",
           required: true,
-          admin: { description: "Thumbnail on the orbit, e.g. /assets/rolling/roll-mask.webp" },
+          admin: { description: "Thumbnail on the orbit, made from the card at 108px." },
         },
         {
           name: "card",
           type: "text",
           required: true,
           admin: { description: "Hang tag at the centre of the stage." },
+        },
+        {
+          name: "hero",
+          type: "text",
+          admin: {
+            description:
+              "The inner page's key visual — the roll shot square-on. Optional: leave it empty and the page falls back to the card, which is a working page rather than a hole in one.",
+          },
         },
         {
           name: "showcase",
@@ -66,8 +110,51 @@ export const Tapes: CollectionConfig = {
           },
           fields: [{ name: "src", type: "text", required: true }],
         },
+        {
+          name: "faces",
+          type: "array",
+          admin: {
+            description:
+              "The siblings' printed labels, one per variant id. Optional and empty for every tape today — each card falls back to the card artwork above, so the row works rather than showing three broken images.",
+          },
+          fields: [
+            { name: "variant", type: "text", required: true },
+            { name: "src", type: "text", required: true },
+          ],
+        },
       ],
     },
+
+    {
+      type: "collapsible",
+      label: "3D model",
+      admin: {
+        description:
+          "Paths into /public/assets/tapes. The slider preloads these — a wrong one breaks the home page, not just this product.",
+      },
+      fields: [
+        { name: "model", type: "text", required: true },
+        {
+          name: "modelInner",
+          type: "text",
+          admin: {
+            description:
+              "A second mesh for the inner page where the slider's is not right for it. Optional.",
+          },
+        },
+        {
+          name: "clarity",
+          type: "number",
+          min: 0,
+          max: 1,
+          admin: {
+            description:
+              "How see-through the tape is, 0 to 1. A fact about the tape rather than a rendering setting, which is why it lives here.",
+          },
+        },
+      ],
+    },
+
     {
       type: "collapsible",
       label: "Copy",
@@ -88,11 +175,125 @@ export const Tapes: CollectionConfig = {
           required: true,
           admin: { description: "Paragraph under the chips." },
         },
+        {
+          name: "origin",
+          type: "array",
+          required: true,
+          minRows: 2,
+          maxRows: 2,
+          admin: {
+            description:
+              "Exactly two lines, broken where the design breaks them rather than wherever the measure lands.",
+          },
+          fields: [{ name: "text", type: "text", required: true }],
+        },
+        {
+          name: "character",
+          type: "array",
+          required: true,
+          minRows: 1,
+          admin: { description: "One entry per line." },
+          fields: [{ name: "text", type: "text", required: true }],
+        },
       ],
     },
+
     {
       type: "collapsible",
-      label: "Palette",
+      label: "Reel",
+      fields: [
+        {
+          name: "reel",
+          type: "group",
+          fields: [
+            {
+              name: "headline",
+              type: "array",
+              required: true,
+              minRows: 1,
+              admin: {
+                description:
+                  "Broken by hand: where display type this size turns is a drawing decision, not something to infer from the string at render time.",
+              },
+              fields: [{ name: "text", type: "text", required: true }],
+            },
+            {
+              name: "note",
+              type: "array",
+              required: true,
+              minRows: 1,
+              fields: [{ name: "text", type: "text", required: true }],
+            },
+            {
+              name: "shots",
+              type: "array",
+              required: true,
+              minRows: 4,
+              maxRows: 4,
+              admin: {
+                description:
+                  "Exactly four. The grid is drawn for four and a fifth has nowhere to go.",
+              },
+              fields: [{ name: "src", type: "text", required: true }],
+            },
+          ],
+        },
+      ],
+    },
+
+    {
+      name: "powers",
+      type: "array",
+      required: true,
+      minRows: 3,
+      maxRows: 3,
+      labels: { singular: "Superpower", plural: "Superpowers" },
+      admin: {
+        description:
+          "Exactly three — the section is a stack of three cards. Per tape rather than per range: a masking tape and a cloth tape are not good at the same things.",
+      },
+      fields: [
+        {
+          /* NOT `id`. Payload gives every array row an id of its own and
+             enforces it unique across the table; a field of the same name
+             collides with it, and the collision only shows when two tapes share
+             a power key — which they do, because the placeholder powers are one
+             shared constant. */
+          name: "key",
+          type: "text",
+          required: true,
+          admin: { description: "Stable key. Not shown on the page." },
+        },
+        {
+          name: "titleTop",
+          type: "text",
+          required: true,
+          admin: { description: "First line of the claim." },
+        },
+        {
+          name: "titleBottom",
+          type: "text",
+          required: true,
+          admin: {
+            description:
+              "Second line. Exactly two: the card is a fixed shape and a third would overflow it.",
+          },
+        },
+        {
+          name: "copy",
+          type: "textarea",
+          required: true,
+          admin: {
+            description:
+              "One sentence, under the mark. Sentence case here — the caps on the page are the section's setting, so this stays readable in a screen reader.",
+          },
+        },
+      ],
+    },
+
+    {
+      name: "colours",
+      type: "group",
       admin: {
         description:
           "Reaches the page as custom properties on the roll button; the animation reads them from there.",
@@ -100,7 +301,7 @@ export const Tapes: CollectionConfig = {
       fields: [
         { name: "ring", type: "text", required: true, admin: { description: "Band behind the roll when selected." } },
         { name: "bg", type: "text", required: true, admin: { description: "Colour the stage floods with." } },
-        { name: "word", type: "text", required: true, admin: { description: "THE and CREATIVE." } },
+        { name: "word", type: "text", required: true, admin: { description: "THE and the tape's own word." } },
         { name: "tagBg", type: "text", required: true, admin: { description: "Chip fill." } },
         { name: "tagInk", type: "text", required: true, admin: { description: "Chip text. Check it against tagBg — 4.5:1 or better." } },
         { name: "ink", type: "text", required: true, admin: { description: "Body copy in the left column." } },

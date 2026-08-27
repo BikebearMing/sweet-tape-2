@@ -19,8 +19,30 @@ import LivePreview from "@/components/LivePreview";
 import Menu from "@/components/Menu";
 import { PeelDefs } from "@/components/Peel";
 import Preloader from "@/components/Preloader";
+import { getPalette } from "@/data/tapes";
 import SmoothScroll from "@/components/SmoothScroll";
 import TopBand from "@/components/TopBand";
+
+/* THE WHOLE FRONT END RENDERS ON DEMAND, and this is the line that decides it.
+ *
+ * The preloader is on every route and its coloured stack is the tapes' own
+ * palette, which now lives in Postgres — so every page under this layout needs a
+ * database to render, including the ones with no CMS content on them at all.
+ * Left static, they are built at image-build time where there is deliberately no
+ * DATABASE_URI, and the build dies on whichever page happens to be first.
+ *
+ * THE COST IS SMALL AND THE ALTERNATIVE IS WORSE. These pages render in about
+ * 200ms with the database in the same datacentre, and the pages that were static
+ * were static for no benefit anybody was measuring. The alternative — a
+ * hard-coded fallback palette so the build can proceed — means a statically
+ * built page shipping the wrong colours the moment an editor changes one, which
+ * is exactly the class of silent drift moving this into the CMS was meant to
+ * end.
+ *
+ * If a genuinely static page is ever wanted back, the way there is ISR plus an
+ * afterChange hook on tapes that revalidates — not a second copy of the palette.
+ */
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Sweet Tape",
@@ -30,7 +52,17 @@ export const metadata: Metadata = {
 /* The site's root layout. The admin has its own, in the (payload) group — the
    two never share a shell, which is why neither route group inherits the
    other's CSS. */
-export default function FrontendLayout({ children }: { children: ReactNode }) {
+export default async function FrontendLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  /* The preloader's colours, fetched here because it cannot fetch them itself —
+     it is a client component and the tapes are in Postgres. Six ids and six hex
+     values; see getPalette, which selects only those two columns rather than
+     pulling six whole rolls through to read one field off each. */
+  const palette = await getPalette();
+
   /* The preloader's mark is the first — and for the length of the hold, the
      only — thing on screen, so its request goes with the document rather than
      waiting for the <img> to be discovered. Ahead of the hero's GLB preload in
@@ -82,7 +114,7 @@ export default function FrontendLayout({ children }: { children: ReactNode }) {
             would lift on the middle of the site). Lenis constructed at a
             restored offset would carry that offset back the first time the
             wheel moved. */}
-        <Preloader />
+        <Preloader palette={palette} />
         <SmoothScroll />
         <Cursor />
         {/* Fixed to the top-right corner and site-wide, so it lives in the

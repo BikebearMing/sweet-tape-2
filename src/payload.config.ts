@@ -36,11 +36,12 @@ export default buildConfig({
        the listening half and explains why it refreshes rather than re-rendering
        from client state.
        
-       NEWS AND CONTACT HAVE ONE; TAPES STILL DOES NOT. A preview is a URL a
-       document can be seen at, and tapes has no page of its own — the rolls are
-       drawn by the slider on the home page, not addressed individually. Giving
-       it a preview pane would mean pointing every roll at "/" and calling it a
-       preview of the edit. */
+       TAPES HAS ONE NOW, and it is declared on the collection itself rather
+       than in this list. It could not have one while the home page's slider was
+       the tapes: a roll had no page of its own, so a preview would have meant
+       pointing all six at "/" and calling it a preview of the edit. Separating
+       the orbit from the products settled that — a tape is /products/<slug>,
+       which is a question with one answer. See src/collections/Tapes.ts. */
     livePreview: {
       collections: ["news"],
 

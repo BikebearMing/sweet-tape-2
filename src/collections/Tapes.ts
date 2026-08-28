@@ -25,6 +25,20 @@ const hex: TextFieldSingleValidation = (value) => {
  * every field is argued properly — this file says what an editor sees, that one
  * says why the field exists at all. Read them together before changing either.
  *
+ * IT IS IN TABS, and it was one column of fifty-two fields. That is the whole
+ * of this arrangement: nobody edits a product from top to bottom, they come to
+ * change a photograph or a claim or a colour, and every one of those meant
+ * scrolling past the other four. Seven tabs, each holding one job.
+ *
+ * THE TABS ARE UNNAMED. A named tab nests its contents under its own key, so
+ * every field here would move in the database and a change about where an
+ * editor LOOKS would need a migration and a rewrite of the mapper. Unnamed, a
+ * tab is furniture: the data is where it always was.
+ *
+ * SLUG AND ORDER ARE IN THE SIDEBAR. Neither is a thing anybody comes here to
+ * write — one is the address, the other a position in two lists — and both were
+ * sitting in the middle of the copy an editor actually came for.
+ *
  * WHAT A PRODUCT IS, AND NOT WHAT THE HOME PAGE IS SHOWING. The orbit used to
  * be this collection — an `order` and a `roll` thumbnail that only the slider
  * ever read — which made one record the authority on two unrelated decisions.
@@ -57,6 +71,17 @@ export const Tapes: CollectionConfig = {
     defaultColumns: ["label", "slug", "order", "updatedAt"],
     description:
       "The products themselves — what each tape IS. The home page's orbit is a separate record (Globals → Homepage), so adding a tape here does not put it on the front page.",
+
+    /* A PREVIEW PANE, and it can have one now. The note in payload.config.ts
+       said tapes could not: the rolls were drawn by the home page's slider and
+       had no page of their own, so a preview would have meant pointing all six
+       at "/" and calling it a preview of the edit. Separating the orbit from
+       the products is what changed that — a tape is /products/<slug> and
+       nothing else, which is a question with one answer. */
+    livePreview: {
+      url: ({ data }) =>
+        `${process.env.SERVER_URL ?? ""}/products/${data?.slug ?? ""}`,
+    },
   },
 
   access: { read: () => true },
@@ -64,18 +89,13 @@ export const Tapes: CollectionConfig = {
 
   fields: [
     {
-      name: "label",
-      type: "text",
-      required: true,
-      admin: { description: "Screen-reader name for the roll button." },
-    },
-    {
       name: "slug",
       type: "text",
       required: true,
       unique: true,
       index: true,
       admin: {
+        position: "sidebar",
         description:
           "The route's last segment: /products/<slug>, and the artwork folder's name. Changing it breaks both.",
       },
@@ -86,368 +106,444 @@ export const Tapes: CollectionConfig = {
       required: true,
       defaultValue: 0,
       admin: {
+        position: "sidebar",
         description:
           "Position in the row at /products, low to high — and the order NEXT UP walks at the foot of a product page. NOT the home page's orbit, which is set on the Homepage global and ordered by dragging the rolls there.",
       },
     },
-    {
-      name: "wordmark",
-      type: "text",
-      required: true,
-      admin: {
-        description:
-          "Which word the bottom title spells — a key of `words` in src/data/wordmarks.json, where its letterforms are. Not free text: the stencils are generated per word into letters.css and selected by this.",
-      },
-    },
 
+    /* AND THE REST IS IN TABS.
+     *
+     * THEY ARE UNNAMED, which is the whole reason this was safe. A NAMED tab
+     * nests everything inside it under its own key — every one of these fields
+     * would move in the database, and a change that is purely about where an
+     * editor looks would need a migration and a rewrite of the mapper. Unnamed,
+     * a tab is furniture: the data is exactly where it was and the front end
+     * reads it exactly as before.
+     *
+     * SLUG AND ORDER ARE IN THE SIDEBAR, above, because they are not things
+     * anybody comes here to write. One is the address and the other is a
+     * position in two lists; both are set once and then left alone, and both
+     * were sitting in the middle of the copy an editor actually came for.
+     */
     {
-      type: "collapsible",
-      label: "Artwork",
-      fields: [
+      type: "tabs",
+      tabs: [
         {
-          name: "card",
-          type: "upload",
-          relationTo: "media",
-          required: true,
-          admin: { description: "Hang tag at the centre of the stage." },
-        },
-        {
-          name: "hero",
-          type: "upload",
-          relationTo: "media",
-          admin: {
-            description:
-              "The inner page's key visual — the roll shot square-on. Optional: leave it empty and the page falls back to the card, which is a working page rather than a hole in one.",
-          },
-        },
-        {
-          name: "showcase",
-          type: "array",
-          required: true,
-          minRows: 2,
-          maxRows: 2,
-          admin: {
-            description:
-              "Exactly two. The layout places each by hand, so a third would have nowhere to go.",
-          },
-          fields: [
-            { name: "image", type: "upload", relationTo: "media", required: true },
-          ],
-        },
-        {
-          name: "faces",
-          type: "array",
-          admin: {
-            description:
-              "The siblings' printed labels, one per variant id. Optional and empty for every tape today — each card falls back to the card artwork above, so the row works rather than showing three broken images.",
-          },
-          fields: [
-            { name: "variant", type: "text", required: true },
-            { name: "image", type: "upload", relationTo: "media", required: true },
-          ],
-        },
-      ],
-    },
-
-    {
-      type: "collapsible",
-      label: "3D model",
-      admin: {
-        description:
-          "Paths into /public/assets/tapes. The slider preloads these — a wrong one breaks the home page, not just this product.",
-      },
-      fields: [
-        { name: "model", type: "text", required: true },
-        {
-          name: "modelInner",
-          type: "text",
-          admin: {
-            description:
-              "A second mesh for the inner page where the slider's is not right for it. Optional.",
-          },
-        },
-        {
-          name: "clarity",
-          type: "number",
-          min: 0,
-          max: 1,
-          admin: {
-            description:
-              "How see-through the tape is, 0 to 1. A fact about the tape rather than a rendering setting, which is why it lives here.",
-          },
-        },
-      ],
-    },
-
-    {
-      type: "collapsible",
-      label: "Copy",
-      fields: [
-        {
-          name: "tags",
-          type: "array",
-          maxRows: 4,
-          admin: {
-            description:
-              "Chips in the left column. Four is the ceiling — the tilt angles run out at five.",
-          },
-          fields: [{ name: "text", type: "text", required: true }],
-        },
-        {
-          name: "copy",
-          type: "textarea",
-          required: true,
-          admin: { description: "Paragraph under the chips." },
-        },
-        {
-          name: "origin",
-          type: "array",
-          required: true,
-          minRows: 2,
-          maxRows: 2,
-          admin: {
-            description:
-              "Exactly two lines, broken where the design breaks them rather than wherever the measure lands.",
-          },
-          fields: [{ name: "text", type: "text", required: true }],
-        },
-        {
-          name: "character",
-          type: "array",
-          required: true,
-          minRows: 1,
-          admin: { description: "One entry per line." },
-          fields: [{ name: "text", type: "text", required: true }],
-        },
-      ],
-    },
-
-    {
-      type: "collapsible",
-      label: "Reel",
-      fields: [
-        {
-          name: "reel",
-          type: "group",
+          label: "Identity",
+          description:
+            "What this tape is called, and which word its title spells.",
           fields: [
             {
-              name: "headline",
-              type: "array",
+              name: "label",
+              type: "text",
               required: true,
-              minRows: 1,
+              admin: { description: "Screen-reader name for the roll button." },
+            },
+            {
+              name: "wordmark",
+              type: "text",
+              required: true,
               admin: {
                 description:
-                  "Broken by hand: where display type this size turns is a drawing decision, not something to infer from the string at render time.",
+                  "Which word the bottom title spells — a key of `words` in src/data/wordmarks.json, where its letterforms are. Not free text: the stencils are generated per word into letters.css and selected by this.",
               },
-              fields: [{ name: "text", type: "text", required: true }],
+            },
+          ],
+        },
+        {
+          label: "Artwork",
+          description:
+            "Every picture this product wears — except the marks on its superpower cards, which sit with the claims they belong to.",
+          fields: [
+            {
+              name: "card",
+              type: "upload",
+              relationTo: "media",
+              required: true,
+              admin: { description: "Hang tag at the centre of the stage." },
             },
             {
-              name: "note",
-              type: "array",
-              required: true,
-              minRows: 1,
-              fields: [{ name: "text", type: "text", required: true }],
-            },
-            {
-              name: "shots",
-              type: "array",
-              required: true,
-              minRows: 4,
-              maxRows: 4,
+              name: "hero",
+              type: "upload",
+              relationTo: "media",
               admin: {
                 description:
-                  "Exactly four. The grid is drawn for four and a fifth has nowhere to go.",
+                  "The inner page's key visual — the roll shot square-on. Optional: leave it empty and the page falls back to the card, which is a working page rather than a hole in one.",
+              },
+            },
+            {
+              name: "showcase",
+              type: "array",
+              required: true,
+              minRows: 2,
+              maxRows: 2,
+              admin: {
+                components: { RowLabel: "/admin/RowLabel#RowLabel" },
+                description:
+                  "Exactly two. The layout places each by hand, so a third would have nowhere to go.",
               },
               fields: [
                 { name: "image", type: "upload", relationTo: "media", required: true },
               ],
             },
+            {
+              name: "faces",
+              type: "array",
+              admin: {
+                components: { RowLabel: "/admin/RowLabel#RowLabel" },
+                description:
+                  "The siblings' printed labels, one per variant id. Optional and empty for every tape today — each card falls back to the card artwork above, so the row works rather than showing three broken images.",
+              },
+              fields: [
+                { name: "variant", type: "text", required: true },
+                { name: "image", type: "upload", relationTo: "media", required: true },
+              ],
+            },
           ],
         },
-      ],
-    },
-
-    {
-      name: "powers",
-      type: "array",
-      required: true,
-      minRows: 3,
-      maxRows: 3,
-      labels: { singular: "Superpower", plural: "Superpowers" },
-      admin: {
-        description:
-          "Exactly three — the section is a stack of three cards. Per tape rather than per range: a masking tape and a cloth tape are not good at the same things.",
-      },
-      fields: [
         {
-          /* NOT `id`. Payload gives every array row an id of its own and
-             enforces it unique across the table; a field of the same name
-             collides with it, and the collision only shows when two tapes share
-             a power key — which they do, because the placeholder powers are one
-             shared constant. */
-          name: "key",
-          type: "text",
-          required: true,
-          admin: { description: "Stable key. Not shown on the page." },
-        },
-        {
-          name: "titleTop",
-          type: "text",
-          required: true,
-          admin: { description: "First line of the claim." },
-        },
-        {
-          name: "titleBottom",
-          type: "text",
-          required: true,
-          admin: {
-            description:
-              "Second line. Exactly two: the card is a fixed shape and a third would overflow it.",
-          },
-        },
-        {
-          name: "copy",
-          type: "textarea",
-          required: true,
-          admin: {
-            description:
-              "One sentence, under the mark. Sentence case here — the caps on the page are the section's setting, so this stays readable in a screen reader.",
-          },
-        },
-        {
-          name: "mark",
-          type: "upload",
-          relationTo: "media",
-          admin: {
-            description:
-              "The drawing that drops onto the card. An SVG — and it may be an ANIMATED one: an export that carries its own motion keeps it, and the page only decides when it plays. A flat SVG is dropped on by the section's own bounce instead, so either kind works. Optional: leave it empty and the card wears the stock box.",
-          },
-        },
-      ],
-    },
-
-    {
-      type: "collapsible",
-      label: "Section colours",
-      admin: {
-        initCollapsed: true,
-        description:
-          "The ground and the writing for the four sections in the MIDDLE of this product's page. Every box is optional — leave one blank and that section keeps the site's own colour, which is what the placeholder shows. Hex codes, e.g. #0d470c. The opening screen and NEXT UP are not here: they already take their colour from the palette above.",
-      },
-      fields: [
-        {
-          name: "sections",
-          type: "group",
-          label: false,
+          label: "Copy",
+          description:
+            "The words in the left column of the opening screen.",
           fields: [
+            {
+              name: "tags",
+              type: "array",
+              maxRows: 4,
+              admin: {
+                components: { RowLabel: "/admin/RowLabel#RowLabel" },
+                description:
+                  "Chips in the left column. Four is the ceiling — the tilt angles run out at five.",
+              },
+              fields: [{ name: "text", type: "text", required: true }],
+            },
+            {
+              name: "copy",
+              type: "textarea",
+              required: true,
+              admin: { description: "Paragraph under the chips." },
+            },
+            {
+              name: "origin",
+              type: "array",
+              required: true,
+              minRows: 2,
+              maxRows: 2,
+              admin: {
+                components: { RowLabel: "/admin/RowLabel#RowLabel" },
+                description:
+                  "Exactly two lines, broken where the design breaks them rather than wherever the measure lands.",
+              },
+              fields: [{ name: "text", type: "text", required: true }],
+            },
+            {
+              name: "character",
+              type: "array",
+              required: true,
+              minRows: 1,
+              admin: {
+                components: { RowLabel: "/admin/RowLabel#RowLabel" },
+                description: "One entry per line.",
+              },
+              fields: [{ name: "text", type: "text", required: true }],
+            },
+          ],
+        },
         {
-              name: "originBg",
-              type: "text",
-              validate: hex,
+          label: "Superpowers",
+          description:
+            "Three claims, three cards. Each can carry a drawing of its own.",
+          fields: [
+            {
+              name: "powers",
+              type: "array",
+              required: true,
+              minRows: 3,
+              maxRows: 3,
+              labels: { singular: "Superpower", plural: "Superpowers" },
               admin: {
-                placeholder: "#0d470c",
-                description: "The origin story's ground. Site default #0d470c.",
+                components: { RowLabel: "/admin/RowLabel#RowLabel" },
+                description:
+                  "Exactly three — the section is a stack of three cards. Per tape rather than per range: a masking tape and a cloth tape are not good at the same things.",
+              },
+              fields: [
+                {
+                  /* NOT `id`. Payload gives every array row an id of its own
+                     and enforces it unique across the table; a field of the
+                     same name collides with it, and the collision only shows
+                     when two tapes share a power key — which they did, because
+                     the placeholder powers were one shared constant.
+
+                     HIDDEN NOW, AND DERIVED. It is a React key and nothing
+                     else: never drawn, never read by a person, and there is no
+                     answer an editor could give that would beat one taken from
+                     the claim itself. Visible, it was a required box on three
+                     rows of six tapes asking for a value whose only wrong
+                     answer was a duplicate.
+
+                     The hook runs BEFORE validation, so `required` is satisfied
+                     by the derived value and nobody ever sees the field refuse.
+                     An existing key is kept: rewriting one on a tape that
+                     already has three would remount a card for no reason. */
+                  name: "key",
+                  type: "text",
+                  required: true,
+                  admin: { hidden: true },
+                  hooks: {
+                    beforeValidate: [
+                      ({ value, siblingData }) => {
+                        if (value) return value;
+                        const row = siblingData as {
+                          titleTop?: string;
+                          titleBottom?: string;
+                        };
+                        const from = `${row?.titleTop ?? ""} ${
+                          row?.titleBottom ?? ""
+                        }`.trim();
+                        return (
+                          from
+                            .toLowerCase()
+                            .replace(/[^a-z0-9]+/g, "-")
+                            .replace(/^-|-$/g, "") || "power"
+                        );
+                      },
+                    ],
+                  },
+                },
+                {
+                  name: "titleTop",
+                  type: "text",
+                  required: true,
+                  admin: { description: "First line of the claim." },
+                },
+                {
+                  name: "titleBottom",
+                  type: "text",
+                  required: true,
+                  admin: {
+                    description:
+                      "Second line. Exactly two: the card is a fixed shape and a third would overflow it.",
+                  },
+                },
+                {
+                  name: "copy",
+                  type: "textarea",
+                  required: true,
+                  admin: {
+                    description:
+                      "One sentence, under the mark. Sentence case here — the caps on the page are the section's setting, so this stays readable in a screen reader.",
+                  },
+                },
+                {
+                  name: "mark",
+                  type: "upload",
+                  relationTo: "media",
+                  admin: {
+                    description:
+                      "The drawing that drops onto the card. An SVG — and it may be an ANIMATED one: an export that carries its own motion keeps it, and the page only decides when it plays. A flat SVG is dropped on by the section's own bounce instead, so either kind works. Optional: leave it empty and the card wears the stock box.",
+                  },
+                },
+              ],
+            },
+          ],
+        },
+        {
+          label: "The reel",
+          description:
+            "The pinned frame the page scrolls sideways through.",
+          fields: [
+            {
+              name: "reel",
+              type: "group",
+              fields: [
+                {
+                  name: "headline",
+                  type: "array",
+                  required: true,
+                  minRows: 1,
+                  admin: {
+                    components: { RowLabel: "/admin/RowLabel#RowLabel" },
+                    description:
+                      "Broken by hand: where display type this size turns is a drawing decision, not something to infer from the string at render time.",
+                  },
+                  fields: [{ name: "text", type: "text", required: true }],
+                },
+                {
+                  name: "note",
+                  type: "array",
+                  admin: {
+                    components: { RowLabel: "/admin/RowLabel#RowLabel" },
+                  },
+                  required: true,
+                  minRows: 1,
+                  fields: [{ name: "text", type: "text", required: true }],
+                },
+                {
+                  name: "shots",
+                  type: "array",
+                  required: true,
+                  minRows: 4,
+                  maxRows: 4,
+                  admin: {
+                    components: { RowLabel: "/admin/RowLabel#RowLabel" },
+                    description:
+                      "Exactly four. The grid is drawn for four and a fifth has nowhere to go.",
+                  },
+                  fields: [
+                    { name: "image", type: "upload", relationTo: "media", required: true },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+        {
+          label: "3D model",
+          description:
+            "Geometry rather than content — paths into /public/assets/tapes.",
+          fields: [
+            { name: "model", type: "text", required: true },
+            {
+              name: "modelInner",
+              type: "text",
+              admin: {
+                description:
+                  "A second mesh for the inner page where the slider's is not right for it. Optional.",
               },
             },
             {
-              name: "siblingsBg",
-              type: "text",
-              validate: hex,
+              name: "clarity",
+              type: "number",
+              min: 0,
+              max: 1,
               admin: {
-                placeholder: "#0d470c",
-                description: "THE SIBLINGS' ground, under the three grade cards. Site default #0d470c.",
-              },
-            },
-            {
-              name: "siblingsCard",
-              type: "text",
-              validate: hex,
-              admin: {
-                placeholder: "#c6fd00",
-                description: "The three grade cards themselves. Site default #c6fd00.",
-              },
-            },
-            {
-              name: "siblingsInk",
-              type: "text",
-              validate: hex,
-              admin: {
-                placeholder: "#a8f000",
-                description: "The tape's name set across those cards. Site default #a8f000.",
-              },
-            },
-            {
-              name: "powersBg",
-              type: "text",
-              validate: hex,
-              admin: {
-                placeholder: "#b6fe00",
-                description: "SUPER POWERS' sheet — the ground the stack of cards passes over. Site default #b6fe00.",
-              },
-            },
-            {
-              name: "powersCard",
-              type: "text",
-              validate: hex,
-              admin: {
-                placeholder: "#0d470c",
-                description: "The card being read, once it fills. Site default #0d470c.",
-              },
-            },
-            {
-              name: "powersCardRest",
-              type: "text",
-              validate: hex,
-              admin: {
-                placeholder: "#9bdc00",
-                description: "A card still waiting its turn. Close to the sheet on purpose: a resting card is meant to be sensed rather than found. Site default #9bdc00.",
-              },
-            },
-            {
-              name: "powersInk",
-              type: "text",
-              validate: hex,
-              admin: {
-                placeholder: "#b6fe00",
-                description: "The claim and the sentence on the open card. Site default #b6fe00.",
-              },
-            },
-            {
-              name: "reelBg",
-              type: "text",
-              validate: hex,
-              admin: {
-                placeholder: "#b6fe00",
-                description: "THE RUN's ground. Site default #b6fe00.",
-              },
-            },
-            {
-              name: "reelInk",
-              type: "text",
-              validate: hex,
-              admin: {
-                placeholder: "#013900",
-                description: "THE RUN's writing. Site default #013900.",
+                description:
+                  "How see-through the tape is, 0 to 1. A fact about the tape rather than a rendering setting, which is why it lives here.",
               },
             },
           ],
         },
-      ],
-    },
-    {
-      name: "colours",
-      type: "group",
-      admin: {
-        description:
-          "Reaches the page as custom properties on the roll button; the animation reads them from there.",
-      },
-      fields: [
-        { name: "ring", type: "text", required: true, admin: { description: "Band behind the roll when selected." } },
-        { name: "bg", type: "text", required: true, admin: { description: "Colour the stage floods with." } },
-        { name: "word", type: "text", required: true, admin: { description: "THE and the tape's own word." } },
-        { name: "tagBg", type: "text", required: true, admin: { description: "Chip fill." } },
-        { name: "tagInk", type: "text", required: true, admin: { description: "Chip text. Check it against tagBg — 4.5:1 or better." } },
-        { name: "ink", type: "text", required: true, admin: { description: "Body copy in the left column." } },
+        {
+          label: "Colours",
+          description:
+            "The palette this product is painted in, and — optionally — the ground its middle sections stand on.",
+          fields: [
+            {
+              name: "colours",
+              type: "group",
+              admin: {
+                description:
+                  "Reaches the page as custom properties on the roll button; the animation reads them from there.",
+              },
+              fields: [
+                { name: "ring", type: "text", required: true, admin: { description: "Band behind the roll when selected." } },
+                { name: "bg", type: "text", required: true, admin: { description: "Colour the stage floods with." } },
+                { name: "word", type: "text", required: true, admin: { description: "THE and the tape's own word." } },
+                { name: "tagBg", type: "text", required: true, admin: { description: "Chip fill." } },
+                { name: "tagInk", type: "text", required: true, admin: { description: "Chip text. Check it against tagBg — 4.5:1 or better." } },
+                { name: "ink", type: "text", required: true, admin: { description: "Body copy in the left column." } },
+              ],
+            },
+            {
+              name: "sections",
+              type: "group",
+              label: false,
+              fields: [
+            {
+                  name: "originBg",
+                  type: "text",
+                  validate: hex,
+                  admin: {
+                    placeholder: "#0d470c",
+                    description: "The origin story's ground. Site default #0d470c.",
+                  },
+                },
+                {
+                  name: "siblingsBg",
+                  type: "text",
+                  validate: hex,
+                  admin: {
+                    placeholder: "#0d470c",
+                    description: "THE SIBLINGS' ground, under the three grade cards. Site default #0d470c.",
+                  },
+                },
+                {
+                  name: "siblingsCard",
+                  type: "text",
+                  validate: hex,
+                  admin: {
+                    placeholder: "#c6fd00",
+                    description: "The three grade cards themselves. Site default #c6fd00.",
+                  },
+                },
+                {
+                  name: "siblingsInk",
+                  type: "text",
+                  validate: hex,
+                  admin: {
+                    placeholder: "#a8f000",
+                    description: "The tape's name set across those cards. Site default #a8f000.",
+                  },
+                },
+                {
+                  name: "powersBg",
+                  type: "text",
+                  validate: hex,
+                  admin: {
+                    placeholder: "#b6fe00",
+                    description: "SUPER POWERS' sheet — the ground the stack of cards passes over. Site default #b6fe00.",
+                  },
+                },
+                {
+                  name: "powersCard",
+                  type: "text",
+                  validate: hex,
+                  admin: {
+                    placeholder: "#0d470c",
+                    description: "The card being read, once it fills. Site default #0d470c.",
+                  },
+                },
+                {
+                  name: "powersCardRest",
+                  type: "text",
+                  validate: hex,
+                  admin: {
+                    placeholder: "#9bdc00",
+                    description: "A card still waiting its turn. Close to the sheet on purpose: a resting card is meant to be sensed rather than found. Site default #9bdc00.",
+                  },
+                },
+                {
+                  name: "powersInk",
+                  type: "text",
+                  validate: hex,
+                  admin: {
+                    placeholder: "#b6fe00",
+                    description: "The claim and the sentence on the open card. Site default #b6fe00.",
+                  },
+                },
+                {
+                  name: "reelBg",
+                  type: "text",
+                  validate: hex,
+                  admin: {
+                    placeholder: "#b6fe00",
+                    description: "THE RUN's ground. Site default #b6fe00.",
+                  },
+                },
+                {
+                  name: "reelInk",
+                  type: "text",
+                  validate: hex,
+                  admin: {
+                    placeholder: "#013900",
+                    description: "THE RUN's writing. Site default #013900.",
+                  },
+                },
+              ],
+            },
+          ],
+        },
       ],
     },
   ],

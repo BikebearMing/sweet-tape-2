@@ -192,10 +192,6 @@ export interface Media {
 export interface Tape {
   id: number;
   /**
-   * Screen-reader name for the roll button.
-   */
-  label: string;
-  /**
    * The route's last segment: /products/<slug>, and the artwork folder's name. Changing it breaks both.
    */
   slug: string;
@@ -203,6 +199,10 @@ export interface Tape {
    * Position in the row at /products, low to high — and the order NEXT UP walks at the foot of a product page. NOT the home page's orbit, which is set on the Homepage global and ordered by dragging the rolls there.
    */
   order: number;
+  /**
+   * Screen-reader name for the roll button.
+   */
+  label: string;
   /**
    * Which word the bottom title spells — a key of `words` in src/data/wordmarks.json, where its letterforms are. Not free text: the stencils are generated per word into letters.css and selected by this.
    */
@@ -232,15 +232,6 @@ export interface Tape {
         id?: string | null;
       }[]
     | null;
-  model: string;
-  /**
-   * A second mesh for the inner page where the slider's is not right for it. Optional.
-   */
-  modelInner?: string | null;
-  /**
-   * How see-through the tape is, 0 to 1. A fact about the tape rather than a rendering setting, which is why it lives here.
-   */
-  clarity?: number | null;
   /**
    * Chips in the left column. Four is the ceiling — the tilt angles run out at five.
    */
@@ -268,6 +259,29 @@ export interface Tape {
     text: string;
     id?: string | null;
   }[];
+  /**
+   * Exactly three — the section is a stack of three cards. Per tape rather than per range: a masking tape and a cloth tape are not good at the same things.
+   */
+  powers: {
+    key: string;
+    /**
+     * First line of the claim.
+     */
+    titleTop: string;
+    /**
+     * Second line. Exactly two: the card is a fixed shape and a third would overflow it.
+     */
+    titleBottom: string;
+    /**
+     * One sentence, under the mark. Sentence case here — the caps on the page are the section's setting, so this stays readable in a screen reader.
+     */
+    copy: string;
+    /**
+     * The drawing that drops onto the card. An SVG — and it may be an ANIMATED one: an export that carries its own motion keeps it, and the page only decides when it plays. A flat SVG is dropped on by the section's own bounce instead, so either kind works. Optional: leave it empty and the card wears the stock box.
+     */
+    mark?: (number | null) | Media;
+    id?: string | null;
+  }[];
   reel: {
     /**
      * Broken by hand: where display type this size turns is a drawing decision, not something to infer from the string at render time.
@@ -288,32 +302,44 @@ export interface Tape {
       id?: string | null;
     }[];
   };
+  model: string;
   /**
-   * Exactly three — the section is a stack of three cards. Per tape rather than per range: a masking tape and a cloth tape are not good at the same things.
+   * A second mesh for the inner page where the slider's is not right for it. Optional.
    */
-  powers: {
+  modelInner?: string | null;
+  /**
+   * How see-through the tape is, 0 to 1. A fact about the tape rather than a rendering setting, which is why it lives here.
+   */
+  clarity?: number | null;
+  /**
+   * Reaches the page as custom properties on the roll button; the animation reads them from there.
+   */
+  colours: {
     /**
-     * Stable key. Not shown on the page.
+     * Band behind the roll when selected.
      */
-    key: string;
+    ring: string;
     /**
-     * First line of the claim.
+     * Colour the stage floods with.
      */
-    titleTop: string;
+    bg: string;
     /**
-     * Second line. Exactly two: the card is a fixed shape and a third would overflow it.
+     * THE and the tape's own word.
      */
-    titleBottom: string;
+    word: string;
     /**
-     * One sentence, under the mark. Sentence case here — the caps on the page are the section's setting, so this stays readable in a screen reader.
+     * Chip fill.
      */
-    copy: string;
+    tagBg: string;
     /**
-     * The drawing that drops onto the card. An SVG — and it may be an ANIMATED one: an export that carries its own motion keeps it, and the page only decides when it plays. A flat SVG is dropped on by the section's own bounce instead, so either kind works. Optional: leave it empty and the card wears the stock box.
+     * Chip text. Check it against tagBg — 4.5:1 or better.
      */
-    mark?: (number | null) | Media;
-    id?: string | null;
-  }[];
+    tagInk: string;
+    /**
+     * Body copy in the left column.
+     */
+    ink: string;
+  };
   sections?: {
     /**
      * The origin story's ground. Site default #0d470c.
@@ -355,35 +381,6 @@ export interface Tape {
      * THE RUN's writing. Site default #013900.
      */
     reelInk?: string | null;
-  };
-  /**
-   * Reaches the page as custom properties on the roll button; the animation reads them from there.
-   */
-  colours: {
-    /**
-     * Band behind the roll when selected.
-     */
-    ring: string;
-    /**
-     * Colour the stage floods with.
-     */
-    bg: string;
-    /**
-     * THE and the tape's own word.
-     */
-    word: string;
-    /**
-     * Chip fill.
-     */
-    tagBg: string;
-    /**
-     * Chip text. Check it against tagBg — 4.5:1 or better.
-     */
-    tagInk: string;
-    /**
-     * Body copy in the left column.
-     */
-    ink: string;
   };
   updatedAt: string;
   createdAt: string;
@@ -567,9 +564,9 @@ export interface MediaSelect<T extends boolean = true> {
  * via the `definition` "tapes_select".
  */
 export interface TapesSelect<T extends boolean = true> {
-  label?: T;
   slug?: T;
   order?: T;
+  label?: T;
   wordmark?: T;
   card?: T;
   hero?: T;
@@ -586,9 +583,6 @@ export interface TapesSelect<T extends boolean = true> {
         image?: T;
         id?: T;
       };
-  model?: T;
-  modelInner?: T;
-  clarity?: T;
   tags?:
     | T
     | {
@@ -606,6 +600,16 @@ export interface TapesSelect<T extends boolean = true> {
     | T
     | {
         text?: T;
+        id?: T;
+      };
+  powers?:
+    | T
+    | {
+        key?: T;
+        titleTop?: T;
+        titleBottom?: T;
+        copy?: T;
+        mark?: T;
         id?: T;
       };
   reel?:
@@ -630,15 +634,18 @@ export interface TapesSelect<T extends boolean = true> {
               id?: T;
             };
       };
-  powers?:
+  model?: T;
+  modelInner?: T;
+  clarity?: T;
+  colours?:
     | T
     | {
-        key?: T;
-        titleTop?: T;
-        titleBottom?: T;
-        copy?: T;
-        mark?: T;
-        id?: T;
+        ring?: T;
+        bg?: T;
+        word?: T;
+        tagBg?: T;
+        tagInk?: T;
+        ink?: T;
       };
   sections?:
     | T
@@ -653,16 +660,6 @@ export interface TapesSelect<T extends boolean = true> {
         powersInk?: T;
         reelBg?: T;
         reelInk?: T;
-      };
-  colours?:
-    | T
-    | {
-        ring?: T;
-        bg?: T;
-        word?: T;
-        tagBg?: T;
-        tagInk?: T;
-        ink?: T;
       };
   updatedAt?: T;
   createdAt?: T;

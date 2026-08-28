@@ -19,6 +19,7 @@ import LivePreview from "@/components/LivePreview";
 import Menu from "@/components/Menu";
 import { PeelDefs } from "@/components/Peel";
 import Preloader from "@/components/Preloader";
+import { getMenu } from "@/data/menu";
 import { getPalette } from "@/data/tapes";
 import SmoothScroll from "@/components/SmoothScroll";
 import TopBand from "@/components/TopBand";
@@ -62,6 +63,11 @@ export default async function FrontendLayout({
      values; see getPalette, which selects only those two columns rather than
      pulling six whole rolls through to read one field off each. */
   const palette = await getPalette();
+
+  /* THE MENU'S ROWS, read here because this is the one place the menu is
+     mounted and it mounts it on every route. components/Menu is a client
+     component and cannot read them itself; see the note at the top of it. */
+  const menu = await getMenu();
 
   /* The preloader's mark is the first — and for the length of the hold, the
      only — thing on screen, so its request goes with the document rather than
@@ -120,7 +126,7 @@ export default async function FrontendLayout({
         {/* Fixed to the top-right corner and site-wide, so it lives in the
             layout rather than on the page — it is not the hero's furniture
             even though that is what sits behind it on load. */}
-        <Menu />
+        <Menu items={menu} />
         {/* The masthead — the claim in the top-left corner and the badge in the
             middle. Site-wide like the menu, and rendered beside it for that
             reason, but it is NOT pinned the way the menu's tab is: it is

@@ -11,6 +11,7 @@ import { Tapes } from "./collections/Tapes";
 import { News } from "./collections/News";
 import { Contact } from "./globals/Contact";
 import { Homepage } from "./globals/Homepage";
+import { Menu } from "./globals/Menu";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -83,7 +84,7 @@ export default buildConfig({
 
   collections: [Users, Media, Tapes, News],
 
-  globals: [Homepage, Contact],
+  globals: [Homepage, Menu, Contact],
 
   editor: lexicalEditor(),
 

@@ -7,6 +7,7 @@ import type gsap from "gsap";
    news cards took the same mark — see components/Arrow. The disc under it, and
    the swing on hover, are this section's own (.menu-arrow in global.css). */
 import Arrow from "@/components/Arrow";
+import type { MenuItem } from "@/data/menu-types";
 import { letters } from "@/components/letters";
 import { onHold } from "@/components/Preloader/gate";
 import {
@@ -18,33 +19,26 @@ import {
 
 import { onViewportChange } from "@/components/viewport";
 
-/* The nav itself. Labels are set in caps here rather than by text-transform so
-   the copy reads in the markup exactly as it paints — the same call the hero
-   makes with its headline.
-
-   OUR FAMILY is the one row that leads somewhere. It is the product page —
-   the family IS the products, and there is no second row for them — so it
-   carries the real preview as well as the real route: the shot of all six
-   rolls the closing key visual uses. The rest are placeholders on the shared
-   preview until their routes and their artwork exist, which is what this list
-   has always said would happen a row at a time.
-
-   ITS SLUG IS NOT ITS LABEL, and it is the only row here of which that is true.
-   /products is the word for that page everywhere outside this menu — in a
-   search result, in a pasted link, in an address bar — and OUR FAMILY is how
-   the brand says it in the nav. The page itself explains the split; the footer's
-   row is the only other place the pairing is written. */
-const ITEMS = [
-  { label: "ABOUT", href: "/about", thumb: "/assets/mask-image-1.jpg" },
-  {
-    label: "OUR FAMILY",
-    href: "/products",
-    thumb: "/assets/make-it-stick.jpg",
-  },
-  { label: "NEWS", href: "/news", thumb: "/assets/mask-image-1.jpg" },
-  { label: "CONTACT", href: "/contact", thumb: "/assets/mask-image-1.jpg" },
-];
-
+/* THE ROWS COME IN AS A PROP and are not a constant here any more.
+ *
+ * This is a client component — it owns two GSAP timelines and the panel's open
+ * state — so it cannot go and read them itself: the module that reads the CMS
+ * imports the Payload config, which drags the Postgres adapter with it, and
+ * that cannot be in a browser bundle. They are read on the server in
+ * (frontend)/layout.tsx, which is the one place the menu is mounted and mounts
+ * it on every route, and arrive here as four short strings a row.
+ *
+ * Labels are still set in CAPS as typed rather than by text-transform, which is
+ * now a rule for whoever writes them rather than for whoever wrote this file:
+ * the copy reads in the markup exactly as it paints, and it is what a screen
+ * reader announces. The hero's headline makes the same call.
+ *
+ * OUR FAMILY's label and slug are different words and it is the only row of
+ * which that is true — the family IS the products, and /products is what the
+ * page is called everywhere outside this menu. See src/globals/Menu.ts, which
+ * argues it, and src/data/menu.ts, which still holds the four as the fallback
+ * for a record nobody has saved yet.
+ */
 /* The pull-down menu.
  *
  * Two pieces, stacked: the paper panel, and the taped tab hanging off its
@@ -77,7 +71,7 @@ const ITEMS = [
  * rather than at the first click, their `from` values are what the panel holds
  * from the start.
  */
-export default function Menu() {
+export default function Menu({ items }: { items: MenuItem[] }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLElement>(null);
   const tlRef = useRef<MenuTimelines | null>(null);
@@ -204,7 +198,7 @@ export default function Menu() {
       <div className="menu-panel" id="site-menu-panel">
         <div className="menu-sheet">
           <ul className="menu-list">
-            {ITEMS.map(({ label, href, thumb }) => (
+            {items.map(({ label, href, thumb }) => (
               <li className="menu-item" key={href}>
                 {/* A real element, not a ::before — the reveal has to be able
                   to reach it, and a pseudo-element is not addressable. */}

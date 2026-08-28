@@ -112,27 +112,29 @@ export const Tapes: CollectionConfig = {
       },
     },
 
-    /* AND THE REST IS IN TABS.
-     *
-     * THEY ARE UNNAMED, which is the whole reason this was safe. A NAMED tab
-     * nests everything inside it under its own key — every one of these fields
-     * would move in the database, and a change that is purely about where an
-     * editor looks would need a migration and a rewrite of the mapper. Unnamed,
-     * a tab is furniture: the data is exactly where it was and the front end
-     * reads it exactly as before.
-     *
-     * SLUG AND ORDER ARE IN THE SIDEBAR, above, because they are not things
-     * anybody comes here to write. One is the address and the other is a
-     * position in two lists; both are set once and then left alone, and both
-     * were sitting in the middle of the copy an editor actually came for.
-     */
+    /* THE TABS FOLLOW THE PAGE, top to bottom, and that is the whole of this
+       arrangement. They were organised by KIND before — Artwork, Copy, 3D — so
+       changing one section meant visiting three tabs and every tab held pieces
+       of five different sections. Nobody edits a product by kind. They come to
+       change the opening screen, or the origin story, or a superpower, and now
+       each of those is one place.
+
+       COLOURS IS THE ONE THAT IS NOT A SECTION, and it is last for that reason:
+       the palette is a single record that paints the opening screen, the origin
+       section, NEXT UP and the scrollbar, and the overrides under it cover four
+       sections at once. Splitting it across the tabs above would mean moving it
+       in the database to solve a question about where an editor looks.
+
+       THEY ARE STILL UNNAMED TABS. A named tab nests its contents under its own
+       key — every field here would move — so unnamed keeps this purely about
+       furniture and leaves the data exactly where it is. */
     {
       type: "tabs",
       tabs: [
         {
-          label: "Identity",
+          label: "Hero banner",
           description:
-            "What this tape is called, and which word its title spells.",
+            "The opening screen: the roll square-on, the tape's name across it, and the colours the page floods with.",
           fields: [
             {
               name: "label",
@@ -149,20 +151,6 @@ export const Tapes: CollectionConfig = {
                   "Which word the bottom title spells — a key of `words` in src/data/wordmarks.json, where its letterforms are. Not free text: the stencils are generated per word into letters.css and selected by this.",
               },
             },
-          ],
-        },
-        {
-          label: "Artwork",
-          description:
-            "Every picture this product wears — except the marks on its superpower cards, which sit with the claims they belong to.",
-          fields: [
-            {
-              name: "card",
-              type: "upload",
-              relationTo: "media",
-              required: true,
-              admin: { description: "Hang tag at the centre of the stage." },
-            },
             {
               name: "hero",
               type: "upload",
@@ -173,57 +161,39 @@ export const Tapes: CollectionConfig = {
               },
             },
             {
-              name: "showcase",
-              type: "array",
+              name: "card",
+              type: "upload",
+              relationTo: "media",
               required: true,
-              minRows: 2,
-              maxRows: 2,
+              admin: { description:
+              "The hang tag. Drawn on the row at /products, in THE RUN below, and used as this page's key visual whenever no hero shot is set." },
+            },
+            { name: "model", type: "text", required: true },
+            {
+              name: "modelInner",
+              type: "text",
               admin: {
-                components: { RowLabel: "/admin/RowLabel#RowLabel" },
                 description:
-                  "Exactly two. The layout places each by hand, so a third would have nowhere to go.",
+                  "A second mesh for the inner page where the slider's is not right for it. Optional.",
               },
-              fields: [
-                { name: "image", type: "upload", relationTo: "media", required: true },
-              ],
             },
             {
-              name: "faces",
-              type: "array",
+              name: "clarity",
+              type: "number",
+              min: 0,
+              max: 1,
               admin: {
-                components: { RowLabel: "/admin/RowLabel#RowLabel" },
                 description:
-                  "The siblings' printed labels, one per variant id. Optional and empty for every tape today — each card falls back to the card artwork above, so the row works rather than showing three broken images.",
+                  "How see-through the tape is, 0 to 1. A fact about the tape rather than a rendering setting, which is why it lives here.",
               },
-              fields: [
-                { name: "variant", type: "text", required: true },
-                { name: "image", type: "upload", relationTo: "media", required: true },
-              ],
             },
           ],
         },
         {
-          label: "Copy",
+          label: "Origin section",
           description:
-            "The words in the left column of the opening screen.",
+            "The dark green section under the opening screen — where this tape comes from, and the two photographs beside it.",
           fields: [
-            {
-              name: "tags",
-              type: "array",
-              maxRows: 4,
-              admin: {
-                components: { RowLabel: "/admin/RowLabel#RowLabel" },
-                description:
-                  "Chips in the left column. Four is the ceiling — the tilt angles run out at five.",
-              },
-              fields: [{ name: "text", type: "text", required: true }],
-            },
-            {
-              name: "copy",
-              type: "textarea",
-              required: true,
-              admin: { description: "Paragraph under the chips." },
-            },
             {
               name: "origin",
               type: "array",
@@ -248,12 +218,47 @@ export const Tapes: CollectionConfig = {
               },
               fields: [{ name: "text", type: "text", required: true }],
             },
+            {
+              name: "showcase",
+              type: "array",
+              required: true,
+              minRows: 2,
+              maxRows: 2,
+              admin: {
+                components: { RowLabel: "/admin/RowLabel#RowLabel" },
+                description:
+                  "Exactly two. The layout places each by hand, so a third would have nowhere to go.",
+              },
+              fields: [
+                { name: "image", type: "upload", relationTo: "media", required: true },
+              ],
+            },
+          ],
+        },
+        {
+          label: "Siblings",
+          description:
+            "The same tape in its three grades, on the green the origin section ends on.",
+          fields: [
+            {
+              name: "faces",
+              type: "array",
+              admin: {
+                components: { RowLabel: "/admin/RowLabel#RowLabel" },
+                description:
+                  "The siblings' printed labels, one per variant id. Optional and empty for every tape today — each card falls back to the card artwork above, so the row works rather than showing three broken images.",
+              },
+              fields: [
+                { name: "variant", type: "text", required: true },
+                { name: "image", type: "upload", relationTo: "media", required: true },
+              ],
+            },
           ],
         },
         {
           label: "Superpowers",
           description:
-            "Three claims, three cards. Each can carry a drawing of its own.",
+            "Three claims on three cards, scrolled through a held screen. Each can carry a drawing of its own.",
           fields: [
             {
               name: "powers",
@@ -349,9 +354,9 @@ export const Tapes: CollectionConfig = {
           ],
         },
         {
-          label: "The reel",
+          label: "Additional info",
           description:
-            "The pinned frame the page scrolls sideways through.",
+            "THE RUN — the pinned frame the page scrolls sideways through — and the line this product shows in a search result.",
           fields: [
             {
               name: "reel",
@@ -396,38 +401,31 @@ export const Tapes: CollectionConfig = {
                 },
               ],
             },
-          ],
-        },
-        {
-          label: "3D model",
-          description:
-            "Geometry rather than content — paths into /public/assets/tapes.",
-          fields: [
-            { name: "model", type: "text", required: true },
             {
-              name: "modelInner",
-              type: "text",
-              admin: {
-                description:
-                  "A second mesh for the inner page where the slider's is not right for it. Optional.",
-              },
+              name: "copy",
+              type: "textarea",
+              required: true,
+              admin: { description:
+              "The line under this product in a Google result, and nothing else — it is NOT drawn on the page. One sentence, about 150 characters; longer is cut off mid-word." },
             },
             {
-              name: "clarity",
-              type: "number",
-              min: 0,
-              max: 1,
+              name: "tags",
+              type: "array",
+              maxRows: 4,
               admin: {
+              hidden: true,
+                components: { RowLabel: "/admin/RowLabel#RowLabel" },
                 description:
-                  "How see-through the tape is, 0 to 1. A fact about the tape rather than a rendering setting, which is why it lives here.",
+              "NOT SHOWN ON THIS PAGE any more. The chips beside the home page's stage are the slider's own now (Globals -> Homepage), and nothing on a product page draws these. Hidden rather than deleted so the words are not lost; say if they should go.",
               },
+              fields: [{ name: "text", type: "text", required: true }],
             },
           ],
         },
         {
           label: "Colours",
           description:
-            "The palette this product is painted in, and — optionally — the ground its middle sections stand on.",
+            "The palette this product is painted in, and — optionally — the ground each middle section stands on. One place rather than five: the palette is one record and paints across sections.",
           fields: [
             {
               name: "colours",

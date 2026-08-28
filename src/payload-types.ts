@@ -208,13 +208,36 @@ export interface Tape {
    */
   wordmark: string;
   /**
-   * Hang tag at the centre of the stage.
-   */
-  card: number | Media;
-  /**
    * The inner page's key visual — the roll shot square-on. Optional: leave it empty and the page falls back to the card, which is a working page rather than a hole in one.
    */
   hero?: (number | null) | Media;
+  /**
+   * The hang tag. Drawn on the row at /products, in THE RUN below, and used as this page's key visual whenever no hero shot is set.
+   */
+  card: number | Media;
+  model: string;
+  /**
+   * A second mesh for the inner page where the slider's is not right for it. Optional.
+   */
+  modelInner?: string | null;
+  /**
+   * How see-through the tape is, 0 to 1. A fact about the tape rather than a rendering setting, which is why it lives here.
+   */
+  clarity?: number | null;
+  /**
+   * Exactly two lines, broken where the design breaks them rather than wherever the measure lands.
+   */
+  origin: {
+    text: string;
+    id?: string | null;
+  }[];
+  /**
+   * One entry per line.
+   */
+  character: {
+    text: string;
+    id?: string | null;
+  }[];
   /**
    * Exactly two. The layout places each by hand, so a third would have nowhere to go.
    */
@@ -232,33 +255,6 @@ export interface Tape {
         id?: string | null;
       }[]
     | null;
-  /**
-   * Chips in the left column. Four is the ceiling — the tilt angles run out at five.
-   */
-  tags?:
-    | {
-        text: string;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Paragraph under the chips.
-   */
-  copy: string;
-  /**
-   * Exactly two lines, broken where the design breaks them rather than wherever the measure lands.
-   */
-  origin: {
-    text: string;
-    id?: string | null;
-  }[];
-  /**
-   * One entry per line.
-   */
-  character: {
-    text: string;
-    id?: string | null;
-  }[];
   /**
    * Exactly three — the section is a stack of three cards. Per tape rather than per range: a masking tape and a cloth tape are not good at the same things.
    */
@@ -302,15 +298,19 @@ export interface Tape {
       id?: string | null;
     }[];
   };
-  model: string;
   /**
-   * A second mesh for the inner page where the slider's is not right for it. Optional.
+   * The line under this product in a Google result, and nothing else — it is NOT drawn on the page. One sentence, about 150 characters; longer is cut off mid-word.
    */
-  modelInner?: string | null;
+  copy: string;
   /**
-   * How see-through the tape is, 0 to 1. A fact about the tape rather than a rendering setting, which is why it lives here.
+   * NOT SHOWN ON THIS PAGE any more. The chips beside the home page's stage are the slider's own now (Globals -> Homepage), and nothing on a product page draws these. Hidden rather than deleted so the words are not lost; say if they should go.
    */
-  clarity?: number | null;
+  tags?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * Reaches the page as custom properties on the roll button; the animation reads them from there.
    */
@@ -568,8 +568,23 @@ export interface TapesSelect<T extends boolean = true> {
   order?: T;
   label?: T;
   wordmark?: T;
-  card?: T;
   hero?: T;
+  card?: T;
+  model?: T;
+  modelInner?: T;
+  clarity?: T;
+  origin?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  character?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
   showcase?:
     | T
     | {
@@ -581,25 +596,6 @@ export interface TapesSelect<T extends boolean = true> {
     | {
         variant?: T;
         image?: T;
-        id?: T;
-      };
-  tags?:
-    | T
-    | {
-        text?: T;
-        id?: T;
-      };
-  copy?: T;
-  origin?:
-    | T
-    | {
-        text?: T;
-        id?: T;
-      };
-  character?:
-    | T
-    | {
-        text?: T;
         id?: T;
       };
   powers?:
@@ -634,9 +630,13 @@ export interface TapesSelect<T extends boolean = true> {
               id?: T;
             };
       };
-  model?: T;
-  modelInner?: T;
-  clarity?: T;
+  copy?: T;
+  tags?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
   colours?:
     | T
     | {

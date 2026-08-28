@@ -7632,23 +7632,31 @@ html[data-loading] {
   justify-content: center;
   align-items: flex-start;
 
-  /* THE GAP, PLUS A HOLE WHERE THE MIDDLE CARD WOULD BE.
-   *
-   * A row of an EVEN number of cards has no middle one to raise, and the name
-   * belongs under the middle of the row — so with two cards side by side the
-   * name has nowhere to go but on top of one of them. The answer is not to move
-   * the name: it is to leave the middle card's place EMPTY and let the name
-   * stand in it. What comes out is the three-card composition with the middle
-   * card lifted out — same overall width, same two leans, same name in the same
-   * place — which is why it reads as the section it has always been rather than
-   * as a different arrangement for a shorter range.
-   *
-   * --sib-hole is 1 when the row has no middle card and 0 when it has one, set
-   * by index.tsx where the rest of the arrangement is decided. At 0 this is the
-   * plain gap it has always been. */
-  gap: calc(
-    var(--sib-gap) + (var(--sib-w) + var(--sib-gap)) * var(--sib-hole, 0)
-  );
+  gap: var(--sib-gap);
+}
+
+/* AN EMPTY PLACE IN THE ROW, and it draws nothing at all.
+ *
+ * THE ARRANGEMENT IS THREE SLOTS — one raised in the middle with one either
+ * side, leaning away — and that is a fact about the COMPOSITION rather than
+ * about how many variants a tape happens to have. A range of two does not
+ * become a different drawing: it takes the first two places and leaves the
+ * last one standing empty, so the raised card is still in the middle of the
+ * screen with the name under it, and the section still reads as the one it has
+ * always been.
+ *
+ * It reserves a side card's width and nothing else — no height, no ground, no
+ * radius. align-items: flex-start on the fan means a box of no height sits at
+ * the top and disturbs nothing; it is here to hold a place open, and holding a
+ * place open is the whole of what it does.
+ *
+ * OUT OF THE CARD'S OWN CLASS ON PURPOSE. Siblings/reveal.ts finds the cards by
+ * .siblings-card and deals exactly what it finds, so a placeholder wearing that
+ * class would be dealt — a beat of the pin spent putting nothing down. This is
+ * layout and not a card, and the two are named apart. */
+.siblings-space {
+  flex: none;
+  width: var(--sib-w-side);
 }
 
 /* One label card. Square, and the size is chosen by --sib-raised — 1 for the

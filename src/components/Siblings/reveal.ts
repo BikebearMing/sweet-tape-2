@@ -310,11 +310,25 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
   const spots = () => {
     if (!row || !cards.length) return cards.map(() => 0);
     const middle = row.clientWidth / 2;
-    return cards.map((_, i) => {
+    const out = cards.map((_, i) => {
       const from = cards[0].offsetLeft;
       const to = cards[i].offsetLeft + cards[i].offsetWidth;
       return middle - (from + to) / 2;
     });
+
+    /* AND THE LAST ONE IS ZERO BY DEFINITION, not by measurement.
+     *
+     * The run ends at the arrangement the stylesheet laid out — that IS the
+     * design, and the swing is a displacement measured FROM it. Measuring the
+     * last stop like the others was harmless while every place in the row held a
+     * card, because centring the cards and resting the fan were then the same
+     * position. They are not once a place is left empty: a range of two sits in
+     * the left and middle places with the right one open (see .siblings-space),
+     * and the measured answer swings the whole composition sideways to put the
+     * PAIR in the middle of the screen — which takes the raised card off centre
+     * and leaves the name standing under nothing. */
+    out[out.length - 1] = 0;
+    return out;
   };
   let stops = spots();
 

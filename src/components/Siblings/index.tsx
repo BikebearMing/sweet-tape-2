@@ -51,25 +51,30 @@ const HEADING = "THE SIBLINGS";
  * `faces` and siblingFacesOf in src/data/tape-types.ts.
  */
 
-/* WHERE THE MIDDLE OF THE ROW IS, as an index — and it is allowed to fall
- * BETWEEN two cards, which is the whole of how a row of two works.
+/* THE ARRANGEMENT IS THREE PLACES, AND IT STAYS THREE PLACES.
  *
- * The arrangement is one card raised and square with the rest put down off it
- * either side. At three that is the middle card, exactly as it always was; at
- * one it is the only card. At TWO there is no middle card, and the honest answer is
- * not to promote one of the pair — it is to say the middle of the row is the
- * empty half-step between them, leave that place empty, and let the name stand
- * in it. What comes out is the three-card composition with the middle card
- * lifted out: same width, same two leans, name in the same place. See
- * --sib-hole on .siblings-fan, which opens the gap. */
-const centreOf = (count: number) => (count - 1) / 2;
+ * One card raised and square in the MIDDLE with one either side of it, lower
+ * and leaning away — and THE SIBLINGS in the gap that raising the middle one
+ * opens up. That is the drawing, and it is a fact about the composition rather
+ * than about how many variants a tape happens to sell.
+ *
+ * SO A SHORTER RANGE FILLS IT FROM THE LEFT AND LEAVES THE REST EMPTY. Two
+ * labels take the left place and the middle one; the right stands empty. The
+ * raised card is still in the middle of the screen, the name is still under it,
+ * and nothing about the section has to be re-composed for a tape that has two
+ * of something instead of three. See .siblings-space in global.css, which is
+ * what holds the empty place open.
+ *
+ * A ROW OF ONE IS THE EXCEPTION and takes the middle place on its own, centred.
+ * A lone card pushed into the left-hand slot is not a row with a gap in it — it
+ * is one object sitting off to one side of a screen with its name in the middle
+ * of the empty half, which is a composition nobody drew. */
+const SLOTS = 3;
 
-/* AND HOW FAR EACH ONE LEANS, in degrees. The two figures are the design's own
- * and the RULE is the design's own too, stated instead of enumerated: the card
- * at the middle stands square and the ones either side are put down off it. At
- * three that is exactly the list this used to hold, [-4.414, 0, 3.578]; at two
- * the middle falls between the pair, so one leans each way and neither stands
- * square.
+/* WHICH PLACE IS RAISED, and how far each one leans, in degrees — by PLACE and
+ * not by card, which is the whole point of the two constants: the middle is up
+ * and square and the outer two are put down off it, whether or not there is
+ * anything standing in all three.
  *
  * Here rather than in global.css because a stylesheet rule would have to count
  * to the first and the last child of .siblings-row — and the last child of that
@@ -80,30 +85,25 @@ const centreOf = (count: number) => (count - 1) / 2;
  * row of one leaves that card square — which it already handles: see
  * PIVOT_MIN_TILT and PIVOT_FALLBACK, written for exactly this case before there
  * was one. */
-const TILT_BEFORE = -4.414;
-const TILT_AFTER = 3.578;
-const tiltAt = (i: number, centre: number) =>
-  i === centre ? 0 : i < centre ? TILT_BEFORE : TILT_AFTER;
+const RAISED = 1;
+const TILT = [-4.414, 0, 3.578];
 
 export default function Siblings({ tape }: { tape: Tape }) {
   const faces = siblingFacesOf(tape);
-  const centre = centreOf(faces.length);
 
-  /* WHETHER THE ROW HAS A MIDDLE CARD OR A MIDDLE GAP. An even row has no card
-     at its centre, so the stylesheet opens the place one would have stood in and
-     the name goes there — see --sib-hole on .siblings-fan. Nothing about an odd
-     row changes: this is 0 and the gap is the gap. */
-  const hole = Number.isInteger(centre) ? 0 : 1;
+  /* WHICH PLACE EACH LABEL STANDS IN. Filled from the left, so two labels are
+     the left place and the middle one — see SLOTS. A lone label is the middle
+     place on its own, which is the one case that is not a row. */
+  const lone = faces.length === 1;
+  const slotOf = (i: number) => (lone ? RAISED : i);
+
+  /* And the places left standing empty on the right of them. None when the
+     range fills the row, and none for a lone label — it is centred rather than
+     placed, so there is nothing to hold open beside it. */
+  const empties = lone ? 0 : SLOTS - faces.length;
 
   return (
-    <Stage
-      style={
-        {
-          ...siblingsVars(tape.sections),
-          "--sib-hole": hole,
-        } as CSSProperties
-      }
-    >
+    <Stage style={siblingsVars(tape.sections)}>
       {/* WITHOUT JAVASCRIPT NEITHER THE NAME NOR THE CARDS ARRIVE. The letters
           are parked under their masks by global.css and the three cards are held
           at nothing by the same attribute, both released by the section's own
@@ -147,13 +147,21 @@ export default function Siblings({ tape }: { tape: Tape }) {
             key={i}
             style={
               {
-                "--sib-raised": i === centre ? 1 : 0,
-                "--sib-tilt": `${tiltAt(i, centre)}deg`,
+                "--sib-raised": slotOf(i) === RAISED ? 1 : 0,
+                "--sib-tilt": `${TILT[slotOf(i)] ?? 0}deg`,
               } as CSSProperties
             }
           >
             <img className="siblings-face" src={face.src} alt={face.alt} />
           </div>
+        ))}
+
+        {/* The places nobody is standing in. They draw nothing and are dealt
+            nothing — see .siblings-space in global.css. Keyed by index because
+            an empty place has no identity beyond where it is, which is the same
+            call the cards above make and for a stronger reason. */}
+        {Array.from({ length: empties }, (_, i) => (
+          <div className="siblings-space" key={`space-${i}`} aria-hidden="true" />
         ))}
         </div>
 

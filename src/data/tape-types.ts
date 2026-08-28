@@ -276,6 +276,9 @@ export type Tape = {
    */
   powers: [Power, Power, Power];
   colours: TapeColours;
+  /** Per-tape overrides for the middle sections' ground. All optional; blank
+   *  means the site's own colour. See SectionColours. */
+  sections?: SectionColours;
 };
 
 
@@ -307,6 +310,93 @@ export function siblingFaceOf(tape: Tape, variant: string): string {
  * it, and copies the values onto whichever element is being repainted. Keeping
  * them as CSS variables on the button means that lookup — and every CSS rule
  * that already consumes them — keeps working untouched. */
+/* THE SECTIONS' OWN GROUND, AND IT IS ALL OPTIONAL.
+ *
+ * `colours` above is the tape's palette — the colour the opening screen floods
+ * with, the ink its word is punched in, the chips. It reaches two sections and
+ * the scrollbar, and it always has.
+ *
+ * The three sections in the middle of a product page — the origin story, THE
+ * SIBLINGS, SUPER POWERS and THE RUN — were the SITE's lime and dark green
+ * rather than the tape's, and fixed in the stylesheet. That was a real design:
+ * a page that opens in the product's colour, passes through shared brand ground
+ * and hands off to the next tape's colour. This does not undo it. It makes the
+ * ground editable per tape, and EVERY FIELD IS BLANK BY DEFAULT MEANING "use
+ * the site's" — so a tape nobody has touched is exactly the page it was, and no
+ * one has to type ten hex values to keep today's look.
+ *
+ * BLANK IS THE ABSENCE OF AN OVERRIDE AND NOT A COLOUR. An empty string is not
+ * a value the browser can use, so the vars are omitted entirely rather than set
+ * to "" — see sectionVars, which is what does the omitting. Set to "", the
+ * custom property would exist and hold nothing, the fallback in the stylesheet
+ * would not fire, and the section would paint transparent.
+ */
+export type SectionColours = {
+  /** The origin story's ground. Site default #0d470c. */
+  originBg?: string;
+  /** THE SIBLINGS' ground. Site default #0d470c. */
+  siblingsBg?: string;
+  /** The three grade cards on it. Site default #c6fd00. */
+  siblingsCard?: string;
+  /** The name set across them. Site default #a8f000. */
+  siblingsInk?: string;
+  /** SUPER POWERS' sheet. Site default #b6fe00. */
+  powersBg?: string;
+  /** The card being read. Site default #0d470c. */
+  powersCard?: string;
+  /** A card waiting its turn. Site default #9bdc00. */
+  powersCardRest?: string;
+  /** What is printed on the open card. Site default #b6fe00. */
+  powersInk?: string;
+  /** THE RUN's ground. Site default #b6fe00. */
+  reelBg?: string;
+  /** THE RUN's writing. Site default #013900. */
+  reelInk?: string;
+};
+
+/** The custom properties for one section, with the unset ones LEFT OUT.
+ *
+ *  Set on the section's own root element, which is where the stylesheet
+ *  declares these same tokens — so an inline value wins over the class rule
+ *  without a single !important, and an absent one leaves the stylesheet's
+ *  default standing. That is the whole mechanism. */
+function sectionVars(pairs: [string, string | undefined][]): CSSProperties {
+  const out: Record<string, string> = {};
+  for (const [name, value] of pairs) {
+    if (value && value.trim()) out[name] = value.trim();
+  }
+  return out as CSSProperties;
+}
+
+/** The origin story's ground. Its ink and chips come from `colours`. */
+export function originVars(s?: SectionColours): CSSProperties {
+  return sectionVars([["--info-bg", s?.originBg]]);
+}
+
+export function siblingsVars(s?: SectionColours): CSSProperties {
+  return sectionVars([
+    ["--sib-bg", s?.siblingsBg],
+    ["--sib-card-bg", s?.siblingsCard],
+    ["--sib-title-ink", s?.siblingsInk],
+  ]);
+}
+
+export function powersVars(s?: SectionColours): CSSProperties {
+  return sectionVars([
+    ["--pow-bg", s?.powersBg],
+    ["--pow-card-bg", s?.powersCard],
+    ["--pow-card-rest", s?.powersCardRest],
+    ["--pow-card-ink", s?.powersInk],
+  ]);
+}
+
+export function reelVars(s?: SectionColours): CSSProperties {
+  return sectionVars([
+    ["--reel-bg", s?.reelBg],
+    ["--reel-ink", s?.reelInk],
+  ]);
+}
+
 export function cssVars(c: TapeColours): CSSProperties {
   return {
     "--ring": c.ring,

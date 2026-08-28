@@ -2,7 +2,7 @@
 import type { CSSProperties } from "react";
 
 import { letters } from "@/components/letters";
-import { siblingFaceOf, type Tape } from "@/data/tapes";
+import { siblingFaceOf, type Tape, siblingsVars } from "@/data/tapes";
 import Stage from "./Stage";
 
 /* THE SIBLINGS — the product page's third section.
@@ -72,7 +72,7 @@ const TILT = [-4.414, 0, 3.578];
 
 export default function Siblings({ tape }: { tape: Tape }) {
   return (
-    <Stage>
+    <Stage style={siblingsVars(tape.sections)}>
       {/* WITHOUT JAVASCRIPT NEITHER THE NAME NOR THE CARDS ARRIVE. The letters
           are parked under their masks by global.css and the three cards are held
           at nothing by the same attribute, both released by the section's own

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode, type CSSProperties } from "react";
 
 import { initSiblingsReveal } from "./reveal";
 
@@ -19,7 +19,18 @@ import { initSiblingsReveal } from "./reveal";
  * orphaned pin is not a leak like the others, it is three screens of spacer left
  * in the document.
  */
-export default function Stage({ children }: { children: ReactNode }) {
+/* THE STYLE PROP CARRIES THIS TAPE'S OVERRIDES, and nothing else ever sets it.
+   The stylesheet declares this section's colour tokens on this very element, so
+   an inline value here wins over the class rule without an !important anywhere;
+   a tape that overrides nothing passes an empty object and the stylesheet's own
+   colours stand. See the Section colours group in src/collections/Tapes.ts. */
+export default function Stage({
+  children,
+  style,
+}: {
+  children: ReactNode;
+  style?: CSSProperties;
+}) {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -35,7 +46,7 @@ export default function Stage({ children }: { children: ReactNode }) {
      something — it ends up as tall as the whole pinned sequence. The pinning
      section up the page is built the same way and calls its box .wrapper. */
   return (
-    <section ref={ref} className="siblings-section">
+    <section ref={ref} className="siblings-section" style={style}>
       <div className="siblings-stage">{children}</div>
     </section>
   );

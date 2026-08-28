@@ -1,4 +1,23 @@
-import type { CollectionConfig } from "payload";
+import type { CollectionConfig, TextFieldSingleValidation } from "payload";
+
+/* A HEX CODE, OR NOTHING AT ALL.
+ *
+ * Blank is the normal state of every field this guards — it means "use the
+ * site's colour" — so an empty box has to pass. What must not pass is a typo:
+ * these values are written straight into a custom property, and a browser given
+ * a value it cannot parse does not complain, it simply ignores the declaration.
+ * The section would fall back to the stylesheet's colour and look exactly as if
+ * the edit had never been made, which is the kind of failure somebody spends an
+ * afternoon on. Caught here, it is a message next to the box.
+ *
+ * Three, six or eight digits: #abc, #aabbcc, and #aabbccff for a colour with
+ * transparency in it. */
+const hex: TextFieldSingleValidation = (value) => {
+  if (!value) return true;
+  return /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value.trim())
+    ? true
+    : "Use a hex code like #0d470c, or leave it blank for the site's own colour.";
+};
 
 /* The tapes, as the CMS holds them.
  *
@@ -307,6 +326,114 @@ export const Tapes: CollectionConfig = {
       ],
     },
 
+    {
+      type: "collapsible",
+      label: "Section colours",
+      admin: {
+        initCollapsed: true,
+        description:
+          "The ground and the writing for the four sections in the MIDDLE of this product's page. Every box is optional — leave one blank and that section keeps the site's own colour, which is what the placeholder shows. Hex codes, e.g. #0d470c. The opening screen and NEXT UP are not here: they already take their colour from the palette above.",
+      },
+      fields: [
+        {
+          name: "sections",
+          type: "group",
+          label: false,
+          fields: [
+        {
+              name: "originBg",
+              type: "text",
+              validate: hex,
+              admin: {
+                placeholder: "#0d470c",
+                description: "The origin story's ground. Site default #0d470c.",
+              },
+            },
+            {
+              name: "siblingsBg",
+              type: "text",
+              validate: hex,
+              admin: {
+                placeholder: "#0d470c",
+                description: "THE SIBLINGS' ground, under the three grade cards. Site default #0d470c.",
+              },
+            },
+            {
+              name: "siblingsCard",
+              type: "text",
+              validate: hex,
+              admin: {
+                placeholder: "#c6fd00",
+                description: "The three grade cards themselves. Site default #c6fd00.",
+              },
+            },
+            {
+              name: "siblingsInk",
+              type: "text",
+              validate: hex,
+              admin: {
+                placeholder: "#a8f000",
+                description: "The tape's name set across those cards. Site default #a8f000.",
+              },
+            },
+            {
+              name: "powersBg",
+              type: "text",
+              validate: hex,
+              admin: {
+                placeholder: "#b6fe00",
+                description: "SUPER POWERS' sheet — the ground the stack of cards passes over. Site default #b6fe00.",
+              },
+            },
+            {
+              name: "powersCard",
+              type: "text",
+              validate: hex,
+              admin: {
+                placeholder: "#0d470c",
+                description: "The card being read, once it fills. Site default #0d470c.",
+              },
+            },
+            {
+              name: "powersCardRest",
+              type: "text",
+              validate: hex,
+              admin: {
+                placeholder: "#9bdc00",
+                description: "A card still waiting its turn. Close to the sheet on purpose: a resting card is meant to be sensed rather than found. Site default #9bdc00.",
+              },
+            },
+            {
+              name: "powersInk",
+              type: "text",
+              validate: hex,
+              admin: {
+                placeholder: "#b6fe00",
+                description: "The claim and the sentence on the open card. Site default #b6fe00.",
+              },
+            },
+            {
+              name: "reelBg",
+              type: "text",
+              validate: hex,
+              admin: {
+                placeholder: "#b6fe00",
+                description: "THE RUN's ground. Site default #b6fe00.",
+              },
+            },
+            {
+              name: "reelInk",
+              type: "text",
+              validate: hex,
+              admin: {
+                placeholder: "#013900",
+                description: "THE RUN's writing. Site default #013900.",
+              },
+            },
+          ],
+        },
+      ],
+    },
     {
       name: "colours",
       type: "group",

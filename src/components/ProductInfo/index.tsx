@@ -5,7 +5,7 @@ import HandNote from "@/components/HandNote";
 import Peel from "@/components/Peel";
 import { letters, words } from "@/components/letters";
 import { stripOf } from "@/components/TapeSlider/strips";
-import { cssVars, heroOf, type Tape } from "@/data/tapes";
+import { cssVars, heroOf, originVars, type Tape } from "@/data/tapes";
 import Stage from "./Stage";
 
 /* THE ORIGIN — the product page's second section.
@@ -128,7 +128,14 @@ export default function ProductInfo({ tape }: { tape: Tape }) {
   const [restHead, restTail] = splitLastWord(rest);
 
   return (
-    <Stage style={cssVars(tape.colours) as CSSProperties}>
+    <Stage
+      style={
+        {
+          ...cssVars(tape.colours),
+          ...originVars(tape.sections),
+        } as CSSProperties
+      }
+    >
       <div className="wrapper">
         <div className="left">
           {/* THE PHOTOGRAPH — this tape at work, and it is the slider's own

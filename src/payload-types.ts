@@ -93,10 +93,12 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     homepage: Homepage;
+    menu: Menu;
     contact: Contact;
   };
   globalsSelect: {
     homepage: HomepageSelect<false> | HomepageSelect<true>;
+    menu: MenuSelect<false> | MenuSelect<true>;
     contact: ContactSelect<false> | ContactSelect<true>;
   };
   locale: null;
@@ -206,10 +208,6 @@ export interface Tape {
    */
   wordmark: string;
   /**
-   * TEMPORARY — being removed.
-   */
-  roll?: (number | null) | Media;
-  /**
    * Hang tag at the centre of the stage.
    */
   card: number | Media;
@@ -316,6 +314,48 @@ export interface Tape {
     mark?: (number | null) | Media;
     id?: string | null;
   }[];
+  sections?: {
+    /**
+     * The origin story's ground. Site default #0d470c.
+     */
+    originBg?: string | null;
+    /**
+     * THE SIBLINGS' ground, under the three grade cards. Site default #0d470c.
+     */
+    siblingsBg?: string | null;
+    /**
+     * The three grade cards themselves. Site default #c6fd00.
+     */
+    siblingsCard?: string | null;
+    /**
+     * The tape's name set across those cards. Site default #a8f000.
+     */
+    siblingsInk?: string | null;
+    /**
+     * SUPER POWERS' sheet — the ground the stack of cards passes over. Site default #b6fe00.
+     */
+    powersBg?: string | null;
+    /**
+     * The card being read, once it fills. Site default #0d470c.
+     */
+    powersCard?: string | null;
+    /**
+     * A card still waiting its turn. Close to the sheet on purpose: a resting card is meant to be sensed rather than found. Site default #9bdc00.
+     */
+    powersCardRest?: string | null;
+    /**
+     * The claim and the sentence on the open card. Site default #b6fe00.
+     */
+    powersInk?: string | null;
+    /**
+     * THE RUN's ground. Site default #b6fe00.
+     */
+    reelBg?: string | null;
+    /**
+     * THE RUN's writing. Site default #013900.
+     */
+    reelInk?: string | null;
+  };
   /**
    * Reaches the page as custom properties on the roll button; the animation reads them from there.
    */
@@ -531,7 +571,6 @@ export interface TapesSelect<T extends boolean = true> {
   slug?: T;
   order?: T;
   wordmark?: T;
-  roll?: T;
   card?: T;
   hero?: T;
   showcase?:
@@ -600,6 +639,20 @@ export interface TapesSelect<T extends boolean = true> {
         copy?: T;
         mark?: T;
         id?: T;
+      };
+  sections?:
+    | T
+    | {
+        originBg?: T;
+        siblingsBg?: T;
+        siblingsCard?: T;
+        siblingsInk?: T;
+        powersBg?: T;
+        powersCard?: T;
+        powersCardRest?: T;
+        powersInk?: T;
+        reelBg?: T;
+        reelInk?: T;
       };
   colours?:
     | T
@@ -773,6 +826,35 @@ export interface Homepage {
   createdAt?: string | null;
 }
 /**
+ * The pull-down menu, on every page. Rows hang in the order they are listed here — drag to reorder.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "menu".
+ */
+export interface Menu {
+  id: number;
+  /**
+   * Six is the ceiling: the panel drops to a measured height and the rows are sized to fill it, so a seventh would either overflow the paper or shrink the rest to fit a row only one page asked for.
+   */
+  items: {
+    /**
+     * What the row says. Capitals — the menu does not transform it, so what is typed is what is drawn, and it is what a screen reader announces.
+     */
+    label: string;
+    /**
+     * Where it goes. A path beginning with a slash for a page on this site; a full https:// address for somewhere else.
+     */
+    href: string;
+    /**
+     * The picture that shows behind the row on hover. Optional — a row without one falls back to the shared preview, which is what most of them have always used.
+     */
+    thumb?: (number | null) | Media;
+    id?: string | null;
+  }[];
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Everything /contact says. The layout is drawn in code; the words are here.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -898,6 +980,23 @@ export interface HomepageSelect<T extends boolean = true> {
                   };
               id?: T;
             };
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "menu_select".
+ */
+export interface MenuSelect<T extends boolean = true> {
+  items?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+        thumb?: T;
+        id?: T;
       };
   updatedAt?: T;
   createdAt?: T;

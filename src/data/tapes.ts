@@ -28,12 +28,19 @@ import type { Tape, TapeColours, Power, MarkFile } from "./tape-types";
  * shape.
  */
 
-export type { Tape, TapeColours, Power };
+export type { Tape, TapeColours, Power, SectionColours } from "./tape-types";
 export {
   heroOf,
   innerModelOf,
   siblingFaceOf,
   cssVars,
+  /* The per-section overrides, one helper per section. Each returns only the
+     custom properties this tape actually set, so an untouched tape passes an
+     empty object and the stylesheet's own colours stand. */
+  originVars,
+  siblingsVars,
+  powersVars,
+  reelVars,
 } from "./tape-types";
 
 /* WHY THE WHOLE COLLECTION, EVERY TIME. Six rolls is one small query and the
@@ -129,6 +136,14 @@ function toTape(doc: TapeDoc): Tape {
     })) as [Power, Power, Power],
 
     colours: doc.colours as TapeColours,
+
+    /* PASSED THROUGH AS IT COMES, nulls and all. Payload stores an untouched
+       text field as null and the type wants undefined, but nothing downstream
+       tells the two apart — sectionVars (tape-types.ts) drops anything falsy on
+       its way to a custom property, which is the one place the distinction
+       would matter. Casting rather than rebuilding ten fields to change ten
+       nulls into ten undefineds. */
+    sections: (doc.sections ?? undefined) as Tape["sections"],
   };
 }
 

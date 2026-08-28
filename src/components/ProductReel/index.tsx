@@ -2,6 +2,7 @@
 import HandNote from "@/components/HandNote";
 import Peel from "@/components/Peel";
 import { letters } from "@/components/letters";
+import { reelVars } from "@/data/tapes";
 import type { Tape } from "@/data/tapes";
 import Stage from "./Stage";
 
@@ -77,7 +78,7 @@ export default function ProductReel({ tape }: { tape: Tape }) {
   const claim = headline.join(" ");
 
   return (
-    <Stage>
+    <Stage style={reelVars(tape.sections)}>
       {/* WITHOUT JAVASCRIPT THE LETTERS AND THE LABEL DO NOT ARRIVE. Both are
           held by global.css — the letters under their masks, the label at
           nothing — and released by the section's own script.

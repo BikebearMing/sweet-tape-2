@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode, type CSSProperties } from "react";
 
 import { initHandNote } from "@/components/HandNote/hand";
 import { initReelPin } from "./pin";
@@ -24,7 +24,18 @@ import { initReelPin } from "./pin";
  * is worse here than elsewhere, because a stale pin leaves a pin-spacer in the
  * document and every section below it moves.
  */
-export default function Stage({ children }: { children: ReactNode }) {
+/* THE STYLE PROP CARRIES THIS TAPE'S OVERRIDES, and nothing else ever sets it.
+   The stylesheet declares this section's colour tokens on this very element, so
+   an inline value here wins over the class rule without an !important anywhere;
+   a tape that overrides nothing passes an empty object and the stylesheet's own
+   colours stand. See the Section colours group in src/collections/Tapes.ts. */
+export default function Stage({
+  children,
+  style,
+}: {
+  children: ReactNode;
+  style?: CSSProperties;
+}) {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -41,7 +52,7 @@ export default function Stage({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <section ref={ref} className="product-reel">
+    <section ref={ref} className="product-reel" style={style}>
       {children}
     </section>
   );

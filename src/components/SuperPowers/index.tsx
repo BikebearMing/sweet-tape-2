@@ -1,5 +1,6 @@
 import { bodyCopy } from "@/components/body";
 import { letters } from "@/components/letters";
+import { powersVars } from "@/data/tapes";
 import type { Tape } from "@/data/tapes";
 import Mark from "./Mark";
 import Stage from "./Stage";
@@ -98,7 +99,7 @@ const NAME_RIGHT = "POWERS";
 
 export default function SuperPowers({ tape }: { tape: Tape }) {
   return (
-    <Stage>
+    <Stage style={powersVars(tape.sections)}>
       {/* WITHOUT JAVASCRIPT THE SECTION IS STILL A SECTION, and that is worth
           the four lines. The letters are parked under their masks by global.css
           and the words of every sentence under theirs, both released by this

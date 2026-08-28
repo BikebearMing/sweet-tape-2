@@ -6784,7 +6784,11 @@ html[data-loading] {
      parent so this section is a complete surface on its own: it is the second
      of an unknown number, and the ones that follow should not have to know what
      colour the page happened to be when they were added. */
-  background: #0d470c;
+  /* THE GROUND, AND IT IS A TOKEN NOW so a tape can set its own — see the
+     Section colours group in src/collections/Tapes.ts. The fallback IS the
+     site's colour and is what every tape gets until somebody types over it, so
+     this rule reads exactly as it did before for all six. */
+  background: var(--info-bg, #0d470c);
 
   /* The absolute children in the left column resolve against THIS box — see
      --info-note-top. clip rather than hidden for the reason every other section

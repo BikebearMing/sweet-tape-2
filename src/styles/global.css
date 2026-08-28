@@ -6474,10 +6474,19 @@ html[data-loading] {
      where the lime finishes rather than where it begins to turn. */
   height: calc(54.215vw * var(--product-scale));
 
-  /* The green the whole site's dark passages are set in — the hero's ground,
-     which is what the lime is lying on there too. It shows only in the two
-     bottom corners, and that is the entire reason it is here. */
-  background: #0d470c;
+  /* THE COLOUR IN THE TWO BOTTOM CORNERS, EITHER SIDE OF THE ARC, and that is
+     the entire reason it is here — nothing else on this section is painted with
+     it.
+     
+     SO IT IS THE SECTION BELOW'S GROUND AND NOT THIS ONE'S. What sits in those
+     corners is visually continuous with the origin story underneath; painted
+     with anything else the arc gets a rim of the wrong colour along its two
+     shoulders. It was the site's #0d470c written flat, which was true while the
+     origin story was always that green — and wrong the moment a tape could set
+     its own, which is what it looked like: a blue page with a green collar.
+     --info-bg is handed down by the same helper the origin section is given
+     (ProductIntro/index.tsx), and the fallback is the green it was. */
+  background: var(--info-bg, #0d470c);
 
   /* NOT CLIPPED, AND IT USED TO BE — the roll leaves this section on purpose.
    *
@@ -7622,7 +7631,24 @@ html[data-loading] {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  gap: var(--sib-gap);
+
+  /* THE GAP, PLUS A HOLE WHERE THE MIDDLE CARD WOULD BE.
+   *
+   * A row of an EVEN number of cards has no middle one to raise, and the name
+   * belongs under the middle of the row — so with two cards side by side the
+   * name has nowhere to go but on top of one of them. The answer is not to move
+   * the name: it is to leave the middle card's place EMPTY and let the name
+   * stand in it. What comes out is the three-card composition with the middle
+   * card lifted out — same overall width, same two leans, same name in the same
+   * place — which is why it reads as the section it has always been rather than
+   * as a different arrangement for a shorter range.
+   *
+   * --sib-hole is 1 when the row has no middle card and 0 when it has one, set
+   * by index.tsx where the rest of the arrangement is decided. At 0 this is the
+   * plain gap it has always been. */
+  gap: calc(
+    var(--sib-gap) + (var(--sib-w) + var(--sib-gap)) * var(--sib-hole, 0)
+  );
 }
 
 /* One label card. Square, and the size is chosen by --sib-raised — 1 for the
@@ -7727,23 +7753,12 @@ html[data-loading] {
   position: absolute;
   top: calc(var(--sib-w) + var(--sib-title-gap));
 
-  /* AND CENTRED ON THE RAISED CARD, WHICH IS NOT ALWAYS THE ROW'S CENTRE.
-   *
-   * It was left: 50% flat, and that was right for exactly as long as the row was
-   * always three cards with the middle one up — the raised card WAS the row's
-   * centre, so the two readings agreed and there was no reason to tell them
-   * apart. The row is the tape's list now and can be one card or two, and at two
-   * the raised card is the left one: a name centred on the row would be standing
-   * on the card beside it.
-   *
-   * --sib-title-shift is that difference IN CARDS, set by index.tsx, which is
-   * where the arrangement lives. Zero for every odd count, so the three-card row
-   * this section was drawn as does not move by a pixel. The length a card comes
-   * to is this stylesheet's business and stays here — a side card and the gap
-   * after it, which is the pitch the row is laid out on. */
-  left: calc(
-    50% + (var(--sib-w-side) + var(--sib-gap)) * var(--sib-title-shift, 0)
-  );
+  /* THE MIDDLE OF THE ROW, WHICHEVER LENGTH THE ROW IS — and it stays one
+     figure because the arrangement makes sure the middle of the row is always
+     where the name belongs: at an odd count that is the raised card, and at an
+     even one it is the hole left where the middle card would have been. See
+     --sib-hole on .siblings-fan, which is what buys this line its simplicity. */
+  left: 50%;
   transform: translateX(-50%);
   margin: 0;
   color: var(--sib-title-ink);
@@ -8063,7 +8078,20 @@ html[data-loading] {
   height: var(--screen-lg);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+
+  /* CENTRED AS A GROUP, AND NOT PUSHED TO THE TWO EDGES.
+   *
+   * It was space-between, which pins SUPER to the left edge and POWERS to the
+   * right and lets the gap either side of the stack be whatever the window
+   * happens to leave. On a wide screen that is a name stretched across the
+   * whole sheet with the cards adrift in the middle of it — the two words stop
+   * reading as one name and start reading as two labels at opposite ends.
+   *
+   * Centred with a stated gap, the three are one composition at any width: the
+   * words sit against the stack rather than against the frame, and the padding
+   * below is only the floor they may not cross. */
+  justify-content: center;
+  gap: 7vw;
   padding: 0 2.5vw;
 }
 
@@ -8086,8 +8114,9 @@ html[data-loading] {
   line-height: 0.8;
   letter-spacing: -0.35vw;
   white-space: nowrap;
-  /* The words are the two ends of the composition, so each is pulled to its own
-     side of the screen and neither is centred on anything. */
+  /* Never squeezed and never stretched: the row is centred as a group and each
+     word stands at its own measure, with the gap between them stated by the
+     stage rather than left to whatever the window has spare. */
   flex: 0 0 auto;
 }
 

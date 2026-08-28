@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import type { CSSProperties } from "react";
 
-import { cssVars, heroOf, type Tape } from "@/data/tapes";
+import { cssVars, heroOf, originVars, type Tape } from "@/data/tapes";
 import { clarityOf, modelOf } from "./rolls";
 import { TopTitle, BottomTitle, wordmarkText } from "@/components/TapeSlider/WordMarks";
 import Stage from "./Stage";
@@ -83,6 +83,16 @@ export default function ProductIntro({ tape }: { tape: Tape }) {
       style={
         {
           ...cssVars(tape.colours),
+          /* THE ORIGIN SECTION'S GROUND, ON THE SECTION ABOVE IT. This one does
+             not paint anything of this section — it paints the two bottom
+             CORNERS, either side of the arc, and what shows there has to be the
+             colour the section below is on or the curve gets a rim of somebody
+             else's green. It was the site's #0d470c in the stylesheet, which was
+             true while the origin story was always that green and wrong the
+             moment a tape could set its own. Same helper the origin section
+             itself is given, so there is one value and no way to set half of
+             it. */
+          ...originVars(tape.sections),
           "--stage-bg": tape.colours.bg,
           "--word-colour": tape.colours.word,
         } as CSSProperties

@@ -51,17 +51,25 @@ const HEADING = "THE SIBLINGS";
  * `faces` and siblingFacesOf in src/data/tape-types.ts.
  */
 
-/* WHICH ONE IS RAISED — the middle, and now by arithmetic rather than by a
-   literal 1, because the row is no longer always three long. At three this is
-   the middle card exactly as before; at one it is the only card; at two it is
-   the first, which puts the taller card on the left and reads as a pair put
-   down by hand rather than as two things centred. */
-const raisedIn = (count: number) => Math.floor((count - 1) / 2);
+/* WHERE THE MIDDLE OF THE ROW IS, as an index — and it is allowed to fall
+ * BETWEEN two cards, which is the whole of how a row of two works.
+ *
+ * The arrangement is one card raised and square with the rest put down off it
+ * either side. At three that is the middle card, exactly as it always was; at
+ * one it is the only card. At TWO there is no middle card, and the honest answer is
+ * not to promote one of the pair — it is to say the middle of the row is the
+ * empty half-step between them, leave that place empty, and let the name stand
+ * in it. What comes out is the three-card composition with the middle card
+ * lifted out: same width, same two leans, name in the same place. See
+ * --sib-hole on .siblings-fan, which opens the gap. */
+const centreOf = (count: number) => (count - 1) / 2;
 
 /* AND HOW FAR EACH ONE LEANS, in degrees. The two figures are the design's own
  * and the RULE is the design's own too, stated instead of enumerated: the card
- * that is raised stands square and the ones either side are put down off it. At
- * three that is exactly the list this used to hold, [-4.414, 0, 3.578].
+ * at the middle stands square and the ones either side are put down off it. At
+ * three that is exactly the list this used to hold, [-4.414, 0, 3.578]; at two
+ * the middle falls between the pair, so one leans each way and neither stands
+ * square.
  *
  * Here rather than in global.css because a stylesheet rule would have to count
  * to the first and the last child of .siblings-row — and the last child of that
@@ -74,32 +82,25 @@ const raisedIn = (count: number) => Math.floor((count - 1) / 2);
  * was one. */
 const TILT_BEFORE = -4.414;
 const TILT_AFTER = 3.578;
-const tiltAt = (i: number, raised: number) =>
-  i === raised ? 0 : i < raised ? TILT_BEFORE : TILT_AFTER;
+const tiltAt = (i: number, centre: number) =>
+  i === centre ? 0 : i < centre ? TILT_BEFORE : TILT_AFTER;
 
 export default function Siblings({ tape }: { tape: Tape }) {
   const faces = siblingFacesOf(tape);
-  const raised = raisedIn(faces.length);
+  const centre = centreOf(faces.length);
 
-  /* WHERE THE NAME GOES, as a shift off the row's centre in cards.
-   *
-   * THE SIBLINGS is placed under the RAISED card — that is what the gap in the
-   * arrangement is, and the stylesheet has always put it at the raised card's
-   * bottom edge. Centring it on the ROW was the same thing only while the row
-   * was three and the raised card was the middle one; at two it is not, and a
-   * name centred on the row would stand on the second card.
-   *
-   * The raised card's centre sits (raised − (count − 1) / 2) side-cards-plus-gaps
-   * off the row's, which the stylesheet turns into a length — it owns those two
-   * figures. Zero for every odd count, so nothing about today's three moves. */
-  const titleShift = raised - (faces.length - 1) / 2;
+  /* WHETHER THE ROW HAS A MIDDLE CARD OR A MIDDLE GAP. An even row has no card
+     at its centre, so the stylesheet opens the place one would have stood in and
+     the name goes there — see --sib-hole on .siblings-fan. Nothing about an odd
+     row changes: this is 0 and the gap is the gap. */
+  const hole = Number.isInteger(centre) ? 0 : 1;
 
   return (
     <Stage
       style={
         {
           ...siblingsVars(tape.sections),
-          "--sib-title-shift": titleShift,
+          "--sib-hole": hole,
         } as CSSProperties
       }
     >
@@ -146,8 +147,8 @@ export default function Siblings({ tape }: { tape: Tape }) {
             key={i}
             style={
               {
-                "--sib-raised": i === raised ? 1 : 0,
-                "--sib-tilt": `${tiltAt(i, raised)}deg`,
+                "--sib-raised": i === centre ? 1 : 0,
+                "--sib-tilt": `${tiltAt(i, centre)}deg`,
               } as CSSProperties
             }
           >

@@ -169,24 +169,6 @@ export const Tapes: CollectionConfig = {
               "The hang tag. Drawn on the row at /products, in THE RUN below, and used as this page's key visual whenever no hero shot is set." },
             },
             { name: "model", type: "text", required: true },
-            {
-              name: "modelInner",
-              type: "text",
-              admin: {
-                description:
-                  "A second mesh for the inner page where the slider's is not right for it. Optional.",
-              },
-            },
-            {
-              name: "clarity",
-              type: "number",
-              min: 0,
-              max: 1,
-              admin: {
-                description:
-                  "How see-through the tape is, 0 to 1. A fact about the tape rather than a rendering setting, which is why it lives here.",
-              },
-            },
           ],
         },
         {
@@ -220,18 +202,13 @@ export const Tapes: CollectionConfig = {
             },
             {
               name: "showcase",
-              type: "array",
+              type: "upload",
+              relationTo: "media",
               required: true,
-              minRows: 2,
-              maxRows: 2,
               admin: {
-                components: { RowLabel: "/admin/RowLabel#RowLabel" },
                 description:
-                  "Exactly two. The layout places each by hand, so a third would have nowhere to go.",
+                  "The photograph beside the origin story. ONE — it was two for a while, mirroring the home page's stage, and the second was never drawn on a product page.",
               },
-              fields: [
-                { name: "image", type: "upload", relationTo: "media", required: true },
-              ],
             },
           ],
         },

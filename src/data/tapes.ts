@@ -31,7 +31,6 @@ import type { Tape, TapeColours, Power, MarkFile } from "./tape-types";
 export type { Tape, TapeColours, Power, SectionColours } from "./tape-types";
 export {
   heroOf,
-  innerModelOf,
   siblingFaceOf,
   cssVars,
   /* The per-section overrides, one helper per section. Each returns only the
@@ -103,10 +102,8 @@ function toTape(doc: TapeDoc): Tape {
     ),
 
     model: doc.model,
-    modelInner: doc.modelInner ?? undefined,
-    clarity: doc.clarity ?? undefined,
 
-    showcase: images(doc.showcase) as [string, string],
+    showcase: urlOf(doc.showcase),
     tags: texts(doc.tags),
     copy: doc.copy,
     origin: texts(doc.origin) as [string, string],

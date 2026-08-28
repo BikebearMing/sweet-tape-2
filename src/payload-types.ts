@@ -217,14 +217,6 @@ export interface Tape {
   card: number | Media;
   model: string;
   /**
-   * A second mesh for the inner page where the slider's is not right for it. Optional.
-   */
-  modelInner?: string | null;
-  /**
-   * How see-through the tape is, 0 to 1. A fact about the tape rather than a rendering setting, which is why it lives here.
-   */
-  clarity?: number | null;
-  /**
    * Exactly two lines, broken where the design breaks them rather than wherever the measure lands.
    */
   origin: {
@@ -239,12 +231,9 @@ export interface Tape {
     id?: string | null;
   }[];
   /**
-   * Exactly two. The layout places each by hand, so a third would have nowhere to go.
+   * The photograph beside the origin story. ONE — it was two for a while, mirroring the home page's stage, and the second was never drawn on a product page.
    */
-  showcase: {
-    image: number | Media;
-    id?: string | null;
-  }[];
+  showcase: number | Media;
   /**
    * The siblings' printed labels, one per variant id. Optional and empty for every tape today — each card falls back to the card artwork above, so the row works rather than showing three broken images.
    */
@@ -571,8 +560,6 @@ export interface TapesSelect<T extends boolean = true> {
   hero?: T;
   card?: T;
   model?: T;
-  modelInner?: T;
-  clarity?: T;
   origin?:
     | T
     | {
@@ -585,12 +572,7 @@ export interface TapesSelect<T extends boolean = true> {
         text?: T;
         id?: T;
       };
-  showcase?:
-    | T
-    | {
-        image?: T;
-        id?: T;
-      };
+  showcase?: T;
   faces?:
     | T
     | {

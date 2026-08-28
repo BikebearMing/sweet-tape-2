@@ -160,7 +160,7 @@ export default function ProductInfo({ tape }: { tape: Tape }) {
               Same `reverse` peel as the one in the sentence: the strip's rest
               pose is a corner already lifted. Its own note is at LIFT. */}
           <span className="info-shot">
-            <img src={tape.showcase[0]} alt="" draggable={false} />
+            <img src={tape.showcase} alt="" draggable={false} />
             <Peel
               className="reverse-peel-tape info-shot-tape"
               src={strip.src}

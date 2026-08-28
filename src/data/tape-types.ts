@@ -148,63 +148,8 @@ export type Tape = {
   faces?: Record<string, string>;
   /** 3D roll shown in place of the card once three.js is live. GLB path. */
   model: string;
-  /**
-   * THE INNER PAGE'S OWN EXPORT, and it exists so the two stages can be art
-   * directed apart.
-   *
-   * `model` above is the home page's: it is what the orbit of six loads and what
-   * the key visual flips between, and it is authored for that stage — small in
-   * frame, seen for a moment, one of six. The product page shows ONE roll, most
-   * of a screen tall, held still and then turned over slowly, and what reads
-   * well there is not automatically what reads well there. Metalness, gloss and
-   * the label's own finish are the obvious places the two want to differ.
-   *
-   * SO THIS IS A SECOND FILE, NOT A SECOND SETTING. Anything that can be dialled
-   * at runtime already can be — see `material` in TapeSlider/tape3d.ts, which is
-   * the cheaper answer for metalness and roughness and needs no re-export. This
-   * field is for what only Blender can say: different maps, a different finish
-   * on one part, geometry the close-up wants and the thumbnail does not.
-   *
-   * OPTIONAL, AND ONLY OPP DECLARES IT — the same shape as `hero` and `faces`
-   * above and for the same reason. The other five inner pages load the home
-   * page's export, which is a working page rather than five copies of a file
-   * nobody has edited. Drop one in, name it here, and that tape alone splits.
-   *
-   * THE BOUNDING BOX IS NOT FREE TO CHANGE. Every export on this site measures
-   * 0.999 x 0.472 x 0.997 and the flip's edge-on handoff is built on it (see the
-   * note over CAMERA_Z in tape3d.ts). A separated export is free to be a
-   * different MATERIAL; it is not free to be a different SIZE.
-   *
-   * See innerModelOf, which is the one place the fallback is decided.
-   */
-  modelInner?: string;
-  /**
-   * HOW CLEAR THIS TAPE IS, 0..1 — a fact about the product, which is why it
-   * lives here with the rest of one and not as a constant in the renderer.
-   *
-   * It reaches the product page's roll as the see-through-ness of the WOUND
-   * SIDE and nothing else: 0 is a solid roll and is what an absent value means,
-   * so a tape that says nothing here is exactly the roll it was before any of
-   * this existed. See ViewerFilm in components/TapeSlider/tape3d.ts, and GLASS
-   * in components/TapeSlider/film.ts for what the number actually does.
-   *
-   * IT IS NOT A TRANSPARENCY PERCENTAGE, and reading it as one will lead you to
-   * set it far too high. The wound side is a cylinder wall, so everywhere but
-   * the silhouette the light crosses it TWICE — a third of the way through each
-   * face is a tenth of the way through the pair. What that buys is the gradient
-   * a real roll has: the core sensed through the near wall, the rim staying
-   * solid. Push it looking for the page behind the roll and what you will get
-   * is a hollow one.
-   *
-   * THE VALUES ARE READ OFF THE PRODUCT, not tuned to taste: cellophane and
-   * low-noise are clear films, OPP is a clear film with a brown pigment in it,
-   * masking is crepe paper, cloth is cloth, and double-sided is tissue between
-   * two adhesive faces. If one of them is wrong for the drawing, this is the
-   * one number to change and it changes nothing else.
-   */
-  clarity?: number;
   /** The two tilted photographs. Exactly two — the layout places both by hand. */
-  showcase: [string, string];
+  showcase: string;
   /** Chips in the left column. */
   tags: string[];
   /** Paragraph under the chips. */
@@ -293,9 +238,6 @@ export function heroOf(tape: Tape): string {
    off for that stage, the home page's otherwise — see the `modelInner` field
    above for why splitting is a decision per tape rather than a rule. The one
    place this fallback is made, so ProductIntro never has to know there is one. */
-export function innerModelOf(tape: Tape): string {
-  return tape.modelInner ?? tape.model;
-}
 
 /* WHICH LABEL A SIBLING CARD SHOWS, and the whole of that fallback in one place
    as well. See the `faces` field above for why all six tapes take the second

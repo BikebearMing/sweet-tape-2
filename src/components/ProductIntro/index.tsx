@@ -1,7 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 import type { CSSProperties } from "react";
 
-import { cssVars, heroOf, innerModelOf, type Tape } from "@/data/tapes";
+import { cssVars, heroOf, type Tape } from "@/data/tapes";
+import { clarityOf, modelOf } from "./rolls";
 import { TopTitle, BottomTitle, wordmarkText } from "@/components/TapeSlider/WordMarks";
 import Stage from "./Stage";
 
@@ -66,16 +67,19 @@ export default function ProductIntro({ tape }: { tape: Tape }) {
          the seam every 3D section on this site uses. roll.ts is plain DOM: it is
          handed the section and finds everything it needs on it.
 
-         AND IT IS THIS PAGE'S EXPORT, NOT THE HOME PAGE'S. innerModelOf hands
-         back the tape's own `modelInner` where one has been authored for this
-         stage and the slider's `model` where one has not — see the field in
-         src/data/tapes.ts. The two pages show the same OBJECT and are no longer
-         obliged to show the same FILE, which is what lets the close-up be
-         finished for a close-up. */
-      model={innerModelOf(tape)}
-      /* AND HOW CLEAR THE TAPE IS — see `clarity` in src/data/tapes.ts, which
-         is where the value and the argument for it live. */
-      clarity={tape.clarity}
+         AND IT IS THIS PAGE'S EXPORT, NOT THE HOME PAGE'S, where one has been
+         made for it. modelOf hands back the close-up where a tape has one and
+         the model it shares with the home page where it has not — see
+         ./rolls.ts. The two pages show the same OBJECT and are not obliged to
+         show the same FILE, which is what lets a close-up be finished for a
+         close-up. */
+      model={modelOf(tape)}
+      /* AND HOW CLEAR THE TAPE IS. Both of these were fields on the tape and are
+         code now: a number between 0 and 1 labelled "how see-through" is a
+         slider, and a slider in a CMS is an invitation to tune a render setting
+         from a screen that cannot show the mesh. ./rolls.ts argues it and holds
+         the values that were in the database, so nothing changed on screen. */
+      clarity={clarityOf(tape.id)}
       style={
         {
           ...cssVars(tape.colours),

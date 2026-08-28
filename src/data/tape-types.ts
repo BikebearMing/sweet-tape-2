@@ -129,23 +129,31 @@ export type Tape = {
    */
   hero?: string;
   /**
-   * THE SIBLINGS' LABEL ARTWORK, keyed by the variant's id — see SIBLINGS in
-   * components/Siblings, which is where the three of them are named. One printed
-   * circular label per variant of THIS tape, so the middle of the card reads
-   * "OPP TAPE" on /products/opp and "MASKING TAPE" on /products/masking.
+   * THE SIBLINGS' LABEL ARTWORK — the rest of this range, one printed circular
+   * label per variant, in the order they stand in the row.
    *
-   * OPTIONAL, AND NO TAPE DECLARES IT YET, which is not an oversight: none of
-   * the six has been exported. Every card falls back to the slider `card` above
-   * — the same object photographed for the orbit — so the section is a working
-   * row today rather than three broken images. Drop the files in, add them here,
-   * and the fallback stops applying for that tape alone.
+   * A LIST AND NOT A MAP, which is the whole of what changed here and is worth
+   * the paragraph. It was keyed by variant id — normal, strong, xtra — against a
+   * section that drew exactly those three cards, so an upload only appeared if
+   * its key matched one of three strings nothing on the screen mentioned. Every
+   * label uploaded under a name a person would actually write drew nothing.
    *
-   * Keyed rather than a tuple, so a tape whose artwork lands one variant at a
-   * time takes what exists and falls back on the rest. See siblingFaceOf, which
-   * is the one place that decision is made — heroOf above is the same shape for
-   * the same reason.
+   * AND THE RANGE IS NOT THREE GRADES OF EVERYTHING. The OPP roll has three
+   * variants, the cloth two, the double-sided tissue one. Three cards was a fact
+   * about the mock; this is the fact about the products, so the LIST IS THE ROW
+   * and its length is the number of cards.
+   *
+   * OPTIONAL AND EMPTY IS STILL A WORKING SECTION: no labels means three of the
+   * hang tag, which is exactly the row every tape drew before any of this
+   * artwork existed. See siblingFacesOf, which is the one place that decision is
+   * made — heroOf above is the same shape for the same reason.
+   *
+   * THE ALT IS THE PICTURE'S OWN, off the media record, because the variant's
+   * name is PRINTED IN THE ARTWORK and there is nowhere else to read it from.
+   * A label with none falls back to the tape's name, which is a card described
+   * as the thing it is a picture of rather than not described at all.
    */
-  faces?: Record<string, string>;
+  faces?: { src: string; alt: string }[];
   /** 3D roll shown in place of the card once three.js is live. GLB path. */
   model: string;
   /** The two tilted photographs. Exactly two — the layout places both by hand. */
@@ -239,12 +247,23 @@ export function heroOf(tape: Tape): string {
    above for why splitting is a decision per tape rather than a rule. The one
    place this fallback is made, so ProductIntro never has to know there is one. */
 
-/* WHICH LABEL A SIBLING CARD SHOWS, and the whole of that fallback in one place
-   as well. See the `faces` field above for why all six tapes take the second
-   half of this expression today, and SIBLINGS in components/Siblings for where
-   the variant ids come from. */
-export function siblingFaceOf(tape: Tape, variant: string): string {
-  return tape.faces?.[variant] ?? tape.card;
+/* WHAT THE SIBLINGS ROW IS MADE OF, and the whole of that fallback in one place
+ * as well.
+ *
+ * THE LIST IS THE ROW: one card per label, in the order they were added. A tape
+ * whose artwork has not been drawn yet gets THREE OF THE HANG TAG — the row the
+ * section drew for all six before any of it existed, which is a working section
+ * rather than an empty green band. Add one label and the fallback stops applying
+ * for that tape entirely, so a half-filled tape is never three cards where one
+ * is real and two are the wrong picture. */
+const FALLBACK_FACES = 3;
+
+export function siblingFacesOf(tape: Tape): { src: string; alt: string }[] {
+  if (tape.faces?.length) return tape.faces;
+  return Array.from({ length: FALLBACK_FACES }, () => ({
+    src: tape.card,
+    alt: tape.label,
+  }));
 }
 
 /* Custom properties rather than props threaded through the tree: the animation
@@ -276,6 +295,14 @@ export function siblingFaceOf(tape: Tape, variant: string): string {
 export type SectionColours = {
   /** The origin story's ground. Site default #0d470c. */
   originBg?: string;
+  /** Everything written on it — the story, the rule under its last word, the
+   *  arrow into the margin and the handwritten note. ONE FIELD FOR FOUR THINGS
+   *  on purpose: they are the same lime in the design, and the section's own
+   *  note in global.css argues that at length — every mark on this ground is
+   *  one colour because that is the pairing the home page opens and closes on.
+   *  Splitting it into four boxes would invite a page where the story and the
+   *  note beside it are written in different hands. Site default #b6fe00. */
+  originInk?: string;
   /** THE SIBLINGS' ground. Site default #0d470c. */
   siblingsBg?: string;
   /** The three grade cards on it. Site default #c6fd00. */
@@ -284,6 +311,12 @@ export type SectionColours = {
   siblingsInk?: string;
   /** SUPER POWERS' sheet. Site default #b6fe00. */
   powersBg?: string;
+  /** The two words themselves, one either side of the stack. Its own field and
+   *  not `powersInk`: that is what is printed on the OPEN CARD, which is a
+   *  different surface — the name is set on the sheet and the claim is set on
+   *  the card, and on the site's own palette those are the dark green and the
+   *  lime respectively. Site default #013900. */
+  powersHeading?: string;
   /** The card being read. Site default #0d470c. */
   powersCard?: string;
   /** A card waiting its turn. Site default #9bdc00. */
@@ -310,9 +343,13 @@ function sectionVars(pairs: [string, string | undefined][]): CSSProperties {
   return out as CSSProperties;
 }
 
-/** The origin story's ground. Its ink and chips come from `colours`. */
+/** The origin story's ground and everything written on it. The chips are the
+ *  tape's own and come from `colours` rather than from here. */
 export function originVars(s?: SectionColours): CSSProperties {
-  return sectionVars([["--info-bg", s?.originBg]]);
+  return sectionVars([
+    ["--info-bg", s?.originBg],
+    ["--info-ink", s?.originInk],
+  ]);
 }
 
 export function siblingsVars(s?: SectionColours): CSSProperties {
@@ -326,6 +363,7 @@ export function siblingsVars(s?: SectionColours): CSSProperties {
 export function powersVars(s?: SectionColours): CSSProperties {
   return sectionVars([
     ["--pow-bg", s?.powersBg],
+    ["--pow-ink", s?.powersHeading],
     ["--pow-card-bg", s?.powersCard],
     ["--pow-card-rest", s?.powersCardRest],
     ["--pow-card-ink", s?.powersInk],

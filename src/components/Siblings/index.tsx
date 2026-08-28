@@ -2,7 +2,7 @@
 import type { CSSProperties } from "react";
 
 import { letters } from "@/components/letters";
-import { siblingFaceOf, type Tape, siblingsVars } from "@/data/tapes";
+import { siblingFacesOf, type Tape, siblingsVars } from "@/data/tapes";
 import Stage from "./Stage";
 
 /* THE SIBLINGS — the product page's third section.
@@ -33,46 +33,76 @@ import Stage from "./Stage";
    make. */
 const HEADING = "THE SIBLINGS";
 
-/* THE THREE GRADES, and they are the same three for every tape — this is a
- * range, not a per-tape list, so it belongs to the section rather than to
- * src/data/tapes.ts. A tape that ever breaks the pattern is the moment this
- * moves into the tape.
+/* THE GRADES ARE NOT HERE ANY MORE, and that is the change worth recording.
  *
- * `id` is the artwork key and `label` is what is printed; they are separate
- * because one is a filename and the other is copy, and a slug derived from
- * "XTRA STRONG" is a guess nobody can check. See `faces` in src/data/tapes.ts,
- * which is keyed by these ids.
+ * This file held the range — NORMAL, STRONG, XTRA STRONG — as three constants,
+ * on the argument that three grades of one tape is a fact about the RANGE and
+ * so belongs to the section rather than to a tape. It said, in as many words,
+ * that a tape breaking the pattern was the moment it moved into the tape.
  *
- * THE SECOND HALF OF EACH LABEL IS IN THE ARTWORK and not here. The design sets
- * "STRONG · BROWN" around the bottom of the printed label, where BROWN is the
- * tape's colour rather than the grade — so it belongs to the tape's own export,
- * and repeating it here would be a second place a colour name lives.
+ * EVERY TAPE BREAKS THE PATTERN. The OPP roll has three variants, the cloth two,
+ * the double-sided tissue one, the low-noise one. Three was a fact about the
+ * mock the section was drawn from, and the ids underneath it were worse than
+ * wrong: `faces` was KEYED by them, so a label uploaded under any name a person
+ * would actually type matched nothing and drew nothing, silently.
+ *
+ * So the row is the tape's list and its LENGTH IS THE NUMBER OF CARDS. What is
+ * printed on each is in the artwork, where the design already drew it. See
+ * `faces` and siblingFacesOf in src/data/tape-types.ts.
  */
-const SIBLINGS = [
-  { id: "normal", label: "NORMAL" },
-  { id: "strong", label: "STRONG" },
-  { id: "xtra", label: "XTRA STRONG" },
-] as const;
 
-/* WHICH ONE IS RAISED — the middle, by index rather than by id, because it is a
-   fact about the ARRANGEMENT and not about the grade. Re-order SIBLINGS and the
-   centre card is still the centre card. */
-const RAISED = 1;
+/* WHICH ONE IS RAISED — the middle, and now by arithmetic rather than by a
+   literal 1, because the row is no longer always three long. At three this is
+   the middle card exactly as before; at one it is the only card; at two it is
+   the first, which puts the taller card on the left and reads as a pair put
+   down by hand rather than as two things centred. */
+const raisedIn = (count: number) => Math.floor((count - 1) / 2);
 
-/* AND HOW FAR EACH ONE LEANS, in degrees, by position for the same reason: the
-   outer two are put down off square and the middle one stands straight, which is
-   a fact about where a card sits in the row and not about which grade is printed
-   on it. The two figures are the design's own.
+/* AND HOW FAR EACH ONE LEANS, in degrees. The two figures are the design's own
+ * and the RULE is the design's own too, stated instead of enumerated: the card
+ * that is raised stands square and the ones either side are put down off it. At
+ * three that is exactly the list this used to hold, [-4.414, 0, 3.578].
  *
  * Here rather than in global.css because a stylesheet rule would have to count
  * to the first and the last child of .siblings-row — and the last child of that
  * row is THE SIBLINGS, not a card. It reaches the page as --sib-tilt, which the
- * stylesheet rests on and reveal.ts animates into. */
-const TILT = [-4.414, 0, 3.578];
+ * stylesheet rests on and reveal.ts animates into.
+ *
+ * reveal.ts READS THE FIRST CARD'S LEAN to size the wheel it deals on, and a
+ * row of one leaves that card square — which it already handles: see
+ * PIVOT_MIN_TILT and PIVOT_FALLBACK, written for exactly this case before there
+ * was one. */
+const TILT_BEFORE = -4.414;
+const TILT_AFTER = 3.578;
+const tiltAt = (i: number, raised: number) =>
+  i === raised ? 0 : i < raised ? TILT_BEFORE : TILT_AFTER;
 
 export default function Siblings({ tape }: { tape: Tape }) {
+  const faces = siblingFacesOf(tape);
+  const raised = raisedIn(faces.length);
+
+  /* WHERE THE NAME GOES, as a shift off the row's centre in cards.
+   *
+   * THE SIBLINGS is placed under the RAISED card — that is what the gap in the
+   * arrangement is, and the stylesheet has always put it at the raised card's
+   * bottom edge. Centring it on the ROW was the same thing only while the row
+   * was three and the raised card was the middle one; at two it is not, and a
+   * name centred on the row would stand on the second card.
+   *
+   * The raised card's centre sits (raised − (count − 1) / 2) side-cards-plus-gaps
+   * off the row's, which the stylesheet turns into a length — it owns those two
+   * figures. Zero for every odd count, so nothing about today's three moves. */
+  const titleShift = raised - (faces.length - 1) / 2;
+
   return (
-    <Stage style={siblingsVars(tape.sections)}>
+    <Stage
+      style={
+        {
+          ...siblingsVars(tape.sections),
+          "--sib-title-shift": titleShift,
+        } as CSSProperties
+      }
+    >
       {/* WITHOUT JAVASCRIPT NEITHER THE NAME NOR THE CARDS ARRIVE. The letters
           are parked under their masks by global.css and the three cards are held
           at nothing by the same attribute, both released by the section's own
@@ -94,32 +124,34 @@ export default function Siblings({ tape }: { tape: Tape }) {
             middle whatever the cards are doing, and a name carried round on the
             fan would lean with them. */}
         <div className="siblings-fan">
-        {SIBLINGS.map((sibling, i) => (
-          /* One card. The grade's name is the ALT and not a caption, because on
-             the page it is printed around the bottom of the label inside the
+        {faces.map((face, i) => (
+          /* One card. The variant's name is the ALT and not a caption, because
+             on the page it is printed around the bottom of the label inside the
              picture — so the readable version is the picture's description,
              which is what alt is for. A caption would be the same words said
-             twice to anyone using a screen reader.
+             twice to anyone using a screen reader. It comes off the media
+             record, which is the only place that name is written down as text.
 
              --sib-raised and --sib-tilt are the arrangement, set here rather
              than by an :nth-child in the stylesheet: which card is up and which
              way it leans are facts about this list, and a selector counting to
-             two would go quietly wrong the day the list did. */
+             two would go quietly wrong the day the list did — which, now that
+             the list is the tape's rather than this file's, it does per tape.
+
+             KEYED BY POSITION, and it is the honest key: a row is an ORDER of
+             pictures with nothing else on it, so the only identity a card has is
+             where it stands. There is no id left to prefer. */
           <div
             className="siblings-card"
-            key={sibling.id}
+            key={i}
             style={
               {
-                "--sib-raised": i === RAISED ? 1 : 0,
-                "--sib-tilt": `${TILT[i] ?? 0}deg`,
+                "--sib-raised": i === raised ? 1 : 0,
+                "--sib-tilt": `${tiltAt(i, raised)}deg`,
               } as CSSProperties
             }
           >
-            <img
-              className="siblings-face"
-              src={siblingFaceOf(tape, sibling.id)}
-              alt={`${tape.label}, ${sibling.label} grade`}
-            />
+            <img className="siblings-face" src={face.src} alt={face.alt} />
           </div>
         ))}
         </div>

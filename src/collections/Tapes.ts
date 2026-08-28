@@ -247,19 +247,47 @@ export const Tapes: CollectionConfig = {
         {
           label: "Siblings",
           description:
-            "The same tape in its three grades, on the green the origin section ends on.",
+            "The rest of this range, on the green the origin section ends on — one printed label per variant.",
           fields: [
             {
+              /* ONE UPLOAD PER ROW AND NOTHING ELSE.
+               *
+               * It carried a `variant` box next to the picture, and that box was
+               * a KEY: the section drew three fixed cards — normal, strong, xtra
+               * — and an upload only landed if what was typed matched one of the
+               * three exactly. Nothing said so, nothing validated it, and every
+               * row filled in with a sensible name like "cloth tape strong.black"
+               * silently drew nothing at all.
+               *
+               * It was also the wrong shape for the products. The range is not
+               * three grades of everything: the OPP roll has three variants, the
+               * cloth two, the double-sided one. Three cards was a fact about the
+               * mock rather than about the tape.
+               *
+               * So the ROW IS THE CARD. However many are added is how many the
+               * section draws, in this order, and the name printed on each is in
+               * the artwork where it was always drawn. Nothing to match and
+               * nothing to keep in step. */
               name: "faces",
               type: "array",
+              maxRows: 3,
+              labels: { singular: "Sibling", plural: "Siblings" },
               admin: {
                 components: { RowLabel: "/admin/RowLabel#RowLabel" },
                 description:
-                  "The siblings' printed labels, one per variant id. Optional and empty for every tape today — each card falls back to the card artwork above, so the row works rather than showing three broken images.",
+                  "One printed label per variant, in the order they should stand — the middle one is the raised card. Up to three, which is what the row is drawn for. Leave it empty and the section shows three of the hang tag, which is what every tape did before the artwork existed.",
               },
               fields: [
-                { name: "variant", type: "text", required: true },
-                { name: "image", type: "upload", relationTo: "media", required: true },
+                {
+                  name: "image",
+                  type: "upload",
+                  relationTo: "media",
+                  required: true,
+                  admin: {
+                    description:
+                      "The round printed label. Its own Alt text in the media library is what a screen reader is told, so put the variant's name there.",
+                  },
+                },
               ],
             },
           ],
@@ -467,6 +495,16 @@ export const Tapes: CollectionConfig = {
                   },
                 },
                 {
+                  name: "originInk",
+                  type: "text",
+                  validate: hex,
+                  admin: {
+                    placeholder: "#b6fe00",
+                    description:
+                      "Everything written on that ground — the story, the rule under its last word, the arrow, and the note in the margin. One field, because in the design they are all one colour. Site default #b6fe00.",
+                  },
+                },
+                {
                   name: "siblingsBg",
                   type: "text",
                   validate: hex,
@@ -500,6 +538,16 @@ export const Tapes: CollectionConfig = {
                   admin: {
                     placeholder: "#b6fe00",
                     description: "SUPER POWERS' sheet — the ground the stack of cards passes over. Site default #b6fe00.",
+                  },
+                },
+                {
+                  name: "powersHeading",
+                  type: "text",
+                  validate: hex,
+                  admin: {
+                    placeholder: "#013900",
+                    description:
+                      "The words SUPER POWERS themselves, one either side of the stack. Set on the sheet rather than on a card, which is why it is its own colour and not the one below. Site default #013900.",
                   },
                 },
                 {

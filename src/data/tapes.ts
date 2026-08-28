@@ -31,7 +31,7 @@ import type { Tape, TapeColours, Power, MarkFile } from "./tape-types";
 export type { Tape, TapeColours, Power, SectionColours } from "./tape-types";
 export {
   heroOf,
-  siblingFaceOf,
+  siblingFacesOf,
   cssVars,
   /* The per-section overrides, one helper per section. Each returns only the
      custom properties this tape actually set, so an untouched tape passes an
@@ -70,6 +70,15 @@ function markFileOf(file: unknown): MarkFile | undefined {
   if (!file || typeof file !== "object") return undefined;
   const m = file as { filename?: string | null; updatedAt?: string | null };
   return m.filename ? { filename: m.filename, updatedAt: m.updatedAt ?? "" } : undefined;
+}
+
+/** An upload's own alt text, or "" — the media record carries one, and for the
+ *  siblings' labels it is the only place the variant's name is written down.
+ *  Empty for a bare id, which is what depth 0 hands back. */
+function altOf(image: unknown): string {
+  if (!image || typeof image !== "object") return "";
+  const m = image as { alt?: string | null };
+  return m.alt ?? "";
 }
 
 /** One Payload document, as the components have always expected a tape.
@@ -119,11 +128,16 @@ function toTape(doc: TapeDoc): Tape {
        and `??` is what does it — an empty string is a value and would win. */
     hero: urlOf(doc.hero) || undefined,
 
-    /* Back into the Record the components index by variant id. Empty for every
-       tape today, which is why siblingFaceOf still falls back to the card. */
-    faces: Object.fromEntries(
-      (doc.faces ?? []).map((f) => [f.variant, urlOf(f.image)]),
-    ),
+    /* THE ROW, IN ORDER. A list rather than the map this used to be — see
+       `faces` in ./tape-types.ts, which argues why the variant keys went. The
+       alt comes off the media record itself because the variant's name is
+       printed IN the label and there is nowhere else to read it from; an image
+       with none falls back in siblingFacesOf rather than here, so the fallback
+       is in the one place all of this section's fallbacks are. */
+    faces: (doc.faces ?? []).map((f) => ({
+      src: urlOf(f.image),
+      alt: altOf(f.image) || doc.label,
+    })),
 
     model: doc.model,
 

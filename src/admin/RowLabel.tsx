@@ -28,11 +28,13 @@ export function RowLabel() {
   const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 
   /* In the order the shapes appear on a tape: a line of copy, a two-line claim,
-     a named sibling face, anything else that calls itself a label. */
+     anything else that calls itself a label. A `variant` was in this list while
+     the siblings' labels were keyed by one; they are a bare upload now, so those
+     rows take the number below, which is what the note above says is the honest
+     answer for a row that is only a picture. */
   const name =
     str(data?.text) ||
     [str(data?.titleTop), str(data?.titleBottom)].filter(Boolean).join(" ") ||
-    str(data?.variant) ||
     str(data?.label);
 
   /* rowNumber is zero-based; the heading it replaces is not. Padded to two

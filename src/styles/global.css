@@ -6739,6 +6739,22 @@ html[data-loading] {
    takes the rest of the rule with it. The second spelling is used throughout.
    ========================================================================== */
 .product-inner-info {
+  /* THE INK, AND IT IS ONE COLOUR FOR EVERY MARK ON THIS GROUND — the story,
+     the rule under its last word, the arrow into the margin and the note
+     written beside the photograph. That was four literals in four rules until
+     a tape wanted its own; it is one token now, and it is deliberately still
+     ONE token rather than four, for the reason the .info-arrow block below
+     argues at length: everything on this dark sheet is a single lime because
+     that is the pairing the home page opens and closes on, and four boxes in
+     the admin would invite a page where the story and the note beside it are
+     written in different hands.
+
+     Declared here rather than left as a var() fallback at each use, because
+     this is the element originVars sets its overrides on — an inline custom
+     property on the same element beats this rule with no !important anywhere.
+     --info-bg is the one that stayed a fallback; it is consumed once. */
+  --info-ink: #b6fe00;
+
   --info-pad-x: 2.823vw;
   --info-pad-y: 8.772vw;
   /* 126.31px at the design width */
@@ -7012,7 +7028,7 @@ html[data-loading] {
   width: 5.9vw;
   /* ~85px at the design width */
   height: 3.6vw;
-  color: #b6fe00;
+  color: var(--info-ink);
   z-index: 3;
 }
 
@@ -7029,6 +7045,15 @@ html[data-loading] {
    in a different hand-colour for no reason a reader could see. Everything else
    about what a note IS lives in the Hand-written note block. */
 .product-inner-info .info-note {
+  /* THE PEN, WHICH THE NOTE ABOVE SAYS IS DELIBERATELY NOT SET HERE — and it
+     still is not, in the sense that mattered: this does not pick a colour, it
+     hands the note the same one everything else on this ground is written in.
+     HandNote's own default IS that lime, so an untouched tape is the page it
+     always was; a tape that recolours the section takes its note with it
+     rather than leaving one mark behind in the old hand, which is exactly the
+     bug the note above records having fixed once already. */
+  --hand-ink: var(--info-ink);
+
   --hand-w: 17vw;
   top: var(--info-note-top);
   left: 0;
@@ -7108,9 +7133,11 @@ html[data-loading] {
   text-transform: uppercase;
   /* The hero's lime on the hero's ground — the site's one pairing for type on
      dark green, which the footer, the news index and the closing key visual all
-     use. Written as the literal because that is how every other section on this
-     site states it; there is no token for it. */
-  color: #b6fe00;
+     use. THERE IS A TOKEN FOR IT NOW: it was written as the literal because
+     every other section on this site states it that way, which held right up
+     until a tape wanted this section in its own colours. Same value, one name,
+     shared with the rule under it and the arrow and the note. */
+  color: var(--info-ink);
 }
 
 /* Each word its own inline box, so the deep measure above breaks BETWEEN words
@@ -7294,7 +7321,7 @@ html[data-loading] {
      pen gets thicker. */
   top: calc(100% - 0.06em);
   height: 0.37em;
-  color: #b6fe00;
+  color: var(--info-ink);
   /* with the story it rules under, and the note and the arrow */
   pointer-events: none;
 }
@@ -7699,7 +7726,24 @@ html[data-loading] {
 .siblings-title {
   position: absolute;
   top: calc(var(--sib-w) + var(--sib-title-gap));
-  left: 50%;
+
+  /* AND CENTRED ON THE RAISED CARD, WHICH IS NOT ALWAYS THE ROW'S CENTRE.
+   *
+   * It was left: 50% flat, and that was right for exactly as long as the row was
+   * always three cards with the middle one up — the raised card WAS the row's
+   * centre, so the two readings agreed and there was no reason to tell them
+   * apart. The row is the tape's list now and can be one card or two, and at two
+   * the raised card is the left one: a name centred on the row would be standing
+   * on the card beside it.
+   *
+   * --sib-title-shift is that difference IN CARDS, set by index.tsx, which is
+   * where the arrangement lives. Zero for every odd count, so the three-card row
+   * this section was drawn as does not move by a pixel. The length a card comes
+   * to is this stylesheet's business and stays here — a side card and the gap
+   * after it, which is the pitch the row is laid out on. */
+  left: calc(
+    50% + (var(--sib-w-side) + var(--sib-gap)) * var(--sib-title-shift, 0)
+  );
   transform: translateX(-50%);
   margin: 0;
   color: var(--sib-title-ink);

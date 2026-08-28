@@ -229,11 +229,13 @@ export interface Tape {
    */
   showcase: number | Media;
   /**
-   * The siblings' printed labels, one per variant id. Optional and empty for every tape today — each card falls back to the card artwork above, so the row works rather than showing three broken images.
+   * One printed label per variant, in the order they should stand — the middle one is the raised card. Up to three, which is what the row is drawn for. Leave it empty and the section shows three of the hang tag, which is what every tape did before the artwork existed.
    */
   faces?:
     | {
-        variant: string;
+        /**
+         * The round printed label. Its own Alt text in the media library is what a screen reader is told, so put the variant's name there.
+         */
         image: number | Media;
         id?: string | null;
       }[]
@@ -326,6 +328,10 @@ export interface Tape {
      */
     originBg?: string | null;
     /**
+     * Everything written on that ground — the story, the rule under its last word, the arrow, and the note in the margin. One field, because in the design they are all one colour. Site default #b6fe00.
+     */
+    originInk?: string | null;
+    /**
      * THE SIBLINGS' ground, under the three grade cards. Site default #0d470c.
      */
     siblingsBg?: string | null;
@@ -341,6 +347,10 @@ export interface Tape {
      * SUPER POWERS' sheet — the ground the stack of cards passes over. Site default #b6fe00.
      */
     powersBg?: string | null;
+    /**
+     * The words SUPER POWERS themselves, one either side of the stack. Set on the sheet rather than on a card, which is why it is its own colour and not the one below. Site default #013900.
+     */
+    powersHeading?: string | null;
     /**
      * The card being read, once it fills. Site default #0d470c.
      */
@@ -557,7 +567,6 @@ export interface TapesSelect<T extends boolean = true> {
   faces?:
     | T
     | {
-        variant?: T;
         image?: T;
         id?: T;
       };
@@ -604,10 +613,12 @@ export interface TapesSelect<T extends boolean = true> {
     | T
     | {
         originBg?: T;
+        originInk?: T;
         siblingsBg?: T;
         siblingsCard?: T;
         siblingsInk?: T;
         powersBg?: T;
+        powersHeading?: T;
         powersCard?: T;
         powersCardRest?: T;
         powersInk?: T;

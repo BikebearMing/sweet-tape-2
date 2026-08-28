@@ -1,34 +1,41 @@
-/* Sweet Tape — THE SIBLINGS arriving: one label, then the name, then the other two.
+/* Sweet Tape — THE SIBLINGS arriving: one label, then the rest, then the name.
  *
  * THE SECTION HOLDS STILL WHILE THE PAGE SCROLLS PAST IT and the range is dealt
  * onto it a card at a time. It is the arrangement the pinning section already
  * uses on this site — a box the height of the window, held with position: fixed
  * while a length of scroll is spent — and it is here for the same reason: this
- * row is three objects arriving one after another, and three arrivals inside the
- * second and a half a section takes to cross the screen is a row that assembles
- * itself while the reader is still on the one above it.
+ * row is a handful of objects arriving one after another, and that many arrivals
+ * inside the second and a half a section takes to cross the screen is a row that
+ * assembles itself while the reader is still on the one above it.
  *
- * THE ORDER, WHICH IS THE WHOLE EFFECT:
+ * THE ORDER, WHICH IS THE WHOLE EFFECT — written here for the three-card row the
+ * section was drawn as, which is the longest it gets:
  *
- *   1. NORMAL arrives on its own, IN THE MIDDLE OF THE SCREEN and standing
- *      square, on the way in — before the pin takes hold, so the card is put
- *      down while the section is still coming up rather than onto a page that
+ *   1. The first label arrives on its own, IN THE MIDDLE OF THE SCREEN and
+ *      standing square, on the way in — before the pin takes hold, so the card is
+ *      put down while the section is still coming up rather than onto a page that
  *      has already stopped. It comes UP into its place and it does not fade in;
  *      nothing here fades. See CARD_RISE.
- *   2. The pin engages and STRONG is dealt to its right: the fan swings, NORMAL
- *      slides left and takes on half its lean, and the pair stays centred. What
- *      the eye sees is the row GROWING rather than cards stacked onto one end.
- *   3. XTRA STRONG is dealt, the fan swings again, and the three land on the
+ *   2. The pin engages and the second is dealt to its right: the fan swings, the
+ *      first slides left and takes on half its lean, and the pair stays centred.
+ *      What the eye sees is the row GROWING rather than cards stacked onto one
+ *      end.
+ *   3. The third is dealt, the fan swings again, and they land on the
  *      arrangement the design draws — every card at its own lean.
  *   4. THE SIBLINGS writes itself in the gap the arrangement has just made.
  *   5. A beat with the whole thing standing, and the pin lets go.
  *
+ * HOW MANY CARDS IS THE TAPE'S BUSINESS AND NOT THIS FILE'S. The range is not
+ * three grades of everything — see `faces` in src/data/tape-types.ts — so a row
+ * can be one card or two, and every number in here is read off the row that was
+ * actually rendered rather than typed. A shorter row is the same deal with fewer
+ * beats in it; nothing above changes but the count.
+ *
  * THE NAME COMES LAST, AND THAT IS A GEOMETRY DECISION RATHER THAN A TASTE ONE.
- * Its place is under the RAISED middle card and between the two beside it — a
- * gap that does not exist until all three are down. Written any earlier it has
- * to be shoved out of the way of whatever is standing in the middle of the
- * screen, and a name that shifts to make room is a worse answer than a name that
- * waits for its room to exist.
+ * Its place is under the RAISED card — a gap that does not exist until the row
+ * is finished. Written any earlier it has to be shoved out of the way of whatever
+ * is standing in the middle of the screen, and a name that shifts to make room is
+ * a worse answer than a name that waits for its room to exist.
  *
  * THE CARDS ARE DEALT ON A STEP AND NOT SCRUBBED. Scroll position picks WHICH
  * beat you are on; the move itself then plays at its own pace. That is the one
@@ -42,8 +49,8 @@
  * the first time it is passed.
  *
  * THE DEAL IS A ROTATION AND NOT A SLIDE, which is the reference effect's move
- * and this arrangement's own logic. The row is an arc: the middle card raised and
- * square, the two beside it lower and leaning away from it. So the cards are hung
+ * and this arrangement's own logic. The row is an arc: the raised card square,
+ * the ones beside it lower and leaning away from it. So the cards are hung
  * on a wheel whose centre is far below the page, and dealing is turning it — a
  * card brought to the middle of the screen is stood square by the same turn that
  * brings it, and the ones already down lean and dip away exactly as the design
@@ -89,7 +96,12 @@ export const SIBLINGS_REVEAL = {
    * to stand and look at the whole thing before it lets go. Five, for three
    * cards.
    *
-   * THE FIRST OF THEM IS A BEAT WITH NOTHING IN IT, and that is the point of it:
+   * A CONSTANT PLUS THE COUNT AND NOT A FLAT FIVE, which it was while the row
+   * was always three. The row is the tape's list now and can be shorter, and a
+   * pin costing five beats to deal one card is three screens of scrolling with
+   * nothing happening in them. See stepsFor, just below.
+   *
+   * THE FIRST BEAT IS ONE WITH NOTHING IN IT, and that is the point of it:
    * card one has already arrived on the way in, so this is the moment it stands
    * alone in the middle of the held screen before the row starts growing around
    * it. Without it the second card is dealt on the same frame the pin engages,
@@ -98,7 +110,7 @@ export const SIBLINGS_REVEAL = {
    *
    * Equal slices of the pin's length, which is what makes the step below a floor
    * of the progress. */
-  STEPS: 5,
+  EXTRA_STEPS: 2,
 
   /* And how long a beat is, in windows of scrolling — the one number that
      decides how long the section is, since the pin's whole length is this times
@@ -209,6 +221,11 @@ export const SIBLINGS_REVEAL = {
 
 };
 
+/** The beats the pin is spent on, for a row of this many cards: one each, plus
+ *  the name's and the hold at the end. Three cards comes to five, which is the
+ *  figure this was written as. */
+const stepsFor = (cards: number) => cards + SIBLINGS_REVEAL.EXTRA_STEPS;
+
 /* Fisher–Yates, the hero's. The shuffle IS the effect for TYPE: reveal the same
    letters left to right and it reads as a wipe. It is used on the name and never
    on the cards — those are dealt in the order they are read in. */
@@ -230,6 +247,10 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
   );
   const cards = Array.from(root.querySelectorAll<HTMLElement>(".siblings-card"));
   if (!chars.length && !cards.length) return () => {};
+
+  /* The pin's length, in beats. Read once off the row that was rendered — the
+     count cannot change without this component remounting. */
+  const steps = stepsFor(cards.length);
 
   /* Hand both over from the stylesheet.
    *
@@ -521,9 +542,7 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
            costs the same number of SCREENS whatever screen it is read on. */
         end: () =>
           "+=" +
-          Math.round(
-            screenH() * SIBLINGS_REVEAL.BEAT * SIBLINGS_REVEAL.STEPS,
-          ),
+          Math.round(screenH() * SIBLINGS_REVEAL.BEAT * steps),
         pin: stage,
         /* True pinning, not fake: the stage is the window's height in ordinary
            document flow, so it can be held with position: fixed and the rest of
@@ -547,8 +566,8 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
         },
         onUpdate: (self) => {
           const next = Math.min(
-            Math.floor(self.progress * SIBLINGS_REVEAL.STEPS),
-            SIBLINGS_REVEAL.STEPS - 1,
+            Math.floor(self.progress * steps),
+            steps - 1,
           );
           if (next === step) return;
           step = next;

@@ -1,4 +1,8 @@
-import type { CollectionConfig, TextFieldSingleValidation } from "payload";
+import type {
+  CollectionConfig,
+  TextFieldSingleValidation,
+  TextareaFieldValidation,
+} from "payload";
 
 /* A HEX CODE, OR NOTHING AT ALL.
  *
@@ -12,6 +16,36 @@ import type { CollectionConfig, TextFieldSingleValidation } from "payload";
  *
  * Three, six or eight digits: #abc, #aabbcc, and #aabbccff for a colour with
  * transparency in it. */
+/* LINES, COUNTED.
+ *
+ * These four used to be arrays of rows holding one text box each, which is what
+ * a list of lines looks like to a database and nothing like what it should look
+ * like to a person: a four-line headline was four boxes to open, fill and drag.
+ * They are one box now, and the line breaks are line breaks.
+ *
+ * WHAT THE ARRAYS GAVE UP IS THE COUNT, so it is enforced here instead.
+ * minRows/maxRows were doing real work — the origin story is drawn as exactly
+ * two lines and a third has nowhere to go — and losing that to a nicer field
+ * would only move the failure to the page, where nobody is watching. */
+const linesOf = (value: string) =>
+  value.split("\n").map((l) => l.trim()).filter(Boolean);
+
+const validateAtLeast =
+  (n: number): TextareaFieldValidation =>
+  (value) =>
+    linesOf(value ?? "").length >= n
+      ? true
+      : `Needs at least ${n} line${n === 1 ? "" : "s"}.`;
+
+const validateExactly =
+  (n: number): TextareaFieldValidation =>
+  (value) => {
+    const got = linesOf(value ?? "").length;
+    return got === n
+      ? true
+      : `Needs exactly ${n} lines — press Enter once. There ${got === 1 ? "is" : "are"} ${got}.`;
+  };
+
 const hex: TextFieldSingleValidation = (value) => {
   if (!value) return true;
   return /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value.trim())
@@ -178,27 +212,25 @@ export const Tapes: CollectionConfig = {
           fields: [
             {
               name: "origin",
-              type: "array",
+              type: "textarea",
               required: true,
-              minRows: 2,
-              maxRows: 2,
+              validate: validateExactly(2),
               admin: {
-                components: { RowLabel: "/admin/RowLabel#RowLabel" },
+                rows: 4,
                 description:
-                  "Exactly two lines, broken where the design breaks them rather than wherever the measure lands.",
+                  "Where this tape comes from. Exactly two lines — press Enter once, at the break the design makes.",
               },
-              fields: [{ name: "text", type: "text", required: true }],
             },
             {
               name: "character",
-              type: "array",
+              type: "textarea",
               required: true,
-              minRows: 1,
+              validate: validateAtLeast(1),
               admin: {
-                components: { RowLabel: "/admin/RowLabel#RowLabel" },
-                description: "One entry per line.",
+                rows: 4,
+                description:
+                  "What it is like to use. One line per line.",
               },
-              fields: [{ name: "text", type: "text", required: true }],
             },
             {
               name: "showcase",
@@ -341,25 +373,25 @@ export const Tapes: CollectionConfig = {
               fields: [
                 {
                   name: "headline",
-                  type: "array",
+                  type: "textarea",
                   required: true,
-                  minRows: 1,
+                  validate: validateAtLeast(1),
                   admin: {
-                    components: { RowLabel: "/admin/RowLabel#RowLabel" },
+                    rows: 4,
                     description:
-                      "Broken by hand: where display type this size turns is a drawing decision, not something to infer from the string at render time.",
+                      "The claim across the pinned frame. One line per line — press Enter where the design breaks it, because where display type this size turns is a drawing decision rather than something to infer from the measure.",
                   },
-                  fields: [{ name: "text", type: "text", required: true }],
                 },
                 {
                   name: "note",
-                  type: "array",
-                  admin: {
-                    components: { RowLabel: "/admin/RowLabel#RowLabel" },
-                  },
+                  type: "textarea",
                   required: true,
-                  minRows: 1,
-                  fields: [{ name: "text", type: "text", required: true }],
+                  validate: validateAtLeast(1),
+                  admin: {
+                    rows: 4,
+                    description:
+                      "The hand-written note beside the label. One line per line, same as above.",
+                  },
                 },
                 {
                   name: "shots",

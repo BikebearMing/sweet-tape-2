@@ -217,19 +217,13 @@ export interface Tape {
   card: number | Media;
   model: string;
   /**
-   * Exactly two lines, broken where the design breaks them rather than wherever the measure lands.
+   * Where this tape comes from. Exactly two lines — press Enter once, at the break the design makes.
    */
-  origin: {
-    text: string;
-    id?: string | null;
-  }[];
+  origin: string;
   /**
-   * One entry per line.
+   * What it is like to use. One line per line.
    */
-  character: {
-    text: string;
-    id?: string | null;
-  }[];
+  character: string;
   /**
    * The photograph beside the origin story. ONE — it was two for a while, mirroring the home page's stage, and the second was never drawn on a product page.
    */
@@ -269,16 +263,13 @@ export interface Tape {
   }[];
   reel: {
     /**
-     * Broken by hand: where display type this size turns is a drawing decision, not something to infer from the string at render time.
+     * The claim across the pinned frame. One line per line — press Enter where the design breaks it, because where display type this size turns is a drawing decision rather than something to infer from the measure.
      */
-    headline: {
-      text: string;
-      id?: string | null;
-    }[];
-    note: {
-      text: string;
-      id?: string | null;
-    }[];
+    headline: string;
+    /**
+     * The hand-written note beside the label. One line per line, same as above.
+     */
+    note: string;
     /**
      * Exactly four. The grid is drawn for four and a fifth has nowhere to go.
      */
@@ -560,18 +551,8 @@ export interface TapesSelect<T extends boolean = true> {
   hero?: T;
   card?: T;
   model?: T;
-  origin?:
-    | T
-    | {
-        text?: T;
-        id?: T;
-      };
-  character?:
-    | T
-    | {
-        text?: T;
-        id?: T;
-      };
+  origin?: T;
+  character?: T;
   showcase?: T;
   faces?:
     | T
@@ -593,18 +574,8 @@ export interface TapesSelect<T extends boolean = true> {
   reel?:
     | T
     | {
-        headline?:
-          | T
-          | {
-              text?: T;
-              id?: T;
-            };
-        note?:
-          | T
-          | {
-              text?: T;
-              id?: T;
-            };
+        headline?: T;
+        note?: T;
         shots?:
           | T
           | {

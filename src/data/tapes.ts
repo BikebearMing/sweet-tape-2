@@ -80,8 +80,32 @@ function markFileOf(file: unknown): MarkFile | undefined {
  *  collection is what makes them true, so a length check here would be a second
  *  enforcement of a rule already enforced where an editor can see it. */
 function toTape(doc: TapeDoc): Tape {
+  /* ONE BOX, BROKEN WHERE SOMEBODY PRESSED ENTER.
+   *
+   * These four — the origin story, the character list, the reel's claim and its
+   * note — used to be arrays of rows holding one text box each. That is what a
+   * list of lines looks like to a database and nothing like what it should look
+   * like to a person: a four-line headline was four boxes to open, fill and
+   * drag into order.
+   *
+   * The break is still set BY HAND and is still a drawing decision — where
+   * display type this size turns is not something to infer from the measure —
+   * so nothing about the page changed. Only where the break is typed.
+   *
+   * Blank lines are dropped rather than kept as empty strings: a stray Enter at
+   * the end of a box is a slip, not a line, and every one of these is rendered
+   * as its own element where an empty one would be a gap in the type. */
+  /* Still an array, and the last one: `tags` is hidden rather than removed
+     (nothing on a product page draws it any more), so it keeps the shape it had
+     rather than being migrated for a field nobody sees. */
   const texts = (rows: { text: string }[] | null | undefined) =>
     (rows ?? []).map((r) => r.text);
+
+  const lines = (value: string | null | undefined) =>
+    (value ?? "")
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
   const images = (rows: { image: unknown }[] | null | undefined) =>
     (rows ?? []).map((r) => urlOf(r.image));
 
@@ -106,12 +130,12 @@ function toTape(doc: TapeDoc): Tape {
     showcase: urlOf(doc.showcase),
     tags: texts(doc.tags),
     copy: doc.copy,
-    origin: texts(doc.origin) as [string, string],
-    character: texts(doc.character),
+    origin: lines(doc.origin) as [string, string],
+    character: lines(doc.character),
 
     reel: {
-      headline: texts(doc.reel?.headline),
-      note: texts(doc.reel?.note),
+      headline: lines(doc.reel?.headline),
+      note: lines(doc.reel?.note),
       shots: images(doc.reel?.shots) as [string, string, string, string],
     },
 

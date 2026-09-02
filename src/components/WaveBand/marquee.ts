@@ -17,12 +17,16 @@
  */
 import gsap from "gsap";
 
-/* One repeat of the marquee, shared with the markup so the measured character
-   range and the rendered text can never disagree. The gap is non-breaking
-   spaces: SVG collapses runs of ordinary spaces, which would make the measured
-   phrase longer than the drawn one and the loop would tick. */
-const HEAD = "WHEN LIFE GETS MESSY,";
-const TAIL = "SOMETHING HAS TO HOLD";
+/* THE TWO HALVES OF THE SENTENCE COME OFF THE RECORD — src/globals/Homepage.ts,
+   the Wave band tab — and reach this file through data attributes on the
+   section, which is the whole of why unit() below exists. The engine measures
+   CHARACTER RANGES: where the badge's hole starts and how long one repeat is are
+   both counts, and a count taken off a constant that no longer matches the
+   drawn text is a loop that ticks and a badge that sits off its hole. So the
+   markup and the engine ask one function for the same three numbers.
+
+   The gap is non-breaking spaces: SVG collapses runs of ordinary spaces, which
+   would make the measured phrase longer than the drawn one. */
 
 /* The hole the roll badge sits in — see placeBadges below.
  *
@@ -42,11 +46,6 @@ const TAIL = "SOMETHING HAS TO HOLD";
  * whatever it comes to, with nothing else needing to move. */
 const SLOT = " ".repeat(6);
 
-export const PHRASE = HEAD + SLOT + TAIL;
-/** Where the hole starts and how long it is, in characters from the unit's
-    start — the range the badge's own arc length is measured over. */
-const SLOT_AT = HEAD.length;
-const SLOT_LEN = SLOT.length;
 /** The badge's diameter, in viewBox units. Against 190 of tape and 155 of
     type: a little taller than the caps, and still clear of the tape's edges
     where the wave runs steepest. */
@@ -55,8 +54,23 @@ export const BADGE_SIZE = 150;
     is a 108px button graphic — at band size that is an upscale, and this sits
     under a grain overlay where softness shows. */
 export const BADGE_SRC = "/assets/slider/opp/card.svg";
-export const GAP = "   ";
-export const UNIT = PHRASE + GAP;
+const GAP = "   ";
+
+/** One repeat of the marquee and the two counts the engine measures it by.
+ *
+ *  ONE FUNCTION FOR THE MARKUP AND THE ENGINE. The section renders `unit`
+ *  REPEATS times and the engine measures character ranges inside it, so the two
+ *  cannot be allowed to disagree about where the badge's hole starts — and once
+ *  the sentence is editable, a constant here would be exactly that disagreement,
+ *  waiting. `slotAt` is a count of characters and not a length: the FONT decides
+ *  how wide they come out, which is what getSubStringLength is asked at runtime. */
+export function unit(head: string, tail: string) {
+  return {
+    text: head + SLOT + tail + GAP,
+    slotAt: head.length,
+    slotLen: SLOT.length,
+  };
+}
 /* Enough copies to cover the visible stretch of path (~5000 units) at every
    offset in the loop; overflow past the path's end is simply not drawn. */
 export const REPEATS = 6;
@@ -86,6 +100,18 @@ export const CONFIG = {
 };
 
 export function initBand(root: HTMLElement): () => void {
+  /* THE SENTENCE, OFF THE MARKUP. The section carries the two halves as data
+     attributes (see ./index.tsx) rather than importing them, for the reason
+     every engine on this site reads its composition off the element it was
+     handed: this is a client module and the copy is fetched on the server. An
+     absent attribute falls back to the empty string, which gives a unit of just
+     the hole and the gap — nothing to see, and nothing that throws. */
+  const {
+    slotAt,
+    slotLen,
+    text: repeat,
+  } = unit(root.dataset.head ?? "", root.dataset.tail ?? "");
+
   const text = root.querySelector<SVGTextElement>("text");
   const tp = root.querySelector<SVGTextPathElement>("textPath");
   if (!text || !tp) return () => {};
@@ -97,7 +123,9 @@ export function initBand(root: HTMLElement): () => void {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const guide = root.querySelector<SVGPathElement>("defs path");
-  const badges = Array.from(root.querySelectorAll<SVGImageElement>(".band-badge"));
+  const badges = Array.from(
+    root.querySelectorAll<SVGImageElement>(".band-badge"),
+  );
 
   /* One roll per repeat of the sentence, flown along the same path the type
      rides. `at` is the arc length from a repeat's start to the middle of its
@@ -142,7 +170,7 @@ export function initBand(root: HTMLElement): () => void {
     /* The advance width of one repeat, in the font that actually loaded.
        Path-independent: it sums character advances, the curve never stretches
        them. */
-    const step = text.getSubStringLength(0, UNIT.length);
+    const step = text.getSubStringLength(0, repeat.length);
 
     /* Where the sentence STARTS: its first word at the section's left edge.
        The path begins 3200 units off-screen left (so glyphs enter the frame
@@ -171,8 +199,8 @@ export function initBand(root: HTMLElement): () => void {
        decides how wide six non-breaking spaces come out, and nothing else here
        is allowed to assume it. */
     const badgeAt =
-      text.getSubStringLength(0, SLOT_AT) +
-      text.getSubStringLength(SLOT_AT, SLOT_LEN) / 2;
+      text.getSubStringLength(0, slotAt) +
+      text.getSubStringLength(slotAt, slotLen) / 2;
 
     if (reduced) {
       /* The tween is normally what applies the anchor — fromTo renders its
@@ -209,7 +237,7 @@ export function initBand(root: HTMLElement): () => void {
         onUpdate() {
           placeBadges(tp.startOffset.baseVal.value, step, badgeAt);
         },
-      }
+      },
     );
     // onUpdate does not fire for fromTo's immediate render of its `from`, so
     // the first frame is placed by hand.
@@ -249,7 +277,7 @@ export function initBand(root: HTMLElement): () => void {
         inView = e.isIntersecting;
         tween?.paused(!inView);
       },
-      { rootMargin: `${CONFIG.LEAD}px 0px` }
+      { rootMargin: `${CONFIG.LEAD}px 0px` },
     );
     io.observe(root);
 

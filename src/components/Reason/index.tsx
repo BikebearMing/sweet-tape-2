@@ -1,5 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { letters } from "@/components/letters";
+import { getAbout } from "@/data/about";
+
 import Stage from "./Stage";
 
 /* THAT'S WHY SWEET TAPE EXISTS. — /about's answer to the belt, and the moment
@@ -76,24 +78,15 @@ import Stage from "./Stage";
  * it, and the two overlap the word after it — so a break between the gap and
  * TAPE would leave the logo alone on a line and the word it is set into on the
  * next one. Bound to TAPE, the pair wraps as one object and the phone reads
- * SWEET over the mark-and-TAPE, which is what the design draws. */
-const TOP: [string, string] = ["THAT'S", "WHY"];
-const MIDDLE: [string, string] = ["SWEET", "TAPE"];
-const BOTTOM = "EXISTS.";
-
-/** The sentence as it is READ, with the hole taken back out. Screen readers get
-    this and never the four fragments or the row of letter boxes. */
-const SPOKEN = `${TOP[0]} ${TOP[1]} ${MIDDLE[0]} ${MIDDLE[1]} ${BOTTOM}`;
-
-/* The chip over it. Section-level copy, so a named constant rather than a string
-   buried in the markup — the same call the slider, the origin section and NEXT
-   UP all make. */
-const KICKER = "MADE FOR A REASON";
-
-/* What is written inside the mark, on the three lines it is drawn on. Fixed
-   breaks for the reason the headline's are fixed, and doubly so here: these
-   three lines are set inside a blob whose shape they have to fit. */
-const MARK_LINES = ["GOOD", "THINGS", "STICK"];
+ * SWEET over the mark-and-TAPE, which is what the design draws.
+ *
+ * ALL OF THAT COPY COMES OFF THE RECORD — src/globals/About.ts, the Reason tab.
+ * Two words on the first line, two on the second and one on the third, because
+ * the arrangement above is what the four boxes and the hole are made of; a third
+ * word typed into either pair has nowhere to be drawn.
+ *
+ * What is written inside the mark is three lines for the same kind of reason and
+ * a stronger one: they are set inside a blob whose shape they have to fit. */
 
 /* THE MARK, AND IT IS THE WHOLE MARK THIS TIME.
  *
@@ -112,7 +105,7 @@ const MARK_LINES = ["GOOD", "THINGS", "STICK"];
  * aria-hidden because the heading's own aria-label is what is announced — this
  * is the brand's mark set into the brand's name, and reading it out would be
  * saying "Sweet Tape" twice with "good things stick" in the middle of it. */
-function Mark() {
+function Mark({ lines }: { lines: string[] }) {
   return (
     <span className="reason-mark">
       <svg
@@ -138,7 +131,7 @@ function Mark() {
           instead of measured because these three lines are drawn to fit a blob
           and are not free to rewrap. */}
       <span className="reason-mark-copy" aria-hidden="true">
-        {MARK_LINES.map((line) => (
+        {lines.map((line) => (
           <span className="body-clip" key={line}>
             <span className="body-rise">{line}</span>
           </span>
@@ -148,7 +141,15 @@ function Mark() {
   );
 }
 
-export default function Reason() {
+export default async function Reason() {
+  const {
+    reason: { kicker, top, middle, bottom, mark },
+  } = await getAbout();
+
+  /** The sentence as it is READ, with the hole taken back out. Screen readers
+      get this and never the four fragments or the row of letter boxes. */
+  const spoken = [...top, ...middle, bottom].join(" ");
+
   return (
     <Stage>
       {/* WITHOUT JAVASCRIPT THE SECTION IS THE FINISHED COMPOSITION. Every one
@@ -190,24 +191,24 @@ export default function Reason() {
             global.css, which have to be read together. */}
         <div className="reason-sheet arc-cut" aria-hidden="true">
           <div className="reason-wrapper">
-            <p className="subhead reason-kicker">{KICKER}</p>
+            <p className="subhead reason-kicker">{kicker}</p>
 
             {/* aria-label so the block is announced as the one sentence it is:
               what is inside it is four rows of letter boxes and a logo, and
               neither is something to read out. */}
-            <h2 className="reason-title" aria-label={SPOKEN}>
+            <h2 className="reason-title" aria-label={spoken}>
               <span className="line" aria-hidden="true">
                 {/* The word space rides with the word BEFORE it rather than
                     sitting between the two boxes, so the desktop's row is the
                     same run of letter boxes it has always been — and when the
                     phone breaks here the space goes up with THAT'S, where a
                     reader cannot see it, instead of opening the second line. */}
-                <span className="reason-word">{letters(`${TOP[0]} `)}</span>
-                <span className="reason-word">{letters(TOP[1])}</span>
+                <span className="reason-word">{letters(`${top[0]} `)}</span>
+                <span className="reason-word">{letters(top[1])}</span>
               </span>
 
               <span className="line" aria-hidden="true">
-                <span className="reason-word">{letters(MIDDLE[0])}</span>
+                <span className="reason-word">{letters(middle[0])}</span>
                 {/* THE HOLE THE MARK DROPS INTO, and the one element on this page
                   whose WIDTH is animated. It rests at the width the design
                   draws — so a page with no script has the mark sitting in its
@@ -220,14 +221,14 @@ export default function Reason() {
                   on a line by itself. */}
                 <span className="reason-word">
                   <span className="reason-gap">
-                    <Mark />
+                    <Mark lines={mark} />
                   </span>
-                  {letters(MIDDLE[1])}
+                  {letters(middle[1])}
                 </span>
               </span>
 
               <span className="line" aria-hidden="true">
-                <span className="reason-word">{letters(BOTTOM)}</span>
+                <span className="reason-word">{letters(bottom)}</span>
               </span>
             </h2>
 

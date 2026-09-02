@@ -5837,6 +5837,33 @@ html[data-loading] {
   overflow: clip;
 }
 
+/* THE PAPER ON THE RISE, and it is not a second copy of the section's.
+   .pick-player::before lays the grain at inset: 0 over the whole section, but
+   this box is a positioned child later in tree order and paints straight over
+   it — so the section's other ground was flat colour on a page where the lime
+   above it, the dark green of the footer below it and every sheet on every other
+   route are one printed surface. The rise is the biggest single field on this
+   page and it was the one thing on it not printed on anything.
+
+   ::after AND NOT ::before, which is the one detail here. .pick-rise-next is the
+   rise's copy of the incoming colour during a recolour and it is a positioned
+   child too; grain written as the FIRST child would be wiped out for the length
+   of every swap and come back when the sheet parked. Last child, it is over both
+   colours and the wipe passes underneath it.
+
+   The rise's own overflow: clip is what gives this the ellipse — there is
+   nothing to say here about the shape. */
+.pick-rise::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/paper-overlay.webp");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
 /* The rise's own copy of the incoming sheet. It needs one because the rise
    paints ABOVE the ground's wash — it is in the row's box and the wash is
    behind everything — so a wipe passing underneath would leave it standing in
@@ -8566,36 +8593,95 @@ html[data-loading] {
    place on this site where that is the correct instrument.
    -------------------------------------------------------------------------- */
 
-/* Where it waits — and where it waits is exactly where it lands. With no
-   animation declared the drawing sits at its own resting position rather than
-   at the first frame of a fall, so this is the mark standing on the card, held
-   invisible until its turn. */
+/* IT STANDS ON EVERY CARD IN THE STACK, and only the one being read MOVES.
+ *
+ * IT USED TO BE GATED ON BOTH AT ONCE — one attribute deciding whether the mark
+ * could be seen AND whether it could play — so a card in the top or the bottom
+ * slot showed a blank shape, and the icon on a card leaving the middle faded off
+ * to nothing on its way out. That is not what the cards are drawn as: the icon
+ * is part of the card, the way the box printed on it is, and a card with its
+ * icon missing is a card that has not finished loading.
+ *
+ * SO THE TWO ARE SEPARATED. Visibility is unconditional — with no animation
+ * declared the drawing sits at its own resting position rather than at the first
+ * frame of a fall, so what a closed card shows is the mark standing on it. The
+ * MOVEMENT is what the turn is still for.
+ *
+ * WHAT IS STILL ONLY THE OPEN CARD'S is everything else on the face: the claim
+ * and the sentence still arrive when the card reaches the middle and go back out
+ * when it leaves, which is what makes the middle the one place anything is read.
+ * The icon is the exception because it is a drawing and not a line of type. */
 .powers-mark--live {
-  opacity: 0;
+  opacity: 1;
 }
 
+/* AND THE ANIMATION IS TAKEN OFF WHILE THE SLOT CARRIES NO ATTRIBUTE AT ALL,
+ * which is two things: a card that has not had its turn, and the single frame
+ * dropMark spends between undeclaring the animation and re-declaring it to make
+ * the fall start again (see SuperPowers/reveal.ts). Undeclared and not paused,
+ * for the reason that file gives: a paused animation resumes from where it
+ * stopped, so a mark that had already landed would be asked to play the frames
+ * after the last one, which is no frames at all.
+ *
+ * WHAT IT MUST NOT REACH IS A CARD THAT HAS LANDED ONE — see the rule below,
+ * which is where "out" is handled and why it is not handled here. */
 .powers-slot:not([data-mark]) .powers-mark--live,
 .powers-slot:not([data-mark]) .powers-mark--live * {
   animation: none !important;
 }
 
-.powers-slot[data-mark="go"] .powers-mark--live {
-  opacity: 1;
+/* AND IT PLAYS ONCE, WHICH THE FILES DO NOT ASK FOR AND THE SECTION REQUIRES.
+ *
+ * Every mark uploaded so far is the same export: a 2s drop with a squash at the
+ * bottom of it, declared `infinite`. That is the honest default for a file
+ * dropped into a viewer with no idea when it is being looked at — and it is
+ * wrong here, because this section already decides when. What it produced was a
+ * card that opened, dropped its icon, and then went on throwing the icon back
+ * into the air and dropping it again every two seconds for as long as the reader
+ * stayed on it.
+ *
+ * ONE ITERATION AND THE LAST FRAME HELD. `forwards` and not the file's own
+ * fill-mode, which is `none`: without it the element reverts to its static pose
+ * on the frame the animation ends, and the last keyframe and the static pose are
+ * the same drawing only by the exporter's good manners. Held, the mark simply
+ * stops where it landed and there is no frame in which it can jump.
+ *
+ * A SECOND TURN STILL DROPS IT AGAIN. dropMark undeclares the animation and
+ * re-declares it (see SuperPowers/reveal.ts), and the rule above strips it in
+ * between — so a card returning to the middle starts from the first frame. Once
+ * per turn, not once per page: this is a loop being stopped, not a card being
+ * made to remember.
+ *
+ * ON "out" AS WELL AS ON "go", AND THAT IS WHAT KEEPS THE CARD STILL AS IT
+ * LEAVES. `out` is a card that has had its turn, and the obvious thing to do
+ * with it — strip the animation, the way an unopened card's is stripped — moves
+ * the drawing: the exports end their fall on translateY(-4px) and the element's
+ * static pose is the untranslated one, so undeclaring the animation drops every
+ * mark four units on the frame its card starts climbing. Measured on all
+ * eighteen of them. Held instead, the mark simply stays where it landed, which
+ * is what a box sitting on a card does.
+ *
+ * It is also what stops "out" looping. Left out of both rules — which it was —
+ * the file's own `infinite` was the only declaration standing on a card that had
+ * finished its turn.
+ *
+ * THE ROOT AS WELL AS ITS CHILDREN, matching the reset above, so a file that
+ * declares its animation on the <svg> itself is covered by the same statement.
+ *
+ * !important for the reason the block's header gives: this has to beat whatever
+ * a file arrived declaring, at whatever specificity, without knowing anything
+ * about it. */
+.powers-slot[data-mark] .powers-mark--live,
+.powers-slot[data-mark] .powers-mark--live * {
+  animation-iteration-count: 1 !important;
+  animation-fill-mode: forwards !important;
 }
 
-/* THE WAY OUT IS ON THE ROOT, and it has to be: the file's own animations are
-   still running on the elements inside, and a fade declared over one of them
-   would be a second animation on the same property. The root carries nothing of
-   the file's, so fading it takes the whole drawing off at once — and because
-   [data-mark="out"] is not [data-mark], the rule above does not strip it.
-
-   An animation and not a transition, for the reason .powers-mark-jump's exit
-   gives at length: a transition compares before-change and after-change styles
-   with animation-derived values excluded, and both sides of that comparison
-   here are the base rule's 0. It would never once fire. */
-.powers-slot[data-mark="out"] .powers-mark--live {
-  animation: powers-mark-fade var(--pow-mark-out) linear 1 both;
-}
+/* AND THERE IS NO WAY OUT TO DRAW. A live mark used to fade off on
+   [data-mark="out"], which is what made a card leaving the middle lose its icon;
+   it is simply left standing now. `out` still means something to the section's
+   OWN bounce — see .powers-mark-jump above, which really does have to be taken
+   back off the card it fell onto — and nothing here reads it. */
 
 /* --------------------------------------------------------------------------
    Parking
@@ -8989,20 +9075,6 @@ html[data-loading] {
    about. Stated, the mark holds exactly where it landed and only its opacity
    moves, which is what makes this read as the box being taken off the card
    rather than as one last small fall. */
-/* And the way out for a mark that moves itself. Opacity alone: the drawing is
-   holding whatever pose its own animation left it in, and restating a transform
-   here would be this stylesheet overwriting a file it knows nothing about. The
-   pose is why powers-mark-leave restates one and this does not. */
-@keyframes powers-mark-fade {
-  0% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-  }
-}
-
 @keyframes powers-mark-leave {
   0% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
@@ -10139,9 +10211,18 @@ html[data-loading] {
    therefore a stacking context of its own; everything inside it, this included,
    goes over a section whose z-index is auto.
 
-   NO GRAIN ON IT, unlike the sheet above. The texture is on ::before at inset: 0
-   and this is outside that box. At three and a half vw of a colour with no detail
-   in it there is nothing to see; it is worth knowing rather than worth fixing. */
+   THE GRAIN IS ON IT, AND IT USED NOT TO BE. The old note here said the texture
+   was on ::before at inset: 0, this is outside that box, and at three and a half
+   vw of flat lime there was nothing to see. The arc is --curve-depth now — three
+   times as deep — and what you can see at that size is the paper stopping dead
+   at the sheet's rectangular foot with a smooth lime bulge hanging under it.
+
+   COMPOSED IN THE BACKGROUND STACK RATHER THAN IN A BOX OF ITS OWN, which is the
+   one thing this element cannot do the way every other sheet on the site does.
+   The grain is always a layer at opacity 0.2 over the colour; a pseudo-element
+   has no child to put it in, so the same result is stacked here — the colour,
+   the paper over it, and a sheet of that colour at 80% over that, which is what
+   an 0.2 layer paints. .we-wanted::after on /about is the same three lines. */
 .whats-rolling::after {
   content: "";
   position: absolute;
@@ -10150,7 +10231,10 @@ html[data-loading] {
   right: 0;
   margin-top: -1px;
   height: calc(var(--rolling-arc) + 1px);
-  background: var(--rolling-bg);
+  background:
+    linear-gradient(color-mix(in srgb, var(--rolling-bg) 80%, transparent) 0 0),
+    url("/assets/paper-overlay.webp") 0 0 / 100% auto repeat-y,
+    var(--rolling-bg);
   -webkit-mask-image: var(--section-curve);
   mask-image: var(--section-curve);
   -webkit-mask-size: 100% 100%;
@@ -14170,7 +14254,12 @@ img#front {
    and clips in both directions by definition; there is no page axis for it to
    turn into a scroller. */
 .conveyor-train {
-  height: 13.567vw;
+  /* ONE HEIGHT FOR ALL FOUR WIDTHS, AND IT IS A TOKEN because the inset fit
+     below is measured against it — a pill's height is the only dimension the
+     four sizes share, and the phone restates it (see the About phone block). */
+  --pill-h: 13.567vw;
+
+  height: var(--pill-h);
   background: var(--conveyor-pill);
   overflow: hidden;
 }
@@ -14180,6 +14269,34 @@ img#front {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* THE OTHER FIT, and it is the pill's own two words: FULL above, INSET here.
+ *
+ * Full is `cover` and the rule above is the whole of it — the picture fills the
+ * stadium and is cut to it, so the pill IS the photograph. That is right for a
+ * shelf, which has nothing at its edges worth keeping, and wrong for anything
+ * composed: a packshot cropped to a 51x13.6vw slot loses its top and its foot.
+ *
+ * SO THE SECOND FIT KEEPS THE WHOLE PICTURE and lets the pill's green show at
+ * the sides. `contain` fits it inside the CONTENT box, so the padding is what
+ * makes the room rather than a smaller box — one declaration, and the picture
+ * re-centres in whatever is left.
+ *
+ * THE PADDING IS THE SAME ON ALL FOUR EDGES and is A FRACTION OF THE PILL'S OWN
+ * HEIGHT rather than a length. A pill is one height whatever its length, so a
+ * share of it is one gap on every one of them — and it is the only form that
+ * survives the phone, where the pill is 45vw rather than 13.567 and a figure in
+ * vw would come out at a quarter of the inset it was drawn as. Measured against
+ * the WIDTH it would be four different insets and the small circle would have
+ * almost none. A twelfth is enough that the picture is clearly standing on the
+ * green and not so much that it reads as a stamp.
+ *
+ * The radius is still the pill's: `contain` cannot reach the corners, so nothing
+ * here needs to know the shape. */
+.conveyor-train.is-inset>img {
+  object-fit: contain;
+  padding: calc(var(--pill-h) * 0.09);
 }
 
 /* THE FOUR LENGTHS, off the design at 1440. The small one is a circle rather
@@ -15274,8 +15391,21 @@ img#front {
      `clip` and not `hidden`, for the reason every section here gives: hidden on
      one axis makes the box a scroll container on the other — and clip, unlike
      hidden, does not make this box a scroll container at all, which is what
-     lets the pinned stage inside it be fixed to the WINDOW rather than to me. */
+     lets the pinned stage inside it be fixed to the WINDOW rather than to me.
+
+     AND Y IS LEFT ALONE, deliberately: the stage's clip path opens its own foot
+     so the props lying low on the sheet are not cut in half, and a clip here
+     would take them back (see .reimagine-stage). */
   overflow-x: clip;
+
+  /* OVER WE WANTED TO BE., which is a positioned sibling later in the tree
+     carrying a z-index of its own and would otherwise paint its green over the
+     props that hang out of the stage's foot. It is the same statement .we-wanted
+     makes about the section under IT, one higher, because this is now the
+     section that has something crossing the join. Nothing else changes: this
+     section and the curtain above it do not overlap, so the two 2s do not
+     compete for anything. */
+  z-index: 2;
 }
 
 /* THE STAGE — one screen, and the thing that is held still.
@@ -15319,14 +15449,45 @@ img#front {
      the curtain above and over WE WANTED TO BE. below, both of which are on
      screen while this one is held.
 
-     clip and NOT hidden, the call every section on this site makes: hidden would
-     make this a scroll container, and a second scroller on a page driven by
-     Lenis fights the smooth scroll for the wheel. clip crops with none of that,
-     and — unlike hidden — does not make the box a scroll container on either
-     axis, which matters here because the pin has to be able to fix this element
-     to the WINDOW. The section around it clips x for its own reason; see
-     overflow-x on .reimagine. */
-  overflow: clip;
+     A CLIP PATH AND NOT `overflow: clip`, WHICH IS THE ONE LINE HERE WORTH
+     READING TWICE. It was overflow, and overflow crops a box on all four edges
+     — which is right for the paper and wrong for everything lying on it. The
+     props are placed against the DRAWING (see .reimagine-props), and the drawing
+     is 76 units tall inside a frame this rule caps at 55: at 1440x900 the
+     photograph low and centre on the sheet runs 25px past this box's foot and
+     the clear strip at the bottom left runs 80px past it. While the pin is held
+     that is invisible, because this box IS the window; the moment the pin
+     releases and the box starts up the screen, the crop is a straight line drawn
+     across a photograph in the middle of the page. That is the bug the screenshot
+     showed and it is not a crop, it is a cut.
+
+     SO THE FOOT IS OPENED AND THE OTHER THREE EDGES ARE NOT. inset() takes
+     negative offsets and grows the rectangle outward, so this is the box plus a
+     fifth of its own height below it — comfortably more than the deepest prop
+     overhangs at any window (worst case is about 17% of the stage, on the
+     shortest screens, where the unit stops shrinking with the width).
+
+     WHAT IT MUST NOT DO IS OPEN THE TOP, and that is the reason the two ends are
+     not symmetrical. The unit above deliberately lets the SHEET be bigger than
+     the held screen — the paper bleeds off the top and reads as a sheet too big
+     for the frame — and a bleed with nothing cropping it is a photograph of
+     paper printed over the curtain in the section above.
+
+     AND THE SIDES STAY AT 0. .reimagine clips x for its own reason and this
+     agrees with it; opening them would put the clear strip that hangs off the
+     left edge of the sheet back into the page's width.
+
+     WHERE THE PROPS GO WHEN THEY GET OUT is the green under the section, which
+     is the same green they were standing on — see --rei-split, which is why the
+     bottom half of this frame and the whole of WE WANTED TO BE. are one ground.
+     A photograph crossing that join is a photograph on green. .reimagine's own
+     z-index is what lets it be seen there rather than painted over.
+
+     A STACKING CONTEXT IS THE COST and it is the right one to pay: the three
+     clear strips are `mix-blend-mode: screen` and blend with their backdrop, and
+     the backdrop they were drawn for is exactly this box — the two grounds and
+     the grain, both of which are inside it. */
+  clip-path: inset(0 0 -20% 0);
   background: linear-gradient(to bottom,
       var(--rei-bg) var(--rei-split),
       var(--about-bg) var(--rei-split));
@@ -16113,6 +16274,64 @@ img#front {
 
      Bare, in screens — the engine parses it as one. */
   --wanted-run: 1.8;
+
+  /* THE CURVE INTO THE WAY OUT. The site's one edge, hung off this section's
+     foot so the green sheet bulges over the CTA's curtain instead of meeting it
+     on a straight line. Depth is --curve-depth like every other use of it. */
+  --wanted-arc: var(--curve-depth);
+
+  /* Over the section below, which is a positioned sibling later in the tree and
+     would otherwise paint the curtain on top of the bulge. .whats-rolling
+     carries the same number for the same reason. */
+  z-index: 1;
+}
+
+/* THE ARC, HUNG BELOW THE SHEET RATHER THAN CUT OUT OF IT — .whats-rolling's
+   recipe exactly, and for its argument: this is a section in flow, so cutting
+   the shape out of the box would show the document's own background in the two
+   corners rather than the section below. The sheet stays a rectangle and the
+   bulge is a box hanging off it, painted in the same green and overlapping the
+   CTA. It IS the curve — --wanted-arc tall with the shape filling it — so it
+   takes --section-curve on its own and not the two-layer .arc-cut recipe.
+
+   The 1px lift is the seam: --wanted-arc is a vw and so almost never a whole
+   device pixel, and a shared edge landing mid-pixel leaves a hairline of the
+   curtain across the width. The extra pixel of height keeps the depth exact.
+
+   IT CLEARS THE COPY UNDER IT, AND THE CLEARANCE IS THE CTA'S TO SET. The belly
+   is --curve-depth (10.336vw) at its deepest and the CTA's small line starts
+   12.083vw down its sheet, which lands the curve 25px above the cap line at the
+   design width — technically clear, and on screen a line of type set into the
+   bottom of a bowl. --cta-clear pushes the whole composition down past it; see
+   .about-cta, which is where the figure is and is the one to turn.
+
+   AND IT CARRIES THE PAPER, which is the one thing this element cannot do the
+   way every other sheet on the site does it. The grain is always its own box at
+   opacity 0.2 over the colour; a pseudo-element has no child to put it in, so
+   the same result is composed in the background stack — the colour, the paper
+   over it, and a sheet of that colour at 80% over that, which is exactly what
+   an 0.2 layer paints. Without it the texture stops dead at the section's
+   rectangular foot and the bulge below reads as a different green.
+   .whats-rolling::after is the same three lines for the same reason. */
+.we-wanted::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: -1px;
+  height: calc(var(--wanted-arc) + 1px);
+  background:
+    linear-gradient(color-mix(in srgb, var(--about-bg) 80%, transparent) 0 0),
+    url("/assets/paper-overlay.webp") 0 0 / 100% auto repeat-y,
+    var(--about-bg);
+  -webkit-mask-image: var(--section-curve);
+  mask-image: var(--section-curve);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  pointer-events: none;
 }
 
 /* THE BOX THAT IS HELD STILL. One screen tall, and everything the section draws
@@ -16670,8 +16889,32 @@ img#front {
    here — see .about-cta-front, which hangs a third of itself past the bottom
    edge. */
 .about-cta {
-  /* The sheet's depth. */
+  /* The sheet's depth, as the drawing gives it. What the section is actually
+     cut to is this plus --cta-clear below. */
   --cta-h: 114.514vw; /* 1649px */
+
+  /* HOW MUCH FARTHER DOWN THE SHEET EVERYTHING ON IT STANDS, AND WHY THERE IS A
+   * TOKEN FOR IT AT ALL.
+   *
+   * WE WANTED TO BE. HANGS ITS ARC OVER THIS SECTION. That is the join working
+   * as designed — the green sheet above bulges over this one's curtain rather
+   * than meeting it on a straight line (see .we-wanted::after) — and the belly
+   * of it reaches --curve-depth, 10.336vw, into this sheet. The drawing puts
+   * the small line at 174, which is 12.083vw, so the clearance between the
+   * deepest point of the curve and the cap line under it was 25px at the design
+   * width: on paper it clears, and on screen the type is set into the bottom of
+   * a bowl.
+   *
+   * ONE FIGURE AND THREE PLACES, so the composition slides down INSIDE A TALLER
+   * SHEET rather than being squashed into the same one. The copy's own top
+   * padding takes it, the crate takes it — the crate has an appointment with the
+   * pill's foot and would be walked into if it did not — and the section's
+   * height takes it so the crate keeps the same distance to the foot it is
+   * cropped by. Turn this one number and all three follow.
+   *
+   * A vw, so a phone gets its share of it without a second figure: the arc it
+   * clears is a proportion of the width too. */
+  --cta-clear: 3.472vw; /* 50px */
 
   /* WHERE THE CRATE'S FILE STARTS, and the arithmetic is worth writing out
      because the number does not look like anything on the drawing.
@@ -16790,9 +17033,31 @@ img#front {
 
   position: relative;
   width: 100%;
-  height: var(--cta-h);
+  height: calc(var(--cta-h) + var(--cta-clear));
   background: var(--about-bg);
   overflow: clip;
+}
+
+/* THE PAPER UNDER THE SHEET, and the only place on this section it is ever seen:
+   the two corners past the curve of .about-cta-sheet, which is where the section
+   shows at all. Every other green ground on this page carries the site's overlay
+   at 0.2 — .about-open, the belt, the pinned stage, the section above this one
+   and its arc — and this corner was the one that did not, so the page ended on a
+   band of flat colour under a page of printed paper.
+
+   NOT ON THE SHEET. The sheet is a photograph of a curtain and a crate; paper
+   laid over it would be a texture on a picture rather than the ground it is
+   printed on. This is under it — first child, so the sheet, the copy and the
+   crate all paint over it in tree order and nothing has to be re-stacked. */
+.about-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/paper-overlay.webp");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  opacity: 0.2;
+  pointer-events: none;
 }
 
 /* THE PHOTOGRAPH'S BOX — the window the curtain drifts inside and the edge the
@@ -16873,7 +17138,9 @@ img#front {
    used to be nothing at all. */
 .about-cta-front {
   position: absolute;
-  top: var(--cta-front-top);
+  /* Plus the clearance, so the crate keeps its appointment with the pill's foot
+     when the copy is pushed clear of the arc — see --cta-clear. */
+  top: calc(var(--cta-front-top) + var(--cta-clear));
   left: 0;
   width: 100%;
   height: auto;
@@ -16902,9 +17169,12 @@ img#front {
   position: relative;
 
   /* 174 down to the small line — the drawing's one vertical measurement in the
-     top half of the sheet. There is no padding at the foot: the section's
-     height is declared, and what is under the pill is the crate's business. */
-  padding-top: 12.083vw; /* 174px */
+     top half of the sheet — plus the clearance that keeps it out from under the
+     arc the section above hangs over this one. See --cta-clear, which is where
+     that is argued and is the number to turn. There is no padding at the foot:
+     the section's height is declared, and what is under the pill is the crate's
+     business. */
+  padding-top: calc(12.083vw + var(--cta-clear)); /* 174px + clearance */
 
   /* The headline's column. */
   padding-inline: 14.722vw; /* 212px */
@@ -17492,7 +17762,7 @@ img#front {
   /* One row's height, and every pill width below is a multiple of it — the same
      proportions at 45vw that they have at 13.567. */
   .conveyor-train {
-    height: 45vw;
+    --pill-h: 45vw;
   }
 
   .conveyor-train.is-sm {
@@ -18208,7 +18478,7 @@ img#front {
   }
 
   .about-cta-copy {
-    padding-top: 16vw; /* 62px */
+    padding-top: calc(16vw + var(--cta-clear)); /* 62px + clearance */
     padding-inline: 6.154vw; /* 24px */
   }
 

@@ -4,6 +4,7 @@ import { Fragment, type CSSProperties } from "react";
 import HandNote from "@/components/HandNote";
 import { letters } from "@/components/letters";
 import Peel from "@/components/Peel";
+import { getHomepage } from "@/data/homepage";
 import Stage from "./Stage";
 
 /* WHY WE EXIST — three giant statements on one wide canvas, walked past by a
@@ -25,10 +26,10 @@ import Stage from "./Stage";
  * wrapper that owns the ref; everything below stays on the server.
  */
 
-/* The section's own copy. Not per panel, so it sits apart from PANELS — and it
-   is the obvious CMS field, so it is named rather than buried in the markup. */
-const SUBHEAD = "WHY WE EXIST";
-const HEADING = ["WE’RE HERE", "FOR THE EVERYDAY", "MOMENTS."];
+/* THE COPY IS ON THE RECORD — src/globals/Homepage.ts, the Why we exist tab.
+   The section's own two lines and each phrase's two words; everything else in
+   PANELS below is where the photographs lie, which is a drawing and stays
+   here. */
 
 /* A loose object on the canvas: a product tag or a photograph, scattered around
  * the type the way the mock has them.
@@ -449,7 +450,11 @@ function Props({ items, tape, lift }: { items: Prop[]; tape: TapeName; lift: num
   );
 }
 
-export default function GiantPinning() {
+export default async function GiantPinning() {
+  const {
+    reasons: { subhead, heading, phrases },
+  } = await getHomepage();
+
   return (
     <Stage>
       {/* WITHOUT JAVASCRIPT THE LETTERS NEVER COME UP. The stylesheet parks them
@@ -466,12 +471,12 @@ export default function GiantPinning() {
           three elements being moved in step. */}
       <div className="giant-canvas">
         <div className="top-title">
-          <h5 className="subhead">{SUBHEAD}</h5>
+          <h5 className="subhead">{subhead}</h5>
           {/* One heading, three lines, each its own row of split letters. A <br>
               between plain strings would not survive the split — the letters
               have to be laid into a row that can be a line. */}
-          <h2 className="h2" aria-label={HEADING.join(" ")}>
-            {HEADING.map((line) => (
+          <h2 className="h2" aria-label={heading.join(" ")}>
+            {heading.map((line) => (
               <span className="line" key={line}>
                 {letters(line)}
               </span>
@@ -482,7 +487,15 @@ export default function GiantPinning() {
         {/* Fragment, not a wrapper div — every block on the canvas is placed
             absolutely off .giant-canvas, and a div per panel would be one more
             box to reason about for nothing. */}
-        {PANELS.map((panel, i) => {
+        {/* THE WORDS COME OFF THE RECORD AND THE ARRANGEMENT DOES NOT, which is
+            what this pairing is: PANELS is a drawing per phrase — which
+            photographs lie where, on which roll, at what lean — and there are
+            three of them because the design drew three. So the phrase at index i
+            supplies the two words and everything else stays put. A record with
+            more phrases than there are arrangements draws only as many as there
+            are places to stand them in. */}
+        {PANELS.slice(0, phrases.length).map((panel, i) => {
+          const phrase = phrases[i];
           /* Resolved once per panel rather than at each of the two or three
              places a strip is rendered, so the slot and the loose photographs
              cannot end up on different rolls by an edit reaching only one of
@@ -490,7 +503,7 @@ export default function GiantPinning() {
           const roll = panel.tape ?? "kraft";
 
           return (
-          <Fragment key={panel.word}>
+          <Fragment key={phrase.word}>
             {/* The arrow sits BEFORE the block it leads to, so the DOM reads in
                 the order the camera travels. Decorative: it is a drawn line
                 repeating what the layout already shows. */}
@@ -553,8 +566,8 @@ export default function GiantPinning() {
                   it is where "colour the verb differently" goes when the design
                   asks for it, and losing it to the split would be losing the
                   only join in the phrase. */}
-              <h1 className="giant" aria-label={`${panel.lead} ${panel.word}`}>
-                {letters(panel.lead)}
+              <h1 className="giant" aria-label={`${phrase.lead} ${phrase.word}`}>
+                {letters(phrase.lead)}
 
                 {/* THE GAP, and the thing standing in it. No word space either
                     side of this and no `gap` on the row — this box is the space,
@@ -614,7 +627,7 @@ export default function GiantPinning() {
                   />
                 </span>
 
-                <span>{letters(panel.word)}</span>
+                <span>{letters(phrase.word)}</span>
               </h1>
               {/* The loose photographs wear the panel's roll and the slot's own
                   lift — one arrangement, taped down in one sitting. */}

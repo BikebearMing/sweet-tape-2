@@ -39,10 +39,29 @@ export type Slide = {
   colours: TapeColours;
 };
 
+/** One of the three phrases the pinning section holds the screen for. */
+export type Phrase = { lead: string; word: string };
+
 /** The home page, as its sections want it. */
 export type Homepage = {
+  hero: {
+    kicker: string[];
+    headline: string[];
+    cornerMark: string[];
+    /** One paragraph — this line is the one on the page that really does wrap. */
+    cardboard: string;
+  };
+  band: { head: string; tail: string };
   slider: {
     subhead: string;
     rolls: Slide[];
   };
+  reasons: {
+    subhead: string;
+    heading: string[];
+    /** Three, in the order they are held. The photographs around each one are
+        drawn in code against its place in this list. */
+    phrases: Phrase[];
+  };
+  stick: { heading: string[]; sub: string };
 };

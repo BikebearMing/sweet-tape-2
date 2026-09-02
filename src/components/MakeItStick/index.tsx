@@ -2,6 +2,8 @@
 import Peel from "@/components/Peel";
 import { bodyCopy } from "@/components/body";
 import { letters } from "@/components/letters";
+import { getHomepage } from "@/data/homepage";
+
 import Stage from "./Stage";
 
 /* LET'S MAKE IT STICK — the key visual, and the last thing said before the
@@ -36,11 +38,10 @@ import Stage from "./Stage";
  * typed into this file.
  */
 
-/* Section copy — the obvious CMS fields, so they are named constants rather
-   than strings buried in the markup. The heading's break is set by design and
-   not by wrapping, which is why it is three strings and not one. */
-const HEADING = ["LET’S", "MAKE IT", "STICK!"];
-const SUB = "For everything that matters.";
+/* THE COPY IS ON THE RECORD — src/globals/Homepage.ts, the Make it stick tab.
+   The heading's break is set by design and not by wrapping, which is why it is
+   three rows and not one string. The photograph is not editable: it is the
+   closing key visual and the strip of tape across it is measured to it. */
 const SHOT = "/assets/make-it-stick.jpg";
 const SHOT_ALT =
   "Six rolls of Sweet Tape held in someone’s arms — stationery, OPP, cloth, masking and double-sided tissue tape.";
@@ -69,7 +70,11 @@ const TAPE = {
 const TAPE_L = 22.222;
 const TAPE_BOX = `${TAPE_L}vw ${(TAPE_L / TAPE.ratio).toFixed(3)}vw`;
 
-export default function MakeItStick() {
+export default async function MakeItStick() {
+  const {
+    stick: { heading, sub },
+  } = await getHomepage();
+
   return (
     <Stage>
       {/* WITHOUT JAVASCRIPT THE TAPE NEVER GOES ON. A scrubbed peel rests at
@@ -115,8 +120,8 @@ export default function MakeItStick() {
               honoured on a heading, so the line is announced whole and the
               rows of letter boxes are never read out a fragment at a time. The
               footer's headline is marked up the same way. */}
-          <h2 className="stick-headline" aria-label={HEADING.join(" ")}>
-            {HEADING.map((line) => (
+          <h2 className="stick-headline" aria-label={heading.join(" ")}>
+            {heading.map((line) => (
               <span className="line" key={line} aria-hidden="true">
                 {letters(line)}
               </span>
@@ -129,8 +134,8 @@ export default function MakeItStick() {
               (hidden) text node and the split version is taken out of the tree;
               the hero's corner mark makes the same call for the same reason. */}
           <p className="stick-sub body-copy">
-            <span className="sr-only">{SUB}</span>
-            <span aria-hidden="true">{bodyCopy(SUB)}</span>
+            <span className="sr-only">{sub}</span>
+            <span aria-hidden="true">{bodyCopy(sub)}</span>
           </p>
         </div>
 

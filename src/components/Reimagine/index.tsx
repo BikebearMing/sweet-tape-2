@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { letters } from "@/components/letters";
 import Peel from "@/components/Peel";
+import { getAbout } from "@/data/about";
 import Props from "./props";
 import Stage from "./Stage";
 
@@ -111,24 +112,18 @@ const GAP = "|";
  * are stripped for SPOKEN below. */
 const TURN = "/";
 
-/* THE FIVE LINES, WITH THE PHONE'S SEVEN TURNS MARKED IN THEM. Read the slashes
- * and ignore the line ends and you have the phone's eight; read the line ends
- * and ignore the slashes and you have the desktop's five. A line that ends with
- * a slash is one both agree on. */
-const LINES = [
-  `TO REIMAGINE ${TURN} AN`,
-  `EVERYDAY ${TURN} ESSENTIAL AS ${TURN}`,
-  `SOMETHING ${GAP} ${TURN} MORE ${TURN}`,
-  `THOUGHTFUL, ${TURN} EXPRESSIVE`,
-  `AND ${TURN} FULL OF HEART.`,
-];
+/* THE LINES COME OFF THE RECORD — src/globals/About.ts, the Statement tab, one
+ * row per line with both markers typed into the copy. Read the slashes and
+ * ignore the line ends and you have the phone's eight; read the line ends and
+ * ignore the slashes and you have the desktop's five. A line that ends with a
+ * slash is one both agree on. */
 
-/** The sentence as it is READ — the lines joined, with the tape's hole taken
-    back out. Screen readers get this and never the five fragments. */
-const SPOKEN = LINES.join(" ")
-  .replace(/[|/]/g, "")
-  .replace(/\s+/g, " ")
-  .trim();
+/** The sentence as it is READ — the lines joined, with the tape's hole and the
+    phone's turns taken back out. Screen readers get this and never the
+    fragments. */
+function spokenOf(lines: string[]): string {
+  return lines.join(" ").replace(/[|/]/g, "").replace(/\s+/g, " ").trim();
+}
 
 /* THE SIX STILLS, CRUMPLED FIRST. Document order IS play order — unfold.ts
  * takes them off the markup and plays them down the list, so the sequence is
@@ -179,7 +174,10 @@ function Turn() {
   return <span className="reimagine-turn" aria-hidden="true" />;
 }
 
-export default function Reimagine() {
+export default async function Reimagine() {
+  const { statement } = await getAbout();
+  const spoken = spokenOf(statement);
+
   return (
     <Stage>
       {/* WITHOUT JAVASCRIPT THE SECTION IS STILL A SECTION. The letters are
@@ -231,8 +229,8 @@ export default function Reimagine() {
             aria-label so it is announced as one sentence: the five lines are a
             drawing, and the row of letter boxes under each of them is a reveal.
             Neither is something to read out. */}
-        <h2 className="reimagine-copy" aria-label={SPOKEN}>
-          {LINES.map((line, i) => (
+        <h2 className="reimagine-copy" aria-label={spoken}>
+          {statement.map((line, i) => (
             <span className="line" aria-hidden="true" key={i}>
               {line
                 .split(" ")

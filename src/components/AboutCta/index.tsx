@@ -5,6 +5,8 @@ import type { CSSProperties } from "react";
 import { bodyCopy } from "@/components/body";
 import { letters } from "@/components/letters";
 
+import { getAbout } from "@/data/about";
+
 import Stage from "./Stage";
 
 /* THE WAY OUT OF /about — the page's last screen, and its only forward door.
@@ -51,21 +53,11 @@ import Stage from "./Stage";
  * section; nothing below this line is a client component.
  */
 
-/* WHERE THE DOOR OPENS. The story ends on what the tape is FOR, so the way on
-   from it is the tapes: /products is the row of six, which is the next thing a
-   reader who has read this far would want, and it is what the crate under the
-   pill is a picture of. Named rather than typed into the markup because it is
-   the one decision in this file that is not a measurement, and it should be the
-   easiest thing here to find and change. */
-const HREF = "/products";
-
-/* The section's copy. In this file and not in a data module for the reason
-   WeWanted gives about its four claims: this is a fact about the company, there
-   is one of it, and it belongs to the page it is written on. The day it comes
-   from the CMS this is the shape the field takes. */
-const KICKER = "We believe the world is better with";
-const HEADLINE = ["MORE COLOUR,", "MORE HEART, AND", "YES — BETTER TAPE."];
-const LABEL = "UNROLL THE STORY";
+/* WHERE THE DOOR OPENS, AND EVERYTHING THIS SECTION SAYS, are on the record —
+   src/globals/About.ts, the Call to action tab. The story ends on what the tape
+   is FOR, so the way on from it defaults to the tapes: /products is the row of
+   six, which is the next thing a reader who has read this far would want, and
+   it is what the crate under the pill is a picture of. */
 
 /* THE CHEVRON, and it is drawn twice on purpose — see the pill below, which is
    two discs rather than one. A function rather than a copied block of markup,
@@ -88,7 +80,11 @@ function Chevron() {
   );
 }
 
-export default function AboutCta() {
+export default async function AboutCta() {
+  const {
+    cta: { kicker, headline, label, href },
+  } = await getAbout();
+
   return (
     <Stage>
       {/* WITHOUT JAVASCRIPT THE SECTION IS STILL A SECTION. The letters are
@@ -159,7 +155,7 @@ export default function AboutCta() {
             a floor that is not drawn. .body-copy is the opt-in that
             components/bodyReveal.ts scans for; the words inside are bodyCopy()'s
             boxes. */}
-        <p className="about-cta-kicker body-copy">{bodyCopy(KICKER)}</p>
+        <p className="about-cta-kicker body-copy">{bodyCopy(kicker)}</p>
 
         {/* THE CLAIM, AND IT IS AN h2 RATHER THAN AN h1. The opening screen owns
             this page's h1; this is the last of several sections under it, and a
@@ -175,8 +171,8 @@ export default function AboutCta() {
             out of the tree with it: what is under this heading is one box per
             character, and a screen reader handed those spells the claim out. The
             opening screen's headline and the hero's are labelled the same way. */}
-        <h2 className="about-cta-title" aria-label={HEADLINE.join(" ")}>
-          {HEADLINE.map((line) => (
+        <h2 className="about-cta-title" aria-label={headline.join(" ")}>
+          {headline.map((line) => (
             <span
               className="line"
               key={line}
@@ -222,8 +218,8 @@ export default function AboutCta() {
             BOTH ARE aria-hidden. They repeat the label's meaning and nothing
             else — a reader who has just heard UNROLL THE STORY does not also
             need "link, arrow", let alone twice. */}
-        <Link className="about-cta-button" href={HREF}>
-          <span className="about-cta-label">{LABEL}</span>
+        <Link className="about-cta-button" href={href}>
+          <span className="about-cta-label">{label}</span>
 
           {/* The one on the drawing — a flex item, so it is what gives the pill
               its width and its right-hand end. It is the one that LEAVES. */}

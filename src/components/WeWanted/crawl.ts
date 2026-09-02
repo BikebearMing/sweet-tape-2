@@ -40,9 +40,18 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { screenH } from "@/components/viewport";
 
-/** The line. Shared with the markup so the measured character range and the
-    rendered text can never disagree — the band's UNIT does the same job. */
-export const SENTENCE = "WE WANTED TO BE.";
+/** The sentence's own advance width, in the font that actually loaded.
+ *
+ *  MEASURED OFF THE NODE AND NOT OFF A CONSTANT. The line is editable now (see
+ *  src/globals/About.ts), so a copy of it kept here would be a second sentence
+ *  that had to be kept in step with the one on the page — and the failure would
+ *  be silent: measure fewer characters than are drawn and the crawl parks with
+ *  its tail off the screen. Whatever is in the node IS what is measured.
+ *
+ *  Path-independent: it sums character advances, and bending them round a curve
+ *  never stretches them. */
+const spanOf = (text: SVGTextElement) =>
+  text.getSubStringLength(0, (text.textContent ?? "").length);
 
 /* WHERE THE SENTENCE SITS BEFORE ANY OF THIS RUNS, as a plain attribute in the
    server HTML. It is an arc length along the wave and it is APPROXIMATE ON
@@ -286,7 +295,8 @@ const runScreens = (root: HTMLElement): number => {
  * see all four; on a canvas the scroll says it. See the build below, where the
  * two mechanisms are the two halves of one branch. */
 const pans = (root: HTMLElement): boolean =>
-  Number.parseFloat(getComputedStyle(root).getPropertyValue("--wanted-pan")) > 0;
+  Number.parseFloat(getComputedStyle(root).getPropertyValue("--wanted-pan")) >
+  0;
 
 /* The arc length at which the path crosses a given x.
  *
@@ -336,7 +346,7 @@ export function initWeWanted(root: HTMLElement): () => void {
      is the section, held still: nothing arrives, and nothing is missing. */
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     whenFace(() => {
-      const span = text.getSubStringLength(0, SENTENCE.length);
+      const span = spanOf(text);
       const right = lengthAtX(guide, FRAME_RIGHT);
       const width = right - lengthAtX(guide, FRAME_LEFT);
       tp.setAttribute(
@@ -360,10 +370,7 @@ export function initWeWanted(root: HTMLElement): () => void {
   whenFace(() => {
     if (dead) return;
 
-    /* THE SENTENCE'S OWN ADVANCE WIDTH, in the font that actually loaded.
-       Path-independent: it sums character advances, and bending them round a
-       curve never stretches them. */
-    const span = text.getSubStringLength(0, SENTENCE.length);
+    const span = spanOf(text);
 
     const left = lengthAtX(guide, FRAME_LEFT);
     const right = lengthAtX(guide, FRAME_RIGHT);

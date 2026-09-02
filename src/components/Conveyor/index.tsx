@@ -1,6 +1,8 @@
 import type { CSSProperties, ReactNode } from "react";
 
 import HandNote from "@/components/HandNote";
+import { getAbout } from "@/data/about";
+import type { BeltItem, BeltRow } from "@/data/about-types";
 
 import Stage from "./Stage";
 
@@ -41,61 +43,42 @@ import Stage from "./Stage";
  * the scroll and has no clock of its own: see ./belt.ts, which is the whole of
  * the movement.
  *
- * EACH ROW CARRIES ITS OWN TRAVEL, here, with the row. Where a row starts and
- * where it ends is composition — the same kind of decision as which pill goes
- * where — so it is stated once in ROWS and read off the markup by the engine,
- * which knows that a row travels and not where to. All three are one property,
- * --x; nothing else in the stylesheet has to know the belt moves at all.
+ * EACH ROW CARRIES ITS OWN TRAVEL, on the row and not in a module the engine
+ * imports. Where a row starts and where it ends is composition — the same kind
+ * of decision as which pill goes where — so it comes off the record with the
+ * row's pills and is read off the markup by the engine, which knows that a row
+ * travels and not where to. All three are one property, --x; nothing else in the
+ * stylesheet has to know the belt moves at all.
  *
- * `from` IS ALSO THE POSE THE MARKUP RESTS ON — what a page with no script, and
- * a reader who has asked for less motion, is left looking at. It used to be a
- * third number because the start of the travel was not a composition anybody
- * would want to stop on; it is one now, because the start IS the drawing: all
- * three claims readable at once, which is the pose the belt sets off from.
- *
- * THE PHOTOGRAPHS ARE NOT IN THE REPOSITORY YET, and the pills are drawn without
- * them rather than filled with stand-ins. What is in public/assets is a set of
- * 204x210 product thumbnails, and one of those blown across a 51vw pill is a
- * worse lie about the design than an empty pill is. Give a row's item a `photo`
- * and it renders one; until then the belt is its shapes, which is the half of
- * the design that is settled. components/AboutOpen above it makes the same
- * argument about a screen that has no copy yet.
+ * A PHOTOGRAPH IS FITTED ONE OF TWO WAYS and the choice is per pill. FULL fills
+ * the stadium and is cut to it, so the pill IS the picture — which is what the
+ * belt is drawn as. INSET keeps the whole picture and leaves the pill's own
+ * green showing round it, which is the fit a photograph with something at its
+ * edges needs. See .conveyor-train.is-inset in global.css, which is the whole
+ * of the difference.
  *
  * Server-rendered but for Stage, the hair-thin client wrapper that owns the ref
  * and hands the section to belt.ts; nothing below that line is a client
  * component.
  */
 
-type Size = "sm" | "med" | "xl" | "xxl";
-
-type Item =
-  /** A pill with a photograph in it — or, until the photographs land, without. */
-  | { kind: "photo"; size: Size; photo?: { src: string; alt: string } }
-  /** A pill carrying one part of the sentence, numbered. */
-  | { kind: "claim"; size: Size; index: string; lines: [string, string] }
-  /** The aside under the second claim — small copy, not a heading. */
-  | { kind: "note"; size: Size; lines: [string, string] }
-  /** The roll pill: a hand-written aside with the tape lying beside it. */
-  | { kind: "roll"; size: Size; lines: string[] }
-  /** The mark, lying on the belt between two pills. */
-  | { kind: "mark" };
-
-/* THE BELT ITSELF. Document order is left-to-right order and top-to-bottom
- * order, so the arrangement is stated once, here, and the stylesheet only ever
- * says how big a pill of each size is.
+/* WHAT IS ON THE BELT COMES OFF THE RECORD — src/globals/About.ts, the Belt
+ * tab. Document order is left-to-right order and top-to-bottom order, so the
+ * arrangement is stated once, there, and the stylesheet only ever says how big a
+ * pill of each size is.
  *
- * THE LINE BREAKS ARE A DRAWING, which is why a claim is two strings and not one
- * sentence left to the browser. Where display type this size turns is decided by
- * looking at it; a measure that decided it for us would re-break the block at
- * the first window that is not 1440 wide. Every headline on this site is stored
- * this way — see Reimagine's LINES.
+ * THE LINE BREAKS ARE A DRAWING, which is why a claim is a list of lines and not
+ * one sentence left to the browser. Where display type this size turns is
+ * decided by looking at it; a measure that decided it for us would re-break the
+ * block at the first window that is not 1440 wide. Every headline on this site
+ * is stored this way — see Reimagine's LINES.
  *
- * from / to ARE IN vw, positive right and negative left, measured on the row's
- * own left edge — which with REPEAT copies is the left edge of the FIRST copy,
- * so the numbers run to a few hundred negative and that is normal. The figures
- * are large because they are absolute positions in a belt three times the length
- * of the one on screen, not distances travelled; the travel is the difference,
- * and it is 76, 114 and 75vw.
+ * `from` / `to` ARE IN vw, positive right and negative left, measured on the
+ * row's own left edge — which with REPEAT copies is the left edge of the FIRST
+ * copy, so the numbers run to a few hundred negative and that is normal. The
+ * figures are large because they are absolute positions in a belt three times
+ * the length of the one on screen, not distances travelled; the travel is the
+ * difference, and it is 76, 114 and 75vw.
  *
  * THE SIGN OF THE RUN IS THE ARRANGEMENT: row one runs LEFT, row two RIGHT and
  * row three LEFT, so no two neighbours are going the same way and the belts read
@@ -106,81 +89,23 @@ type Item =
  * middle of the window with the claims run off both sides — see MARK in
  * ./belt.ts, which takes over from exactly there. The other two ends are chosen
  * to CLEAR, so that nothing is competing with the mark at the moment it is left
- * alone. */
-type RowSpec = { from: number; to: number; items: Item[] };
+ * alone. THEY ARE EDITABLE AND THEY ARE NOT DECORATION: add or remove a pill and
+ * both ends of that row want re-finding.
+ *
+ * `from` IS ALSO THE POSE THE MARKUP RESTS ON — what a page with no script, and
+ * a reader who has asked for less motion, is left looking at. The start IS the
+ * drawing: all three claims readable at once, which is the pose the belt sets
+ * off from.
+ *
+ * A PILL WITH NO PHOTOGRAPH IN IT IS A REAL ANSWER and not a hole. The belt is
+ * its shapes until the pictures land, which is what it has always been — see
+ * components/AboutOpen for the same argument about a screen with no copy on it.
+ */
 
 /* HOW MANY TIMES EACH ROW IS PRINTED. Three is the smallest number that covers a
    100vw window at both ends of a ~115vw run through a ~190vw row, with a copy in
    hand on either side. */
 const REPEAT = 3;
-
-const ROWS: RowSpec[] = [
-  {
-    from: -87.1,
-    to: -163.1,
-    items: [
-      { kind: "photo", size: "xl" },
-      { kind: "photo", size: "med" },
-      { kind: "photo", size: "sm" },
-      {
-        kind: "claim",
-        size: "med",
-        index: "01",
-        lines: ["ROWS OF", "PRODUCTS."],
-      },
-      { kind: "photo", size: "xl" },
-    ],
-  },
-  {
-    from: -402.3,
-    to: -284.8,
-    items: [
-      { kind: "photo", size: "sm" },
-      {
-        kind: "claim",
-        size: "xxl",
-        index: "02",
-        lines: ["ENDLESS CHOICES THAT", "SOMEHOW ALL BLUR TOGETHER."],
-      },
-      { kind: "photo", size: "med" },
-      { kind: "mark" },
-      /* THE ONE PILL ON THE BELT THAT IS NOT PART OF THE COMPLAINT, and it is
-         the one directly after the mark on purpose. Everything up to here is the
-         aisle — rows of products, choices that blur, the same plain packaging —
-         and the reader has just passed the brand's own silhouette lying in the
-         middle of it. What comes out the other side is the aisle's own line,
-         written in the aisle's hand: same material, same roll, same routine,
-         with the tape itself lying beside the sentence. It is the last thing on
-         the belt before the mark is grown to fill the window, so the complaint
-         finishes on a picture of the product rather than on another shelf. */
-      {
-        kind: "roll",
-        size: "xl",
-        lines: ["same material.", "same roll.", "same routine."],
-      },
-    ],
-  },
-  {
-    from: -80.1,
-    to: -155.1,
-    items: [
-      { kind: "photo", size: "xl" },
-      {
-        kind: "note",
-        size: "med",
-        lines: ["Very few stood out.", "Even fewer felt memorable."],
-      },
-      { kind: "photo", size: "med" },
-      { kind: "photo", size: "sm" },
-      {
-        kind: "claim",
-        size: "med",
-        index: "03",
-        lines: ["SAME PLAIN", "PACKAGING."],
-      },
-    ],
-  },
-];
 
 /* THE MARK, AS A SILHOUETTE. The blob the wordmark is normally printed inside,
  * on its own and in the PILL's colour rather than in lime — so it reads as one
@@ -228,7 +153,7 @@ function Line({ children }: { children: ReactNode }) {
   );
 }
 
-function Train({ item, echo }: { item: Item; echo?: boolean }) {
+function Train({ item, echo }: { item: BeltItem; echo?: boolean }) {
   if (item.kind === "mark") return <Mark />;
 
   const className = `conveyor-train is-${item.size}`;
@@ -236,15 +161,12 @@ function Train({ item, echo }: { item: Item; echo?: boolean }) {
 
   if (item.kind === "photo") {
     return (
-      <div className={className} aria-hidden={hidden}>
-        {item.photo ? (
+      /* THE FIT IS A CLASS AND NOT A STYLE, so the two arrangements are stated
+         once each in the stylesheet beside the pill they crop. */
+      <div className={`${className} is-${item.fit}`} aria-hidden={hidden}>
+        {item.src ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={item.photo.src}
-            alt={item.photo.alt}
-            loading="lazy"
-            decoding="async"
-          />
+          <img src={item.src} alt={item.alt} loading="lazy" decoding="async" />
         ) : null}
       </div>
     );
@@ -294,8 +216,9 @@ function Train({ item, echo }: { item: Item; echo?: boolean }) {
     return (
       <div className={`${className} has-text`} aria-hidden={hidden}>
         <p className="conveyor-note">
-          <Line>{item.lines[0]}</Line>
-          <Line>{item.lines[1]}</Line>
+          {item.lines.map((line, i) => (
+            <Line key={i}>{line}</Line>
+          ))}
         </p>
       </div>
     );
@@ -312,15 +235,18 @@ function Train({ item, echo }: { item: Item; echo?: boolean }) {
           {item.index}
         </span>
         <h2 className="h2">
-          <Line>{item.lines[0]}</Line>
-          <Line>{item.lines[1]}</Line>
+          {item.lines.map((line, i) => (
+            <Line key={i}>{line}</Line>
+          ))}
         </h2>
       </div>
     </div>
   );
 }
 
-export default function Conveyor() {
+export default async function Conveyor() {
+  const { belt } = await getAbout();
+
   return (
     <Stage>
       {/* WITHOUT JAVASCRIPT THE COPY IS STILL THERE. global.css parks every line
@@ -335,7 +261,7 @@ export default function Conveyor() {
       </noscript>
 
       <div className="conveyor-belt">
-        {ROWS.map((row, r) => (
+        {belt.map((row: BeltRow, r: number) => (
           <div
             className="conveyor-track"
             key={r}

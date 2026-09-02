@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import AboutCta from "@/components/AboutCta";
 import AboutOpen from "@/components/AboutOpen";
 import Conveyor from "@/components/Conveyor";
+import Footer from "@/components/Footer";
 import Reason from "@/components/Reason";
 import WeWanted from "@/components/WeWanted";
 import Reimagine from "@/components/Reimagine";
@@ -68,17 +69,17 @@ import Reimagine from "@/components/Reimagine";
  * Conveyor/belt.ts, which are the two ends of it. Nothing between them in this
  * list can be reordered without re-counting both.
  *
- * NO FOOTER YET, and that is a decision rather than an oversight. /contact
- * closes with one because a contact page ENDS at the form; this page does not
- * end here — the origin story, the people and the sign-off are still to come —
- * and a footer parked under the last of them would be the page claiming to be
- * finished. /products/[id] is open at the foot for exactly this reason. Add it
- * when the last section lands.
+ * AND IT CLOSES WITH THE FOOTER, which it did not for one round. The note that
+ * stood here argued the opposite: the origin story, the people and the sign-off
+ * were still to come, and a footer parked under the last of them would be the
+ * page claiming to be finished. That was true of a page that ended on a section
+ * nobody could get out of — it is not true of one that ends on the way out, and
+ * the cost of leaving it off is a route with no nav at the bottom of it, which
+ * every other page on this site has. The call to action is not a substitute for
+ * that nav: it offers ONE door, and the footer's row is the rest of the site.
  *
- * AND THE CALL TO ACTION IS NOT THAT SIGN-OFF. It is a section like the five
- * above it and it keeps its place under them when the missing ones arrive; what
- * it is not is a substitute for the footer's nav, which every other route on
- * this site closes with.
+ * A section added later goes ABOVE the call to action and above this, which is
+ * the same order every other route already keeps.
  *
  * THE MENU HAS LINKED HERE ALL ALONG. /about is one of the four routes in the
  * pull-down and in the footer's row, and until now it was the only one of them
@@ -105,6 +106,7 @@ export default function AboutPage() {
       <Reimagine />
       <WeWanted />
       <AboutCta />
+      <Footer />
     </>
   );
 }

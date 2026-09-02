@@ -121,7 +121,34 @@ export default function SmoothScroll() {
        initPreloader), and this takes over at the handoff — the same moment the
        scroll unlocks, which is the first moment any of this matters. Fires
        immediately on a page with no preloader on it. */
-    const stopGate = whenRevealed(() => gsap.ticker.lagSmoothing(0));
+    const stopGate = whenRevealed(() => {
+      gsap.ticker.lagSmoothing(0);
+
+      /* AND EVERY PIN IS RE-MEASURED, which is a bug fix and not housekeeping.
+       *
+       * The lock above is `overflow: hidden` on the root, and while it is on the
+       * document has no scrollbar — the gutter reserved by scrollbar-gutter is
+       * not kept through it. So a window 1440 wide reports a client width of
+       * 1440 during the hold and 1428 the instant it lifts, and any pin built in
+       * between measures the wrong one: ScrollTrigger writes the pinned box's
+       * width onto the element and onto its spacer as inline px, and those two
+       * numbers do not follow a viewport that changed after they were taken.
+       *
+       * WHAT IT LOOKED LIKE was a HORIZONTAL SCROLLBAR on /about and nowhere
+       * else — three pinned sections there, each spacer 12px wider than the page
+       * that held it, and the widest of them not inside anything that clips x.
+       * Every route with a pin on it had the same 12px; that one was the only
+       * one where it could be seen.
+       *
+       * HERE AND NOT IN THE SECTIONS, because it is one fact about the page —
+       * the viewport just changed size — and every trigger on it wants the same
+       * answer. It is also the only moment on the site when that is true without
+       * a resize event to announce it.
+       *
+       * Cheap and invisible: the page is at the top, nothing has been scrolled
+       * past, and a refresh at scroll 0 moves nothing. */
+      ScrollTrigger.refresh();
+    });
 
     return () => {
       stopViewport();

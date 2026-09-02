@@ -1,8 +1,10 @@
 import type { CSSProperties } from "react";
 
 import Mark, { type MarkKind } from "./Mark";
+import { getAbout } from "@/data/about";
+
 import Stage from "./Stage";
-import { SENTENCE, START_OFFSET } from "./crawl";
+import { START_OFFSET } from "./crawl";
 
 /* WE WANTED TO BE. — /about's last section, and where the green comes back.
  *
@@ -52,11 +54,8 @@ import { SENTENCE, START_OFFSET } from "./crawl";
 
 /* WHAT THE BRAND WANTED TO BE — the four claims, and the section's own copy.
  *
- * IN THIS FILE AND NOT IN A DATA MODULE, unlike a tape's claims. src/data/tapes
- * .ts holds what a PRODUCT is good at, because that is a fact about the product
- * and six of them carry their own; this is a fact about the company, there is
- * one of it, and it belongs to the page it is written on. The day it comes from
- * the CMS this is the shape the field takes.
+ * OFF THE RECORD NOW — src/globals/About.ts, the We wanted tab. What follows is
+ * the shape of the four fields there and why each one is what it is.
  *
  * THE LABEL IS AN ARRAY BECAUSE THE BREAK IS A DRAWING. EASY TO CHOOSE is two
  * lines on this box and MORE HUMAN is two lines on that one, and where a phrase
@@ -76,34 +75,12 @@ import { SENTENCE, START_OFFSET } from "./crawl";
  * The numbers ARE the order and are printed as such. Written out rather than
  * struck off the index so that a box can be reordered without its number
  * changing meaning — 01 is CLEARER whatever position it ends up in.
+ *
+ * THE KEY IS ITS OWN FIELD AND IS NOT THE WORDS. It reaches the markup as
+ * [data-box] and the stylesheet's four palettes are keyed on it, so rewording a
+ * claim leaves the box the colour it was drawn in. There are four because there
+ * are four palettes.
  */
-type Box = {
-  id: string;
-  num: string;
-  label: string[];
-  mark: MarkKind;
-  /** How far down the stage the box sits, in vh, measured to its top edge. */
-  y: number;
-};
-
-const BOXES: Box[] = [
-  { id: "clearer", num: "01", label: ["CLEARER"], mark: "strip", y: 45 },
-  {
-    id: "choose",
-    num: "02",
-    label: ["EASY TO", "CHOOSE"],
-    mark: "parcel",
-    y: 4.5,
-  },
-  {
-    id: "recognisable",
-    num: "03",
-    label: ["RECOGNISABLE"],
-    mark: "roll",
-    y: 57.5,
-  },
-  { id: "human", num: "04", label: ["MORE", "HUMAN"], mark: "person", y: 24.5 },
-];
 
 /* THE WAVE, AND IT IS THE HOME PAGE'S CURVE AT TWICE THE WAVELENGTH.
  *
@@ -153,7 +130,11 @@ const WAVE = [
   "Q 8800,560 9600,280",
 ].join(" ");
 
-export default function WeWanted() {
+export default async function WeWanted() {
+  const {
+    wanted: { sentence, boxes },
+  } = await getAbout();
+
   return (
     <Stage>
       {/* WITHOUT JAVASCRIPT THE SECTION IS STILL A SECTION. The boxes are held
@@ -202,7 +183,7 @@ export default function WeWanted() {
               which is deliberately a constant and deliberately approximate. */}
           <text className="wanted-text" dy="0.35em">
             <textPath href="#wanted-path" startOffset={START_OFFSET}>
-              {SENTENCE}
+              {sentence}
             </textPath>
           </text>
         </svg>
@@ -212,7 +193,7 @@ export default function WeWanted() {
           is: four claims of equal weight with nothing between them, and no pads
           to announce as empty items. */}
       <ul className="wanted-boxes">
-        {BOXES.map((box, i) => (
+        {boxes.map((box, i) => (
           <li
             className="wanted-box"
             key={box.id}

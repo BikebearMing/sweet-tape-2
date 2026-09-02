@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 
 import HandNote from "@/components/HandNote";
+import { getAbout } from "@/data/about";
 import { letters } from "@/components/letters";
 
 import Stage from "./Stage";
@@ -64,47 +65,42 @@ import Stage from "./Stage";
  * client boundary it needs.
  */
 
-/* THE STATEMENT, and it is two lines rather than one string with a break in it.
- * Where a headline this size turns is a decision made by looking at it, not
- * something inferred from a box width at render time — every headline on this
- * site is stored the same way, and each line has to be its own row for the arc
- * to have anything to measure --letters against. */
-const HEADLINE = ["THREE", "GENERATION"];
-
-/* THE LINE UNDER IT, AND IT IS TWO HALVES BECAUSE THE GAP IS THE POINT. What
- * opens between them as the reader scrolls is where the roll comes up, so the
- * two words cannot be one text node with a space in it — the space has to be a
- * box that something else can be measured against and pushed through.
+/* THE COPY COMES OFF THE RECORD — src/globals/About.ts, the Opening tab — and
+ * this is what the three fields there are and why each of them is LINES rather
+ * than one string.
  *
- * The hero's kicker is the same object: WE'RE / HERE TO with the brand mark
- * dropping into the gap. What is different is which way the gap is filled — the
- * badge falls into the hero's from above the page, and this one is prised OPEN
- * from underneath by the hand. See ./spaceOut.ts. */
-const KICKER = ["ONE SHARED", "BELIEF"];
-
-/* THE NOTE'S OWN WORDS, in this section rather than in HandNote/copy.ts — which
- * holds the BOARD's sentence and is the component's default, not a place every
- * note's copy is kept. The note takes its lines as an argument precisely so that
- * the only thing which knows what an instance says is the instance; the news
- * page's is passed in the same way.
+ * THE STATEMENT is two lines and not one string with a break in it. Where a
+ * headline this size turns is a decision made by looking at it, not something
+ * inferred from a box width at render time — every headline on this site is
+ * stored the same way, and each line has to be its own row for the arc to have
+ * anything to measure --letters against.
  *
- * FOUR EXPLICIT LINES AND THE BREAKS ARE THE DRAWING, the same call the headline
- * above makes and for the same reason: a hand-written note has a shape, and
- * nothing here wraps. See HandNote/copy.ts, where the argument is made at
- * length.
+ * THE LINE UNDER IT IS TWO HALVES BECAUSE THE GAP IS THE POINT. What opens
+ * between them as the reader scrolls is where the roll comes up, so the two
+ * words cannot be one text node with a space in it — the space has to be a box
+ * that something else can be measured against and pushed through. The hero's
+ * kicker is the same object: WE'RE / HERE TO with the brand mark dropping into
+ * the gap. What is different is which way the gap is filled — the badge falls
+ * into the hero's from above the page, and this one is prised OPEN from
+ * underneath by the hand. See ./spaceOut.ts.
  *
- * THE APOSTROPHE IS THE TYPOGRAPHIC ONE and it is drawn rather than exported —
- * see TICK in HandNote/glyphs.ts, which exists for this word. Written with the
- * typewriter apostrophe it still writes; written as "we have" it would need no
- * drawing at all, and it is not what the note says. */
-const NOTE = [
-  "we\u2019ve believed that",
-  "even the simplest",
-  "products deserve",
-  "thoughtful design.",
-];
+ * THE NOTE'S WORDS ARE PASSED IN and are not HandNote/copy.ts, which holds the
+ * BOARD's sentence and is the component's default rather than a place every
+ * note's copy is kept. Its four breaks are the drawing for the same reason the
+ * headline's are: a hand-written note has a shape, and nothing here wraps.
+ *
+ * ITS APOSTROPHE IS THE TYPOGRAPHIC ONE and it is drawn rather than exported —
+ * see TICK in HandNote/glyphs.ts, which exists for that word. An editor typing
+ * the typewriter apostrophe still gets a note that writes.
+ *
+ * WHAT AN EMPTY RECORD SHOWS is the page as it was before it had a CMS; the
+ * fallback is in ../../data/about.ts and there is one copy of it. */
 
-export default function AboutOpen() {
+export default async function AboutOpen() {
+  const {
+    open: { headline, kicker, note },
+  } = await getAbout();
+
   return (
     <Stage>
       {/* WITHOUT JAVASCRIPT THE HEADLINE IS STILL A HEADLINE. The letters are
@@ -137,8 +133,8 @@ export default function AboutOpen() {
               aria-label is what gets announced: the letters below are one span
               each, and a screen reader handed those spells the word out. The
               home page's headline is built exactly this way. */}
-          <h1 className="h1" aria-label={HEADLINE.join(" ")}>
-            {HEADLINE.map((line) => (
+          <h1 className="h1" aria-label={headline.join(" ")}>
+            {headline.map((line) => (
               <span
                 className="line"
                 key={line}
@@ -162,8 +158,8 @@ export default function AboutOpen() {
             otherwise liable to be announced a fragment at a time, and the gap
             between the two is a drawing rather than a pause in the sentence.
             The h1 above is labelled the same way. */}
-        <h2 className="h4 space-out" aria-label={KICKER.join(" ")}>
-          {KICKER.map((half) => (
+        <h2 className="h4 space-out" aria-label={kicker.join(" ")}>
+          {kicker.map((half) => (
             <span className="half" key={half} aria-hidden="true">
               {letters(half)}
             </span>
@@ -187,7 +183,7 @@ export default function AboutOpen() {
           nothing and the note is placed against the SHEET. Where it sits is
           .about-note in global.css, which is the only thing about it this file
           does not say. */}
-      <HandNote className="about-note" lines={NOTE} />
+      <HandNote className="about-note" lines={note} />
 
       {/* THE TWO CUTTINGS, and they are drawn on the phone only — see the
           .about-clipping / .about-shop rules in global.css, which say why and

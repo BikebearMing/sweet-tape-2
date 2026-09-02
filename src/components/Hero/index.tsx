@@ -6,17 +6,16 @@ import HandNote from "@/components/HandNote";
 import Peel from "@/components/Peel";
 import { letters, words } from "@/components/letters";
 import { MODEL_URL } from "./engine";
+import { getHomepage } from "@/data/homepage";
 
-/* Section-level copy. Two lines rather than one string: the headline is set as
-   two centred lines by design, not by wrapping. The obvious CMS fields, so they
-   are named constants rather than strings buried in the markup. */
-const KICKER = ["WE'RE", "HERE TO"];
-const HEADLINE = ["STICK", "BY YOU"];
-/* The corner mark. Two lines for the same reason the headline is: the break is
-   set, not wrapped — it is short copy in a corner and it has one shape. */
-const CORNER_MARK = ["STICK WITH YOU THROUGH", "THREE GENERATIONS"];
-const CARDBOARD_COPY =
-  "DIY FAIL, MOVING DAY CHAOS, SCHOOL PROJECT EMERGENCY,LAST-MINUTES FIXES. WE ALWAYS STICK BY YOU.";
+/* Section-level copy, on the record — src/globals/Homepage.ts, the Hero tab.
+   Two lines rather than one string wherever it is two: the headline is set as
+   two centred lines by DESIGN and not by wrapping, and the corner mark is short
+   copy in a corner with one shape. The cardboard's line is the exception and is
+   one paragraph, because that one really does wrap.
+
+   The artwork does not come from the CMS and is not meant to: the carton, the
+   lemon, the gift and the roll are a drawing. */
 
 /* The badge in the middle of the kicker — the same file the preloader draws its
    mark from, deliberately and not by coincidence: it is one logo, and pointing
@@ -53,7 +52,10 @@ const HERO_MARK = "/assets/preloader-image.svg";
  * and sized in vw, so the space it will fill is already reserved and the roll
  * arriving shifts nothing.
  */
-export default function Hero() {
+export default async function Hero() {
+  const { hero } = await getHomepage();
+  const { kicker, headline, cornerMark, cardboard } = hero;
+
   /* The GLB is 1.3 MB and it is the hero. Left to itself it would be requested
      third-hand — after hydration, after three's chunk downloads, after the
      loader constructs — which on a cold load is most of a second of empty box.
@@ -106,9 +108,9 @@ export default function Hero() {
               liable to be announced a fragment at a time. Same call the
               kicker makes. */}
           <p className="corner-mark">
-            <span className="sr-only">{CORNER_MARK.join(" ")}</span>
+            <span className="sr-only">{cornerMark.join(" ")}</span>
             <span className="corner-perf" aria-hidden="true" />
-            {CORNER_MARK.map((line) => (
+            {cornerMark.map((line) => (
               <span className="line" key={line} aria-hidden="true">
                 {letters(line)}
               </span>
@@ -126,10 +128,10 @@ export default function Hero() {
                 of the tree — a row of block-level letter boxes is otherwise
                 liable to be announced a fragment at a time. */}
             <p className="h4">
-              <span className="sr-only">{KICKER.join(" ")}</span>
+              <span className="sr-only">{kicker.join(" ")}</span>
 
               <span className="half" aria-hidden="true">
-                {letters(KICKER[0])}
+                {letters(kicker[0])}
               </span>
 
               {/* The badge that fills that gap, dropped into it from above the
@@ -163,7 +165,7 @@ export default function Hero() {
               </span>
 
               <span className="half" aria-hidden="true">
-                {letters(KICKER[1])}
+                {letters(kicker[1])}
               </span>
             </p>
 
@@ -175,8 +177,8 @@ export default function Hero() {
                 reason as the kicker's hidden copy — on a heading the label is
                 honoured, so nothing hidden is needed here. */}
             <div className="warped-text">
-              <h1 className="h1" aria-label={HEADLINE.join(" ")}>
-                {HEADLINE.map((line) => (
+              <h1 className="h1" aria-label={headline.join(" ")}>
+                {headline.map((line) => (
                   <span
                     className="line"
                     key={line}
@@ -205,8 +207,6 @@ export default function Hero() {
             sits in between. The cardboard carries its copy with it, so the
             wrapper wears the attributes rather than the img. */}
         <div className="bottom-part">
-
-          
           <img
             src="./assets/lemon painting 1.webp"
             alt=""
@@ -214,7 +214,7 @@ export default function Hero() {
             // data-parallax="0.14"
             // data-parallax-ease="3.5"
           />
-          
+
           <img
             id="gift"
             src="./assets/gift 1.webp"
@@ -223,7 +223,6 @@ export default function Hero() {
             data-parallax-ease="9"
           />
 
-          
           {/* No parallax here, deliberately: the finale tapes the strip across
               this board, and the strip is fixed to the section — a drifting
               board would slide under its own tape. */}
@@ -232,11 +231,10 @@ export default function Hero() {
                   scroll (Hero/reveal.ts, initCopyReveal) since this sits a
                   viewport below the fold. aria-label carries the readable
                   copy, same as the h1. */}
-            <h2 className="h2" aria-label={CARDBOARD_COPY}>
-              <span aria-hidden="true">{words(CARDBOARD_COPY)}</span>
+            <h2 className="h2" aria-label={cardboard}>
+              <span aria-hidden="true">{words(cardboard)}</span>
             </h2>
             <img id="cardboard" src="./assets/cardboard.webp" alt="" />
-            
           </div>
 
           {/* The tab of tape that holds the note up, and the scroll is what
@@ -324,8 +322,6 @@ export default function Hero() {
           <img id="paperclip" src="./assets/paper-clip-1.webp" alt="" />
           <img src="./assets/tape top.webp" alt="" id="tape-top" />
         </div>
-
-        
       </div>
     </Stage>
   );

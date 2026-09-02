@@ -93,11 +93,13 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     homepage: Homepage;
+    about: About;
     menu: Menu;
     contact: Contact;
   };
   globalsSelect: {
     homepage: HomepageSelect<false> | HomepageSelect<true>;
+    about: AboutSelect<false> | AboutSelect<true>;
     menu: MenuSelect<false> | MenuSelect<true>;
     contact: ContactSelect<false> | ContactSelect<true>;
   };
@@ -698,6 +700,27 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
  */
 export interface Homepage {
   id: number;
+  /**
+   * The small line above the headline, on the two rows the design breaks it on. The brand mark drops into the gap between them, so exactly two.
+   */
+  heroKicker?: string | null;
+  /**
+   * Two centred rows. One line per row — the break is set by the design, not by wrapping.
+   */
+  heroHeadline?: string | null;
+  /**
+   * The two small rows in the corner.
+   */
+  heroCornerMark?: string | null;
+  /**
+   * The running line across the carton. This one WRAPS, so it is one paragraph rather than set rows.
+   */
+  heroCardboard?: string | null;
+  /**
+   * Capitals. The roll sits in the gap after this half.
+   */
+  bandHead?: string | null;
+  bandTail?: string | null;
   slider: {
     /**
      * The line above the stage. Capitals — the page does not transform it, so what is typed is what is drawn.
@@ -783,6 +806,179 @@ export interface Homepage {
       id?: string | null;
     }[];
   };
+  /**
+   * The chip above the block. Capitals.
+   */
+  reasonsSubhead?: string | null;
+  /**
+   * Three rows at the design width. One line per row.
+   */
+  reasonsHeading?: string | null;
+  /**
+   * Three, in the order they are held. Exactly three: each has its own arrangement of photographs drawn against it, and a fourth would have nothing to stand in.
+   */
+  reasonsPanels?:
+    | {
+        /**
+         * The small word in front.
+         */
+        lead: string;
+        /**
+         * The noun, which the design colours and tilts on its own.
+         */
+        word: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Three rows. One line per row.
+   */
+  stickHeading?: string | null;
+  /**
+   * Sentence case — it is a caption, not a heading.
+   */
+  stickSub?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Everything /about says, section by section. The layout is drawn in code; the words and the belt's photographs are here.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "about".
+ */
+export interface About {
+  id: number;
+  /**
+   * The statement, set on an arc. One line per row — the breaks are the drawing, so what is typed is what is drawn.
+   */
+  headline?: string | null;
+  /**
+   * The line under it. Exactly two rows — the roll comes up through the gap between them. One line per row — the breaks are the drawing, so what is typed is what is drawn.
+   */
+  kicker?: string | null;
+  /**
+   * Written by pen as the screen arrives. Sentence case: this one is handwriting, not display type. One line per row — the breaks are the drawing, so what is typed is what is drawn.
+   */
+  note?: string | null;
+  /**
+   * Three rows, top to bottom. The middle one is the one that carries the mark, and where it stops is what leaves the mark alone in the window.
+   */
+  belt?:
+    | {
+        /**
+         * Where the row is parked, in vw of its own left edge. Negative is left. This is also the pose the page rests on with no script.
+         */
+        from: number;
+        /**
+         * Where it has travelled to by the end of the section. The difference is the travel — re-tune both if you add or remove pills.
+         */
+        to: number;
+        /**
+         * Left to right. Drag to reorder; the row is printed three times over so it never runs out of belt.
+         */
+        items?:
+          | {
+              kind: 'photo' | 'claim' | 'note' | 'roll' | 'mark';
+              /**
+               * How long the pill is. The height never changes.
+               */
+              size?: ('sm' | 'med' | 'xl' | 'xxl') | null;
+              /**
+               * Left empty the pill is drawn as a plain shape, which is what the belt does until the photographs land.
+               */
+              image?: (number | null) | Media;
+              /**
+               * Full crops the picture to the stadium. Inset keeps the whole picture and leaves the pill's green showing at the sides.
+               */
+              fit?: ('full' | 'inset') | null;
+              /**
+               * What the photograph shows, for a reader who cannot see it. Leave empty if it says nothing the page does not.
+               */
+              alt?: string | null;
+              /**
+               * The number beside the heading — 01, 02, 03.
+               */
+              index?: string | null;
+              /**
+               * One line per row — the breaks are the drawing. A claim and a note take two; the roll's aside takes three.
+               */
+              lines?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * The chip over the title. Capitals — the page does not transform it.
+   */
+  reasonKicker?: string | null;
+  /**
+   * Exactly two words: the line is set as two boxes. One line per row — the breaks are the drawing, so what is typed is what is drawn.
+   */
+  reasonTop?: string | null;
+  /**
+   * Exactly two words. The mark drops into the gap between them, so neither can carry both. One line per row — the breaks are the drawing, so what is typed is what is drawn.
+   */
+  reasonMiddle?: string | null;
+  /**
+   * One word, and it closes the sentence.
+   */
+  reasonBottom?: string | null;
+  /**
+   * Three rows — they are set inside a blob whose shape they have to fit. One line per row — the breaks are the drawing, so what is typed is what is drawn.
+   */
+  reasonMark?: string | null;
+  /**
+   * One row per line at desktop width. Two markers, both of which are part of the drawing: a pipe (|) is the hole the strip of tape lies in, and a slash (/) is where the phone turns the line. Neither is read out.
+   */
+  statement?: string | null;
+  /**
+   * Bent round the wave and crawled in from the right. One line — the curve is what breaks it.
+   */
+  wantedSentence?: string | null;
+  /**
+   * Four boxes at a fixed pitch. Their horizontal place is their place in this list; only the drop is set by hand.
+   */
+  wantedBoxes?:
+    | {
+        /**
+         * Which of the four palettes this box is printed in. A fixed list and not free text: the colours are four rules in the stylesheet keyed on this, and a name with nothing behind it is a box with no colour.
+         */
+        key: 'clearer' | 'choose' | 'recognisable' | 'human';
+        /**
+         * Printed on the ceiling — 01.
+         */
+        num: string;
+        /**
+         * The drawing inside the box.
+         */
+        mark: 'strip' | 'parcel' | 'roll' | 'person';
+        /**
+         * How far down the screen the box sits, in vh. The scatter is the whole reason the four do not read as a row.
+         */
+        y: number;
+        /**
+         * The words across the floor of the box. One line per row — the breaks are the drawing, so what is typed is what is drawn.
+         */
+        label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Sentence case — it runs into the headline.
+   */
+  ctaKicker?: string | null;
+  /**
+   * Three rows at the design width. One line per row — the breaks are the drawing, so what is typed is what is drawn.
+   */
+  ctaHeadline?: string | null;
+  ctaLabel?: string | null;
+  /**
+   * A path on this site, or a full URL to leave it.
+   */
+  ctaHref?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -903,6 +1099,12 @@ export interface Contact {
  * via the `definition` "homepage_select".
  */
 export interface HomepageSelect<T extends boolean = true> {
+  heroKicker?: T;
+  heroHeadline?: T;
+  heroCornerMark?: T;
+  heroCardboard?: T;
+  bandHead?: T;
+  bandTail?: T;
   slider?:
     | T
     | {
@@ -942,6 +1144,69 @@ export interface HomepageSelect<T extends boolean = true> {
               id?: T;
             };
       };
+  reasonsSubhead?: T;
+  reasonsHeading?: T;
+  reasonsPanels?:
+    | T
+    | {
+        lead?: T;
+        word?: T;
+        id?: T;
+      };
+  stickHeading?: T;
+  stickSub?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "about_select".
+ */
+export interface AboutSelect<T extends boolean = true> {
+  headline?: T;
+  kicker?: T;
+  note?: T;
+  belt?:
+    | T
+    | {
+        from?: T;
+        to?: T;
+        items?:
+          | T
+          | {
+              kind?: T;
+              size?: T;
+              image?: T;
+              fit?: T;
+              alt?: T;
+              index?: T;
+              lines?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  reasonKicker?: T;
+  reasonTop?: T;
+  reasonMiddle?: T;
+  reasonBottom?: T;
+  reasonMark?: T;
+  statement?: T;
+  wantedSentence?: T;
+  wantedBoxes?:
+    | T
+    | {
+        key?: T;
+        num?: T;
+        mark?: T;
+        y?: T;
+        label?: T;
+        id?: T;
+      };
+  ctaKicker?: T;
+  ctaHeadline?: T;
+  ctaLabel?: T;
+  ctaHref?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

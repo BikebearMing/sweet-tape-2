@@ -9,6 +9,7 @@ import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
 import { Tapes } from "./collections/Tapes";
 import { News } from "./collections/News";
+import { About } from "./globals/About";
 import { Contact } from "./globals/Contact";
 import { Homepage } from "./globals/Homepage";
 import { Menu } from "./globals/Menu";
@@ -50,7 +51,7 @@ export default buildConfig({
          from. Both get a pane for the reason news does and tapes still does
          not: each is one document with one page of its own, so "the page this
          document is" is a question with an answer. */
-      globals: ["contact", "homepage"],
+      globals: ["contact", "homepage", "about"],
 
       /* SERVER_URL, not NEXT_PUBLIC_SERVER_URL. This runs on the server when
          the admin builds the preview pane's iframe src, so it is read at
@@ -70,7 +71,9 @@ export default buildConfig({
             ? `/news/${data?.slug ?? ""}`
             : globalConfig?.slug === "homepage"
               ? "/"
-              : "/contact"
+              : globalConfig?.slug === "about"
+                ? "/about"
+                : "/contact"
         }`,
 
       /* The sizes the design is actually drawn to. The editor gets a dropdown
@@ -85,7 +88,7 @@ export default buildConfig({
 
   collections: [Users, Media, Tapes, News],
 
-  globals: [Homepage, Menu, Contact],
+  globals: [Homepage, About, Menu, Contact],
 
   editor: lexicalEditor(),
 

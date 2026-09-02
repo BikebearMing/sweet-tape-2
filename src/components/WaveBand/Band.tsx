@@ -12,7 +12,15 @@ import { initBand } from "./marquee";
  * aria-hidden: the band is decoration — the same sentence eight times, bent
  * for effect. A screen reader gains nothing from any of it.
  */
-export default function Band({ children }: { children: ReactNode }) {
+export default function Band({
+  children,
+  head,
+  tail,
+}: {
+  children: ReactNode;
+  head: string;
+  tail: string;
+}) {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -22,7 +30,17 @@ export default function Band({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <section ref={ref} className="wave-band" aria-hidden="true">
+    /* THE COPY IS HANDED OVER AS DATA rather than imported by the engine: the
+       sentence is fetched on the server and initBand runs in the browser, so
+       the element both of them already share is the way across. See unit() in
+       ./marquee.ts, which is what reads it. */
+    <section
+      ref={ref}
+      className="wave-band"
+      aria-hidden="true"
+      data-head={head}
+      data-tail={tail}
+    >
       {children}
     </section>
   );

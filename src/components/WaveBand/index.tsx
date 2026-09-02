@@ -1,5 +1,7 @@
+import { getHomepage } from "@/data/homepage";
+
 import Band from "./Band";
-import { UNIT, REPEATS, BADGE_SIZE, BADGE_SRC } from "./marquee";
+import { unit, REPEATS, BADGE_SIZE, BADGE_SRC } from "./marquee";
 
 /* The wavy hand-off between the hero and the slider.
  *
@@ -44,9 +46,12 @@ const WAVE = [
   "Q 7600,200 8000,330",
 ].join(" ");
 
-export default function WaveBand() {
+export default async function WaveBand() {
+  const { band } = await getHomepage();
+  const repeat = unit(band.head, band.tail).text;
+
   return (
-    <Band>
+    <Band head={band.head} tail={band.tail}>
       {/* The viewBox is sized to the ROTATED tape and nothing else: y 60..600
           just contains the stroke at full tilt (the 7deg lean carries the
           peaks up and the valleys down by ~112 units at the frame's edges),
@@ -79,7 +84,11 @@ export default function WaveBand() {
             width="1600"
             height="897"
           >
-            <image href="/assets/paper-overlay.webp" width="1600" height="897" />
+            <image
+              href="/assets/paper-overlay.webp"
+              width="1600"
+              height="897"
+            />
           </pattern>
         </defs>
         <use href="#wave-band-path" className="band-tape" />
@@ -90,7 +99,7 @@ export default function WaveBand() {
             cosmetic and approximate on purpose. */}
         <text className="band-text" dy="0.35em">
           <textPath href="#wave-band-path" startOffset="3295">
-            {UNIT.repeat(REPEATS)}
+            {repeat.repeat(REPEATS)}
           </textPath>
         </text>
         {/* The roll in the sentence — one per repeat, standing in the hole the

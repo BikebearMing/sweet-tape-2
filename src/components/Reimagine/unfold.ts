@@ -85,6 +85,42 @@ export const REIMAGINE = {
    * trigger says the same. */
   START: "top top",
 
+  /* HOW SLOWLY THE READER HAS TO BE MOVING BEFORE THE PAPER IS ALLOWED TO OPEN,
+   * IN SCREENS PER SECOND. THIS IS THE FIX FOR A REAL BUG AND IT IS WORTH THE
+   * WHOLE OF THIS NOTE.
+   *
+   * THE PIN CATCHES THE SCREEN. IT DOES NOT CATCH THE READER. `top top` fires
+   * the moment the stage's top edge reaches the window's top edge, and the
+   * timeline keeps its own clock from there — so what the flipbook is racing is
+   * not the scroll, it is the wall. The pin is two screens long and the unfold
+   * is two seconds: throw the wheel and you cross 1800px in under two tenths of
+   * a second, and Lenis then GLIDES for the better part of two more (duration
+   * 1.8). Land inside the pin at the end of that glide and the sheet you arrive
+   * on has already opened, with the writing still queued behind it.
+   *
+   * That is exactly the report: the paper does not start from crumpled, it is
+   * already at the last frame, and everything after it comes up late. Nothing
+   * was broken — the section had simply happened while the reader was still
+   * travelling towards it.
+   *
+   * SO THE PIN IS THE PLACE AND THIS IS THE MOMENT. The cue is not "the stage
+   * has taken the screen" any more; it is "the stage has taken the screen AND
+   * the reader has stopped moving fast enough to see it". Below this speed the
+   * timeline plays exactly as it always did, which is every ordinary scroll: 3
+   * screens a second is 2700px/s at a 900 window, and a reader who is reading
+   * is nowhere near it.
+   *
+   * ABOVE IT NOTHING HAPPENS AT ALL, and that is the right nothing. A reader
+   * going past at wheel-throw speed sees a ball of paper, which is the honest
+   * frame — and the section is still armed, so coming back to it plays the
+   * unfold from the beginning rather than showing them the end of something
+   * they never saw start.
+   *
+   * IN SCREENS AND NOT IN PIXELS, so the figure means the same thing on a
+   * laptop and on a tall monitor: what it is really bounding is how much of the
+   * pin goes past per second, and the pin is measured in screens too. */
+  SETTLE: 3,
+
   /* HOW LONG THE WHOLE UNFOLD TAKES, IN SECONDS. THIS IS THE KNOB.
    *
    * Not seconds-per-frame, which is what it was: the sequence is however many
@@ -444,7 +480,11 @@ function roll(
   gsap.set(el, { autoAlpha: 0 });
   tl.set(el, { autoAlpha: 1 }, at);
 
-  tl.to(fold, { v: 0, duration: spec.DURATION, ease: spec.EASE, onUpdate: write }, at);
+  tl.to(
+    fold,
+    { v: 0, duration: spec.DURATION, ease: spec.EASE, onUpdate: write },
+    at,
+  );
 }
 
 export function initReimagine(root: HTMLElement): () => void {
@@ -594,7 +634,9 @@ export function initReimagine(root: HTMLElement): () => void {
    * inner box has no transform of its own and nothing to preserve. It is the
    * same split .reimagine-prop makes between `transform` and .peel's `rotate`,
    * one level down. */
-  const props = Array.from(root.querySelectorAll<HTMLElement>(".reimagine-prop"));
+  const props = Array.from(
+    root.querySelectorAll<HTMLElement>(".reimagine-prop"),
+  );
   const propsAt = unfold + REIMAGINE.PROPS.AT;
 
   props.forEach((prop, i) => {
@@ -617,7 +659,12 @@ export function initReimagine(root: HTMLElement): () => void {
        has asked for less motion both get the props simply THERE — so something
        has to take them away again the moment there is a script to bring them
        back. */
-    tl.fromTo(pop, { autoAlpha: 0 }, { autoAlpha: 1, duration: FADE, ease: "none" }, at);
+    tl.fromTo(
+      pop,
+      { autoAlpha: 0 },
+      { autoAlpha: 1, duration: FADE, ease: "none" },
+      at,
+    );
 
     tl.fromTo(
       pop,
@@ -648,7 +695,60 @@ export function initReimagine(root: HTMLElement): () => void {
      behaviour rather than to no section at all. */
   const stage = root.querySelector<HTMLElement>(".reimagine-stage") ?? root;
 
-  const st = ScrollTrigger.create({
+  /* PLAY, BUT ONLY ONCE AND ONLY WHEN IT CAN BE SEEN.
+   *
+   * `armed` is what makes this once: the timeline is a thing that HAPPENS, so
+   * the first cue that gets through spends it and every later one is a no-op.
+   * That is the same guarantee `once: true` used to give the trigger — which it
+   * cannot be given, because killing a pinning trigger reverts the pin (see
+   * below) — moved onto the flag it actually belongs on.
+   *
+   * `st.isActive` is what makes it VISIBLE: a page coming to rest anywhere else
+   * is a page with this section nowhere near the window.
+   *
+   * AND THE SPEED IS MEASURED HERE RATHER THAN ASKED FOR, which is the one thing
+   * in this block that looks like reinvention and is not. ScrollTrigger's own
+   * getVelocity() is smoothed over its update cadence, and the case this guard
+   * exists for is precisely the case that defeats that smoothing: a page still
+   * loading drops long frames, and a frame that carries three thousand pixels of
+   * scroll came back from it as 1482px/s — a fifth of the threshold, on a reader
+   * moving two orders of magnitude faster than that. Two positions and the clock
+   * between them cannot be wrong about a jump, because the jump IS the two
+   * numbers.
+   *
+   * A cue with no trigger on it is scrollEnd — the page has stopped, which is
+   * the answer this is trying to arrive at, so there is nothing to measure. */
+  const settle = () => REIMAGINE.SETTLE * screenH();
+  let armed = true;
+  let atY = -1;
+  let atT = 0;
+
+  const cue = (self?: ScrollTrigger) => {
+    if (!armed || !st?.isActive) return;
+
+    if (self) {
+      const y = self.scroll();
+      const t = performance.now();
+      /* The first sample has nothing to be a delta from — record it and wait
+         one frame, which is the frame the glide is decelerating over anyway. */
+      const moved =
+        atY < 0 ? Infinity : (Math.abs(y - atY) * 1000) / Math.max(t - atT, 1);
+      atY = y;
+      atT = t;
+      if (moved > settle()) return;
+    }
+
+    armed = false;
+    tl.play();
+  };
+
+  /* `let` and not `const`, because `cue` above closes over it and is handed to
+     the very trigger that defines it. Nothing calls cue before the assignment
+     lands — ScrollTrigger fires no callback from inside create() — and the
+     optional chain up there is the belt to that brace. */
+  let st: ScrollTrigger | undefined;
+
+  st = ScrollTrigger.create({
     /* THE PINNED BOX IS THE TRIGGER, which is the same call .wanted-stage makes
        and for the same reason: `start` is a statement about where THIS element
        takes the screen, and the pin is what holds it there once it has. */
@@ -711,6 +811,12 @@ export function initReimagine(root: HTMLElement): () => void {
      * the timeline is not tied to the scroll at all — the pin buys it time and
      * the timeline keeps its own clock (see the head of this file).
      *
+     * AND IT WAITS FOR THE READER TO SETTLE — see `cue` below and REIMAGINE
+     * .SETTLE, which is the whole argument. onEnter is where the section becomes
+     * eligible; onUpdate is what notices the reader has slowed down enough to
+     * watch it, and it fires on every frame the scroll moves while the trigger
+     * is active, which is exactly the window a glide decelerates over.
+     *
      * NO `once: true`, AND THAT IS NOT AN OVERSIGHT — IT IS THE OPPOSITE OF ONE.
      * It was there when this trigger's only job was to fire the timeline, and
      * `once` kills the ScrollTrigger the moment it has fired. Killing a pinning
@@ -724,8 +830,26 @@ export function initReimagine(root: HTMLElement): () => void {
      * scrolls back above the start and comes down again re-enters the pin and
      * finds the sheet exactly as they left it. Nothing here reverses, which is
      * what a sheet of paper that has been opened does. */
-    onEnter: () => tl.play(),
+    onEnter: cue,
+
+    /* AND EVERY FRAME OF THE GLIDE AFTER IT. onEnter can land while the wheel is
+       still being paid out; this is what catches the moment it is not. Only
+       while the trigger is active, which is what makes `armed` enough of a guard
+       — nothing here has to ask whether the reader is looking at the section. */
+    onUpdate: cue,
+
+    /* AND COMING BACK UP INTO IT, for the reader who threw the wheel past the
+       whole section and scrolled back to find out what they missed. Still armed,
+       because nothing played. */
+    onEnterBack: cue,
   });
+
+  /* THE ONE CASE THE THREE ABOVE CANNOT SEE: the reader crosses the start and
+     stops dead on the same frame. No further scroll means no further onUpdate,
+     and the section would sit on a ball of paper waiting for a movement that is
+     not coming. scrollEnd fires once when the page comes to rest, whatever the
+     last frame's velocity happened to be. */
+  ScrollTrigger.addEventListener("scrollEnd", cue);
 
   if (process.env.NODE_ENV !== "production") {
     /* Console handle for tuning, the same convention as window.hero,
@@ -737,6 +861,7 @@ export function initReimagine(root: HTMLElement): () => void {
   }
 
   return () => {
+    ScrollTrigger.removeEventListener("scrollEnd", cue);
     st.kill();
     tl.kill();
     /* A teardown mid-unfold must leave a section that reads: the sheet open and

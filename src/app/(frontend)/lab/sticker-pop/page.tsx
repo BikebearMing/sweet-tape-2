@@ -80,9 +80,14 @@ type Pose = {
  * are STICKER in Preloader/sticker.ts, copied across, so this page opens on the
  * live gesture and a change made here is a change to something real.
  *
- * KEEP THEM IN STEP BY HAND, which is the one chore this lab costs. They were
- * allowed to drift apart once and the lab quietly stopped being evidence: it
- * showed a different animation from the site while looking like the same one.
+ * KEEP THEM IN STEP BY HAND, which is the one chore this lab costs, and it has
+ * been paid twice now. Both times the lab quietly stopped being evidence — it
+ * went on showing a different animation from the site while looking like the
+ * same one, which is worse than having no lab at all. The second drift was the
+ * whole flex: the cover was re-tuned from a deep fold near the back of the mark
+ * to a shallow one near the front with the arc carrying the turn, and the sheen
+ * was moved onto the pop's own beat, and none of it was carried over. If a
+ * figure below is changed, change STICKER, and the other way round.
  *
  * THREE OF THEM ARE PX HERE AND FRACTIONS THERE, because the real mark is 15vw
  * (46vw on a phone) and a gesture written in px would be a different gesture on
@@ -112,42 +117,65 @@ const DEFAULTS = {
   popRise: 16, // px it travels up as it stands = markW x 0.064
   popBack: 2.8, // back.out overshoot
 
-  /* the flex */
-  bend0: 0.9, // radians of arc at the moment it lands
+  /* THE FLEX, AND THE CREASE AND THE ARC SHARE THE WORK. Worth reading off the
+     numbers rather than guessing at: the fold alone is 1.0 rad — about 57deg,
+     well short of facing away — and sits near the FRONT of the mark at 0.31.
+     What carries the far side past a quarter turn is the arc on top of it, and
+     1.85 rad puts u = 1 at about 110deg while the crease keeps the near side
+     from simply rolling with it. So the underside shows along the trailing edge
+     rather than as a folded-over corner.
 
-  /* THE FOLD — a corner turned back on itself, which is the only shape that
-     shows the mark's UNDERSIDE. An arc, however deep, does not: past about a
-     quarter turn it is a tight roll, and a roll hides its own back behind its
-     own front. What shows a back is a CREASE with a flap lying over it. */
-  fold0: 2.6, // radians past the crease. Pi is the flap folded flat on itself
-  foldAt: 0.72, // where the crease sits, 0 at the left edge of the mark
-  crease: 0.12, // half-width of the crease. Small is a sharp fold
+     THE SET THIS REPLACED did the opposite — 2.6 rad of fold at 0.72 with 0.9 of
+     arc — and gave a hard flap over the end of TAPE. Both show a back; they are
+     different gestures, and the one below is the one that was chosen. It is kept
+     here because it is the obvious other place to look from.
 
-  /* The wobble after it lands. Kept under one cycle across the mark on
-     purpose — a travelling wave at more than that IS a flag. */
-  wave0: 0.45, // radians of travelling flex
-  waveFreq: 0.9,
+     A FOLD AND NOT A DEEPER ARC, because an arc is the only shape that CANNOT
+     show the mark's underside: past about a quarter turn it is a tight roll, and
+     a roll hides its own back behind its own front. */
+  bend0: 1.85, // radians of arc at the moment it lands
+  fold0: 1.0, // radians past the crease. Pi is the flap folded flat on itself
+  foldAt: 0.31, // where the crease sits, 0 at the left edge of the mark
+  crease: 0.09, // half-width of the crease. Small is a sharp fold
+
+  /* The wobble after it lands. Just under one cycle of travel across the mark:
+     a travelling wave at better than that IS a flag, whatever else is done to
+     it, and under it the sheet reads as flexing rather than as cloth. */
+  wave0: 0.35, // radians of travelling flex
+  waveFreq: 1.95,
   waveSpin: 0.3, // turns per second the wave travels
 
-  flexAt: 0.5, // when the unroll starts, x popDur
-  unroll: 0.7, // seconds the curled edge takes to lay down
-  settle: 1.3, // seconds the wobble after it takes to die
-  elastic: 0.38, // elastic.out damping on the wobble — lower is rubberier
+  /* LATE, AND THE ONE FIGURE HERE THAT LOOKS WRONG UNTIL IT IS READ. At 0.5 the
+     mark begins flattening itself while still at 62% and tipped 78deg away — so
+     the one moment the underside exists is the one moment nothing can be seen of
+     it. 0.26 overlaps the BACK half of the pop instead: the mark is most of the
+     way up and still bent, and it finishes arriving and finishes flattening
+     within a couple of frames of each other. */
+  flexAt: 0.26, // when the unroll starts, x popDur
+  unroll: 0.74, // seconds the curled edge takes to lay down
+  settle: 1.35, // seconds the wobble after it takes to die
+  elastic: 0.36, // elastic.out damping on the wobble — lower is rubberier
 
-  /* the light */
-  sheenAt: 0.5, // with the fold, not with the pop — a highlight wants a shape
-  sheenDur: 0.84,
+  /* THE LIGHT, ON THE POP'S OWN BEAT. It was 0.5 — with the fold rather than
+     with the pop, on the reasoning that a highlight wants a shape to run across.
+     It does, and it gets one: at 0 the band is still crossing while the fold is
+     laying down, because it is now longer than the pop rather than shorter. What
+     0.5 actually bought was a beat of nothing between the mark arriving and the
+     light finding it. */
+  sheenAt: 0,
+  sheenDur: 1.06,
   sheenBand: 30, // half-width of the highlight, % of the mark
   sheenPower: 0.16,
   sheenTilt: 118, // deg — the band's lean
   sheenScreen: 1, // blend it rather than paint it
 
   /* the light on the surface */
-  shade: 0.48,
+  shade: 0.6,
 
-  /* the underside */
+  /* the underside. Full shade: the back of a sticker is the sheet's own colour
+     with no light on it, and anything less reads as a translucent card. */
   back: 1, // draw it at all — off is the old two-faced flag
-  backShade: 0.3,
+  backShade: 1,
 
   /* the fall */
   hold: 2.08, // what the cover's "wait for the line" works out to

@@ -101,27 +101,100 @@ function stripBox(s: ReturnType<typeof stripOf>, vw: number): string {
   return `${w.toFixed(3)}vw ${((w * s.h) / s.w).toFixed(3)}vw`;
 }
 
-/* WHERE THE STRIP GOES, WRITTEN IN THE COPY.
+/** A design's px at the 1440 stencil, in vw — the one conversion this file
+ *  makes, and the reason a width typed on a token scales with the page instead
+ *  of holding 100px on a phone. Undefined falls back to the measured default. */
+function vwOf(px: number | undefined): number {
+  return px === undefined ? TAPE_VW : px / 14.4;
+}
+
+/** WHAT THE SLOT IS TOLD: an angle and a thickness, and neither is emitted when
+ *  the token did not ask for it — an absent custom property lets the fallback in
+ *  the stylesheet stand, exactly as an unset section colour does.
+ *
+ *  THE THICKNESS IS A SCALE AND NOT A HEIGHT, which is the one thing here that
+ *  is not the obvious spelling. The strip's element IS the peel's box: the fold
+ *  is clipped against it, so a height written onto it would move the crease
+ *  rather than stretch the tape. Scaled on the slot instead, the peel is drawn
+ *  at its own proportions and the finished picture is squashed or pulled after
+ *  the fact — which is what a piece of tape pressed down harder looks like.
+ *
+ *  Measured against what the artwork WOULD draw at this length, so the number an
+ *  editor types is the number of pixels they get: `art` is the visible aspect
+ *  with the file's transparent margin taken off both sides, and without it the
+ *  cloth strip — barely two thirds of its box — would come out a third short.
+ *  See the field on Roll in components/TapeSlider/strips.ts. */
+function tapeVars(
+  s: ReturnType<typeof stripOf>,
+  o: TapeOpts,
+): CSSProperties | undefined {
+  const vars: Record<string, string> = {};
+  /* AND THE LENGTH IS TOLD TO THE SLOT AS WELL AS TO THE STRIP, which looks like
+     saying it twice and is not. The strip's box is what the FOLD is measured
+     against; the slot's width is what the LINE makes room for, so the words
+     either side fall where a strip of this length puts them. Same figure, two
+     jobs, and leaving the slot out would run a long strip over the copy beside
+     it. */
+  if (o.width !== undefined) vars["--info-tape-w"] = `${vwOf(o.width).toFixed(3)}vw`;
+  if (o.rotate !== undefined) vars["--tape-turn"] = `${o.rotate}deg`;
+  if (o.height !== undefined) {
+    const natural = (vwOf(o.width) * 14.4) / s.art;
+    vars["--tape-squash"] = (o.height / natural).toFixed(4);
+  }
+  return Object.keys(vars).length ? (vars as CSSProperties) : undefined;
+}
+
+/* WHERE THE STRIP GOES AND HOW IT IS LAID DOWN, BOTH WRITTEN IN THE COPY.
+ *
+ *     {{tape}}
+ *     {{tape rotate=-8}}
+ *     {{tape rotate=30 width=100 height=40}}
  *
  * The paragraph used to be stored as two strings and the strip went at the join,
- * which meant there was exactly one place it could ever be. This is a token in
- * the sentence instead — it can sit between any two words, at the end, or twice
- * — and `origin` in src/data/tape-types.ts argues why that is MORE explicit than
- * a pair of halves rather than less.
+ * which meant there was exactly one place it could ever be and one way for it to
+ * look. This is a token in the sentence instead — it can sit between any two
+ * words, at the end, or twice — and `origin` in src/data/tape-types.ts argues
+ * why that is MORE explicit than a pair of halves rather than less.
+ *
+ * THE SETTINGS ARE ON THE TOKEN AND NOT IN A FIELD, and that is the same
+ * argument one step further. A strip's angle is a fact about the sentence it is
+ * stuck across: it is set to miss a descender, or to sit against the way a line
+ * happens to break, and the moment there are two strips in a paragraph a field
+ * cannot say which one it means. On the token, each strip carries its own.
+ *
+ * THREE OF THEM, ALL OPTIONAL, ALL PLAIN NUMBERS:
+ *
+ *   rotate — degrees, signed. Clockwise, like every other angle on this site.
+ *   width  — how long the strip reads, in px at the 1440 design width. The unit
+ *            the design gives; it is converted to vw so it scales with the page.
+ *   height — how thick it reads, same units. Left out, it is whatever the
+ *            artwork's own proportions make it.
+ *
+ * NOT A TEMPLATE LANGUAGE. There is no expression, no second token and no way to
+ * name a file: WHICH tape is a fact about the product and lives in STORY_ROLL,
+ * in code, with the rest of the artwork. An unknown key is ignored rather than
+ * refused — a typo should cost a setting, not a paragraph.
  *
  * Double braces because nothing else on this site writes them and no copy ever
- * will by accident. It is not a template language and there is no second token:
- * WHICH tape is a fact about the product and lives in STORY_ROLL, in code, where
- * the rest of the artwork does. */
-const TAPE_TOKEN = "{{tape}}";
+ * will by accident. */
+const TAPE_TOKEN = /\{\{tape\b([^}]*)\}\}/g;
+
+/** What one token asked for. Everything undefined means "leave it alone". */
+type TapeOpts = { rotate?: number; width?: number; height?: number };
 
 /* THE PARAGRAPH, CUT AT EVERY TOKEN — n+1 runs of words with n strips between
- * them, and any of them may be empty.
+ * them, and any run may be empty.
  *
  * EMPTY IS THE INTERESTING CASE and there are three of them: the copy opens with
  * the token, ends with it, or carries two in a row. All three are legal, all
- * three come out as an empty string in this list, and the markup renders nothing
- * for one — which is what stops a stray space opening up on the line.
+ * three come out as an empty string, and the markup renders nothing for one —
+ * which is what stops a stray space opening up on the line.
+ *
+ * split() WITH A CAPTURING GROUP is what makes this one pass: the capture is
+ * interleaved into the result, so the array runs text, options, text, options,
+ * text. Even indices are copy and odd ones are whatever was written inside the
+ * braces — which is exactly the shape the markup wants, a strip before every
+ * piece but the first.
  *
  * Whitespace is collapsed, and the line breaks are why. The field is a textarea
  * and the old format's break was the marker, so the copy in the database has one
@@ -129,8 +202,33 @@ const TAPE_TOKEN = "{{tape}}";
  * measure. Collapsing here means a break an editor leaves in — for their own
  * comfort, reading a long sentence in a small box — is whitespace and nothing
  * more. */
-function storyPieces(copy: string): string[] {
-  return copy.split(TAPE_TOKEN).map((p) => p.replace(/\s+/g, " ").trim());
+function storyRuns(copy: string): { text: string; opts: TapeOpts }[] {
+  const cut = copy.split(TAPE_TOKEN);
+  return cut.map((piece, i) => ({
+    text: i % 2 === 0 ? piece.replace(/\s+/g, " ").trim() : "",
+    /* The options belong to the strip BEFORE a run, so run i reads the capture
+       at i-1. The first run has no strip before it and gets nothing. */
+    opts: i % 2 === 0 ? tapeOpts(cut[i - 1]) : {},
+  })).filter((_, i) => i % 2 === 0);
+}
+
+/** key=number pairs out of one token's braces, and nothing else is looked for.
+ *
+ *  A number and not an arbitrary value on purpose: all three settings are
+ *  measurements, and the two that are lengths go straight into a calc(). Letting
+ *  a unit through would mean deciding what "width=10vw" does to a peel whose box
+ *  is measured in the artwork's own pixels, which is a question the design does
+ *  not ask. */
+function tapeOpts(raw: string | undefined): TapeOpts {
+  const out: TapeOpts = {};
+  for (const [, k, v] of (raw ?? "").matchAll(/([a-z]+)\s*=\s*(-?[\d.]+)/gi)) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) continue;
+    if (k === "rotate") out.rotate = n;
+    else if (k === "width" && n > 0) out.width = n;
+    else if (k === "height" && n > 0) out.height = n;
+  }
+  return out;
 }
 
 /* THE STORY'S LAST WORD, SPLIT OFF THE REST OF IT — everything up to the final
@@ -163,13 +261,13 @@ export default function ProductInfo({ tape }: { tape: Tape }) {
      is decided and where the default — the tape's own — comes from. */
   const story = storyStripOf(tape.id);
 
-  const pieces = storyPieces(tape.origin);
+  const runs = storyRuns(tape.origin);
   /* WHICH RUN OF WORDS THE PARAGRAPH ACTUALLY ENDS ON, which is not simply the
-     last one: a copy that closes on the token ends with an empty piece, and the
-     rule has to be drawn under the word before it. Empty pieces are skipped. */
-  const lastRun = pieces.reduce((at, p, i) => (p ? i : at), -1);
+     last one: a copy that closes on the token ends with an empty run, and the
+     rule has to be drawn under the word before it. Empty runs are skipped. */
+  const lastRun = runs.reduce((at, r, i) => (r.text ? i : at), -1);
   const [runHead, runTail] =
-    lastRun < 0 ? ["", ""] : splitLastWord(pieces[lastRun]);
+    lastRun < 0 ? ["", ""] : splitLastWord(runs[lastRun].text);
 
   return (
     <Stage
@@ -323,9 +421,12 @@ export default function ProductInfo({ tape }: { tape: Tape }) {
               is a place, not a word. */}
           <h3
             className="h3 info-story"
-            aria-label={pieces.filter(Boolean).join(" ")}
+            aria-label={runs
+              .map((r) => r.text)
+              .filter(Boolean)
+              .join(" ")}
           >
-            {pieces.map((piece, i) => (
+            {runs.map(({ text: piece, opts }, i) => (
               <Fragment key={i}>
                 {/* A SLOT BEFORE EVERY PIECE BUT THE FIRST, which is the whole
                     of the interleave: n tokens cut the copy into n+1 runs, so
@@ -347,14 +448,32 @@ export default function ProductInfo({ tape }: { tape: Tape }) {
                     renders a span of images and has nothing to announce. */}
                 {i > 0 ? (
                   <>
-                    <span className="info-tape-slot" aria-hidden="true">
+                    {/* THE TOKEN'S OWN SETTINGS RIDE ON THE SLOT, not on the
+                        strip, and that is not tidiness — .peel spends `rotate`
+                        on --peel-dir, which is how the fold is aimed across the
+                        strip rather than along it. A second angle written there
+                        would be fighting the mechanism that makes this a peel.
+                        The slot is a plain box the section owns, it is already
+                        centred on the strip, and a transform on it turns the
+                        finished picture without the peel knowing anything
+                        happened. See .info-tape-slot in global.css, which is
+                        where the two custom properties are read.
+
+                        The LENGTH is different and does go to the strip: it is
+                        the box the fold is measured against, so it has to be
+                        the real thing rather than a scale laid over it. */}
+                    <span
+                      className="info-tape-slot"
+                      aria-hidden="true"
+                      style={tapeVars(story, opts)}
+                    >
                       <Peel
                         className="reverse-peel-tape info-story-tape"
                         src={story.src}
                         back={story.back}
                         drive="manual"
                         direction="90deg"
-                        box={stripBox(story, TAPE_VW)}
+                        box={stripBox(story, vwOf(opts.width))}
                         from={LIFT}
                         to={0}
                         aria-hidden="true"

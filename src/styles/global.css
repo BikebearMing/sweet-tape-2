@@ -7305,6 +7305,28 @@ html[data-loading] {
   height: 0.42em;
   vertical-align: baseline;
   pointer-events: none;
+
+  /* HOW THE STRIP IS LAID DOWN, and both of these come off the {{tape}} in the
+   * copy — see tapeOpts in components/ProductInfo. Unset, they resolve to their
+   * fallbacks here and this is the identity transform it always was.
+   *
+   * ON THE SLOT AND NOT ON THE STRIP, which is the whole reason this rule exists
+   * rather than one on .info-story-tape. That element is a .peel, and .peel
+   * spends `rotate` on --peel-dir: the quarter turn that swings the fold ACROSS
+   * the strip instead of creasing it lengthwise. An angle written there is an
+   * argument with the mechanism. The slot is the section's own box, it is
+   * already centred on the strip, and turning it turns the finished picture.
+   *
+   * THE ORDER IS SQUASH THEN TURN, which is what the right-to-left reading of a
+   * transform list gives: the tape is pressed thinner along its own axis and the
+   * whole thing is then rotated. Written the other way the squash would be
+   * vertical on the PAGE rather than on the strip, and a rotated strip would
+   * come out sheared rather than thinner.
+   *
+   * It has no layout effect and it is not meant to: the width above is what the
+   * line makes room for, and a turned strip overflows this box exactly as an
+   * untuned one already does. */
+  transform: rotate(var(--tape-turn, 0deg)) scaleY(var(--tape-squash, 1));
 }
 
 /* Centred in its slot and lifted a shade off the baseline, so it sits ON the

@@ -43,6 +43,20 @@ type Roll = {
    * their files do.
    */
   ink: number;
+  /**
+   * The ARTWORK's own aspect — its visible width over its visible height, with
+   * the transparent margin taken off both. `ink` above corrects the width and
+   * this is the other half of the same measurement.
+   *
+   * It exists for one job: the origin story's {{tape height=…}} option, which
+   * asks for a strip a given number of pixels thick. Without this the only
+   * height in the code is the FILE's, and on the cloth roll — 0.697 of its box
+   * is artwork — a strip asked to be 40 tall would draw 28. Measured off the
+   * alpha channel like `ink`, in a browser rather than in sharp: two of these
+   * files are SVGs wrapping a raster in a <pattern>, which librsvg renders as
+   * nothing at all.
+   */
+  art: number;
   back: "peel-back-masking" | "peel-back-tissue" | "peel-back-clear" | "peel-back-black";
   /**
    * How the strip meets the photograph underneath it. "normal" for a tape you
@@ -59,22 +73,31 @@ type Roll = {
 };
 
 const ROLLS = {
+  /* The masking strip, re-drawn. It was /assets/tape-on-lemon.webp — the same
+     object in a heavier, more golden rendering — and this one is the torn-edged
+     cream the product page is designed around. One file per roll, so the swap is
+     one line and it lands everywhere masking is taped down: the origin story,
+     the photograph beside it, and the showcase shots on the home page's stage.
+     That is the point of the table. */
   masking: {
-    src: "/assets/tape-on-lemon.webp",
-    box: [283, 134],
-    ink: 0.968,
+    src: "/assets/masking-tape-product-inner.webp",
+    box: [184, 68],
+    ink: 0.924,
+    art: 3.091,
     back: "peel-back-masking",
   },
   tissue: {
     src: "/assets/double-side.svg",
     box: [120, 43],
     ink: 0.925,
+    art: 3.707,
     back: "peel-back-tissue",
   },
   clear: {
     src: "/assets/stationery-silent-opp-tape.svg",
     box: [141, 92],
     ink: 0.858,
+    art: 4.267,
     back: "peel-back-clear",
     blend: "screen",
   },
@@ -82,6 +105,7 @@ const ROLLS = {
     src: "/assets/black-tape.webp",
     box: [213, 106],
     ink: 0.916,
+    art: 2.654,
     back: "peel-back-black",
   },
   /* THE BROWN PACKING TAPE — the OPP rolls' own strip, and the reason they are
@@ -103,6 +127,7 @@ const ROLLS = {
     src: "/assets/tape top.webp",
     box: [428, 173],
     ink: 0.972,
+    art: 2.94,
     back: "peel-back-masking",
   },
 } as const satisfies Record<string, Roll>;
@@ -178,6 +203,10 @@ export type Strip = {
    * module already knows. See --strip-ink in global.css.
    */
   ink: number;
+  /** The roll's own `art` — the visible artwork's aspect. The origin story's
+   *  {{tape height=…}} option is the only thing that reads it; see the field on
+   *  Roll above, which is where it is argued. */
+  art: number;
 };
 
 function strip(name: RollName): Strip {
@@ -193,6 +222,7 @@ function strip(name: RollName): Strip {
     h: (w * bh) / bw,
     blend: roll.blend ?? "normal",
     ink: roll.ink,
+    art: roll.art,
   };
 }
 

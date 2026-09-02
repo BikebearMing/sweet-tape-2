@@ -52,7 +52,7 @@ const validateAtLeast =
  * NOT "exactly one". Two is legal and the section draws two; a paragraph that
  * ever wants a second strip should not have to be argued with. */
 const hasTapeToken: TextareaFieldValidation = (value) =>
-  (value ?? "").includes("{{tape}}")
+  /\{\{tape\b[^}]*\}\}/.test(value ?? "")
     ? true
     : "Type {{tape}} where the strip of tape should sit in the paragraph.";
 
@@ -233,7 +233,7 @@ export const Tapes: CollectionConfig = {
               admin: {
                 rows: 5,
                 description:
-                  "Where this tape comes from — one paragraph. Type {{tape}} where the strip of tape should be stuck across it: it can go between any two words, or at the very end. WHICH tape it is, is set in the code and is normally this product's own. Line breaks are just for reading; the paragraph flows to its own width on the page.",
+                  "Where this tape comes from — one paragraph. Type {{tape}} where the strip of tape should be stuck across it: it can go between any two words, or at the very end. Add settings inside the braces to lay it down differently — {{tape rotate=-8}} turns it, {{tape rotate=30 width=100 height=40}} turns and resizes it. rotate is in degrees, clockwise; width and height are in pixels at desktop size and both are optional. WHICH tape it is, is set in the code and is normally this product's own. Line breaks are just for reading; the paragraph flows to its own width on the page.",
               },
             },
             {

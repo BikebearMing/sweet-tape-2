@@ -219,7 +219,7 @@ export interface Tape {
   card: number | Media;
   model: string;
   /**
-   * Where this tape comes from — one paragraph. Type {{tape}} where the strip of tape should be stuck across it: it can go between any two words, or at the very end. WHICH tape it is, is set in the code and is normally this product's own. Line breaks are just for reading; the paragraph flows to its own width on the page.
+   * Where this tape comes from — one paragraph. Type {{tape}} where the strip of tape should be stuck across it: it can go between any two words, or at the very end. Add settings inside the braces to lay it down differently — {{tape rotate=-8}} turns it, {{tape rotate=30 width=100 height=40}} turns and resizes it. rotate is in degrees, clockwise; width and height are in pixels at desktop size and both are optional. WHICH tape it is, is set in the code and is normally this product's own. Line breaks are just for reading; the paragraph flows to its own width on the page.
    */
   origin: string;
   /**

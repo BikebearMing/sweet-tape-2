@@ -163,19 +163,36 @@ export type Tape = {
   /** Paragraph under the chips. */
   copy: string;
   /**
-   * THE ORIGIN STORY — the inner page's second section, in TWO HALVES because a
-   * strip of this tape is stuck across the sentence between them.
+   * THE ORIGIN STORY — the inner page's second section. One paragraph, with a
+   * strip of tape stuck across it, and {{tape}} in the copy is where it lands.
    *
-   * It is one paragraph and it is stored as two strings rather than one with a
-   * marker in it, for the reason every other split on this site is explicit:
-   * where the tape lands is a DRAWING decision, not something to be parsed out
-   * of the copy at render time. A CMS field for this is two fields.
+   * IT WAS TWO STRINGS AND THE ARGUMENT FOR THAT WAS WRONG, which is worth
+   * writing down because it sounded right for months: where the tape falls is a
+   * DRAWING decision, so it should be explicit in the shape of the data rather
+   * than parsed out of a sentence. The shape it produced was a pair of halves
+   * with nothing to say what the halves were — a required "exactly two lines"
+   * on a field whose second line was not a line at all — and the only position
+   * it could express was the join between them. One strip, between two runs of
+   * words, and never anywhere else in the paragraph.
+   *
+   * A token IS explicit. It is in the copy because the position is a fact about
+   * the copy: it goes between these two words and not those two, and an editor
+   * reading the box can see exactly where. It can appear anywhere, including
+   * mid-sentence and at the very end, and more than once if a paragraph ever
+   * wants two.
+   *
+   * WHICH TAPE IS NOT IN HERE, and that is on purpose. The token says WHERE; the
+   * roll is a fact about the product and lives in code beside the rest of the
+   * artwork — see STORY_ROLL in components/TapeSlider/strips.ts.
+   *
+   * Line breaks in the copy are whitespace. The paragraph flows to its own
+   * measure and always has; the old second "line" was the marker, not a break.
    *
    * Sentence case here and uppercase on the page — the caps are the section's
    * setting (text-transform in global.css), so the copy stays readable in the
    * data file and in a screen reader.
    */
-  origin: [string, string];
+  origin: string;
   /**
    * THE NOTE IN THE MARGIN — the tape's character, written by hand beside the
    * photograph. Lines, not a sentence: the breaks are part of the drawing, which
@@ -277,14 +294,21 @@ export function siblingFacesOf(tape: Tape): { src: string; alt: string }[] {
  * with, the ink its word is punched in, the chips. It reaches two sections and
  * the scrollbar, and it always has.
  *
- * The three sections in the middle of a product page — the origin story, THE
+ * The four sections in the middle of a product page — the origin story, THE
  * SIBLINGS, SUPER POWERS and THE RUN — were the SITE's lime and dark green
  * rather than the tape's, and fixed in the stylesheet. That was a real design:
  * a page that opens in the product's colour, passes through shared brand ground
  * and hands off to the next tape's colour. This does not undo it. It makes the
- * ground editable per tape, and EVERY FIELD IS BLANK BY DEFAULT MEANING "use
- * the site's" — so a tape nobody has touched is exactly the page it was, and no
- * one has to type ten hex values to keep today's look.
+ * ground editable per tape, and EVERY FIELD IS BLANK BY DEFAULT MEANING "leave
+ * it as it is" — so a tape nobody has touched is exactly the page it was, and no
+ * one has to type seventeen hex values to keep today's look.
+ *
+ * AND THE OPENING SCREEN IS IN HERE TOO, which reads like a contradiction: that
+ * screen is already in the tape's colour and was never the site's. It is here
+ * because being painted in the palette is not the same as being able to SET the
+ * palette — the same six values paint the roll in three other places. See
+ * introVars, which is the only helper in this file whose blank falls back to the
+ * tape rather than to the stylesheet.
  *
  * BLANK IS THE ABSENCE OF AN OVERRIDE AND NOT A COLOUR. An empty string is not
  * a value the browser can use, so the vars are omitted entirely rather than set
@@ -293,6 +317,17 @@ export function siblingFacesOf(tape: Tape): { src: string; alt: string }[] {
  * would not fire, and the section would paint transparent.
  */
 export type SectionColours = {
+  /** The opening screen's sheet. Blank means the tape's own `colours.bg`, which
+   *  is what it has always been. See introVars for why this exists. */
+  introBg?: string;
+  /** THE and the tape's word on that sheet. Blank means `colours.word`. */
+  introWord?: string;
+  /** The chip above the mark — its fill. Blank means `colours.tagBg`. */
+  introTagBg?: string;
+  /** And its text. Blank means `colours.tagInk`. */
+  introTagInk?: string;
+  /** The line of copy beside the roll. Blank means `colours.ink`. */
+  introInk?: string;
   /** The origin story's ground. Site default #0d470c. */
   originBg?: string;
   /** Everything written on it — the story, the rule under its last word, the
@@ -341,6 +376,42 @@ function sectionVars(pairs: [string, string | undefined][]): CSSProperties {
     if (value && value.trim()) out[name] = value.trim();
   }
   return out as CSSProperties;
+}
+
+/** THE OPENING SCREEN, AND WHY IT IS HERE AT ALL.
+ *
+ *  Every other section in this list overrides a colour the STYLESHEET sets. This
+ *  one overrides a colour the TAPE sets, which is a different kind of override
+ *  and the reason it was missing for so long: the opening screen is already
+ *  painted in the tape's palette, so it looked like the one section that already
+ *  had its own colours.
+ *
+ *  It does not. `colours` is not the opening screen's palette — it is the TAPE's,
+ *  and it is read in four places: this screen, the roll buttons in the home
+ *  page's orbit, the row at /products, and the door NEXT UP opens. Change bg to
+ *  repaint the opening screen and the roll's chip on the home page changes with
+ *  it. There was no way to say "this section, in this colour" without saying it
+ *  about the whole product everywhere it appears.
+ *
+ *  So these five are the same bargain the other four sections get — blank means
+ *  the colour it already was — with one difference worth stating: blank here
+ *  falls back to the TAPE's palette rather than to the site's, because that is
+ *  what the section falls back to. Nothing has a hex for a placeholder for the
+ *  same reason; the default is a different colour on every product.
+ *
+ *  SET AFTER cssVars ON THE SAME ELEMENT, which is the whole mechanism — see
+ *  components/ProductIntro. The palette lands first under the names the shared
+ *  component rules read, and an override lands on top of it. The tape's own
+ *  --bg and --word are left alone underneath, so anything reading the PALETTE
+ *  rather than the section still gets the palette. */
+export function introVars(s?: SectionColours): CSSProperties {
+  return sectionVars([
+    ["--stage-bg", s?.introBg],
+    ["--word-colour", s?.introWord],
+    ["--tag-bg", s?.introTagBg],
+    ["--tag-ink", s?.introTagInk],
+    ["--ink", s?.introInk],
+  ]);
 }
 
 /** The origin story's ground and everything written on it. The chips are the

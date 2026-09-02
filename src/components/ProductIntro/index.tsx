@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import type { CSSProperties } from "react";
 
-import { cssVars, heroOf, originVars, type Tape } from "@/data/tapes";
+import { cssVars, heroOf, introVars, originVars, type Tape } from "@/data/tapes";
 import { clarityOf, modelOf } from "./rolls";
 import { TopTitle, BottomTitle, wordmarkText } from "@/components/TapeSlider/WordMarks";
 import Stage from "./Stage";
@@ -95,6 +95,16 @@ export default function ProductIntro({ tape }: { tape: Tape }) {
           ...originVars(tape.sections),
           "--stage-bg": tape.colours.bg,
           "--word-colour": tape.colours.word,
+          /* AND THIS SECTION'S OWN GROUND, LAST, WHICH IS THE POINT OF IT BEING
+             LAST. Everything above is the TAPE's palette — read here, in the
+             home page's orbit, in the row at /products and by the door NEXT UP
+             opens — so repainting this screen by editing it repainted the roll
+             in three other places. These five are the overrides that say "this
+             section" and nothing else, and they are written over the palette on
+             the same element rather than instead of it: unset ones are not
+             emitted at all, so a tape nobody has touched is exactly the page it
+             was. See introVars in src/data/tape-types.ts. */
+          ...introVars(tape.sections),
         } as CSSProperties
       }
     >

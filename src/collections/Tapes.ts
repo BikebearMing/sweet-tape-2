@@ -24,9 +24,14 @@ import type {
  * They are one box now, and the line breaks are line breaks.
  *
  * WHAT THE ARRAYS GAVE UP IS THE COUNT, so it is enforced here instead.
- * minRows/maxRows were doing real work — the origin story is drawn as exactly
- * two lines and a third has nowhere to go — and losing that to a nicer field
- * would only move the failure to the page, where nobody is watching. */
+ * minRows/maxRows were doing real work — a note in the margin is drawn on the
+ * lines it is written on — and losing that to a nicer field would only move the
+ * failure to the page, where nobody is watching.
+ *
+ * THE ORIGIN STORY USED TO BE COUNTED TOO, at exactly two, and that count was
+ * never about lines: the second "line" was where a strip of tape went, and the
+ * paragraph has never drawn a break there. It is one paragraph with a {{tape}}
+ * in it now, and what is checked is the token — see hasTapeToken. */
 const linesOf = (value: string) =>
   value.split("\n").map((l) => l.trim()).filter(Boolean);
 
@@ -37,14 +42,19 @@ const validateAtLeast =
       ? true
       : `Needs at least ${n} line${n === 1 ? "" : "s"}.`;
 
-const validateExactly =
-  (n: number): TextareaFieldValidation =>
-  (value) => {
-    const got = linesOf(value ?? "").length;
-    return got === n
-      ? true
-      : `Needs exactly ${n} lines — press Enter once. There ${got === 1 ? "is" : "are"} ${got}.`;
-  };
+/* THE STRIP'S PLACE IN THE ORIGIN STORY, and the whole reason it is checked
+ * here. The token is what the section cuts the paragraph at — no token, no
+ * strip, and a paragraph that quietly lost the piece of tape stuck across it is
+ * not an error anywhere. It renders, it reads, and it is simply missing the one
+ * thing that section is drawn around. Caught at the box, it is a message beside
+ * the field.
+ *
+ * NOT "exactly one". Two is legal and the section draws two; a paragraph that
+ * ever wants a second strip should not have to be argued with. */
+const hasTapeToken: TextareaFieldValidation = (value) =>
+  (value ?? "").includes("{{tape}}")
+    ? true
+    : "Type {{tape}} where the strip of tape should sit in the paragraph.";
 
 const hex: TextFieldSingleValidation = (value) => {
   if (!value) return true;
@@ -96,6 +106,11 @@ const hex: TextFieldSingleValidation = (value) => {
  * COLOURS ARE A GROUP, not six loose fields. `word` is a tape's wordmark key AND
  * the colour THE is set in; flat, one has to be renamed and the type stops
  * matching the schema. Nested, both keep the name the design calls them.
+ *
+ * AND THE COLOURS TAB IS BROKEN UP BY SECTION, in the order the page draws them
+ * — see the note on the tab itself. Two groups of six and twelve became six
+ * folds, because a field called powersCardRest is only findable by somebody who
+ * already knows the section is called SUPER POWERS in the code.
  */
 export const Tapes: CollectionConfig = {
   slug: "tapes",
@@ -214,11 +229,11 @@ export const Tapes: CollectionConfig = {
               name: "origin",
               type: "textarea",
               required: true,
-              validate: validateExactly(2),
+              validate: hasTapeToken,
               admin: {
-                rows: 4,
+                rows: 5,
                 description:
-                  "Where this tape comes from. Exactly two lines — press Enter once, at the break the design makes.",
+                  "Where this tape comes from — one paragraph. Type {{tape}} where the strip of tape should be stuck across it: it can go between any two words, or at the very end. WHICH tape it is, is set in the code and is normally this product's own. Line breaks are just for reading; the paragraph flows to its own width on the page.",
               },
             },
             {
@@ -462,138 +477,263 @@ export const Tapes: CollectionConfig = {
         {
           label: "Colours",
           description:
-            "The palette this product is painted in, and — optionally — the ground each middle section stands on. One place rather than five: the palette is one record and paints across sections.",
+            "Every colour this product is painted in, section by section, in the order the page draws them. The first box in each section is its ground.",
           fields: [
+            /* SIX SECTIONS OF A PRODUCT PAGE, IN THE ORDER THE READER MEETS
+               THEM, and it was two groups of six and twelve. That is the whole
+               of this arrangement: nobody comes here to change "a colour", they
+               come to change THE COLOUR OF A SECTION, and finding it meant
+               reading twelve field names with the section's name buried in the
+               middle of each — powersCardRest against siblingsCard against
+               reelInk. Under a heading that says which section it is, each one
+               only has to say which part.
+
+               COLLAPSIBLES AND NOT TABS OR GROUPS, deliberately, and each is
+               worth a word:
+
+                 A GROUP would nest the fields under its own key, so every one
+                 of these would move in the database and a change about where an
+                 editor LOOKS would need a migration. Both real groups here —
+                 `colours` and `sections` — are the ones the data already has.
+
+                 TABS at this depth would be tabs inside a tab, which reads as a
+                 second navigation on the same screen.
+
+               A collapsible is furniture: it draws a heading and a fold and
+               changes nothing about where anything is stored.
+
+               THE PALETTE IS FIRST AND IS OPEN, because it is the one an editor
+               is most often here for and the only one whose fields are
+               required. The five section folds under it are all-optional
+               overrides and start shut. */
             {
-              name: "colours",
-              type: "group",
+              type: "collapsible",
+              label: "The tape's palette",
               admin: {
+                initCollapsed: false,
                 description:
-                  "Reaches the page as custom properties on the roll button; the animation reads them from there.",
+                  "The product's own colours, and NOT one section's — these reach the opening screen, the roll in the home page's orbit, the row at /products and the door NEXT UP opens. Change one and it changes on all four. To repaint just the opening screen, use the fold under this.",
               },
               fields: [
-                { name: "ring", type: "text", required: true, admin: { description: "Band behind the roll when selected." } },
-                { name: "bg", type: "text", required: true, admin: { description: "Colour the stage floods with." } },
-                { name: "word", type: "text", required: true, admin: { description: "THE and the tape's own word." } },
-                { name: "tagBg", type: "text", required: true, admin: { description: "Chip fill." } },
-                { name: "tagInk", type: "text", required: true, admin: { description: "Chip text. Check it against tagBg — 4.5:1 or better." } },
-                { name: "ink", type: "text", required: true, admin: { description: "Body copy in the left column." } },
+                {
+                  name: "colours",
+                  type: "group",
+                  label: false,
+                  admin: {
+                    description:
+                      "Reaches the page as custom properties on the roll button; the animation reads them from there.",
+                  },
+                  fields: [
+                    { name: "ring", type: "text", required: true, label: "Ring", admin: { description: "Band behind the roll when it is the selected one." } },
+                    { name: "bg", type: "text", required: true, label: "Sheet", admin: { description: "The colour the stage floods with." } },
+                    { name: "word", type: "text", required: true, label: "Wordmark", admin: { description: "THE and the tape's own word." } },
+                    { name: "tagBg", type: "text", required: true, label: "Chip fill", admin: { description: "The chip behind the strapline." } },
+                    { name: "tagInk", type: "text", required: true, label: "Chip text", admin: { description: "Check it against the chip fill — 4.5:1 or better." } },
+                    { name: "ink", type: "text", required: true, label: "Body copy", admin: { description: "The line of copy in the left column." } },
+                  ],
+                },
               ],
             },
+
+            /* AND THE FIVE SECTIONS' OWN GROUND, ALL OPTIONAL, ALL BLANK BY
+               DEFAULT MEANING "leave it as it is". A tape nobody has touched is
+               exactly the page it was, and nobody has to type seventeen hex
+               values to keep today's look. The placeholder in each box is the
+               colour that will be used if it is left empty, so the default is
+               visible rather than remembered — except on the opening screen,
+               where the default is the tape's own palette and is therefore a
+               different colour on every product. Those say so in words.
+
+               ONE `sections` GROUP HOLDING FIVE FOLDS, and the group is the one
+               the data already has — the folds are inside it, so nothing moves.
+               `label: false` because the group's name would print above the
+               first fold and say nothing the fold does not. */
             {
               name: "sections",
               type: "group",
               label: false,
               fields: [
-            {
-                  name: "originBg",
-                  type: "text",
-                  validate: hex,
-                  admin: {
-                    placeholder: "#0d470c",
-                    description: "The origin story's ground. Site default #0d470c.",
-                  },
-                },
                 {
-                  name: "originInk",
-                  type: "text",
-                  validate: hex,
+                  type: "collapsible",
+                  label: "1 · Opening screen",
                   admin: {
-                    placeholder: "#b6fe00",
+                    initCollapsed: true,
                     description:
-                      "Everything written on that ground — the story, the rule under its last word, the arrow, and the note in the margin. One field, because in the design they are all one colour. Site default #b6fe00.",
+                      "The screen the page opens on. Blank means this tape's palette above — these five are how the section is repainted WITHOUT repainting the roll everywhere else it appears.",
                   },
+                  fields: [
+                    {
+                      name: "introBg",
+                      type: "text",
+                      label: "Sheet",
+                      validate: hex,
+                      admin: { description: "The ground the roll stands on. Blank = the palette's Sheet." },
+                    },
+                    {
+                      name: "introWord",
+                      type: "text",
+                      label: "Wordmark",
+                      validate: hex,
+                      admin: { description: "THE and the tape's word, punched across the screen. Blank = the palette's Wordmark." },
+                    },
+                    {
+                      name: "introTagBg",
+                      type: "text",
+                      label: "Chip fill",
+                      validate: hex,
+                      admin: { description: "Blank = the palette's Chip fill." },
+                    },
+                    {
+                      name: "introTagInk",
+                      type: "text",
+                      label: "Chip text",
+                      validate: hex,
+                      admin: { description: "Check it against the chip fill — 4.5:1 or better. Blank = the palette's Chip text." },
+                    },
+                    {
+                      name: "introInk",
+                      type: "text",
+                      label: "Body copy",
+                      validate: hex,
+                      admin: { description: "Blank = the palette's Body copy." },
+                    },
+                  ],
                 },
                 {
-                  name: "siblingsBg",
-                  type: "text",
-                  validate: hex,
+                  type: "collapsible",
+                  label: "2 · Origin story",
                   admin: {
-                    placeholder: "#0d470c",
-                    description: "THE SIBLINGS' ground, under the three grade cards. Site default #0d470c.",
+                    initCollapsed: true,
+                    description: "The story, the arrow and the note in the margin. Blank means the site's own green and lime.",
                   },
+                  fields: [
+                    {
+                      name: "originBg",
+                      type: "text",
+                      label: "Ground",
+                      validate: hex,
+                      admin: { placeholder: "#0d470c", description: "Site default #0d470c." },
+                    },
+                    {
+                      name: "originInk",
+                      type: "text",
+                      label: "Everything written on it",
+                      validate: hex,
+                      admin: {
+                        placeholder: "#b6fe00",
+                        description:
+                          "The story, the rule under its last word, the arrow, and the note in the margin. ONE field, because in the design they are all one colour. Site default #b6fe00.",
+                      },
+                    },
+                  ],
                 },
                 {
-                  name: "siblingsCard",
-                  type: "text",
-                  validate: hex,
+                  type: "collapsible",
+                  label: "3 · The siblings",
                   admin: {
-                    placeholder: "#c6fd00",
-                    description: "The three grade cards themselves. Site default #c6fd00.",
+                    initCollapsed: true,
+                    description: "The three grade cards and the ground under them.",
                   },
+                  fields: [
+                    {
+                      name: "siblingsBg",
+                      type: "text",
+                      label: "Ground",
+                      validate: hex,
+                      admin: { placeholder: "#0d470c", description: "Site default #0d470c." },
+                    },
+                    {
+                      name: "siblingsCard",
+                      type: "text",
+                      label: "The cards",
+                      validate: hex,
+                      admin: { placeholder: "#c6fd00", description: "The three grade cards themselves. Site default #c6fd00." },
+                    },
+                    {
+                      name: "siblingsInk",
+                      type: "text",
+                      label: "The name across them",
+                      validate: hex,
+                      admin: { placeholder: "#a8f000", description: "Site default #a8f000." },
+                    },
+                  ],
                 },
                 {
-                  name: "siblingsInk",
-                  type: "text",
-                  validate: hex,
+                  type: "collapsible",
+                  label: "4 · Super powers",
                   admin: {
-                    placeholder: "#a8f000",
-                    description: "The tape's name set across those cards. Site default #a8f000.",
-                  },
-                },
-                {
-                  name: "powersBg",
-                  type: "text",
-                  validate: hex,
-                  admin: {
-                    placeholder: "#b6fe00",
-                    description: "SUPER POWERS' sheet — the ground the stack of cards passes over. Site default #b6fe00.",
-                  },
-                },
-                {
-                  name: "powersHeading",
-                  type: "text",
-                  validate: hex,
-                  admin: {
-                    placeholder: "#013900",
+                    initCollapsed: true,
                     description:
-                      "The words SUPER POWERS themselves, one either side of the stack. Set on the sheet rather than on a card, which is why it is its own colour and not the one below. Site default #013900.",
+                      "The sheet, the two words either side of it, and the cards passing between them. Two card colours because a card changes colour as it opens.",
                   },
+                  fields: [
+                    {
+                      name: "powersBg",
+                      type: "text",
+                      label: "Sheet",
+                      validate: hex,
+                      admin: { placeholder: "#b6fe00", description: "The ground the stack of cards passes over. Site default #b6fe00." },
+                    },
+                    {
+                      name: "powersHeading",
+                      type: "text",
+                      label: "SUPER POWERS",
+                      validate: hex,
+                      admin: {
+                        placeholder: "#013900",
+                        description:
+                          "The two words themselves, one either side of the stack. Set on the sheet rather than on a card, which is why it is its own colour and not the ink below. Site default #013900.",
+                      },
+                    },
+                    {
+                      name: "powersCard",
+                      type: "text",
+                      label: "The open card",
+                      validate: hex,
+                      admin: { placeholder: "#0d470c", description: "The card being read, once it has filled. Site default #0d470c." },
+                    },
+                    {
+                      name: "powersCardRest",
+                      type: "text",
+                      label: "A resting card",
+                      validate: hex,
+                      admin: {
+                        placeholder: "#9bdc00",
+                        description: "A card still waiting its turn. Close to the sheet on purpose: a resting card is meant to be sensed rather than found. Site default #9bdc00.",
+                      },
+                    },
+                    {
+                      name: "powersInk",
+                      type: "text",
+                      label: "Writing on the open card",
+                      validate: hex,
+                      admin: { placeholder: "#b6fe00", description: "The claim and the sentence. Site default #b6fe00." },
+                    },
+                  ],
                 },
                 {
-                  name: "powersCard",
-                  type: "text",
-                  validate: hex,
+                  type: "collapsible",
+                  label: "5 · The run",
                   admin: {
-                    placeholder: "#0d470c",
-                    description: "The card being read, once it fills. Site default #0d470c.",
+                    initCollapsed: true,
+                    description: "The last section before NEXT UP.",
                   },
-                },
-                {
-                  name: "powersCardRest",
-                  type: "text",
-                  validate: hex,
-                  admin: {
-                    placeholder: "#9bdc00",
-                    description: "A card still waiting its turn. Close to the sheet on purpose: a resting card is meant to be sensed rather than found. Site default #9bdc00.",
-                  },
-                },
-                {
-                  name: "powersInk",
-                  type: "text",
-                  validate: hex,
-                  admin: {
-                    placeholder: "#b6fe00",
-                    description: "The claim and the sentence on the open card. Site default #b6fe00.",
-                  },
-                },
-                {
-                  name: "reelBg",
-                  type: "text",
-                  validate: hex,
-                  admin: {
-                    placeholder: "#b6fe00",
-                    description: "THE RUN's ground. Site default #b6fe00.",
-                  },
-                },
-                {
-                  name: "reelInk",
-                  type: "text",
-                  validate: hex,
-                  admin: {
-                    placeholder: "#013900",
-                    description: "THE RUN's writing. Site default #013900.",
-                  },
+                  fields: [
+                    {
+                      name: "reelBg",
+                      type: "text",
+                      label: "Ground",
+                      validate: hex,
+                      admin: { placeholder: "#b6fe00", description: "Site default #b6fe00." },
+                    },
+                    {
+                      name: "reelInk",
+                      type: "text",
+                      label: "Writing",
+                      validate: hex,
+                      admin: { placeholder: "#013900", description: "Site default #013900." },
+                    },
+                  ],
                 },
               ],
             },

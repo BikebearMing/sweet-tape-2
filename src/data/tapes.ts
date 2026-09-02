@@ -35,7 +35,10 @@ export {
   cssVars,
   /* The per-section overrides, one helper per section. Each returns only the
      custom properties this tape actually set, so an untouched tape passes an
-     empty object and the stylesheet's own colours stand. */
+     empty object and the stylesheet's own colours stand. The opening screen's
+     falls back to the TAPE's palette rather than to the stylesheet, which is the
+     one difference between them; see introVars. */
+  introVars,
   originVars,
   siblingsVars,
   powersVars,
@@ -144,7 +147,10 @@ function toTape(doc: TapeDoc): Tape {
     showcase: urlOf(doc.showcase),
     tags: texts(doc.tags),
     copy: doc.copy,
-    origin: lines(doc.origin) as [string, string],
+    /* NOT split to lines. The paragraph's own breaks are whitespace and the
+       strip's place is a {{tape}} in the copy — see `origin` in tape-types.ts,
+       and storyPieces in components/ProductInfo, which is what reads it. */
+    origin: doc.origin ?? "",
     character: lines(doc.character),
 
     reel: {

@@ -1,10 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
-import type { CSSProperties } from "react";
+import { Fragment, type CSSProperties } from "react";
 
 import HandNote from "@/components/HandNote";
 import Peel from "@/components/Peel";
 import { letters, words } from "@/components/letters";
-import { stripOf } from "@/components/TapeSlider/strips";
+import { storyStripOf, stripOf } from "@/components/TapeSlider/strips";
 import { cssVars, heroOf, originVars, type Tape } from "@/data/tapes";
 import Stage from "./Stage";
 
@@ -14,7 +14,8 @@ import Stage from "./Stage";
  * the left the roll, standing on a photograph of itself at work, with a curved
  * arrow running back to it and a note in the margin saying what this tape is
  * like. On the right the story, in the page's largest body voice, with a strip
- * of this very tape stuck across the sentence.
+ * of tape stuck across the sentence — usually this tape, wherever the copy's
+ * {{tape}} puts it.
  *
  * BUILT TO THE STENCIL in giant-section.html, and the figures there are the
  * design's: 8.772vw of block padding, a 5.379vw gutter, a 42.076vw left column,
@@ -100,6 +101,38 @@ function stripBox(s: ReturnType<typeof stripOf>, vw: number): string {
   return `${w.toFixed(3)}vw ${((w * s.h) / s.w).toFixed(3)}vw`;
 }
 
+/* WHERE THE STRIP GOES, WRITTEN IN THE COPY.
+ *
+ * The paragraph used to be stored as two strings and the strip went at the join,
+ * which meant there was exactly one place it could ever be. This is a token in
+ * the sentence instead — it can sit between any two words, at the end, or twice
+ * — and `origin` in src/data/tape-types.ts argues why that is MORE explicit than
+ * a pair of halves rather than less.
+ *
+ * Double braces because nothing else on this site writes them and no copy ever
+ * will by accident. It is not a template language and there is no second token:
+ * WHICH tape is a fact about the product and lives in STORY_ROLL, in code, where
+ * the rest of the artwork does. */
+const TAPE_TOKEN = "{{tape}}";
+
+/* THE PARAGRAPH, CUT AT EVERY TOKEN — n+1 runs of words with n strips between
+ * them, and any of them may be empty.
+ *
+ * EMPTY IS THE INTERESTING CASE and there are three of them: the copy opens with
+ * the token, ends with it, or carries two in a row. All three are legal, all
+ * three come out as an empty string in this list, and the markup renders nothing
+ * for one — which is what stops a stray space opening up on the line.
+ *
+ * Whitespace is collapsed, and the line breaks are why. The field is a textarea
+ * and the old format's break was the marker, so the copy in the database has one
+ * in it; the paragraph has never drawn a break there, it flows to its own
+ * measure. Collapsing here means a break an editor leaves in — for their own
+ * comfort, reading a long sentence in a small box — is whitespace and nothing
+ * more. */
+function storyPieces(copy: string): string[] {
+  return copy.split(TAPE_TOKEN).map((p) => p.replace(/\s+/g, " ").trim());
+}
+
 /* THE STORY'S LAST WORD, SPLIT OFF THE REST OF IT — everything up to the final
  * run of whitespace, and everything after it.
  *
@@ -124,8 +157,19 @@ function splitLastWord(text: string): [string, string] {
 
 export default function ProductInfo({ tape }: { tape: Tape }) {
   const strip = stripOf(tape.id);
-  const [lead, rest] = tape.origin;
-  const [restHead, restTail] = splitLastWord(rest);
+  /* AND THE ONE IN THE SENTENCE, WHICH IS NOT ALWAYS THE SAME ROLL. The
+     photograph is held down by this tape; the story sometimes needs another
+     one. See STORY_ROLL in components/TapeSlider/strips.ts, which is where that
+     is decided and where the default — the tape's own — comes from. */
+  const story = storyStripOf(tape.id);
+
+  const pieces = storyPieces(tape.origin);
+  /* WHICH RUN OF WORDS THE PARAGRAPH ACTUALLY ENDS ON, which is not simply the
+     last one: a copy that closes on the token ends with an empty piece, and the
+     rule has to be drawn under the word before it. Empty pieces are skipped. */
+  const lastRun = pieces.reduce((at, p, i) => (p ? i : at), -1);
+  const [runHead, runTail] =
+    lastRun < 0 ? ["", ""] : splitLastWord(pieces[lastRun]);
 
   return (
     <Stage
@@ -264,108 +308,154 @@ export default function ProductInfo({ tape }: { tape: Tape }) {
 
           <h5 className="subhead">{KICKER}</h5>
 
-          {/* THE STORY. One paragraph with a strip of tape stuck across it, so
-              it is two text nodes and a <Peel> between them rather than a
-              string with a marker in it — where the tape falls is a drawing
-              decision and belongs in the markup. See `origin` in
-              src/data/tapes.ts.
-
-              The strip is inside the paragraph and inline, so it sits ON the
-              line and travels with the copy when it rewraps. It is
-              aria-hidden's job to keep it out of the sentence; Peel renders a
-              span of images and has nothing to announce.
+          {/* THE STORY. One paragraph with a strip of tape stuck across it,
+              cut into runs of words at every {{tape}} in the copy — see
+              storyPieces above, and `origin` in src/data/tape-types.ts, which
+              argues why the position is written in the sentence rather than
+              built into the shape of the field.
 
               SPLIT TO LETTERS FOR THE REVEAL (reveal.ts), which is the site's
               — each waits below its own mask and slides up in a shuffled order.
               aria-label carries the readable version rather than a second hidden
               copy of the words: the sentence is announced whole, so the row of
-              letter boxes is never read out a fragment at a time, and the two
-              halves are read as the one sentence they are. */}
-          <h3 className="h3 info-story" aria-label={`${lead} ${rest}`}>
-            {/* SPLIT TO LETTERS BY WORD and not by the whole run: words() keeps
-                each word an inline box, so the paragraph breaks BETWEEN words
-                exactly where the unsplit copy would have broken. letters() lays
-                a row that cannot break, which is right for a headline whose
-                breaks are set by design and wrong for a measure this deep. */}
-            <span aria-hidden="true">{words(lead)}</span>{" "}
-            {/* A SLOT AROUND IT, and it is not decoration.
-                The strip's own box is the FILE's, which for these exports is
-                mostly transparent margin — the clear tape's artwork sits in a
-                box getting on for three times its own height. Inline, that box
-                is what the line is sized to, so a 163px strip pushed the first
-                two lines of the paragraph 60px apart to make room for padding
-                nobody can see.
-                The slot is what the LINE sees; the strip inside it is placed
-                against it and overflows it freely. */}
-            <span className="info-tape-slot" aria-hidden="true">
-            <Peel
-              className="reverse-peel-tape info-story-tape"
-              src={strip.src}
-              back={strip.back}
-              drive="manual"
-              direction="90deg"
-              box={stripBox(strip, TAPE_VW)}
-              from={LIFT}
-              to={0}
-              aria-hidden="true"
-              style={{ "--strip-blend": strip.blend } as CSSProperties}
-            />
-            </span>{" "}
-            <span aria-hidden="true">{words(restHead)}</span>
-            {restHead ? " " : null}
-            {/* THE LAST WORD, AND THE RULE UNDER IT — one box, which is the
-                whole of why the word is split off the run above.
-                The rule used to be a zero-width marker dropped after the
-                paragraph with a width of 5.4em: right-anchored so it ended
-                under the full stop, and five and a bit ems long because that is
-                what NEVER AGAIN. measures at this size. That figure was the
-                OPP tape's copy written into the stylesheet. Every other tape
-                ends on a different word, so the rule ran back past the start of
-                the line and out under the one above it — most visibly on the
-                low-noise tape, whose last line is one short word.
-                So the rule is sized by the thing it rules under instead of by a
-                measurement of one tape's sentence: this box is the last word,
-                the rule is absolutely positioned across it, and it is right for
-                whatever any of the six ends on.
-                IT IS THE LAST WORD AND NOT THE LAST PHRASE, which is the one
-                place this reads shorter than the mock — that rules under NEVER
-                AGAIN., two words. Two words can be split by a line break and
-                this box cannot, and a rule drawn across a group that has
-                wrapped is a stroke running from the end of one line to the
-                middle of the next. A single word is the largest run that is
-                safe at every measure.
-                inline-flex like words()' own boxes, for the same reason: the
-                letters are flex items and this is the row they stand in. */}
-            <span className="word info-last" aria-hidden="true">
-              {letters(restTail)}
+              letter boxes is never read out a fragment at a time, and every run
+              is read as the one sentence they are. The token is not in it — it
+              is a place, not a word. */}
+          <h3
+            className="h3 info-story"
+            aria-label={pieces.filter(Boolean).join(" ")}
+          >
+            {pieces.map((piece, i) => (
+              <Fragment key={i}>
+                {/* A SLOT BEFORE EVERY PIECE BUT THE FIRST, which is the whole
+                    of the interleave: n tokens cut the copy into n+1 runs, so
+                    the strip belongs at each seam and nowhere else.
 
-              {/* Drawn in two passes the way a hand underlines something — one
-                  stroke out and a shorter one back over it, neither quite
-                  straight and neither quite meeting the other's ends. A
-                  border-bottom would be a printed rule, and this section is
-                  written on rather than set. */}
-              <span className="info-underline">
-                <svg
-                  viewBox="0 0 320 22"
-                  fill="none"
-                  focusable="false"
-                  preserveAspectRatio="none"
-                >
-                  <path
-                    d="M4 9C74 3 168 5 314 8"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M22 17C96 12 190 14 292 15"
-                    stroke="currentColor"
-                    strokeWidth="2.4"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </span>
-            </span>
+                    A SLOT AROUND IT, and it is not decoration. The strip's own
+                    box is the FILE's, which for these exports is mostly
+                    transparent margin — the clear tape's artwork sits in a box
+                    getting on for three times its own height. Inline, that box
+                    is what the line is sized to, so a 163px strip pushed the
+                    first two lines of the paragraph 60px apart to make room for
+                    padding nobody can see. The slot is what the LINE sees; the
+                    strip inside it is placed against it and overflows it
+                    freely.
+
+                    The strip is inside the paragraph and inline, so it sits ON
+                    the line and travels with the copy when it rewraps. It is
+                    aria-hidden's job to keep it out of the sentence; Peel
+                    renders a span of images and has nothing to announce. */}
+                {i > 0 ? (
+                  <>
+                    <span className="info-tape-slot" aria-hidden="true">
+                      <Peel
+                        className="reverse-peel-tape info-story-tape"
+                        src={story.src}
+                        back={story.back}
+                        drive="manual"
+                        direction="90deg"
+                        box={stripBox(story, TAPE_VW)}
+                        from={LIFT}
+                        to={0}
+                        aria-hidden="true"
+                        style={
+                          { "--strip-blend": story.blend } as CSSProperties
+                        }
+                      />
+                    </span>{" "}
+                  </>
+                ) : null}
+
+                {/* SPLIT TO LETTERS BY WORD and not by the whole run: words()
+                    keeps each word an inline box, so the paragraph breaks
+                    BETWEEN words exactly where the unsplit copy would have
+                    broken. letters() lays a row that cannot break, which is
+                    right for a headline whose breaks are set by design and
+                    wrong for a measure this deep.
+
+                    An empty piece draws nothing at all — see storyPieces. */}
+                {i === lastRun ? (
+                  <>
+                    {runHead ? (
+                      <>
+                        <span aria-hidden="true">{words(runHead)}</span>{" "}
+                      </>
+                    ) : null}
+                    {/* THE LAST WORD, AND THE RULE UNDER IT — one box, which is
+                        the whole of why the word is split off the run above.
+
+                        The rule used to be a zero-width marker dropped after
+                        the paragraph with a width of 5.4em: right-anchored so
+                        it ended under the full stop, and five and a bit ems
+                        long because that is what NEVER AGAIN. measures at this
+                        size. That figure was the OPP tape's copy written into
+                        the stylesheet. Every other tape ends on a different
+                        word, so the rule ran back past the start of the line
+                        and out under the one above it — most visibly on the
+                        low-noise tape, whose last line is one short word.
+
+                        So the rule is sized by the thing it rules under
+                        instead of by a measurement of one tape's sentence: this
+                        box is the last word, the rule is absolutely positioned
+                        across it, and it is right for whatever any of the six
+                        ends on.
+
+                        IT IS THE LAST WORD AND NOT THE LAST PHRASE, which is
+                        the one place this reads shorter than the mock — that
+                        rules under NEVER AGAIN., two words. Two words can be
+                        split by a line break and this box cannot, and a rule
+                        drawn across a group that has wrapped is a stroke
+                        running from the end of one line to the middle of the
+                        next. A single word is the largest run that is safe at
+                        every measure.
+
+                        AND IT IS THE LAST RUN'S last word, not the last piece's
+                        — a paragraph that closes on the token has an empty
+                        piece after it and the rule belongs under the word
+                        before the strip.
+
+                        inline-flex like words()' own boxes, for the same
+                        reason: the letters are flex items and this is the row
+                        they stand in. */}
+                    <span className="word info-last" aria-hidden="true">
+                      {letters(runTail)}
+
+                      {/* Drawn in two passes the way a hand underlines
+                          something — one stroke out and a shorter one back over
+                          it, neither quite straight and neither quite meeting
+                          the other's ends. A border-bottom would be a printed
+                          rule, and this section is written on rather than
+                          set. */}
+                      <span className="info-underline">
+                        <svg
+                          viewBox="0 0 320 22"
+                          fill="none"
+                          focusable="false"
+                          preserveAspectRatio="none"
+                        >
+                          <path
+                            d="M4 9C74 3 168 5 314 8"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                          />
+                          <path
+                            d="M22 17C96 12 190 14 292 15"
+                            stroke="currentColor"
+                            strokeWidth="2.4"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                      </span>
+                    </span>
+                  </>
+                ) : piece ? (
+                  <>
+                    <span aria-hidden="true">{words(piece)}</span>{" "}
+                  </>
+                ) : null}
+              </Fragment>
+            ))}
           </h3>
         </div>
       </div>

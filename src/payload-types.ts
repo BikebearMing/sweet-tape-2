@@ -219,7 +219,7 @@ export interface Tape {
   card: number | Media;
   model: string;
   /**
-   * Where this tape comes from. Exactly two lines — press Enter once, at the break the design makes.
+   * Where this tape comes from — one paragraph. Type {{tape}} where the strip of tape should be stuck across it: it can go between any two words, or at the very end. WHICH tape it is, is set in the code and is normally this product's own. Line breaks are just for reading; the paragraph flows to its own width on the page.
    */
   origin: string;
   /**
@@ -300,11 +300,11 @@ export interface Tape {
    */
   colours: {
     /**
-     * Band behind the roll when selected.
+     * Band behind the roll when it is the selected one.
      */
     ring: string;
     /**
-     * Colour the stage floods with.
+     * The colour the stage floods with.
      */
     bg: string;
     /**
@@ -312,29 +312,49 @@ export interface Tape {
      */
     word: string;
     /**
-     * Chip fill.
+     * The chip behind the strapline.
      */
     tagBg: string;
     /**
-     * Chip text. Check it against tagBg — 4.5:1 or better.
+     * Check it against the chip fill — 4.5:1 or better.
      */
     tagInk: string;
     /**
-     * Body copy in the left column.
+     * The line of copy in the left column.
      */
     ink: string;
   };
   sections?: {
     /**
-     * The origin story's ground. Site default #0d470c.
+     * The ground the roll stands on. Blank = the palette's Sheet.
+     */
+    introBg?: string | null;
+    /**
+     * THE and the tape's word, punched across the screen. Blank = the palette's Wordmark.
+     */
+    introWord?: string | null;
+    /**
+     * Blank = the palette's Chip fill.
+     */
+    introTagBg?: string | null;
+    /**
+     * Check it against the chip fill — 4.5:1 or better. Blank = the palette's Chip text.
+     */
+    introTagInk?: string | null;
+    /**
+     * Blank = the palette's Body copy.
+     */
+    introInk?: string | null;
+    /**
+     * Site default #0d470c.
      */
     originBg?: string | null;
     /**
-     * Everything written on that ground — the story, the rule under its last word, the arrow, and the note in the margin. One field, because in the design they are all one colour. Site default #b6fe00.
+     * The story, the rule under its last word, the arrow, and the note in the margin. ONE field, because in the design they are all one colour. Site default #b6fe00.
      */
     originInk?: string | null;
     /**
-     * THE SIBLINGS' ground, under the three grade cards. Site default #0d470c.
+     * Site default #0d470c.
      */
     siblingsBg?: string | null;
     /**
@@ -342,19 +362,19 @@ export interface Tape {
      */
     siblingsCard?: string | null;
     /**
-     * The tape's name set across those cards. Site default #a8f000.
+     * Site default #a8f000.
      */
     siblingsInk?: string | null;
     /**
-     * SUPER POWERS' sheet — the ground the stack of cards passes over. Site default #b6fe00.
+     * The ground the stack of cards passes over. Site default #b6fe00.
      */
     powersBg?: string | null;
     /**
-     * The words SUPER POWERS themselves, one either side of the stack. Set on the sheet rather than on a card, which is why it is its own colour and not the one below. Site default #013900.
+     * The two words themselves, one either side of the stack. Set on the sheet rather than on a card, which is why it is its own colour and not the ink below. Site default #013900.
      */
     powersHeading?: string | null;
     /**
-     * The card being read, once it fills. Site default #0d470c.
+     * The card being read, once it has filled. Site default #0d470c.
      */
     powersCard?: string | null;
     /**
@@ -362,15 +382,15 @@ export interface Tape {
      */
     powersCardRest?: string | null;
     /**
-     * The claim and the sentence on the open card. Site default #b6fe00.
+     * The claim and the sentence. Site default #b6fe00.
      */
     powersInk?: string | null;
     /**
-     * THE RUN's ground. Site default #b6fe00.
+     * Site default #b6fe00.
      */
     reelBg?: string | null;
     /**
-     * THE RUN's writing. Site default #013900.
+     * Site default #013900.
      */
     reelInk?: string | null;
   };
@@ -614,6 +634,11 @@ export interface TapesSelect<T extends boolean = true> {
   sections?:
     | T
     | {
+        introBg?: T;
+        introWord?: T;
+        introTagBg?: T;
+        introTagInk?: T;
+        introInk?: T;
         originBg?: T;
         originInk?: T;
         siblingsBg?: T;

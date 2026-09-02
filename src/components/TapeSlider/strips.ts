@@ -125,6 +125,27 @@ const ROLL_OF: Record<string, RollName> = {
   "opp-quiet": "clear",
 };
 
+/* AND WHICH ROLL IS STUCK ACROSS THE ORIGIN STORY'S SENTENCE, where it is not
+   the tape's own.
+ *
+ * The strip in the paragraph started as the same one holding the photograph
+ * down — this tape, taped with itself, which is the right default and stays the
+ * default. It is not always the right picture. The story is about what the tape
+ * was made FOR, and the tape in the sentence is sometimes the one that failed:
+ * a box that arrived in pieces was taped with something else, and drawing the
+ * hero across that line puts the wrong roll on the wrong half of the story.
+ *
+ * SO IT IS A TABLE AND IT IS ALMOST EMPTY, which is the whole design. Absent
+ * means ROLL_OF — the tape's own — so nothing here is a list of six answers to
+ * keep in step with six products. It is a list of the exceptions, and a product
+ * that has not been decided yet is simply not in it.
+ *
+ * IN CODE AND NOT IN THE CMS, the same call ROLL_OF above makes: these are
+ * facts about which FILE goes where, and the four figures behind each of them —
+ * a box, an ink fraction, a peel back and a blend — are measured off the file
+ * itself. A field would be a dropdown of six words with none of that behind it. */
+const STORY_ROLL: Record<string, RollName> = {};
+
 /* HOW LONG THE STRIP READS, in px of visible artwork.
  *
  * px, and this is the one place on the page where that is the right unit: the
@@ -159,8 +180,8 @@ export type Strip = {
   ink: number;
 };
 
-export function stripOf(tapeId: string): Strip {
-  const roll: Roll = ROLLS[ROLL_OF[tapeId] ?? "masking"];
+function strip(name: RollName): Strip {
+  const roll: Roll = ROLLS[name];
   const [bw, bh] = roll.box;
   // Divided by ink, so it is the ARTWORK that comes out INK long and not the
   // file. Height follows the file's own aspect, so nothing is ever squashed.
@@ -173,6 +194,17 @@ export function stripOf(tapeId: string): Strip {
     blend: roll.blend ?? "normal",
     ink: roll.ink,
   };
+}
+
+/** The strip a tape's photographs are held down with — its own film. */
+export function stripOf(tapeId: string): Strip {
+  return strip(ROLL_OF[tapeId] ?? "masking");
+}
+
+/** And the one stuck across its origin story, which is the same strip unless
+ *  STORY_ROLL says otherwise. See the note there. */
+export function storyStripOf(tapeId: string): Strip {
+  return strip(STORY_ROLL[tapeId] ?? ROLL_OF[tapeId] ?? "masking");
 }
 
 /* Packed onto the roll button beside the rest of the tape's payload, because

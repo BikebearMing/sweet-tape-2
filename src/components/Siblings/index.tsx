@@ -118,7 +118,14 @@ export default function Siblings({ tape }: { tape: Tape }) {
           .siblings-section .siblings-card { opacity: 1; visibility: visible }`}</style>
       </noscript>
 
-      <div className="siblings-row">
+      {/* data-pair, and it is the one thing about the row's LENGTH the stylesheet
+          has to be told. Everything else about a short row falls out of the flex
+          — the cards are as many as there are and they centre — but where the
+          name stands does not: at three it goes in the gap the raised card opens
+          between the two beside it, and at two there is no such gap to go in.
+          See --sib-title-top in global.css, which is where that is argued and
+          where both figures are kept. */}
+      <div className="siblings-row" data-pair={faces.length === 2 || undefined}>
         {/* THE FAN — the three cards and nothing else, in a box of their own.
             It is what reveal.ts turns to deal them: the row's arrangement IS an
             arc, and swinging this box about a point far below the page brings

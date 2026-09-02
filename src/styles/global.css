@@ -312,7 +312,9 @@ h6 {
    is taller than the section and their arc has to be the section's arc all the
    same. See TapeSlider/engine.ts and PickYourPlayer/recolour.ts. */
 .arc-cut,
-.arc-foot {
+.arc-foot,
+.jack-in-box,
+.reimagine-stage::before {
   --arc-h: var(--curve-depth);
 
   -webkit-mask-image: linear-gradient(#000 0 0), var(--section-curve);
@@ -7659,7 +7661,38 @@ html[data-loading] {
      business. The sum is the middle card plus the gap under it plus one line of
      the name, and it is written out rather than measured so it stays true if the
      two beside it are ever made the taller pair. */
-  min-height: calc(var(--sib-w) + var(--sib-title-gap) + var(--sib-title-size));
+  min-height: calc(var(--sib-title-top) + var(--sib-title-size));
+}
+
+/* WHERE THE NAME STANDS, AND IT IS NOT ONE ANSWER FOR EVERY LENGTH OF ROW.
+ *
+ * UNDER THE RAISED CARD is the drawing: that card is the tallest thing in the
+ * arrangement and raising it opens a gap beneath, between the two lower cards
+ * either side. The name goes in the gap. It works because at three the cards
+ * either side are a long way apart — their inner edges are outside THE SIBLINGS'
+ * own measure — and at one there is nothing beside it at all.
+ *
+ * AT TWO THERE IS NO GAP. The pair is centred, so the leaning card's inner edge
+ * is at the middle of the screen and its bottom is --sib-drop lower than the
+ * raised card's: measured at 1440 the name lands 146px across it and 37px into
+ * it. That is not a name in a gap, it is a name printed on a label.
+ *
+ * SO A PAIR PUTS IT UNDER THE WHOLE ROW — the lower card's own bottom, plus the
+ * same gap. It reads as the row being named rather than as one card being
+ * labelled, which at two is what it is.
+ *
+ * ONE FIGURE AND NOT AN OVERRIDE ON .siblings-title, because the ROW's height is
+ * struck from it too: the name is placed rather than in flow, so it contributes
+ * nothing, and a name moved down without the box under it growing hangs into the
+ * next section. */
+.siblings-row {
+  --sib-title-top: calc(var(--sib-w) + var(--sib-title-gap));
+}
+
+.siblings-row[data-pair] {
+  --sib-title-top: calc(
+    var(--sib-drop) + var(--sib-w-side) + var(--sib-title-gap)
+  );
 }
 
 /* THE THREE CARDS, and only them — the row's flex, moved off .siblings-row when
@@ -7779,18 +7812,23 @@ html[data-loading] {
    card starts at the row's top and is --sib-w tall, so its bottom is exactly
    --sib-w down; the name sits --sib-title-gap under that.
 
+   THAT ONLY WORKS WHILE THE GAP IS CLEAR, which is what --sib-title-top is for
+   and what the rule under this one is about. The note at --sib-gap already
+   warned of it from the other direction: "a gap wide enough to pull their inner
+   edges inside THE SIBLINGS' measure would have them standing on it."
+
    Centred by left: 50% and a translate rather than by inset: 0 and text-align,
    so the box is as wide as the word and nothing about the row's width can move
    it. */
 .siblings-title {
   position: absolute;
-  top: calc(var(--sib-w) + var(--sib-title-gap));
+  top: var(--sib-title-top);
 
-  /* THE MIDDLE OF THE ROW, WHICHEVER LENGTH THE ROW IS — and it stays one
-     figure because the arrangement makes sure the middle of the row is always
-     where the name belongs: at an odd count that is the raised card, and at an
-     even one it is the hole left where the middle card would have been. See
-     --sib-hole on .siblings-fan, which is what buys this line its simplicity. */
+  /* THE MIDDLE OF THE ROW, WHICHEVER LENGTH THE ROW IS. The arrangement makes
+     sure that is where the name belongs: at three the raised card is in the
+     middle of the screen and the name goes under it, at one it is the only card
+     there, and at two the pair is centred and the name goes under the seam
+     between them. */
   left: 50%;
   transform: translateX(-50%);
   margin: 0;
@@ -13891,10 +13929,39 @@ li::marker {
    illusion is the z-index order below and nothing else; see components/AboutOpen
    for the markup, whose source order is deliberately not the paint order.
 
+   THE BOX IS CUT BY THE CURVE AND NOT BY A STRAIGHT LINE, which is what
+   .jack-in-box is now for. It used to collapse to nothing and the carton was
+   simply cropped at the section's floor — a flat edge straight across a drawing
+   that is standing on a curved horizon, with the carton's bottom corners printed
+   over the green in the two places the lime has already given way. The box read
+   as chopped off rather than as standing behind anything.
+
+   SO IT TAKES THE SHEET'S OWN MASK. .arc-cut is listed above with .arc-foot and
+   this element, so the carton is cut along exactly the edge the lime is cut
+   along — one curve, stated once, and the green in the corners is in front of
+   the box rather than under it. That is the whole of "behind the curvature":
+   nothing is stacked, the drawing is simply not painted past the horizon.
+
+   IT HAS TO BE A BOX OF ITS OWN SIZE TO CARRY A MASK, which is the only thing
+   that changes underneath. It was collapsed to nothing so that .wrapper's
+   inset: 0 would resolve against .about-open; it is now the same rectangle as
+   .about-open itself, so that inset resolves to exactly the box it always did
+   and the three images have not moved. A mask on .wrapper would not do: it
+   carries --jack-scale as a transform, and a mask goes on with the element it is
+   on — the curve would be scaled with the drawing and stop matching the lime's.
+
    THE WRAPPER IS THE SECTION, not the .jack-in-box div around it. inset: 0 on an
    absolutely positioned box resolves against the nearest positioned ancestor,
-   and that is .about-open — so the three images are placed against the SHEET and
-   .jack-in-box collapses to nothing, which is what it is for. */
+   which is this element and is the same rectangle — so the three images are
+   still placed against the SHEET. */
+.jack-in-box {
+  position: absolute;
+  inset: 0;
+  /* A drawing is never what a click lands on, and this box now covers the whole
+     screen rather than collapsing out of the way of one. */
+  pointer-events: none;
+}
+
 .about-hero .wrapper {
   width: 100%;
   height: 100%;
@@ -15403,9 +15470,46 @@ img#front {
      the backdrop they were drawn for is exactly this box — the two grounds and
      the grain, both of which are inside it. */
   clip-path: inset(0 0 -20% 0);
-  background: linear-gradient(to bottom,
-      var(--rei-bg) var(--rei-split),
-      var(--about-bg) var(--rei-split));
+
+  /* THE GROUND UNDER EVERYTHING — the page's green, which is what shows in the
+     two corners the curve above gives up. The lime is a sheet laid on top of it;
+     see ::before. */
+  background: var(--about-bg);
+}
+
+/* THE LIME, AND IT ENDS ON THE SITE'S CURVE.
+ *
+ * IT WAS A HARD-STOP GRADIENT — two colour stops at the same position, which is
+ * a straight line ruled across the window. It was the only colour edge on this
+ * site that was not the site's arc: the hero, the opening screen of /about, the
+ * product page's intro sheet and WHAT'S ROLLING all hand over on
+ * --section-curve, and this one handed over on a horizon. On flat ground with a
+ * sheet of paper lying across it, a ruled line is exactly what it looks like.
+ *
+ * SAME RECIPE AS EVERY OTHER CURVED FOOT, and it is listed with .arc-foot at the
+ * top of this file rather than repeated here: a full-bleed layer masked by a
+ * rectangle above the strip and the curve inside it. A pseudo-element and not an
+ * .arc-foot child, because the stage's children are the drawing — the sheet, the
+ * props and the statement — and a ground belongs to the box, not in front of it.
+ *
+ * --rei-split IS UNTOUCHED AND STILL MEANS WHAT IT MEANT. It is the height of
+ * this sheet, so the join is in exactly the same place at the middle of the
+ * window, which is where it was measured: the note on --rei-split derives it
+ * from the photograph's own printed area and that derivation is about the CENTRE
+ * of the sheet. What the curve changes is the two ends, which rise by
+ * --curve-depth — and the paper is centred and nowhere near them.
+ *
+ * ::before AND NOT ::after, which is taken: the grain is on ::after and has to
+ * lie over BOTH grounds (it argues that at length below). Tree order gives the
+ * right stack on its own — background, then this, then the drawing, then the
+ * grain. */
+.reimagine-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--rei-split);
+  background: var(--rei-bg);
+  pointer-events: none;
 }
 
 /* Paper grain — the same sheet the rest of the site is printed on.

@@ -227,13 +227,23 @@ function Train({ item, echo }: { item: BeltItem; echo?: boolean }) {
   /* THE NUMBER IS NOT PART OF THE SENTENCE. It is a marker set beside the
      heading's first line — printed, so it is there for a sighted reader, and
      hidden from the accessibility tree so the heading is announced as the two
-     words it is rather than as "01 rows of products". */
+     words it is rather than as "01 rows of products".
+
+     AND IT ARRIVES THE WAY THE WORDS DO. It used to be the one thing printed on
+     a claim that was simply there: the lines rose out of their masks and the
+     number was already standing beside them, which reads as the number being
+     part of the pill rather than part of what is written on it. Wrapped in the
+     same Line, it takes the same mask and the same rise — and it takes them
+     FIRST, because it is first in the block and the stagger runs down the DOM.
+     The marker lands, then the claim is written next to it. */
   return (
     <div className={`${className} has-text`} aria-hidden={hidden}>
       <div className="conveyor-claim">
-        <span className="conveyor-index" aria-hidden="true">
-          {item.index}
-        </span>
+        <Line>
+          <span className="conveyor-index" aria-hidden="true">
+            {item.index}
+          </span>
+        </Line>
         <h2 className="h2">
           {item.lines.map((line, i) => (
             <Line key={i}>{line}</Line>

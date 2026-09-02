@@ -125,26 +125,18 @@ export default function SuperPowers({ tape }: { tape: Tape }) {
           all. Filled outright here, exactly as the reduced-motion path in
           SuperPowers/reveal.ts fills the open one.
 
-          THE MARK IS HELD OFF A DIFFERENT WAY and needs its own line. The type is
-          held down by a transform; the mark is held off by opacity, because the
-          bounce is a CSS animation that is only declared once reveal.ts sets an
-          attribute — and no script means no attribute, which means a drawing
-          that is never asked for. Shown outright here, exactly as the
-          reduced-motion rule in global.css shows it.
-
-          AN UPLOADED MARK THAT MOVES ITSELF is the third line, and it is held
-          off the same way for the opposite reason: its animation is declared by
-          the file and the stylesheet TAKES IT OFF until the attribute lands, so
-          with no script it is a drawing standing still — and standing still is
-          exactly where it would have landed. Showing it is the whole fix. */}
+          THE MARK NEEDS NOTHING, and that is worth a line because it used to need
+          two. It waited off the card at opacity 0 and the turn was what showed
+          it, so a page with no script was a page with no icons on it. It stands
+          on every card in the stack now — the base rule parks it at exactly the
+          pose the drop ends on — and what the turn decides is only whether it
+          moves. No attribute means no animation, which means a drawing standing
+          where it would have landed. */}
       <noscript>
         <style>{`.super-powers .char { transform: none }
           .super-powers .body-rise { transform: none }
           .super-powers .powers-slot { --pow-shown: 1 }
-          .super-powers .powers-card { --pow-fill: 1 }
-          .super-powers .powers-mark-jump,
-          .super-powers .powers-mark-plate,
-          .super-powers .powers-mark--live { opacity: 1 }`}</style>
+          .super-powers .powers-card { --pow-fill: 1 }`}</style>
       </noscript>
 
       {/* THE NAME'S FIRST HALF. A heading rather than two decorative words: the

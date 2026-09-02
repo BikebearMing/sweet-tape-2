@@ -8070,11 +8070,6 @@ html[data-loading] {
   --pow-pad: calc(var(--pow-open-h) * 0.085);
   --pow-title-size: calc(var(--pow-open-h) * 0.19);
   --pow-mark-h: calc(var(--pow-open-h) * 0.22);
-  /* How long the mark takes to fade when its card stops being the open one.
-     Shorter than the card's own move, so the box is gone before the card it was
-     on has finished shrinking — a mark still fading on a card halfway to shut
-     reads as two things leaving at different speeds. */
-  --pow-mark-out: 0.28s;
   --pow-copy-size: calc(var(--pow-open-h) * 0.043);
 
   position: relative;
@@ -8430,20 +8425,15 @@ html[data-loading] {
  * is a shade off the card and meant to be nearly invisible — what it does is
  * give the thing falling somewhere to arrive. See Mark.tsx.
  *
- * IT WAITS WITH THE MARK, and it did not at first. Left showing, the plate is
- * the only thing on a card whose turn has not come yet — the lime is still up on
- * the ceiling — so the card below the open one carried a small dark blob in the
- * middle of it that reads as a smudge on the artwork rather than as a surface.
- * Gated on the same attribute, the card is simply empty where the box will land,
- * and the plate arrives underneath it in the frame it starts falling. */
+ * IT STANDS WITH THE MARK, and for one round it did not. Gated on the turn, it
+ * was the only thing on a card whose turn had not come yet — a small dark blob
+ * in the middle of an otherwise empty card, reading as a smudge on the artwork
+ * rather than as a surface. That was the right answer while the mark itself
+ * waited off the card; it is the wrong one now that the mark stands on every
+ * card in the stack, because the surface would be the one part of the drawing
+ * missing until the card was read. It is simply drawn. */
 .powers-mark-plate {
   fill: #033d02;
-  opacity: 0;
-  transition: opacity var(--pow-mark-out) linear;
-}
-
-.powers-slot[data-mark="go"] .powers-mark-plate {
-  opacity: 1;
 }
 
 /* And the mark itself.
@@ -8511,177 +8501,58 @@ html[data-loading] {
  * reads as a drop was spent half transparent. It falls in solid now, and the
  * card's edge is the only thing that hides it.
  *
- * So opacity is stated OUTRIGHT rather than animated. It has to be stated
- * somewhere — the base rule below parks the mark at 0 while it waits for its
- * turn, and with no fade there is nothing else to lift it. */
-.powers-slot[data-mark="go"] .powers-mark-jump {
+ * SO OPACITY IS NOT ANIMATED AND IS NOT GATED EITHER. The mark stands on every
+ * card in the stack — see the base rule below — and what the turn decides is
+ * whether it MOVES. The drop starts nearly a hundred units above the frame and
+ * the slot clips at its own top edge, so the box leaves the card and comes back
+ * down onto it without anything having to be faded.
+ *
+ * ON [data-mark] AND NOT ON [data-mark="go"], which is the whole of the exit.
+ * `out` is a card that has had its turn and is climbing out of the middle, and
+ * the two values naming the same declaration means nothing changes at that
+ * moment: the animation is not restarted, not undeclared, and goes on holding
+ * its last frame. Written as ="go" alone, the declaration would come off on the
+ * way out and the mark would fall back to the base rule's pose — four units, on
+ * one frame, which reads as a twitch. See the note on the base rule.
+ *
+ * A SECOND TURN STILL DROPS IT AGAIN, because dropMark deletes the attribute
+ * before it writes it (see SuperPowers/reveal.ts) and the declaration really
+ * does go away in between. */
+.powers-slot[data-mark] .powers-mark-jump {
   animation: powers-mark-drop 2s linear 1 both;
-  opacity: 1;
 }
 
-/* THE WAY OUT, AND IT HAS TO BE AN ANIMATION TOO — which is the whole of the
- * bug this rule was added to fix, and it is worth writing down because the
- * thing that did not work looks like it should.
+/* THERE IS NO WAY OUT TO DRAW, and there was for a long time: the mark faded off
+ * the card the moment it stopped being the one being read. That is not what the
+ * cards are drawn as. The icon is part of the card, the way the box printed on it
+ * is, and a card with its icon missing is a card that has not finished loading —
+ * so the drawing stays and only the MOVEMENT belongs to the turn.
  *
- * A transition on .powers-mark-jump used to carry the mark out: undeclare the
- * drop, and opacity falls from the animation's held 1 back to the base rule's
- * 0 with a transition on it to smooth the fall. It never once ran. A transition
- * fires on a change between the BEFORE-CHANGE and AFTER-CHANGE styles, and the
- * before-change style is defined to exclude values derived from declarative
- * animations — so at the moment the attribute comes off, the browser compares
- * the base rule's 0 against the base rule's 0, sees no change, and has nothing
- * to transition. The mark was at opacity 1 on the frame before and 0 on the
- * frame after, and that gap is invisible to transitions by design.
- *
- * So the exit is declared the same way the entrance is. `both` holds it at
- * opacity 0, which is where the base rule has it anyway — the attribute can sit
- * at "out" indefinitely and mean exactly what no attribute means.
- *
- * IT HOLDS THE LANDED POSE while it fades. The drop's last keyframe is four
- * units above the origin and the base rule has no transform at all, so a fade
- * that did not restate the pose would drop the mark those four units on its way
- * out — small, and precisely the kind of small that reads as a twitch.
- *
- * reveal.ts sets "out" only on a slot that was at "go", which is what keeps a
- * card whose mark never fell from flashing one in and out on its way past. */
-.powers-slot[data-mark="out"] .powers-mark-jump {
-  animation: powers-mark-leave var(--pow-mark-out) linear 1 both;
-}
+ * The claim and the sentence are still the open card's alone. They arrive when
+ * the card reaches the middle and go back out when it leaves, which is what makes
+ * the middle the one place anything is read. The icon is the exception because it
+ * is a drawing and not a line of type. */
 
-/* Where it waits. Not a keyframe: with the animation undeclared until the
-   attribute lands, something has to hold the mark off the card before its first
-   turn and after the reader has scrolled back above the section. It is also the
-   only thing holding it now that the export's fade has gone — see the [data-mark
-   ="go"] rule above, which lifts it outright. */
+/* WHERE IT WAITS, WHICH IS WHERE IT LANDS.
+ *
+ * translateY(-4px) AND NOT ZERO, and this is the one figure in the block that
+ * looks like a mistake. The drop's last keyframe is four units above the origin
+ * — the mark settles proud of where the artboard puts it — and it holds there
+ * from 88% to the end. An untransformed base rule would therefore be four units
+ * below the landed pose, and every card whose attribute is cleared (the reader
+ * scrolls back above the section, or dropMark deletes it for a frame) would drop
+ * its mark those four units. Small, and exactly the kind of small that reads as a
+ * twitch. Stated here, the resting pose and the landed pose are the same pose and
+ * there is no frame in which anything can jump. Measured on all eighteen marks.
+ *
+ * NOT OPACITY. It used to be `opacity: 0` — the mark waited off the card and the
+ * turn was what showed it. See the note above on why the drawing stays. */
 .powers-mark-jump {
   /* The export's own origin. The keyframes carry their own translate pair around
      each scale, so this must stay at the corner or the squash pivots twice. */
   transform-origin: 0 0;
-  opacity: 0;
+  transform: translateY(-4px);
 }
-
-/* --------------------------------------------------------------------------
-   A MARK THAT MOVES ITSELF
-   --------------------------------------------------------------------------
-   Everything above drives the mark the SECTION animates: the stock box, and any
-   flat file uploaded in its place, both of which are wrapped in
-   .powers-mark-jump and dropped by @keyframes powers-mark-drop.
-
-   An uploaded file can also arrive carrying its OWN motion — that is what the
-   design's own export is, and what this section's keyframes were lifted out of
-   by hand when there was one mark to lift. Once there is a mark per claim that
-   lift is a ritual to repeat per file, so the file is used as it comes and the
-   section stops animating it. What is left for the section to do is decide WHEN,
-   which is the only part it was ever the authority on.
-
-   THE SWITCH IS THE SAME SWITCH, and that matters: one attribute on the slot,
-   set and unset by reveal.ts, means the same thing for both kinds of mark. What
-   differs is only which direction it works in. For .powers-mark-jump the
-   stylesheet DECLARES an animation under [data-mark="go"]; here the animation is
-   declared by the file and always would be, so the stylesheet TAKES IT OFF until
-   the turn comes.
-
-   AND IT TAKES IT OFF RATHER THAN PAUSING IT, for the reason dropMark gives in
-   SuperPowers/reveal.ts: a paused animation resumes from where it stopped, so a
-   mark that had already landed would be asked to play the frames after the last
-   one — which is no frames at all. Undeclared and re-declared, it starts again
-   from the first, which is what a second turn on a card has to look like.
-
-   `* ` AND !important, both of which are blunt and both of which are the point:
-   this has to beat whatever a file arrived declaring, at whatever specificity,
-   on however many elements, without knowing anything about it. It is the one
-   place on this site where that is the correct instrument.
-   -------------------------------------------------------------------------- */
-
-/* IT STANDS ON EVERY CARD IN THE STACK, and only the one being read MOVES.
- *
- * IT USED TO BE GATED ON BOTH AT ONCE — one attribute deciding whether the mark
- * could be seen AND whether it could play — so a card in the top or the bottom
- * slot showed a blank shape, and the icon on a card leaving the middle faded off
- * to nothing on its way out. That is not what the cards are drawn as: the icon
- * is part of the card, the way the box printed on it is, and a card with its
- * icon missing is a card that has not finished loading.
- *
- * SO THE TWO ARE SEPARATED. Visibility is unconditional — with no animation
- * declared the drawing sits at its own resting position rather than at the first
- * frame of a fall, so what a closed card shows is the mark standing on it. The
- * MOVEMENT is what the turn is still for.
- *
- * WHAT IS STILL ONLY THE OPEN CARD'S is everything else on the face: the claim
- * and the sentence still arrive when the card reaches the middle and go back out
- * when it leaves, which is what makes the middle the one place anything is read.
- * The icon is the exception because it is a drawing and not a line of type. */
-.powers-mark--live {
-  opacity: 1;
-}
-
-/* AND THE ANIMATION IS TAKEN OFF WHILE THE SLOT CARRIES NO ATTRIBUTE AT ALL,
- * which is two things: a card that has not had its turn, and the single frame
- * dropMark spends between undeclaring the animation and re-declaring it to make
- * the fall start again (see SuperPowers/reveal.ts). Undeclared and not paused,
- * for the reason that file gives: a paused animation resumes from where it
- * stopped, so a mark that had already landed would be asked to play the frames
- * after the last one, which is no frames at all.
- *
- * WHAT IT MUST NOT REACH IS A CARD THAT HAS LANDED ONE — see the rule below,
- * which is where "out" is handled and why it is not handled here. */
-.powers-slot:not([data-mark]) .powers-mark--live,
-.powers-slot:not([data-mark]) .powers-mark--live * {
-  animation: none !important;
-}
-
-/* AND IT PLAYS ONCE, WHICH THE FILES DO NOT ASK FOR AND THE SECTION REQUIRES.
- *
- * Every mark uploaded so far is the same export: a 2s drop with a squash at the
- * bottom of it, declared `infinite`. That is the honest default for a file
- * dropped into a viewer with no idea when it is being looked at — and it is
- * wrong here, because this section already decides when. What it produced was a
- * card that opened, dropped its icon, and then went on throwing the icon back
- * into the air and dropping it again every two seconds for as long as the reader
- * stayed on it.
- *
- * ONE ITERATION AND THE LAST FRAME HELD. `forwards` and not the file's own
- * fill-mode, which is `none`: without it the element reverts to its static pose
- * on the frame the animation ends, and the last keyframe and the static pose are
- * the same drawing only by the exporter's good manners. Held, the mark simply
- * stops where it landed and there is no frame in which it can jump.
- *
- * A SECOND TURN STILL DROPS IT AGAIN. dropMark undeclares the animation and
- * re-declares it (see SuperPowers/reveal.ts), and the rule above strips it in
- * between — so a card returning to the middle starts from the first frame. Once
- * per turn, not once per page: this is a loop being stopped, not a card being
- * made to remember.
- *
- * ON "out" AS WELL AS ON "go", AND THAT IS WHAT KEEPS THE CARD STILL AS IT
- * LEAVES. `out` is a card that has had its turn, and the obvious thing to do
- * with it — strip the animation, the way an unopened card's is stripped — moves
- * the drawing: the exports end their fall on translateY(-4px) and the element's
- * static pose is the untranslated one, so undeclaring the animation drops every
- * mark four units on the frame its card starts climbing. Measured on all
- * eighteen of them. Held instead, the mark simply stays where it landed, which
- * is what a box sitting on a card does.
- *
- * It is also what stops "out" looping. Left out of both rules — which it was —
- * the file's own `infinite` was the only declaration standing on a card that had
- * finished its turn.
- *
- * THE ROOT AS WELL AS ITS CHILDREN, matching the reset above, so a file that
- * declares its animation on the <svg> itself is covered by the same statement.
- *
- * !important for the reason the block's header gives: this has to beat whatever
- * a file arrived declaring, at whatever specificity, without knowing anything
- * about it. */
-.powers-slot[data-mark] .powers-mark--live,
-.powers-slot[data-mark] .powers-mark--live * {
-  animation-iteration-count: 1 !important;
-  animation-fill-mode: forwards !important;
-}
-
-/* AND THERE IS NO WAY OUT TO DRAW. A live mark used to fade off on
-   [data-mark="out"], which is what made a card leaving the middle lose its icon;
-   it is simply left standing now. `out` still means something to the section's
-   OWN bounce — see .powers-mark-jump above, which really does have to be taken
-   back off the card it fell onto — and nothing here reads it. */
 
 /* --------------------------------------------------------------------------
    Parking
@@ -8741,28 +8612,21 @@ html[data-loading] {
     opacity: var(--pow-open, 0);
   }
 
-  .powers-mark-jump,
-  .powers-slot[data-mark="go"] .powers-mark-jump,
-  .powers-slot[data-mark="out"] .powers-mark-jump {
-    animation: none;
-    opacity: 1;
-  }
+  /* THE MARK STANDS ON THE CARD RATHER THAN FALLING ONTO IT. The base rule
+     already puts it at the pose the drop ends on, so taking the animation off
+     is the whole of this — there is nothing to restate and nothing to reveal.
 
-  /* And a mark that animates itself is stopped the same way — including whatever
-     it declared on its own insides, which is what the universal selector is for.
-     It stands on the card rather than falling onto it, which is the same
-     settlement the rule above makes for the section's own bounce. */
-  .powers-mark--live,
-  .powers-mark--live * {
+     The universal selector is not superstition: an uploaded drawing is inlined
+     into this page and markSvg.ts strips whatever motion it arrived with, but
+     this rule is the backstop for a file whose spelling of it that pass did not
+     recognise. It is one of two places on this site where !important is the
+     correct instrument, and both are here for the same reason: it has to beat
+     whatever a file arrived declaring, at whatever specificity, without knowing
+     anything about it. */
+  .powers-mark,
+  .powers-mark *,
+  .powers-slot[data-mark] .powers-mark-jump {
     animation: none !important;
-  }
-
-  .powers-mark--live {
-    opacity: 1;
-  }
-
-  .powers-mark-plate {
-    opacity: 1;
   }
 }
 
@@ -8771,17 +8635,27 @@ html[data-loading] {
    --------------------------------------------------------------------------
    LIFTED VERBATIM FROM THE DESIGN'S OWN EXPORT — public/assets/svgviewer-output
    .svg — and renamed, and that is the only thing done to them. Sixty-seven stops
-   on the fall, and the export's three-stop fade dropped (see the [data-mark
-   ="go"] rule above): it is a bake of a spring, not a curve
-   anybody wrote, so there is nothing in here to tune and nothing to read. The
+   on the fall, and the export's three-stop fade dropped (see the [data-mark]
+   rule above, which argues why nothing on this mark fades at all): it is a bake
+   of a spring, not a curve anybody wrote, so there is nothing in here to tune
+   and nothing to read. The
    shape of the move is a drawing decision that was made in the tool the mark was
    drawn in, and the honest thing to do with it is carry it across untouched.
 
-   HERE AND NOT IN THE SVG, because three cards carry three copies of that markup
-   — the same mark until the truck and the roll are drawn — and the file's own
-   <style> block inlined three times is one animation defined three times. It
-   would also start on page load, in all three at once, which is the one
-   behaviour the section exists to avoid.
+   HERE AND NOT IN THE SVG — not in the built-in mark's markup, which is copied
+   into every card, and not in an uploaded file's <style> either. Three cards mean
+   three copies, and one animation defined three times is three definitions to
+   keep in step. It would also start on page load, in all three at once, which is
+   the one behaviour the section exists to avoid.
+
+   AND IT IS THE ONLY ONE ON THE PAGE, which is the part worth defending. An
+   uploaded drawing usually arrives with a drop of its own — the same tool, the
+   same two seconds — and for a while each was allowed to keep it. They are not
+   the same drop. Exported one drawing at a time, one falls straight, one comes in
+   on a tilt, one drifts sideways, and three cards in one window doing three
+   different things is not a section with animated icons on it. The motion is
+   stripped at the point of inlining (SuperPowers/markSvg.ts) and this is what
+   every mark on the site moves by.
 
    THE RESTING POSE IS translateY(-4px), NOT ZERO. The mark settles four units
    proud of where it started and holds there from 88% to the end, so the frozen
@@ -9060,30 +8934,6 @@ html[data-loading] {
 
   100% {
     transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
-  }
-}
-
-/* AND THE ONE THAT IS NOT THE EXPORT'S. Everything above was lifted out of the
-   drawing tool; this is the two frames that carry the mark back off, and it is
-   here rather than in the block above so the line between what was drawn and
-   what was written stays visible.
-
-   Both stops restate the drop's LAST keyframe verbatim rather than saying
-   `transform: none` or leaving it out. Left out, the animation would not touch
-   transform at all and the base rule's `none` would take over the moment the
-   drop's declaration went — which is the four-unit drop the rule above warns
-   about. Stated, the mark holds exactly where it landed and only its opacity
-   moves, which is what makes this read as the box being taken off the card
-   rather than as one last small fall. */
-@keyframes powers-mark-leave {
-  0% {
-    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
-    opacity: 1;
-  }
-
-  100% {
-    transform: translateX(0px) translateY(-4px) translate(197.938px, 182.651px) scaleX(1) scaleY(1) translate(-197.938px, -182.651px);
-    opacity: 0;
   }
 }
 

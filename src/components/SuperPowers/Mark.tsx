@@ -25,12 +25,12 @@ import { markArt } from "./markSvg";
  * That is as true of an uploaded file as of the one below, which is why an
  * upload is read and inlined rather than pointed at.
  *
- * THE KEYFRAMES ARE NOT HERE — for THIS mark, which is the one the section
- * itself drops. An uploaded file keeps its own and has them renamed per file
- * instead; see markSvg.ts. These are in global.css with the rest of the
- * section, because three cards carry three copies of this markup and three
- * identical @keyframes blocks in three <style> tags is the same animation
- * defined three times. What is left here is geometry and two class names.
+ * THE KEYFRAMES ARE NOT HERE, and they are not in an uploaded file either. They
+ * are in global.css with the rest of the section, and they drop every mark on
+ * the page — this one and whatever an editor puts in its place. Three cards
+ * carry three copies of this markup, and three identical @keyframes blocks in
+ * three <style> tags is the same animation defined three times. What is left
+ * here is geometry and two class names.
  *
  * THE IDS ARE GONE for the same reason — again, from THIS one, which could
  * simply have them stripped because it is checked in and nobody will change it.
@@ -114,17 +114,19 @@ function StockMark() {
  * on this disk, a file that does not parse. A card with the old drawing on it is
  * a page that works, and this is a product page.
  *
- * THREE CLASSES AND WHAT EACH IS FOR:
+ * TWO CLASSES AND WHAT EACH IS FOR:
  *
  *   .powers-mark is the frame — the size the card gives the drawing, and the
  *   overflow that lets it start its fall above it. Every mark carries it.
  *
- *   .powers-mark--live says the file animates ITSELF, which changes who is
- *   driving: global.css takes every animation off it until the slot says its
- *   turn has come, rather than declaring the section's own bounce over it.
+ *   The second is the file's own tag, and it is what its stylesheet was scoped
+ *   under — without it on this element, none of the file's own CSS matches. A
+ *   file that brought no CSS has no tag and the class is left off.
  *
- *   The third is the file's own tag, and it is what its stylesheet was scoped
- *   under — without it on this element, none of the file's own CSS matches.
+ * THERE IS NO THIRD ANY MORE. A file used to be able to say it animated ITSELF,
+ * and the section would only decide when that ran. It cannot: the bounce belongs
+ * to the section and the drawing is a drawing. See ./markSvg.ts, which is where
+ * the motion is taken off and the argument is made.
  *
  * aria-hidden, and not a title or a role, for the reason the stock mark gives:
  * the card already says what it does in a heading and says it again in the
@@ -135,13 +137,7 @@ export default async function Mark({ file }: { file?: MarkFile }) {
   const art = await markArt(file ?? null);
   if (!art) return <StockMark />;
 
-  const className = [
-    "powers-mark",
-    art.live ? "powers-mark--live" : "",
-    art.scope,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const className = ["powers-mark", art.scope].filter(Boolean).join(" ");
 
   return (
     <svg

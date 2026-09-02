@@ -26,33 +26,46 @@ import path from "path";
  *
  *   THE ANIMATION WOULD RUN ON PAGE LOAD, in all three cards at once, whether or
  *   not any of them was on screen — which is the one behaviour the section is
- *   built to avoid. It does not, because global.css takes every animation off
- *   the mark until the slot says its turn has come. That is the SAME switch the
- *   built-in mark has always used; see .powers-mark--live there.
+ *   built to avoid. It cannot, because the file's own motion is taken off it
+ *   here and the section's is put on instead. See ONE KIND OF FILE below.
  *
  *   AND IT MIGHT NOT BE THE SIZE THE BOUNCE WAS DRAWN FOR. See NORMALISING.
  *
- * TWO KINDS OF FILE, TOLD APART AND TREATED DIFFERENTLY.
+ * ONE KIND OF FILE, AND IT WAS TWO. Every mark is stripped of whatever motion it
+ * arrived with — the @keyframes in its <style>, the animation declarations that
+ * name them, any SMIL — wrapped in .powers-mark-jump and dropped onto the card by
+ * @keyframes powers-mark-drop in global.css, which is the section's own bounce.
  *
- *   A file that ANIMATES ITSELF — a <style> with @keyframes in it, or SMIL — is
- *   left to do so. Its motion is its own and the section only decides when it
- *   plays. This is what the design's own export is: see public/assets/
- *   svgviewer-output.svg, whose sixty-seven-stop bounce was lifted into
- *   global.css by hand when there was one mark. Once there is a mark per claim,
- *   that lift is a ritual to repeat per file, and the export can simply be used.
+ * IT USED TO LET A FILE KEEP ITS OWN, and the argument for that was good: the
+ * exports the design hands over already carry a two-second drop, that drop is
+ * where this section's keyframes were lifted from in the first place, and
+ * lifting it again per file is a ritual nobody should have to perform. What it
+ * missed is that the exports are not the SAME drop. They are one per drawing,
+ * exported one at a time, and they differ — one falls straight, one comes in on
+ * a five-degree tilt, one drifts sideways on the way down. Three cards in one
+ * window doing three different things is not a section with animated icons on
+ * it; it is three animations that happen to be next to each other. The bounce
+ * belongs to the SECTION, the way the letter reveal and the line reveal do, and
+ * a drawing an editor uploads is a drawing.
  *
- *   A file that does NOT is dropped onto the card by the section's own bounce,
- *   which is that same lifted animation and is still in global.css. Its contents
- *   are wrapped in .powers-mark-jump, the group the keyframes move.
+ * SO A MARK IS ARTWORK AND NOTHING ELSE, which is also the smaller promise to
+ * make to whoever draws the next one: it will be dropped onto the card exactly
+ * as the last one was, and nothing about how it was exported can change that.
  *
- * NORMALISING, and it is only for the second kind. Those keyframes are baked in
- * the export's own user units — a 96-unit fall, a squash pivoted at
- * (197.938, 182.651) — so they mean what they were drawn to mean only inside a
- * 438x418 box. A drawing in any other viewBox is fitted into that box and the
- * root's viewBox is restated, so the fall is the fall whatever was uploaded.
- * The scale sits INSIDE the animated group on purpose: outside it, it would
- * multiply the animation's own translations and the mark would fall a distance
- * that depended on how the artboard happened to be cropped.
+ * NORMALISING. The bounce's keyframes are baked in the export's own user units —
+ * a 96-unit fall, a squash pivoted at (197.938, 182.651) — so they mean what they
+ * were drawn to mean only inside a 438x418 box. A drawing in any other viewBox is
+ * fitted into that box and the root's viewBox is restated, so the fall is the
+ * fall whatever was uploaded. The scale sits INSIDE the animated group on
+ * purpose: outside it, it would multiply the animation's own translations and the
+ * mark would fall a distance that depended on how the artboard happened to be
+ * cropped.
+ *
+ * IT IS FITTED AND NOT FILLED, which is worth one line because it is visible: a
+ * wide drawing lands smaller than a square one rather than being stretched to
+ * match it. Uniform and centred is the only fit that leaves a drawing the
+ * drawing it was, and a common box is what makes three marks in one window read
+ * as one set.
  *
  * SANITISED AGAIN HERE, though Payload already refuses an upload carrying a
  * script tag, an event handler, a javascript: URL or a foreignObject
@@ -68,8 +81,6 @@ export type MarkArt = {
   inner: string;
   /** What the root element should carry. */
   viewBox: string;
-  /** The file animates itself and only needs starting. See above. */
-  live: boolean;
   /** The class its own CSS was scoped under, and which the root must carry.
    *  Empty when the file brought no CSS with it. */
   scope: string;
@@ -241,6 +252,35 @@ function scopeCss(css: string, scope: string, tag: string): string {
   return rewriteRules(css, scope);
 }
 
+/** Every SMIL element an export can carry, opening tag through closing — and
+ *  the self-closing spelling, which is the one these tools actually emit.
+ *  \1 is the tag name, so <set> is not closed by </animate>. */
+const SMIL =
+  /<(animate|animateTransform|animateMotion|set)\b[^>]*(?:\/>|>[\s\S]*?<\/\1\s*>)/gi;
+
+/** A file's stylesheet with the motion taken out of it and everything else left
+ *  alone.
+ *
+ *  TWO PASSES, because an animation is written in two places: the @keyframes
+ *  block that describes it and the declaration that names it. Removing only the
+ *  first would leave `animation: kf_Vector_2 2s linear infinite` pointing at a
+ *  rule that no longer exists, which is not an error and not a problem — but it
+ *  would still hold animation-fill-mode and animation-name in the cascade, and
+ *  the section is about to put its own animation on the same element.
+ *
+ *  The keyframes pattern allows ONE level of nesting, which is what a keyframes
+ *  block is: a list of percentage rules with declarations in them. It is not a
+ *  CSS parser and does not need to be — these are tool exports, not hand-written
+ *  stylesheets, and what it does not recognise it leaves alone. */
+function stripMotion(css: string): string {
+  return css
+    .replace(
+      /@(?:-webkit-)?keyframes[^{]*\{(?:[^{}]|\{[^{}]*\})*\}/gi,
+      "",
+    )
+    .replace(/(?:-webkit-)?animation(?:-[a-z-]+)?\s*:[^;}]*;?/gi, "");
+}
+
 /** The transform that fits one artboard into the box the bounce was drawn for.
  *  Uniform and centred — a drawing squashed to fill the frame would be a
  *  different drawing. */
@@ -301,32 +341,27 @@ function build(source: string, tag: string): MarkArt | null {
     },
   );
 
-  const live =
-    /@(?:-webkit-)?keyframes\b/i.test(css) ||
-    /<animate(?:Transform|Motion)?\b|<set\b/i.test(inner);
+  /* WHATEVER MOTION IT CAME WITH, TAKEN OFF — both spellings of it, because a
+     drawing can be animated two ways and either would run on page load in all
+     three cards at once. The declarative one is CSS and is stripped from the
+     block above; the other is SMIL, which is markup, and is stripped from the
+     markup. What is left of the stylesheet is kept: an export's <style> also
+     carries things that are not motion at all, and a future one may put a fill
+     in it. See stripMotion, and the header on why this is taken rather than
+     honoured. */
+  css = stripMotion(css);
+  inner = inner.replace(SMIL, "");
 
   const style = css.trim() ? `<style>${scopeCss(css, scope, tag)}</style>` : "";
 
-  /* A file that moves itself keeps its own box: its animation is written in
-     those units and refitting it would be rewriting the animation. */
-  if (live) {
-    return {
-      inner: style + inner,
-      viewBox: box.join(" "),
-      live: true,
-      scope: tag,
-    };
-  }
-
-  /* And one that does not is fitted into the frame the section's bounce was
-     drawn in, then handed to it. */
+  /* And then it is fitted into the frame the section's bounce was drawn in, and
+     handed to it. */
   const fit = fitInto(box);
   const fitted = fit ? `<g transform="${fit}">${inner}</g>` : inner;
 
   return {
     inner: `${style}<g class="powers-mark-jump">${fitted}</g>`,
     viewBox: `0 0 ${FRAME.w} ${FRAME.h}`,
-    live: false,
     scope: css.trim() ? tag : "",
   };
 }
@@ -343,7 +378,6 @@ function raster(filename: string, tag: string): MarkArt {
       `preserveAspectRatio="xMidYMid meet" />` +
       `</g>`,
     viewBox: `0 0 ${FRAME.w} ${FRAME.h}`,
-    live: false,
     scope: "",
   };
 }

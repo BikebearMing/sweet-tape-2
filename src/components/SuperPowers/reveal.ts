@@ -428,10 +428,11 @@ export function initSuperPowersReveal(root: HTMLElement): () => void {
    * elements are not HTMLElements — they have no offsetWidth to read, so the
    * usual spelling of this trick is a silent undefined and no reflow at all.
    *
-   * The delete also covers a slot caught mid-EXIT at data-mark="out" — a reader
-   * who scrolls off a card and straight back onto it. Clearing the attribute
-   * takes the leave animation off before the drop is declared, so the mark
-   * restarts from the ceiling rather than fighting a fade on its way down. */
+   * The delete also covers a slot caught at data-mark="out" — a reader who
+   * scrolls off a card and straight back onto it. "out" carries the same
+   * declaration as "go", so writing "go" over it would change nothing and the
+   * mark would sit where it landed; the delete is what makes the second turn a
+   * second fall. */
   const dropMark = (slot: HTMLElement) => {
     /* THE ROOT AND NOT THE BOUNCING GROUP, which it used to be. A mark that
        animates ITSELF has no .powers-mark-jump in it — the group is something
@@ -447,22 +448,25 @@ export function initSuperPowersReveal(root: HTMLElement): () => void {
     slot.dataset.mark = "go";
   };
 
-  /* And take it off again, which is what makes a card blank the moment it stops
-   * being the one being read.
+  /* And say the card has had its turn, which is now ALL this does.
    *
-   * "out" AND NOT NO ATTRIBUTE AT ALL, and the difference is the whole of a bug
-   * that made every change of card look like the drawing had been switched off.
-   * Undeclaring the drop outright returns the mark to the base rule's opacity 0
-   * on a single frame — the transition that used to be on .powers-mark-jump to
-   * catch that fall could never fire, because a transition compares styles with
-   * animation-derived values excluded and both sides of that comparison were
-   * the base rule's 0. So the mark simply vanished mid-card, while the card it
-   * was on was still shrinking. See the [data-mark="out"] rule in global.css,
-   * which now carries the exit as an animation of its own.
+   * IT USED TO TAKE THE MARK OFF THE CARD and it takes nothing off anything. The
+   * icon is part of the card and stays on it — see the note above .powers-mark-
+   * jump in global.css — so what is left for this to say is only that the drop
+   * has already been played here.
    *
-   * ONLY FROM "go". A slot whose mark never fell has nothing to take off, and
-   * putting it into the exit would run a fade from opacity 1 on a mark that was
-   * never shown — a box flashing onto a card on its way past. */
+   * "out" AND NOT NO ATTRIBUTE AT ALL, and it still matters for one reason: the
+   * stylesheet declares the drop under [data-mark], which both values match, so
+   * moving between them changes no declaration and the animation is neither
+   * restarted nor undone. It goes on holding its last frame. Cleared outright
+   * the declaration would go, the base rule's pose would take over, and — because
+   * that pose is deliberately the drop's own last frame — nothing would move.
+   * Which makes this belt and braces rather than load-bearing, and it is kept
+   * because the two poses agreeing is a fact about a keyframe somebody could
+   * reasonably re-export.
+   *
+   * ONLY FROM "go", so a card whose mark never fell is not marked as having had
+   * a turn it did not have. */
   const liftMark = (slot: HTMLElement) => {
     if (slot.dataset.mark === "go") slot.dataset.mark = "out";
   };

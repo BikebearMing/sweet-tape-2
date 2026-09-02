@@ -20750,12 +20750,8 @@ html.has-cursor * {
   cursor: none;
 }
 
-/* An exception worth keeping: text you can select still says so. A caret over
-   a field is information the arrow does not carry. */
-html.has-cursor input,
-html.has-cursor textarea {
-  cursor: text;
-}
+/* No exception for fields: the caret a text input used to borrow from the
+   system is now one of the cursor's own faces. */
 
 .cursor-arrow {
   position: fixed;

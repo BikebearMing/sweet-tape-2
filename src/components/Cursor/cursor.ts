@@ -40,7 +40,24 @@ export const CONFIG = {
   TILT: -8, // degrees the arrow kicks back from BASE on hover
   FADE: 0.2, // seconds, the show/hide at the window's edge
   MORPH: 0.28, // seconds, the state change
+  SHRINK: 0.16, // seconds, the old face squashing away on a swap
+  GROW: 0.34, // seconds, the new face springing in
 };
+
+/* The three faces. Sizes are the artwork's own box at 0.8 — the same
+   reduction the arrow already carried — and the hotspot is the point of the
+   drawing that must sit under the real pointer: the arrow's tip, the hand's
+   fingertip, the I-beam's middle, in those same reduced pixels. */
+const VARIANTS = {
+  arrow: { url: "/assets/new-cursor.svg", w: 48, h: 52, hx: 11.2, hy: 12 },
+  pointer: { url: "/assets/cursor-pointer.svg", w: 46.4, h: 49.6, hx: 13.3, hy: 6.3 },
+  type: { url: "/assets/cursor-type.svg", w: 25.6, h: 40.8, hx: 12.8, hy: 20.4 },
+};
+type Variant = keyof typeof VARIANTS;
+
+/* A caret belongs over anything text goes into — including a rich editor,
+   which is a div and would otherwise read as a button. */
+const TEXTUAL = "input, textarea, [contenteditable]";
 
 export function initCursor(): () => void {
   /* Touch and pen get nothing: there is no hover to react to, no persistent
@@ -92,6 +109,60 @@ export function initCursor(): () => void {
       overwrite: "auto",
     });
 
+  /* Which face is on screen. The box, the artwork and the hotspot change
+     together — they are one drawing — and inline styles are used so the
+     stylesheet keeps stating the arrow as the resting default. */
+  let variant: Variant = "arrow";
+  const paint = (v: (typeof VARIANTS)[Variant]) => {
+    arrow.style.backgroundImage = `url("${v.url}")`;
+    arrow.style.width = `${v.w}px`;
+    arrow.style.height = `${v.h}px`;
+    /* translate, not transform — GSAP owns the transform for tracking. It is
+       applied first, so the scale below still pivots on the hotspot. */
+    arrow.style.translate = `${-v.hx}px ${-v.hy}px`;
+    arrow.style.transformOrigin = `${v.hx}px ${v.hy}px`;
+  };
+  paint(VARIANTS.arrow);
+  /* Prime the other two: the artwork is heavy (each is a traced raster), and
+     a swap that lands on an unloaded background is a swap to nothing. */
+  Object.values(VARIANTS).forEach((v) => {
+    new Image().src = v.url;
+  });
+
+  /* Swapping faces: the old one squashes past itself and out, the new one
+     springs back past its size and settles — back.in then back.out, so the
+     bounce is on both halves. The artwork is exchanged at scale 0, where the
+     size and hotspot jump is invisible.
+
+     Held so a fast pointer crossing three targets kills its predecessor
+     rather than stacking swaps that each restore their own scale. */
+  let swapping: gsap.core.Timeline | null = null;
+  const face = (next: Variant, scale: number, rotation: number) => {
+    if (next === variant) return void morph(scale, rotation);
+    variant = next;
+    swapping?.kill();
+    if (reduced) {
+      paint(VARIANTS[next]);
+      gsap.set(arrow, { scale, rotation });
+      return;
+    }
+    swapping = gsap
+      .timeline()
+      .to(arrow, {
+        scale: 0,
+        duration: CONFIG.SHRINK,
+        ease: "back.in(2.4)",
+        overwrite: "auto",
+      })
+      .add(() => paint(VARIANTS[next]))
+      .to(arrow, {
+        scale,
+        rotation,
+        duration: CONFIG.GROW,
+        ease: "back.out(2.6)",
+      });
+  };
+
   function onMove(e: PointerEvent) {
     px = e.clientX;
     py = e.clientY;
@@ -123,14 +194,21 @@ export function initCursor(): () => void {
      only changes when THAT changes — moving between a button's own children
      is not a leave. */
   let hovered: Element | null = null;
-  const rest = () => morph(1, CONFIG.BASE);
-  const lift = () => morph(CONFIG.HOVER, CONFIG.BASE + CONFIG.TILT);
+  let held = false;
+  /* One place the state is decided, so hover and press cannot disagree about
+     which face is showing — every event below just updates its own flag and
+     asks for the state that follows. */
+  const apply = () =>
+    face(
+      hovered ? (hovered.matches(TEXTUAL) ? "type" : "pointer") : "arrow",
+      held ? CONFIG.PRESS : hovered ? CONFIG.HOVER : 1,
+      CONFIG.BASE + (hovered ? CONFIG.TILT : 0),
+    );
   const onOver = (e: PointerEvent) => {
     const hit = (e.target as Element | null)?.closest?.(INTERACTIVE) ?? null;
     if (hit === hovered) return;
     hovered = hit;
-    if (hit) lift();
-    else rest();
+    apply();
   };
   const onOut = (e: PointerEvent) => {
     if (!hovered) return;
@@ -138,12 +216,17 @@ export function initCursor(): () => void {
     const to = e.relatedTarget as Element | null;
     if (to && hovered.contains(to)) return;
     hovered = null;
-    rest();
+    apply();
   };
 
-  const onDown = () =>
-    morph(CONFIG.PRESS, CONFIG.BASE + (hovered ? CONFIG.TILT : 0));
-  const onUp = () => (hovered ? lift() : rest());
+  const onDown = () => {
+    held = true;
+    apply();
+  };
+  const onUp = () => {
+    held = false;
+    apply();
+  };
 
   /* The window's edges. pointerleave on the document covers walking off the
      page; blur covers the pointer leaving via something over the page —
@@ -176,6 +259,7 @@ export function initCursor(): () => void {
     document.removeEventListener("pointerleave", onLeave);
     document.removeEventListener("pointerenter", onEnter);
     window.removeEventListener("blur", onLeave);
+    swapping?.kill();
     gsap.killTweensOf(arrow);
     root.classList.remove("has-cursor");
     arrow.remove();

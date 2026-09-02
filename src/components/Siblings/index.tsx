@@ -51,25 +51,32 @@ const HEADING = "THE SIBLINGS";
  * `faces` and siblingFacesOf in src/data/tape-types.ts.
  */
 
-/* THE ARRANGEMENT IS THREE PLACES, AND IT STAYS THREE PLACES.
+/* THE ARRANGEMENT IS THREE PLACES, AND A SHORTER RANGE TAKES THE FIRST OF THEM
+ * AND STANDS IN THE MIDDLE OF THE SCREEN.
  *
- * One card raised and square in the MIDDLE with one either side of it, lower
- * and leaning away — and THE SIBLINGS in the gap that raising the middle one
- * opens up. That is the drawing, and it is a fact about the composition rather
- * than about how many variants a tape happens to sell.
+ * One card raised and square with one either side of it, lower and leaning away
+ * — and THE SIBLINGS in the gap that raising it opens up. That is the drawing,
+ * and the PLACES are a fact about the composition rather than about how many
+ * variants a tape happens to sell: two labels are still the raised one and one
+ * leaning away from it, not two equals side by side.
  *
- * SO A SHORTER RANGE FILLS IT FROM THE LEFT AND LEAVES THE REST EMPTY. Two
- * labels take the left place and the middle one; the right stands empty. The
- * raised card is still in the middle of the screen, the name is still under it,
- * and nothing about the section has to be re-composed for a tape that has two
- * of something instead of three. See .siblings-space in global.css, which is
- * what holds the empty place open.
+ * WHAT IS NOT A FACT ABOUT THE COMPOSITION IS THE WIDTH OF THE ROW. A range of
+ * two used to hold the third place open with an empty box, so the raised card
+ * stayed at the middle of the SCREEN and the name stayed under it. That reads
+ * as it sounds: a pair of labels pushed a couple of hundred pixels to the left
+ * of a section whose right-hand third is bare, with the name centred under the
+ * emptiness rather than under the cards. The section is not three places wide;
+ * it is however wide the range is, standing in the middle.
  *
- * A ROW OF ONE IS THE EXCEPTION and takes the middle place on its own, centred.
- * A lone card pushed into the left-hand slot is not a row with a gap in it — it
- * is one object sitting off to one side of a screen with its name in the middle
- * of the empty half, which is a composition nobody drew. */
-const SLOTS = 3;
+ * SO THE ROW IS AS LONG AS THE LIST AND IT IS CENTRED. Two labels are centred
+ * as a pair — the leaning one left of the middle, the raised one right of it,
+ * the name under the seam. One is the raised place on its own. Three is the
+ * drawing untouched, because at three the two readings are the same picture.
+ *
+ * A LONE CARD TAKES THE MIDDLE PLACE and not the left one, which is the only
+ * thing here that has to be said in code rather than left to the flex: the
+ * places carry the size and the lean, and a single label wants the raised,
+ * square one. */
 
 /* WHICH PLACE IS RAISED, and how far each one leans, in degrees — by PLACE and
  * not by card, which is the whole point of the two constants: the middle is up
@@ -92,15 +99,10 @@ export default function Siblings({ tape }: { tape: Tape }) {
   const faces = siblingFacesOf(tape);
 
   /* WHICH PLACE EACH LABEL STANDS IN. Filled from the left, so two labels are
-     the left place and the middle one — see SLOTS. A lone label is the middle
-     place on its own, which is the one case that is not a row. */
+     the leaning place and the raised one. A lone label is the raised place on
+     its own — see the note above, which is where that exception is argued. */
   const lone = faces.length === 1;
   const slotOf = (i: number) => (lone ? RAISED : i);
-
-  /* And the places left standing empty on the right of them. None when the
-     range fills the row, and none for a lone label — it is centred rather than
-     placed, so there is nothing to hold open beside it. */
-  const empties = lone ? 0 : SLOTS - faces.length;
 
   return (
     <Stage style={siblingsVars(tape.sections)}>
@@ -154,14 +156,6 @@ export default function Siblings({ tape }: { tape: Tape }) {
           >
             <img className="siblings-face" src={face.src} alt={face.alt} />
           </div>
-        ))}
-
-        {/* The places nobody is standing in. They draw nothing and are dealt
-            nothing — see .siblings-space in global.css. Keyed by index because
-            an empty place has no identity beyond where it is, which is the same
-            call the cards above make and for a stronger reason. */}
-        {Array.from({ length: empties }, (_, i) => (
-          <div className="siblings-space" key={`space-${i}`} aria-hidden="true" />
         ))}
         </div>
 

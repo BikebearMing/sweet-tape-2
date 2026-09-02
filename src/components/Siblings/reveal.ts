@@ -92,21 +92,9 @@ export const SIBLINGS_REVEAL = {
      exactly the window's height. */
   PIN_START: "top top",
 
-  /* HOW MANY BEATS THE PIN IS SPENT ON — one per card, one for the name and one
-   * to stand and look at the whole thing before it lets go. Five, for three
-   * cards.
-   *
-   * A CONSTANT PLUS THE COUNT AND NOT A FLAT FIVE, which it was while the row
-   * was always three. The row is the tape's list now and can be shorter, and a
-   * pin costing five beats to deal one card is three screens of scrolling with
-   * nothing happening in them. See stepsFor, just below.
-   *
-   * THE FIRST BEAT IS ONE WITH NOTHING IN IT, and that is the point of it:
-   * card one has already arrived on the way in, so this is the moment it stands
-   * alone in the middle of the held screen before the row starts growing around
-   * it. Without it the second card is dealt on the same frame the pin engages,
-   * and the card that was supposed to introduce the section never gets looked
-   * at.
+  /* THE BEATS WITH NOTHING BEING DEALT IN THEM: the name's, and one to stand and
+   * look at the whole thing before the pin lets go. See beatsFor, just below,
+   * which is where the deals are counted and the whole length is put together.
    *
    * Equal slices of the pin's length, which is what makes the step below a floor
    * of the progress. */
@@ -221,10 +209,50 @@ export const SIBLINGS_REVEAL = {
 
 };
 
-/** The beats the pin is spent on, for a row of this many cards: one each, plus
- *  the name's and the hold at the end. Three cards comes to five, which is the
- *  figure this was written as. */
-const stepsFor = (cards: number) => cards + SIBLINGS_REVEAL.EXTRA_STEPS;
+/** HOW THE PIN'S BEATS ARE SPENT, for a row of this many cards.
+ *
+ *  IT WAS A FLAT FIVE while the row was always three, and then `cards + 2` when
+ *  the row became the tape's list. Both were too long at the short end, and the
+ *  reason is what this function now says out loud: the beats that carry no card
+ *  do not shrink with the row, so the shorter the range the more of the pin is
+ *  scrolling past nothing. Three cards spend two of five beats that way; one
+ *  card used to spend two of three, which is two-thirds of a two-screen hold
+ *  with a single label sitting on it.
+ *
+ *  THE PIN NEVER DEALS THE FIRST CARD. It arrives on the way in, before the pin
+ *  takes hold — see CARD_ONE — so what the pin has to deal is everything after
+ *  it, and a row of one has nothing to deal at all.
+ *
+ *  THE INTRODUCTORY BEAT IS SPENT ONLY WHEN A ROW IS COMING. Its job is to let
+ *  card one stand alone in the middle of the held screen before the row grows
+ *  AROUND it. That is a real beat when two more cards are on their way. With one
+ *  card left to deal there is no row growing — there is one more label arriving
+ *  — and the beat that shows card one alone is the same beat that brings the
+ *  other, so spending a second one on it is a held screen with nothing in it.
+ *
+ *  AND CARD ONE HAS ALREADY BEEN LOOKED AT BY THEN, which is what makes dropping
+ *  it safe rather than brisk. It is dealt at ARRIVE_START — the stage's top a
+ *  quarter of the way down the window — and the pin does not engage until that
+ *  edge reaches the top, so there is three quarters of a screen in which the
+ *  card is the only thing there, rising into the middle. The introductory beat
+ *  is a second helping of that, and a short row does not need one.
+ *
+ *  Three cards still comes to five, which is the figure the section was drawn
+ *  to. Two comes to three and one to two, which is where the time was going. */
+function beatsFor(cards: number) {
+  const deals = Math.max(0, cards - 1);
+  const intro = deals > 1 ? 1 : 0;
+  return {
+    /* The beats spent dealing, the intro's included — and so the beat the name
+       is written on, since it comes on the one after the last card. */
+    deal: intro + deals,
+    /* How many cards should be down on beat 0. One when the intro is spent
+       (card one, already there); two when it is not, because that beat is the
+       deal. dealTo clamps, so a lone card asks for two and gets its one. */
+    lead: intro ? 1 : 2,
+    total: intro + deals + SIBLINGS_REVEAL.EXTRA_STEPS,
+  };
+}
 
 /* Fisher–Yates, the hero's. The shuffle IS the effect for TYPE: reveal the same
    letters left to right and it reads as a wipe. It is used on the name and never
@@ -248,9 +276,10 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
   const cards = Array.from(root.querySelectorAll<HTMLElement>(".siblings-card"));
   if (!chars.length && !cards.length) return () => {};
 
-  /* The pin's length, in beats. Read once off the row that was rendered — the
-     count cannot change without this component remounting. */
-  const steps = stepsFor(cards.length);
+  /* How the pin's length is spent, in beats. Read once off the row that was
+     rendered — the count cannot change without this component remounting. */
+  const beats = beatsFor(cards.length);
+  const steps = beats.total;
 
   /* Hand both over from the stylesheet.
    *
@@ -319,14 +348,19 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
     /* AND THE LAST ONE IS ZERO BY DEFINITION, not by measurement.
      *
      * The run ends at the arrangement the stylesheet laid out — that IS the
-     * design, and the swing is a displacement measured FROM it. Measuring the
-     * last stop like the others was harmless while every place in the row held a
-     * card, because centring the cards and resting the fan were then the same
-     * position. They are not once a place is left empty: a range of two sits in
-     * the left and middle places with the right one open (see .siblings-space),
-     * and the measured answer swings the whole composition sideways to put the
-     * PAIR in the middle of the screen — which takes the raised card off centre
-     * and leaves the name standing under nothing. */
+     * design, and the swing is a displacement measured FROM it. The measurement
+     * agrees, now that a short row is simply a short row: the fan holds nothing
+     * but cards and centres them, so "the cards centred" and "the fan at rest"
+     * are one position again. Stated rather than measured because it is a
+     * statement about where the run ENDS, and a rounding error in the last stop
+     * would leave the finished composition a pixel off the design for the sake
+     * of arithmetic that already knows the answer.
+     *
+     * It was load-bearing rather than tidy for one round, when a range of two
+     * held the third place open with an empty box: the measure then centred the
+     * PAIR, which took the raised card off the middle of the screen and left the
+     * name standing under nothing. The empty place is gone and so is the
+     * disagreement. */
     out[out.length - 1] = 0;
     return out;
   };
@@ -586,12 +620,12 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
           if (next === step) return;
           step = next;
 
-          /* One card per beat, so the count IS the step plus one — and beat 0
-             asks for the card that is already down, which is what makes it the
-             held moment described at STEPS. dealTo clamps at the row's length,
-             which leaves the two beats after the last card free for the name and
-             the hold. */
-          dealTo(step + 1, shown > 0);
+          /* One card per beat, counted from whatever beat 0 is asking for —
+             the card already down when the introductory beat is spent, the
+             second card when it is not. dealTo clamps at the row's length, which
+             leaves the two beats after the last card free for the name and the
+             hold. See beatsFor, which is where `lead` is argued. */
+          dealTo(step + beats.lead, shown > 0);
 
           /* And the name on the beat AFTER the last card, not on the same one:
              the row has to be finished for the gap to be there, and the two
@@ -604,7 +638,10 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
              is the name being deleted, and the reader who scrolled up by one
              beat did not ask for that — they asked to see the last thing
              again. */
-          if (step >= cards.length) nameTl?.play();
+          /* AND THE NAME ON THE BEAT AFTER THE LAST CARD, which is the beat
+             after the dealing ends — not `cards.length`, which was the same
+             number only while every card got a beat of its own. */
+          if (step >= beats.deal) nameTl?.play();
           else nameTl?.reverse();
         },
         onLeaveBack: () => {

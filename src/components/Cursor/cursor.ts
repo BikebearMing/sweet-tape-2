@@ -40,8 +40,6 @@ export const CONFIG = {
   TILT: -8, // degrees the arrow kicks back from BASE on hover
   FADE: 0.2, // seconds, the show/hide at the window's edge
   MORPH: 0.28, // seconds, the state change
-  SHRINK: 0.16, // seconds, the old face squashing away on a swap
-  GROW: 0.34, // seconds, the new face springing in
 };
 
 /* The three faces. Sizes are the artwork's own box at 0.8 — the same
@@ -129,38 +127,14 @@ export function initCursor(): () => void {
     new Image().src = v.url;
   });
 
-  /* Swapping faces: the old one squashes past itself and out, the new one
-     springs back past its size and settles — back.in then back.out, so the
-     bounce is on both halves. The artwork is exchanged at scale 0, where the
-     size and hotspot jump is invisible.
-
-     Held so a fast pointer crossing three targets kills its predecessor
-     rather than stacking swaps that each restore their own scale. */
-  let swapping: gsap.core.Timeline | null = null;
+  /* Swapping faces is a cut: the artwork is exchanged on the spot and only
+     the scale and tilt tween, exactly as they do when the face stays put. */
   const face = (next: Variant, scale: number, rotation: number) => {
-    if (next === variant) return void morph(scale, rotation);
-    variant = next;
-    swapping?.kill();
-    if (reduced) {
+    if (next !== variant) {
+      variant = next;
       paint(VARIANTS[next]);
-      gsap.set(arrow, { scale, rotation });
-      return;
     }
-    swapping = gsap
-      .timeline()
-      .to(arrow, {
-        scale: 0,
-        duration: CONFIG.SHRINK,
-        ease: "back.in(2.4)",
-        overwrite: "auto",
-      })
-      .add(() => paint(VARIANTS[next]))
-      .to(arrow, {
-        scale,
-        rotation,
-        duration: CONFIG.GROW,
-        ease: "back.out(2.6)",
-      });
+    morph(scale, rotation);
   };
 
   function onMove(e: PointerEvent) {
@@ -259,7 +233,6 @@ export function initCursor(): () => void {
     document.removeEventListener("pointerleave", onLeave);
     document.removeEventListener("pointerenter", onEnter);
     window.removeEventListener("blur", onLeave);
-    swapping?.kill();
     gsap.killTweensOf(arrow);
     root.classList.remove("has-cursor");
     arrow.remove();

@@ -129,6 +129,16 @@ html {
      this site is several screens long, so the gutter is occupied anyway and
      this changes nothing else. */
   scrollbar-gutter: stable;
+
+  /* THE PAGE NEVER SCROLLS SIDEWAYS, and this is the one place that says so.
+     Every section already clips its own overhangs (overflow-x: clip, several
+     below), but any element that escapes them — a vw length rounding wide of a
+     client area narrowed by the scrollbar, a pin spacer measured before the
+     gutter came back — hands the document a horizontal scrollbar. Propagated to
+     the viewport, this takes that class of bug off the table. clip and not
+     hidden: clip does not make the viewport a different scroll container, so
+     sticky, pins and the smooth scroll are untouched. */
+  overflow-x: clip;
 }
 
 /* THE SCROLLBAR, AND IT IS A PIECE OF THE DRAWING RATHER THAN A PIECE OF THE
@@ -2605,14 +2615,14 @@ html[data-loading] {
        next span dropped into the column would silently steal the second card's
        placement. Both showcases are the first two children of .middle. */
     &:first-child {
-      top: 14.5vw;
-      left: 19.878vw;
-      --rot: -6.487deg;
+      top: 15.5vw;
+      left: 15.878vw;
+      --rot: -7.487deg;
     }
 
     &:nth-child(2) {
-      top: 18.3vw;
-      right: 24vw;
+      top: 19.3vw;
+      right: 18vw;
       --rot: 10.359deg;
     }
 
@@ -2751,7 +2761,11 @@ html[data-loading] {
      * roll's slot ends at 60.4vw, so the rolls on it cannot reach the middle of
      * the stage. If the orbit is ever brought inboard, THAT is a z-index on
      * .tape-slide and not one here. */
-    z-index: 11;
+    z-index: 15;
+    /* OVER the explore button by design — the tape's edge crosses the sticker.
+       The canvas is transparent and nothing in this slot is clickable (the lean
+       reads window pointermove), so the clicks go through to the button. */
+    pointer-events: none;
 
     /* Deliberately no --parallax. The roll is the one element here that moves
        in three dimensions on its own — it leans with the pointer inside the
@@ -2839,6 +2853,149 @@ html[data-loading] {
      while staying under everything else here (4 and up). The colour layers are
      below it either way, so the tape still reads against the stage. */
   z-index: 3;
+}
+
+/* --------------------------------------------------------------------------
+   EXPLORE — the sticker on the corner of THE, and the only way off this stage.
+   --------------------------------------------------------------------------
+   PLACED OFF THE WORD'S OWN THREE NUMBERS, not beside them. The mark above is
+   left 48%, width 26.32vw, top 9.1vw; the E is its last letter, so the word's
+   right edge IS the E's, and the foot below is the E's foot — the letters are
+   flex-end aligned and E is the tallest of the three (214/120 of its share of
+   the row, which is 14.5vw at this width). Move .top-title and the sticker goes
+   with it; the only figures here that are taste are the two nudges, which are
+   how far it laps the corner.
+
+   A SIBLING OF THE ROLL AND NOT A CHILD OF THE WORD, which is what the two
+   z-indexes cost: .top-title is z-index 3 so the hero's tape can pass behind
+   the letters, and an absolute box with a z-index is a stacking context its
+   children cannot climb out of — a sticker inside the word could never be over
+   the roll, which is what the design draws. 14 is one above .key-visual's 13,
+   and that 13 is the ceiling of this stage: .middle is a stacking context of
+   its own (it carries a `translate`), so the number is spent against the roll,
+   the two showcases and the titles and against nothing else.
+
+   PRINTED IN THE BRAND'S INK, not the tape's. Everything else on this stage
+   recolours per roll, and this deliberately does not: it is a sticker stuck to
+   the artwork rather than part of it, and half the palettes here are pale
+   (--word is #fcd805 on the first roll) which is nothing to letter a white
+   badge in. Swap the three colours below for var(--word-colour) and friends if
+   that decision is ever reversed. */
+.tape-slider-parent .explore-button {
+  --explore-size: 11.5vw;
+  /* 151px at the design width. Measured off the word rather than chosen: the
+     type below is the drawn 35px and sets EXPLORE 108px wide, and the mockup
+     has the word filling about seven tenths of the disc. */
+  --explore-face: #fff;
+  --explore-ink: #013900;
+  --explore-disc: #b6fe00;
+  /* How far the sticker laps ONTO the letter from the corner, negative being
+     inward and up. The whole of the tuning. */
+  --explore-lap-x: 0.4vw;
+  --explore-lap-y: -4.6vw;
+
+  position: absolute;
+  z-index: 14;
+  left: calc(48% + 26.32vw / 2 + var(--explore-lap-x));
+  top: calc(9.1vw + 14.5vw + var(--explore-lap-y));
+  /* The `translate` property, not `transform`: the entrance is GSAP's and it
+     owns transform on this element. They are separate properties and compose,
+     so the centring survives the bounce. */
+  translate: -50% -50%;
+  /* !important because the entrance writes `rotate` on this element too. */
+  rotate: 8deg !important;
+
+  display: grid;
+  place-items: center;
+  width: var(--explore-size);
+  height: var(--explore-size);
+  border-radius: 50%;
+  background: var(--explore-face);
+  color: var(--explore-ink);
+  text-decoration: none;
+  /* The die-cut edge — a sticker's perforation, drawn as a dotted rule inside
+     the white rather than as the white's own border, so the disc keeps its full
+     size and the dots sit in from the edge the way the mockup's do. */
+  box-shadow:
+    inset 0 0 0 0.14vw var(--explore-face),
+    0 0.3vw 0.9vw rgb(0 0 0 / 0.14);
+  /* THE ROLL IS DELIBERATELY OVER THIS (.key-visual, z-index 15) so the tape's
+     edge crosses the sticker — the canvas is transparent and has no hit target
+     of its own, so it gives its clicks back rather than eating this one. */
+}
+
+/* The perforation itself. A pseudo-element and not a border: a border would be
+   the outer edge of the disc, and this ring is inset from it. */
+.tape-slider-parent .explore-button::before {
+  content: "";
+  position: absolute;
+  inset: 0.5vw;
+  border: 0.24vw dotted var(--explore-ink);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* The clip the word rises out of on the way in — the word alone, see the note
+   in Explore.tsx on why the badge is not in here with it. */
+.tape-slider-parent .explore-clip {
+  overflow: hidden;
+}
+
+/* THE TYPE AS DRAWN: 35px / 25px, -1.05px of tracking, weight 800. In em and
+   vw rather than px, because this stage is drawn in vw and nothing else on it
+   holds one size while the window changes — 2.43vw IS 35px at the 1440 the
+   design was drawn on. */
+.tape-slider-parent .button-text {
+  display: block;
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 2.43vw;
+  line-height: 0.715;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+/* The badge, hung off the BOTTOM MIDDLE of the word and lapping over it —
+   which is where the mockup puts it. Absolute against the disc rather than a
+   flex sibling of the word: it is printed on top of the type, not set beside
+   it, and a flow position could only ever push the word aside. */
+.tape-slider-parent .explore-button .arrow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  /* Down onto the word's foot, so the badge laps the BOTTOM of the letters
+     rather than sitting across their middle. 1.9vw is the disc's own radius
+     below the line's centre, less the sliver of overlap the mockup draws. */
+  translate: -50% 0.55vw;
+  display: grid;
+  place-items: center;
+  width: 2vw;
+  height: 2vw;
+  border-radius: 50%;
+  background: var(--explore-disc);
+  color: var(--explore-ink);
+}
+
+/* On the svg and not on the disc: the disc is what the entrance scales, and
+   whichever of the two was written second would win. Same overshoot curve the
+   news cards turn their arrow on. */
+.tape-slider-parent .explore-button .arrow svg {
+  width: 9px;
+  height: 9px;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* THE WHOLE STICKER IS THE TARGET, not the badge — an arrow that only turns
+   when the pointer is on the arrow is a thing nobody finds. */
+.tape-slider-parent .explore-button:hover .arrow svg,
+.tape-slider-parent .explore-button:focus-visible .arrow svg {
+  transform: rotate(45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tape-slider-parent .explore-button .arrow svg {
+    transition: none;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -3428,6 +3585,41 @@ html[data-loading] {
   .tape-slider-parent .top-title {
     top: 25vw;
     width: 62vw;
+  }
+
+  /* The sticker follows it, off the same numbers again: the word is 62vw wide
+     here and its E is 19.4vw of that, which is 34.6vw tall. Everything else is
+     the desktop rule, scaled — a badge sized in desktop vw would be a 130px
+     circle on a 390px screen. */
+  .tape-slider-parent .explore-button {
+    --explore-size: 23vw;
+    --explore-lap-x: -5vw;
+    --explore-lap-y: -5vw;
+    left: calc(48% + 62vw / 2 + var(--explore-lap-x));
+    top: calc(25vw + 34.6vw + var(--explore-lap-y));
+    box-shadow:
+      inset 0 0 0 0.3vw var(--explore-face),
+      0 0.7vw 2vw rgb(0 0 0 / 0.14);
+  }
+
+  .tape-slider-parent .explore-button::before {
+    inset: 1.1vw;
+    border-width: 0.5vw;
+  }
+
+  .tape-slider-parent .button-text {
+    font-size: 5.4vw;
+  }
+
+  .tape-slider-parent .explore-button .arrow {
+    width: 6vw;
+    height: 6vw;
+    translate: -50% 0.8vw;
+  }
+
+  .tape-slider-parent .explore-button .arrow svg {
+    width: 2.2vw;
+    height: 2.2vw;
   }
 
   /* CREATIVE and its five siblings. --unit-base is one artwork pixel on screen
@@ -15204,18 +15396,11 @@ img#front {
  * paper, the screen catches, the sheet opens and is written on and taped, and
  * the screen lets go. Four events in a row and each one waits for the last.
  *
- * THE PIN IS ON THE STAGE AND NOT ON THE SECTION, which is the one structural
- * rule this site has about pinning and it was learnt expensively — see the long
- * note in Conveyor/Stage.tsx, where pinning a section that is a direct child of
- * the page crashes every navigation away from it. WE WANTED TO BE. pins its
- * stage; THE SIBLINGS and SUPER POWERS pin theirs; this one now does too.
- *
- * AND THE SECTION HAS NO HEIGHT OF ITS OWN ANY MORE. The stage is one screen and
- * ScrollTrigger's spacer supplies the rest, exactly as .we-wanted does it — so
- * the section is as tall as the pin is long, the figure lives in ./unfold.ts
- * beside the timeline it is paying for, and a reader who has asked for less
- * motion gets no pin, no spacer and a one-screen section without this file
- * having to take anything back. */
+ * THE PIN IS GONE AGAIN. The section is its stage's own height and the reveal
+ * plays off a plain ScrollTrigger cue in ./unfold.ts — the paragraphs above
+ * record why it was held for a round, and the reason it no longer needs to be
+ * is that nothing unfolds any more: the sheet rests open and only what is ON
+ * it arrives. */
 .reimagine {
   --rei-bg: #b6fe00;
   --rei-ink: #013900;
@@ -15224,74 +15409,19 @@ img#front {
    *
    * The drawing is 1440 x 1096 and everything in it — the sheet, the type on
    * the sheet, the hole in line three, the strip of tape in the hole — was
-   * written as a fraction of that width, in vw. That is the call every section
-   * on this site makes and it is the right one: the composition is one drawing
-   * scaled, rather than a set of boxes that reflow against each other.
+   * written as a fraction of that width, in vw: the composition is one drawing
+   * scaled, rather than a set of boxes that reflow against each other. Every
+   * length in this section is calc(N * var(--rei-u)) where N is the design's
+   * own vw figure.
    *
-   * IT STOPS WORKING THE MOMENT THE SECTION IS PINNED. A drawing 76.111vw tall
-   * is 1096px at a 1440 window, and the window is 900 — so un-pinned the reader
-   * simply scrolled the extra 200px and never noticed. Pinned, the screen IS the
-   * frame: whatever does not fit is never seen, and what did not fit was the
-   * bottom of the sheet.
-   *
-   * So the unit is capped: 1vw while the screen is tall enough, and the height
-   * that exactly fills it once it is not.
-   *
-   * AND WHAT HAS TO FIT IS THE WRITING. Not the artboard, and not the paper —
-   * and the divisor has been each of those three in turn, so it is worth saying
-   * what each one cost.
-   *
-   * 76.111 WAS THE ARTBOARD, sheet plus the empty ground the design leaves above
-   * and below it. It defended that ground at the sheet's expense on every window
-   * shorter than the artboard, which is nearly all of them: 1096px of CONTENT
-   * height at 1440 wide is a browser almost nobody has with devtools open. The
-   * sheet came out 874 wide at 1440 x 700 against a design of 1354.
-   *
-   * 65.752 WAS THE PAPER, edge to edge in the held screen with the margins spent.
-   * Better — 1011 at the same window — and still not the drawing. A sheet of
-   * paper that always sits wholly inside the frame is a sheet of paper being
-   * kept at arm's length, and on a short window it is a small object in the
-   * middle of a lot of ground.
-   *
-   * SO THE PAPER IS ALLOWED TO BLEED. What the reader has to be able to read is
-   * the sentence written on it; the blank top and bottom of the sheet are the
-   * parts that can go off the edge, and a sheet running past the frame reads as
-   * a sheet too big for the frame, which is the right impression for a section
-   * whose whole subject is the thing on the paper. .reimagine-stage carries the
-   * clip that makes that a crop instead of a spill.
-   *
-   * WHERE 55.052 COMES FROM. The statement's block — rotated -3deg, so this is
-   * its rendered box and not the type's own — stands from 25.526 units above the
-   * stage's centre to 2.087 below it. The top is the edge that binds. Give it 2
-   * units of clear ground above and half a screen has to hold 25.526 + 2 =
-   * 27.526 of them, which is 55.052 for the whole.
-   *
-   * FOR REFERENCE, THE PAPER'S OWN FIGURES, since they are what decides where it
-   * crops: .reimagine-sheet's box is 94.993 units wide and its aspect is the
-   * canvas's, so 94.993 x 950/1378 = 65.489 units tall; the paper is 911 of the
-   * canvas's 950 and so 62.800 of those, sitting 0.655 low in the box because
-   * the canvas carries 29 units of margin above the sheet and 10 below; the box
-   * is centred 2.131 above the stage's centre, so the paper's top edge stands
-   * 2.131 - 0.655 + 62.800/2 = 32.876 units up and its foot 29.914 down.
-   *
-   * WHAT THAT GIVES. At 1440 wide the drawing reaches its design size at 793px
-   * of screen rather than 1096, and the paper is wholly inside the frame again
-   * from 947. Between those two the sheet is full size and its top runs off the
-   * fold — 23px at 900, 73px at 800. Below 793 everything scales together as it
-   * always did: at 1440 x 700 the unit is 12.72 against a nominal 14.4, the
-   * sheet is 1208 x 833 where the artboard rule gave 874 and the paper rule
-   * 1011, and the sentence still has 25px of clear paper above its first line.
-   * Nothing inside re-lays-out at any of them; it is the same drawing, bigger.
-   *
-   * --screen and not 100vh, for the reason Tokens gives: a retracting mobile
-   * address bar must not re-scale a pinned composition mid-scroll.
-   *
-   * EVERY LENGTH IN THIS SECTION IS calc(N * var(--rei-u)) WHERE N IS THE OLD
-   * vw FIGURE. They are the same number — the unit is 1vw at the design's own
-   * proportions — so the design figures are still readable in place, and the
-   * markup passes the tape's box through in the same form (see ./index.tsx,
-   * where it has to be written without spaces to survive being split). */
-  --rei-u: min(1vw, calc(var(--screen-lg) / 55.052));
+   * IT WAS CAPPED — min(1vw, screen/55.052) — for as long as the section was
+   * PINNED, because a held screen was the whole frame and the writing had to
+   * fit inside it; the sheet was allowed to bleed off the top and the stage's
+   * clip cropped the bleed. Un-pinned, the reader simply scrolls the extra
+   * height, the stage grows to hold the whole drawing (see its `height`), and a
+   * cap would only shrink the paper — and cut the strip of tape lying across
+   * its top edge on any window shorter than the drawing. */
+  --rei-u: 1vw;
 
   /* AND THE UNIT THE PROPS ARE DRAWN IN, which is the same one until the phone.
    *
@@ -15309,16 +15439,6 @@ img#front {
    * make it by turning one line, and their own four figures are then the only
    * thing a phone block has to say about them. */
   --prop-u: var(--rei-u);
-
-  /* HOW MUCH SCROLL THE PIN IS GIVEN, in screens — and therefore whether there
-     is a pin. Reimagine/unfold.ts reads this the way AboutOpen/spaceOut.ts reads
-     --space-run, and 0 means the section is given no page: no pin, no flipbook,
-     and the sheet resting already open with the statement on it. That is the
-     phone's, and it is argued in the About phone block. Two screens here, which
-     is what the unfold and the writing take.
-
-     Bare, in screens — the engine parses it as one. */
-  --rei-run: 2;
 
   /* WHERE THE LIME STOPS AND THE GREEN STARTS. THIS IS THE ONE NUMBER TO TURN.
    *
@@ -15390,17 +15510,15 @@ img#front {
   z-index: 2;
 }
 
-/* THE STAGE — one screen, and the thing that is held still.
+/* THE STAGE — one screen, and the section's whole visible surface.
  *
- * ./unfold.ts pins THIS, at top top, for as long as the animation needs. It is
- * the section's whole visible surface for the length of that pin, which is why
- * both of the things that used to belong to the section now live on it: the two
- * grounds (below) and the grain (next rule). Anything painted on the section
- * would scroll behind it.
+ * NO LONGER PINNED. ./unfold.ts now only uses it as the reveal's trigger, but
+ * it keeps the box and everything on it — the two grounds (below) and the
+ * grain (next rule) — because the whole drawing is composed against its
+ * one-screen height.
  *
  * ONE SCREEN AND NOT THE DRAWING'S HEIGHT. It was the drawing for one round,
- * back when the section was not pinned and the two were the same box; a pinned
- * box taller than the window is a box with its bottom permanently off screen.
+ * and a box taller than the window put the drawing's foot off short screens.
  * --rei-u above is what makes the drawing fit inside this instead.
  *
  * THE TWO GROUNDS, ONE BOX, AND A HARD EDGE BETWEEN THEM. Both stops are written
@@ -15420,8 +15538,12 @@ img#front {
 .reimagine-stage {
   position: relative;
   width: 100%;
-  /* The pin's height — --screen-lg and not --screen. See @property. */
-  height: var(--screen-lg);
+  /* A screen, or the whole drawing if the drawing is taller — the same call
+     the phone block makes at its own figure. 76.111 units is the artboard
+     (1096 at the 1440 design width), so the sheet and the strip lying across
+     its top edge are never cropped by a short window; on a tall one the
+     drawing sits centred in the screen it was given. */
+  height: max(var(--screen-lg), calc(76.111 * var(--rei-u)));
 
   /* AND THE FRAME CROPS THE SHEET, which it never had to before. The unit above
      used to guarantee the paper fitted inside this box; it no longer does — the
@@ -15630,49 +15752,17 @@ img#front {
   aspect-ratio: 1378 / 950;
 }
 
-/* ONE FRAME. All six are laid in the same box at the same size and only their
- * opacity ever differs; unfold.ts shows them in turn.
- *
- * object-fit: contain IS THE ALIGNMENT and it is the only thing keeping the six
- * registered. They were exported at different canvas sizes — 1536x1024 for the
- * ball, 1378x950 for the open sheet — and contained in one box each of them
- * lands at its own scale inside the same frame, which is what makes the paper
- * grow as it opens instead of every frame filling the box and the ball being
- * the size of the sheet.
- *
- * Parked at 0 with the FIRST shown, so the section rests on the ball before any
- * script has run and a page with no JS shows a ball rather than a stack of six
- * papers printed on top of each other. */
+/* THE SHEET, OPEN AND SIMPLY THERE. The flipbook is gone — one photograph,
+ * visible from the first paint; the reveal animates what is on the paper, not
+ * the paper (see Reimagine/unfold.ts). */
 .reimagine-paper {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  opacity: 0;
-  /* KEEP EVERY FRAME READY TO DRAW, and this is not a performance nicety — it
-   * is what stopped the cuts flashing.
-   *
-   * A compositor does not raster what it is not drawing, and five of these six
-   * are sitting at opacity 0. So the frame being switched on had no rastered
-   * layer at the moment it was asked for, and the cut painted the lime
-   * underneath for exactly one frame. will-change: opacity is the promise that
-   * this element's opacity is about to change and its layer is worth preparing
-   * — which is precisely the situation.
-   *
-   * TAKEN OFF AGAIN when the sheet is open: six full-size layers is real GPU
-   * memory, and the hint is meant to be withdrawn once the change it was
-   * promising has happened. Reimagine/unfold.ts does it on the timeline's
-   * onComplete. REIMAGINE.LAP is the other half of the fix and argues the whole
-   * bug at length. */
-  will-change: opacity;
-  /* The frames overlap, and none of them should ever be what a click lands
-     on. */
+  /* A full-bleed photograph must never be what a click lands on. */
   pointer-events: none;
-}
-
-.reimagine-paper:first-of-type {
-  opacity: 1;
 }
 
 /* THE STATEMENT, WRITTEN ON THE SHEET.
@@ -16218,48 +16308,13 @@ img#front {
   transform: none;
 }
 
-/* A sheet of paper springing open and ninety letters flying up out of it are
-   exactly what this setting is asking about. Here as well as in unfold.ts, so it
-   also covers the window before hydration, when the stylesheet is holding both
-   on its own.
-
-   What is left is where the section ends up rather than where it starts: the
-   sheet OPEN — the last frame, not the ball — with the statement written on it.
-   A reader who has asked for less motion is not asking to be shown a ball of
-   paper that never opens.
-
-   THERE IS NOTHING ELSE TO UNDO, AND THE PIN IS THE REASON THAT SENTENCE IS
-   WORTH CHECKING RATHER THAN ASSUMING. The section is pinned again, for two
-   screens, and a hold with nothing to hold for is scroll spent on a sheet that
-   was already open — precisely the thing this setting exists to refuse.
-
-   It does not need taking back here, because it is never built. The section has
-   no height of its own: the extra comes from ScrollTrigger's pin-spacer, and
-   Reimagine/unfold.ts asks this same media query and returns BEFORE it creates
-   the trigger. No trigger, no pin, no spacer, and the section is one screen with
-   the sheet open on it. The two files agree by construction rather than by both
-   remembering; if that early return in unfold.ts ever moves below the
-   ScrollTrigger.create, this block has a screen and a half of dead scroll to
-   take back and no way to know it. */
+/* Ninety letters flying up is exactly what this setting is asking about. Here
+   as well as in unfold.ts, so it also covers the window before hydration, when
+   the stylesheet is holding the letters on its own. Everything else — the open
+   sheet, the tape, the props — already rests in its finished pose. */
 @media (prefers-reduced-motion: reduce) {
   .reimagine .char {
     transform: none;
-  }
-
-  /* :first-of-type IS NAMED HERE AND HAS TO BE. The rest pose above is
-     .reimagine-paper:first-of-type — one class and a pseudo-class — which a bare
-     .reimagine-paper does not out-specify however late it comes, so the ball of
-     paper stayed at full opacity and was merely COVERED by the flat sheet laid
-     over it. Two stacked photographs where there should be one, and it survives
-     only as long as the top one is opaque edge to edge. */
-  .reimagine-paper,
-  .reimagine-paper:first-of-type {
-    opacity: 0;
-  }
-
-  .reimagine-paper:last-of-type {
-    opacity: 1;
-
   }
 }
 
@@ -16486,10 +16541,11 @@ img#front {
    * The pitch is what makes the row a row: it is applied per box off --n, so the
    * four are evenly spaced by construction and cannot drift apart one edit at a
    * time. */
-  --box-w: 18.889vw;
-  /* 272 / 1440 */
-  --box-h: 18.819vw;
-  /* 271 / 1440 */
+  --box-w: 17.7vw;
+  /* 255 / 1440 — was 18.889vw (272); pulled in ~6% by eye. Everything printed
+     on the card is struck off this, so the face scales with it. */
+  --box-h: 17.635vw;
+  /* 254 / 1440 — the drawing's 271/272 ratio, held. */
   --box-pitch: 27.083vw;
   /* 390 / 1440 */
 
@@ -16499,10 +16555,9 @@ img#front {
      POWERS' stack both bleed off their edges for the same reason. */
   --box-x: -2.3vw;
 
-  /* The corner. A seventh of the box, which is SUPER POWERS' card exactly
-     (--pow-radius) — these are the same object at a different size and they
-     should be cornered the same. */
-  --box-radius: calc(var(--box-w) * 0.147);
+  /* The corner. 60px on the drawing — deeper than SUPER POWERS' seventh, so
+     it is its own figure now: 60 / 255 of the box's width. */
+  --box-radius: calc(var(--box-w) * 0.235);
 
   /* THE CARD'S TWO HALVES. --box-fill is how much of the box the deep colour
    * takes from the floor up, and --box-bite is how deep the concave edge between
@@ -16513,8 +16568,14 @@ img#front {
    * The two are read together by .wanted-box-fill and its crown; changing one
    * without the other moves where the halves meet at the SIDES only, which is
    * the join that reads as a mistake. */
-  --box-fill: 37%;
-  --box-bite: 14%;
+  /* THE FLOOR'S SHAPE — THE DESIGN'S OWN PATH, VERBATIM. One piece: the two
+     shoulders curling up into little ears at the card's sides, the smooth
+     valley between them bottoming a quarter of the way down the floor's own
+     box, and the rounded feet — a 260 x 174 drawing, used as a mask so each
+     card paints it in its own --box-deep rather than the export's hardcoded
+     red. It replaces a two-element floor-plus-crown construction and three
+     tokens that tried to describe this curve piecewise. */
+  --box-shape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 260 174' fill='none'%3E%3Cpath d='M238.947 4.5818C246.155 -2.81084 260 -1.22451 260 9.10091V113.101C260 146.238 233.137 173.101 200 173.101H60C26.863 173.101 0.000120234 146.238 0 113.101V9.10091C0 -1.22435 13.8438 -2.81083 21.0522 4.58169C44.2519 28.3738 84.3818 44.099 130 44.099C175.618 44.099 215.747 28.3738 238.947 4.5818Z' fill='%23000'/%3E%3C/svg%3E");
 
   /* What is printed on a box, all of it struck off the box's own width — these
      are parts of the card, not parts of the page, and a claim measured in vw
@@ -16522,7 +16583,8 @@ img#front {
      face is built the same way, off its own height. */
   --box-pad: calc(var(--box-w) * 0.08);
   --box-num-size: calc(var(--box-w) * 0.062);
-  --box-label-size: calc(var(--box-w) * 0.135);
+  --box-label-size: calc(var(--box-w) * 0.16);
+  /* was 0.135 — the drawing's RECOGNISABLE spans four fifths of the card */
   --box-mark-size: calc(var(--box-w) * 0.42);
 
   position: absolute;
@@ -16616,6 +16678,27 @@ img#front {
   --box-num: #9ccb3d;
 }
 
+/* HAND NUDGES ON THE DESKTOP SCATTER, asked for by eye against the new wave:
+   the blue card rides a little higher, the red one sits a little lower, and the
+   two end cards come in 5px off the crop. Margins rather than the data's --y /
+   the computed left, so the CMS record and the row's pitch stay untouched — and
+   desktop-only, because the phone composes its own arrangement (including its
+   own margin-top on the second row, which these must not leak into). */
+@media (min-width: 768px) {
+  .wanted-box[data-box="choose"] {
+    margin-top: -2.083vw; /* -30px */
+  }
+
+  .wanted-box[data-box="recognisable"] {
+    margin-top: 2.083vw; /* 30px */
+  }
+
+  .wanted-box[data-box="clearer"],
+  .wanted-box[data-box="human"] {
+    margin-left: 0.347vw; /* 5px */
+  }
+}
+
 /* THE DEEP HALF, AND THE BITE OUT OF ITS TOP EDGE.
  *
  * The floor is a flat block --box-fill tall sitting on the bottom of the card.
@@ -16638,25 +16721,22 @@ img#front {
  * lets the label sit across it. */
 .wanted-box-fill {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: var(--box-fill);
+  /* The floor is INSET from the card — the drawing runs a 6px rim of the
+     ceiling's colour down the sides and along the foot, so the deep half sits
+     on the card rather than being its bottom. 6px at the 272 design card,
+     struck off the width like everything printed here. */
+  --box-rim: calc(var(--box-w) * 0.022);
+  left: var(--box-rim);
+  right: var(--box-rim);
+  bottom: var(--box-rim);
+  /* The height is the drawing's, not a token: the floor is --box-shape's own
+     260 x 174 box laid across the inset width, and the mask is the whole of
+     its outline — corners, ears and valley in one path. */
+  height: auto;
+  aspect-ratio: 260 / 174;
   background: var(--box-deep);
-}
-
-.wanted-box-fill::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  /* On top of the floor, measured against the floor — so the two move together
-     if --box-fill ever changes and there is no third figure to keep in step. */
-  bottom: 100%;
-  height: var(--box-bite);
-  background: var(--box-deep);
-  -webkit-mask-image: var(--edge-bite);
-  mask-image: var(--edge-bite);
+  -webkit-mask-image: var(--box-shape);
+  mask-image: var(--box-shape);
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
@@ -16682,6 +16762,9 @@ img#front {
   font-weight: 700;
   letter-spacing: 0.06em;
   line-height: 1;
+  /* The drawing sets the number 35px under the card's top edge; the card's own
+     padding gives 0.08 of the width, and this is the rest of 35/272. */
+  margin-top: calc(var(--box-w) * 0.049);
 }
 
 /* THE DRAWING. Square, sized off the card's width, and centred in whatever room
@@ -16705,6 +16788,35 @@ img#front {
   top: calc(var(--box-w) * -0.025);
 }
 
+/* THE LEMON'S EXCEPTIONS. Its ink is the CEILING'S colour, not the floor's:
+   the drawing shows the badge pale on the deep floor, and the mark inherits
+   `color` like everything printed on the card, so this card hands it a
+   different pot.
+
+   AND IT IS PLACED, NOT FLOWED. The badge is nested in the divider — its
+   centre at 49% of the card, under the deep bump the dip's profile makes for
+   it — which is a fact about the CARD's geometry, not about the room the
+   number and label leave, so the auto margins are the wrong tool. Absolute,
+   centred, at the drawing's 37% of the card's width; the label picks up the
+   auto margin instead so it stays on the floor. */
+.wanted-box[data-box="recognisable"] .wanted-box-mark {
+  color: var(--box-top);
+  position: absolute;
+  left: 50%;
+  /* ON the divider, where the drawing nests it — the badge's own deep collar
+     (see Mark.tsx) wraps it wherever it crosses the pale ceiling, so it can
+     ride the valley instead of hiding under it. */
+  top: 49%;
+  width: calc(var(--box-w) * 0.37);
+  height: calc(var(--box-w) * 0.37);
+  margin: 0;
+  transform: translate(-50%, -50%);
+}
+
+.wanted-box[data-box="recognisable"] .wanted-box-label {
+  margin-top: auto;
+}
+
 /* THE CLAIM, across the floor. The site's headline face at card size, set tight
    and centred, on the lines the design breaks it on — see BOXES.
 
@@ -16722,11 +16834,25 @@ img#front {
   text-transform: uppercase;
 }
 
-/* Two set lines rather than a wrap. Block, not flex: these are whole words, not
-   split letters, so there is no baseline trap of the kind every row of .clip
-   boxes on this site has to dodge. */
+/* EACH LINE IS AN SVG RIDING AN ARC — see components/WeWanted, where the
+   markup says why. The viewBox is 100 x 20, so a unit is a hundredth of the
+   line's width and the type is sized in those units below; overflow visible
+   because the arc's crest carries the caps above the box's own top, and the
+   crop here would shave them exactly as the band's viewBox would shave the
+   sentence. */
 .wanted-box-label .line {
   display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+/* The type, in the svg's own units: 19 hundredths of the line's width is the
+   0.16-of-the-card the drawing sets, restated against the box the glyphs are
+   actually drawn in (the label is inset by the card's padding). Family, weight
+   and tracking inherit from the label; the fill is the label's ink. */
+.wanted-box-label text {
+  fill: currentColor;
+  font-size: 19px;
 }
 
 /* --------------------------------------------------------------------------
@@ -16910,7 +17036,7 @@ img#front {
 .about-cta {
   /* The sheet's depth, as the drawing gives it. What the section is actually
      cut to is this plus --cta-clear below. */
-  --cta-h: 114.514vw; /* 1649px */
+  --cta-h: 117.292vw; /* 1689px — 1649 + the 40 the crate moved down, so its crop at the foot holds */
 
   /* HOW MUCH FARTHER DOWN THE SHEET EVERYTHING ON IT STANDS, AND WHY THERE IS A
    * TOKEN FOR IT AT ALL.
@@ -16938,18 +17064,23 @@ img#front {
   /* WHERE THE CRATE'S FILE STARTS, and the arithmetic is worth writing out
      because the number does not look like anything on the drawing.
 
-     What the composition wants is the OPP TAPE'S TOP EDGE at 737 — just clear
-     of the pill's foot at 722, which is the whole relationship: the tape rises
-     to meet the button and stops short of it. What this property positions is
-     the FILE, and the file carries 878 rows of fully transparent black over
-     that tape — 27.94% of its 3143 — which at the width it is drawn (the full
-     1440) is 549 of empty picture. So the box starts 549 higher than the
-     artwork does: 737 - 549 = 188.
+     What the composition wants is the OPP TAPE'S TOP EDGE at 707 — OVERLAPPING
+     the pill's foot at 722 by 15, the tapes just rising over the button's lower
+     edge (the crate paints in front, in its own box after the copy). What this
+     property positions is the FILE, and the file carries 878 rows of fully
+     transparent black over that tape — 27.94% of its 3143 — which at the width
+     it is drawn (the full 1440) is 549 of empty picture. So the box starts 549
+     higher than the artwork does: 707 - 549 = 158.
 
-     RE-EXPORT THE ARTWORK WITH THAT BAND TRIMMED and this becomes 737 (51.181
+     RE-EXPORT THE ARTWORK WITH THAT BAND TRIMMED and this becomes 707 (49.097
      vw) and nothing else changes. It is the one figure in this section that is
-     about the file rather than about the drawing. */
-  --cta-front-top: 13.056vw; /* 188px */
+     about the file rather than about the drawing.
+
+     WAS 118 (tape top at 667, 55 over the pill's foot at 722) — the tape rose
+     over half the pill and swallowed the label. Now 158: tape top at 707, a
+     15px kiss on the foot, and --cta-h grew by the same 40 so the crate keeps
+     its crop. */
+  --cta-front-top: 10.972vw; /* 158px */
 
   /* THE ARC ALONG THE BOTTOM. How far the sheet's two corners rise above its
      own middle — the dark green in the corners of the drawing is the section
@@ -17046,9 +17177,15 @@ img#front {
    *
    * It is also the better statement. NEXT UP's label writes its own travel as a
    * share of its box and says why: a shared absolute makes a bigger object
-   * travel visibly less far relative to itself. 0.02 of a 1964-tall artwork is
-   * the 40 this was, and it stays 40's worth of drift at any window. */
-  --cta-front-drift: 0.02; /* of the crate's own height — about 40px at 1440 */
+   * travel visibly less far relative to itself.
+   *
+   * 0.04, WALKED TO FROM BOTH ENDS. Forty pixels (0.02) over a full section
+   * crossing read as nothing — the crate looked glued to the sheet; 0.06 read
+   * as the crate floating free of it. At 0.04 (~78px at 1440) the crate
+   * visibly leads the curtain and still feels planted, and the appointment
+   * above still holds: the crate is only that high on the way OUT, when the
+   * pill is at the top of the window or past it. */
+  --cta-front-drift: 0.04; /* of the crate's own height — about 78px at 1440 */
 
   position: relative;
   width: 100%;
@@ -17169,6 +17306,13 @@ img#front {
      defaults to 0, so with no script the crate sits exactly where
      --cta-front-top puts it. */
   transform: translate3d(0, var(--cta-front-pan, 0px), 0);
+}
+
+/* THE CRATE'S OWN BOX — the sheet's twin (same classes carry the geometry and
+   the arc crop), after the copy in source so the crate paints OVER the pill.
+   Clicks pass straight through to the pill under the overlap. */
+.about-cta-frontbox {
+  pointer-events: none;
 }
 
 /* THE COPY, AND IT IS A BOX OF ITS OWN SO THAT IT PAINTS OVER THE SHEET. The
@@ -18108,17 +18252,13 @@ img#front {
   .rei-mark-a { --px: 84; --py: 118; --pw: 15; --pr: 6deg; }
   .rei-mark-b { --px: 26; --py: 124; --pw: 17; --pr: -5deg; }
 
-  /* cover AND NOT contain, WHICH IS A PLACEHOLDER AND ALSO NOT ONE. The frames
-     are 1378 x 950 and the box above is 2:3, so `contain` letterboxes the
-     landscape sheet into the top of a tall box and draws back the empty field
-     this block exists to remove. `cover` fills it — a crop through the middle of
-     the paper, so what shows is texture rather than a sheet with its own edges,
-     which is the honest look of a section waiting for its artwork.
-
-     AND IT IS NOT A LINE TO TAKE OUT LATER. A portrait file is 2:3 like the box,
-     and at the box's own aspect cover and contain are the same picture. */
+  /* cover AND NOT contain: the sheet is 1378 x 950 and the box above is 2:3,
+     so `contain` would letterbox the landscape paper into the top of a tall
+     box. Cropped to the paper's own left edge instead — texture rather than a
+     sheet with its own edges. */
   .reimagine-paper {
     object-fit: cover;
+    object-position: left;
   }
 
   /* THE STATEMENT, AT 50px ON 40 — the design's, in vw of the 390 it is drawn
@@ -18186,32 +18326,8 @@ img#front {
     height: 0;
   }
 
-  /* AND THE SHEET IS ALREADY OPEN.
-     ------------------------------------------------------------------------
-     THE UNFOLD IS A GESTURE THAT NEEDS ROOM TO BE READ AS ONE. It is six
-     photographs of a hand opening a ball of paper, and at 1440 the sheet is a
-     third of a wide window: you can see the ball, the space around it, and the
-     paper travelling outward into that space. On a phone the paper is 95vw of a
-     sheet two and a half times as tall — it fills the frame edge to edge from
-     the first frame — so what the flipbook shows is a shape flexing in the
-     middle of the screen rather than a sheet being opened. The move's whole
-     subject is the growth, and there is nowhere for it to grow.
-
-     AND IT COSTS TWO SCREENS OF PIN TO SHOW IT. That is the trade this section
-     cannot win on a phone: two screens the reader cannot move through, spent on
-     a gesture the frame is too small to carry, on the way to a statement that is
-     the actual point of the section. Handed over open, the statement is there
-     when they arrive and the page keeps moving.
-
-     0 IS NOT AN OFF SWITCH, it is "this section is given no page" — and what
-     unfold.ts does with that is the same thing it does for a reader who has
-     asked for less motion: nothing, and let the stylesheet stand the section on
-     its last frame. Give the phone its two screens back here and the flipbook
-     comes back with them. */
   .reimagine {
-    --rei-run: 0;
-
-    /* AND THE PROPS ARE MEASURED AGAINST THE WINDOW DOWN HERE, because the box
+    /* THE PROPS ARE MEASURED AGAINST THE WINDOW DOWN HERE, because the box
        they lie in is: .reimagine-sheet below is 129.564vw on a different aspect
        and the paper in it is cropped rather than fitted, so the desktop's unit
        is not a fraction of anything the phone draws. One line, and every prop's
@@ -18223,31 +18339,6 @@ img#front {
        sit is a reading of a 1440 comp scaled into a 390 one. Every one of them
        is four numbers in the props block above, and the overrides go here. */
     --prop-u: 1vw;
-  }
-
-  /* THE LAST FRAME AND ONLY THE LAST FRAME — the flat sheet. The stylesheet
-     rests on the FIRST (see .reimagine-paper:first-of-type), which is the ball
-     of paper, because that is where the flipbook starts; with no flipbook to run
-     it would be a ball of paper that never opened. This is the reduced-motion
-     block's pair restated, and it has to be restated rather than shared: the two
-     conditions are unrelated, and a phone is not an accessibility preference. */
-  .reimagine-paper,
-  .reimagine-paper:first-of-type {
-    opacity: 0;
-
-    /* AND THE LAYERS ARE HANDED BACK IMMEDIATELY. will-change: opacity on the
-       base rule is what keeps all six frames decoded and ready in the compositor
-       so a cut has no hole in it; unfold.ts takes it off when the run finishes.
-       With no run there is no onComplete to take it off, so six full-size layers
-       would be held on the GPU for ever — on the phone, which is the device
-       least able to spare them, for a section showing one image. */
-    will-change: auto;
-  }
-
-  .reimagine-paper:last-of-type {
-    opacity: 1;
-    object-fit: cover;
-    object-position: left;
   }
 
   /* --------------------------------------------------------------------------

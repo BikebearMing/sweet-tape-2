@@ -54,12 +54,14 @@ type Pt = { x: number; y: number };
 function crosses(a: Pt, b: Pt, c: Pt, d: Pt): boolean {
   const side = (p: Pt, q: Pt, r: Pt) =>
     Math.sign((q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x));
-  return (
-    side(a, b, c) !== side(a, b, d) && side(c, d, a) !== side(c, d, b)
-  );
+  return side(a, b, c) !== side(a, b, d) && side(c, d, a) !== side(c, d, b);
 }
 
-export default function PeelLetter() {
+/* THE TAPING GAME IS OPT-OUT, and the homepage opts out: it mounts this with
+   game={false} and gets the lift and the breathing alone — no tape mode, no
+   anchors, no crosshair, no scroll lock, and none of the window listeners that
+   drive them. The lab keeps the default and keeps the whole machine. */
+export default function PeelLetter({ game = true }: { game?: boolean } = {}) {
   const mountRef = useRef<HTMLDivElement>(null);
   const tipRef = useRef<HTMLDivElement>(null);
   const wallRef = useRef<HTMLDivElement>(null);
@@ -144,6 +146,10 @@ export default function PeelLetter() {
       window.addEventListener("resize", onResize);
 
       const tick = (time: number) => {
+        /* Scrolled past. The canvas is fixed and full-bleed, so on a page that
+           is not the lab the letter would go on being drawn — off screen, at
+           full rate — for the rest of the document. */
+        if (el.getBoundingClientRect().bottom < 0) return;
         scene.frame(time, S.peel.p, S.peel.wobble);
         paintChrome();
       };
@@ -292,7 +298,12 @@ export default function PeelLetter() {
           },
         })
         .to(S.peel, { press: 1, duration: 0.22, ease: "back.out(3)" })
-        .to(S.peel, { press: 0, duration: 0.3, ease: "power2.in", delay: 0.18 });
+        .to(S.peel, {
+          press: 0,
+          duration: 0.3,
+          ease: "power2.in",
+          delay: 0.18,
+        });
     }
 
     /* G parks the letter flat and unpeeled — the alignment check. Hold the
@@ -307,9 +318,11 @@ export default function PeelLetter() {
       }
     }
 
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerdown", onDown, true);
-    window.addEventListener("keydown", onKey);
+    if (game) {
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerdown", onDown, true);
+      window.addEventListener("keydown", onKey);
+    }
 
     /* After the cover, and then after the headline has written itself: the
        letter cannot be measured until it is standing where it will stand. */
@@ -384,38 +397,46 @@ export default function PeelLetter() {
           the targets are computed in viewport px anyway. */}
       <div className="pl-mount" ref={mountRef} aria-hidden="true" />
 
-      <div className="pl-ui" aria-hidden="true">
-        <div className="pl-ring pl-ring--tip" ref={tipRef} />
-        <div className="pl-ring pl-ring--wall" ref={wallRef} />
-        <div className="pl-cross" ref={crossRef}>
-          <span />
-          <span />
-        </div>
-      </div>
+      {game && (
+        <>
+          <div className="pl-ui" aria-hidden="true">
+            <div className="pl-ring pl-ring--tip" ref={tipRef} />
+            <div className="pl-ring pl-ring--wall" ref={wallRef} />
+            <div className="pl-cross" ref={crossRef}>
+              <span />
+              <span />
+            </div>
+          </div>
 
-      <div className="pl-bar" data-pl-ui>
-        <button
-          type="button"
-          className="pl-btn"
-          disabled={!ready || mode === "sticking"}
-          onClick={() =>
-            setMode((m) =>
-              m === "arming" || m === "dragging" ? "peeled" : "arming",
-            )
-          }
-        >
-          <span className="pl-btn__arrow" aria-hidden="true">
-            ↗
-          </span>
-          {mode === "arming" || mode === "dragging" ? "EXIT" : "TAPE MODE"}
-        </button>
+          <div className="pl-bar" data-pl-ui>
+            <button
+              type="button"
+              className="pl-btn"
+              disabled={!ready || mode === "sticking"}
+              onClick={() =>
+                setMode((m) =>
+                  m === "arming" || m === "dragging" ? "peeled" : "arming",
+                )
+              }
+            >
+              <span className="pl-btn__arrow" aria-hidden="true">
+                ↗
+              </span>
+              {mode === "arming" || mode === "dragging" ? "EXIT" : "TAPE MODE"}
+            </button>
 
-        <button type="button" className="pl-btn pl-btn--ghost" onClick={reset}>
-          RESET
-        </button>
+            <button
+              type="button"
+              className="pl-btn pl-btn--ghost"
+              onClick={reset}
+            >
+              RESET
+            </button>
 
-        {hint && <p className="pl-hint">{hint}</p>}
-      </div>
+            {hint && <p className="pl-hint">{hint}</p>}
+          </div>
+        </>
+      )}
     </>
   );
 }

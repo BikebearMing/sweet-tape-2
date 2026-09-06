@@ -125,20 +125,11 @@ function spokenOf(lines: string[]): string {
   return lines.join(" ").replace(/[|/]/g, "").replace(/\s+/g, " ").trim();
 }
 
-/* THE SIX STILLS, CRUMPLED FIRST. Document order IS play order — unfold.ts
- * takes them off the markup and plays them down the list, so the sequence is
- * stated once, here, and there is no second copy of it in the script.
- *
- * webp rather than the exports themselves: the six PNGs come to 4.5 MB, which
- * is a flipbook that arrives after the reader has scrolled past it. At the same
- * pixel dimensions this is 305 kB for the set, and the originals are left in
- * the folder beside them as the source they were made from.
- *
- * The alt text is on the LAST one, which is the sheet the section rests on and
- * the only one of the six that is ever seen for longer than a sixteenth of a
- * second; the other five are frames of its arrival and are announced as
- * nothing. */
-const FRAMES = [6, 5, 4, 3, 2, 1];
+/* THE SHEET, OPEN. The five crumpled stills and the flipbook that played them
+ * are gone — the section rests on the flat sheet from the first paint and the
+ * reveal animates what is ON it, not the paper itself (see ./unfold.ts). The
+ * crumpled frames are still in the folder beside this one if the unfold ever
+ * comes back. */
 
 /* ONE WORD, ONE BOX.
  *
@@ -181,46 +172,26 @@ export default async function Reimagine() {
   return (
     <Stage>
       {/* WITHOUT JAVASCRIPT THE SECTION IS STILL A SECTION. The letters are
-          parked under their masks by global.css and the sheet is parked on its
-          first frame — a ball of paper with nothing beside it. Both are
-          released here, which costs nothing when scripting is on: the contents
-          of a noscript element are not even parsed. The reduced-motion rules in
-          global.css say exactly the same two things. */}
+          parked under their masks by global.css and released here; the sheet,
+          the tape and the props rest in their finished poses and need nothing.
+          Costs nothing when scripting is on: the contents of a noscript element
+          are not even parsed. */}
       <noscript>
-        <style>{`.reimagine .char { transform: none }
-          .reimagine-paper { opacity: 0 }
-          .reimagine-paper:last-of-type { opacity: 1 }`}</style>
+        <style>{`.reimagine .char { transform: none }`}</style>
       </noscript>
 
-      {/* THE SHEET'S BOX, AND IT IS THE FLAT SHEET'S BOX AND NOT THE BALL'S.
-          Every frame is drawn into this one box and fitted inside it, so the
-          paper's size on screen is the photographer's rather than the
-          stylesheet's: the ball is small in its own frame and the sheet fills
-          its own, and playing them in place is what makes the paper open
-          outward. The box is the last frame's shape because that is the one the
-          section comes to rest on and the one the design measures — see
-          .reimagine-sheet in global.css. */}
+      {/* THE SHEET'S BOX — the flat sheet's own shape, which is what the design
+          measures everything on the paper against. See .reimagine-sheet in
+          global.css. */}
       <div className="reimagine-sheet">
-        {FRAMES.map((n, i) => (
-          <img
-            className="reimagine-paper"
-            key={n}
-            src={`/assets/uncrumpled-paper/paper-${n}.webp`}
-            alt={i === FRAMES.length - 1 ? "A sheet of graph paper, opened out" : ""}
-            aria-hidden={i === FRAMES.length - 1 ? undefined : true}
-            width={1536}
-            height={1024}
-            /* EAGER, ALL SIX, and it is the one thing about this markup that is
-               not obvious. They are below the fold, so the default would defer
-               every frame until the reader was nearly on them — and the unfold
-               plays at sixty milliseconds a frame the moment they arrive. A
-               flipbook whose frames are still in flight plays as a ball of
-               paper that jumps to a flat sheet. 305 kB for the set is the price
-               of it being a movement at all. */
-            loading="eager"
-            decoding="async"
-          />
-        ))}
+        <img
+          className="reimagine-paper"
+          src="/assets/uncrumpled-paper/paper-1.webp"
+          alt="A sheet of graph paper, opened out"
+          width={1378}
+          height={950}
+          decoding="async"
+        />
 
         {/* THE STATEMENT, WRITTEN ON THE SHEET. Inside the sheet's box rather
             than positioned against the section, so the copy stays where it was

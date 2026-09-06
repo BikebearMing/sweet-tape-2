@@ -76,28 +76,35 @@ const PATHS: Record<MarkKind, ReactElement> = {
     </g>
   ),
   roll: (
-    <g>
-      {/* A ROLL, SEEN FROM SLIGHTLY ABOVE — the ring, the hole, and the depth
-       * between them.
-       *
-       * FACE-ON IT WAS A TARGET. Two flat concentric circles have nothing in
-       * them that says tape: at this size and this weight the mark reads as a
-       * bullseye, and the claim under it is about being RECOGNISED, which is
-       * the one thing a mark that reads as something else cannot do.
-       *
-       * A TAIL DOES NOT RESCUE IT AND WAS TRIED THREE WAYS. A spout off the
-       * ring at ten o'clock is a whistle; a stub off the bottom corner, a
-       * magnifying glass; a torn strip running off to the right, a key. A
-       * circle with any small thing attached is read as that thing's handle.
-       *
-       * Depth is what fixes it. The roll is a cylinder with a hole through it,
-       * and drawing it as one — an ellipse for the top face, an ellipse for the
-       * hole, and the side wall under them — is a roll of tape and nothing
-       * else. It is also the object the wave band prints in the middle of its
-       * sentence, seen from a different angle. */}
-      <path d="M20,36 V58 A30,17 0 0 0 80,58 V36" />
-      <ellipse cx="50" cy="36" rx="30" ry="17" />
-      <ellipse cx="50" cy="36" rx="11" ry="6" />
+    /* THE LEMON BADGE — the brand's own lozenge, and the one mark of the four
+     * that is the design's rather than a stand-in. The card's claim is about
+     * being RECOGNISED and the drawing puts the most recognisable thing the
+     * brand owns in the dip: the logo's silhouette, filled, nested in the
+     * valley between the card's two halves.
+     *
+     * THE PATH IS public/assets/preloader-image.svg's OUTER SILHOUETTE — the
+     * same file the top band, the hero and the preloader draw the badge from —
+     * scaled from its 191x118 box into this one's 100x100 (0.5236) and centred.
+     * Traced, not redrawn, so it cannot drift from the logo.
+     *
+     * FILLED, WHERE ITS THREE NEIGHBOURS ARE STROKED: the drawing shows a solid
+     * pale badge on the deep floor, and a stroked lemon at this weight is a
+     * pointy ellipse. The fill/stroke pair is set here because the svg root
+     * below sets the opposite; the INK is still the box's — see the
+     * data-box="recognisable" override in global.css, which hands the mark the
+     * ceiling's colour so the badge reads as the pale half showing through. */
+    <g fill="currentColor" stroke="none" transform="translate(0 19) scale(0.5236)">
+      {/* THE COLLAR FIRST — the same silhouette scaled up a seventh about its
+          own centre and filled with the FLOOR's colour, so wherever the badge
+          rides over the pale ceiling the deep wraps it, exactly as the drawing
+          nests it into the divider. Over the floor it vanishes into the same
+          paint, which is why one halo serves every position. */}
+      <path
+        fill="var(--box-deep)"
+        transform="translate(90.5 59) scale(1.14) translate(-90.5 -59)"
+        d="M84.5137 1.62111C112.565 -1.28159 138.265 6.19363 154.421 19.8369L154.422 19.8379C156.243 21.3707 158.612 22.1241 160.994 21.875L160.993 21.874L171.151 20.8252C173.185 20.615 174.812 22.4927 174.314 24.4795L169.991 41.7315L168.973 45.7891L168.972 45.7901C168.193 48.8992 168.464 52.1771 169.733 55.1123L170.001 55.6953L171.829 59.4551L179.595 75.4522V75.4531C180.49 77.2979 179.281 79.4664 177.246 79.6768L167.089 80.7266H167.087C164.856 80.9601 162.817 82.0432 161.359 83.7266L161.076 84.0713C148.053 100.737 124.433 113.318 96.3818 116.221C68.3258 119.123 42.6306 111.648 26.4746 98.0049L26.4736 98.0039L26.125 97.7256C24.4737 96.4705 22.4287 95.8226 20.3477 95.9317L19.9023 95.9658L9.74414 97.0166C7.71054 97.2269 6.0827 95.349 6.58008 93.3623L10.9033 76.1084L11.9229 72.0527V72.0518C12.7015 68.9423 12.4317 65.664 11.1621 62.7285L10.8945 62.1465L9.06543 58.3867H9.06641L1.30078 42.3887C0.405343 40.544 1.61401 38.3757 3.64844 38.1651L13.8066 37.1152H13.8086C16.0395 36.8817 18.0776 35.7983 19.5352 34.1152L19.8193 33.7705C32.8421 17.1048 56.4629 4.52379 84.5137 1.62111Z"
+      />
+      <path d="M84.5137 1.62111C112.565 -1.28159 138.265 6.19363 154.421 19.8369L154.422 19.8379C156.243 21.3707 158.612 22.1241 160.994 21.875L160.993 21.874L171.151 20.8252C173.185 20.615 174.812 22.4927 174.314 24.4795L169.991 41.7315L168.973 45.7891L168.972 45.7901C168.193 48.8992 168.464 52.1771 169.733 55.1123L170.001 55.6953L171.829 59.4551L179.595 75.4522V75.4531C180.49 77.2979 179.281 79.4664 177.246 79.6768L167.089 80.7266H167.087C164.856 80.9601 162.817 82.0432 161.359 83.7266L161.076 84.0713C148.053 100.737 124.433 113.318 96.3818 116.221C68.3258 119.123 42.6306 111.648 26.4746 98.0049L26.4736 98.0039L26.125 97.7256C24.4737 96.4705 22.4287 95.8226 20.3477 95.9317L19.9023 95.9658L9.74414 97.0166C7.71054 97.2269 6.0827 95.349 6.58008 93.3623L10.9033 76.1084L11.9229 72.0527V72.0518C12.7015 68.9423 12.4317 65.664 11.1621 62.7285L10.8945 62.1465L9.06543 58.3867H9.06641L1.30078 42.3887C0.405343 40.544 1.61401 38.3757 3.64844 38.1651L13.8066 37.1152H13.8086C16.0395 36.8817 18.0776 35.7983 19.5352 34.1152L19.8193 33.7705C32.8421 17.1048 56.4629 4.52379 84.5137 1.62111Z" />
     </g>
   ),
   person: (

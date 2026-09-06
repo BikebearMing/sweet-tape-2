@@ -82,52 +82,43 @@ import { START_OFFSET } from "./crawl";
  * are four palettes.
  */
 
-/* THE WAVE, AND IT IS THE HOME PAGE'S CURVE AT TWICE THE WAVELENGTH.
+/* THE WAVE, AND ITS GEOMETRY IS THE DESIGN'S OWN DRAWING, MEASURED.
  *
- * The band's own geometry is one full cycle per 1600 units, which is one cycle
- * per screen — a valley AND a peak in the frame at once, which is right for a
- * length of tape crossing the page and wrong for a sentence you are meant to
- * read. This is one cycle per 3200, so what stands in the frame is a single
- * broad hump: the line rises through the middle of the screen and falls away at
- * both ends, which is the shape the design draws.
+ * public/assets/"We wanted to be.svg" is the sentence as the designer bent it —
+ * outlined glyphs, 1641x309. Reading each glyph's baseline off that file gives:
+ * a crest about a fifth of the way in, a trough at four fifths, a swing of
+ * +/-67 units against a 174-unit cap height, one full cycle per ~1900 units.
+ * Scaled to this band's type (cap ~155 viewBox units at font-size 222) that is
+ * ONE CYCLE PER 1700 VIEWBOX UNITS, SWINGING +/-60, CREST AT x=320 — a tighter,
+ * far shallower undulation than the single broad hump this section carried
+ * before: the line rises early, dips through a trough in the right half, and is
+ * rising again as it leaves the frame, which is the drawing.
  *
- * The numbers, in viewBox units: centreline y=280, swinging +/-140 (control
- * points +/-280 — a quadratic reaches halfway to its control point), a node on
- * the centreline every 1600. The crest sits at x=800, dead centre of the frame,
- * because the frame IS 0..1600 — see the viewBox below, which is why this file
- * can talk about screen edges in path coordinates at all.
+ * The frame IS 0..1600 — see the viewBox below — so those x figures are screen
+ * positions. Centreline y=280, the box's middle; control points sit +/-120 off
+ * it because a quadratic reaches halfway to its control point.
  *
- * THE SWING IS THE ONE FIGURE TO REACH FOR, and it was 90 before this. It is
- * what decides how hard the line falls away at the two ends of the screen —
- * raise it and the sentence dives off both edges, drop it and the whole thing
- * flattens towards a rule. It is bounded by the viewBox: the caps at the crest
- * and the descenders at the trough both have to stay inside the box, or the svg
- * clips the tops off its own type. At 140 against a box 560 deep and type set at
- * 222, there are 60 units of air at each extreme.
- *
- * IT RUNS FROM -8000 TO 9600, far past the frame at both ends, and that is
- * runway rather than decoration: the sentence is longer than the screen and
- * starts with half of itself off the right edge, so the curve has to exist
- * where the words are before they arrive. Glyphs enter the frame already bent,
- * exactly as the band's do.
- *
- * Written out rather than generated. Twelve segments is not enough arithmetic to
- * be worth a loop, and a path you can read is a path whose shape you can check
- * against the drawing. */
+ * GENERATED RATHER THAN WRITTEN OUT, which is the opposite of the call the old
+ * twelve-segment path made, and the arithmetic is why: the runway still has to
+ * reach from about -8600 to past 10000 (the sentence is longer than the screen
+ * and starts with most of itself off the right edge, so the curve must exist
+ * where the words are before they arrive), and at half-cycles of 850 that is
+ * 22 segments of identical arithmetic. The three constants ARE the shape;
+ * re-measure the design file and they are the only figures to touch. */
+const WAVE_SWING = 60;
+const WAVE_CENTER = 280;
+const WAVE_HALF = 850; /* node to node — half of the 1700-unit wavelength */
+/* Nodes at 320 +/- 425 + k*850 put the crest at x=320, as measured. Ten half
+   cycles of runway before the frame, eleven after. */
+const WAVE_FIRST_NODE = 320 - WAVE_HALF / 2 - 10 * WAVE_HALF;
 const WAVE = [
-  "M -8000,280",
-  "Q -7200,560 -6400,280",
-  "Q -5600,0 -4800,280",
-  "Q -4000,560 -3200,280",
-  "Q -2400,0 -1600,280",
-  "Q -800,560 0,280",
-  /* The one in the frame: the crest at (800,140). */
-  "Q 800,0 1600,280",
-  "Q 2400,560 3200,280",
-  "Q 4000,0 4800,280",
-  "Q 5600,560 6400,280",
-  "Q 7200,0 8000,280",
-  "Q 8800,560 9600,280",
+  `M ${WAVE_FIRST_NODE},${WAVE_CENTER}`,
+  ...Array.from({ length: 22 }, (_, i) => {
+    const x0 = WAVE_FIRST_NODE + i * WAVE_HALF;
+    /* Even segments rise (the crest's own segment is i=10); odd ones dip. */
+    const cy = WAVE_CENTER + (i % 2 === 0 ? -2 : 2) * WAVE_SWING;
+    return `Q ${x0 + WAVE_HALF / 2},${cy} ${x0 + WAVE_HALF},${WAVE_CENTER}`;
+  }),
 ].join(" ");
 
 export default async function WeWanted() {
@@ -220,15 +211,44 @@ export default async function WeWanted() {
 
             <Mark kind={box.mark} />
 
-            {/* The claim across the floor. Two lines where the design breaks it
-                on two — see BOXES — and the lines are spans rather than a wrap,
-                so a box whose label is set larger tomorrow breaks where it was
-                drawn to break rather than where it happens to fit. */}
+            {/* The claim across the floor, ARCHED — the drawing bows the word
+                up through the middle, so each line rides a shallow quadratic
+                exactly the way the sentence overhead rides its wave: an SVG
+                path, a textPath, and the browser doing the bending. SVG <text>
+                is real text, so a screen reader gets the claim from the same
+                characters the eye does — the heading above makes the same
+                argument.
+
+                ONE ARC FOR EVERY LINE, and it is self-adjusting: the crest of
+                a quadratic is its flattest stretch, so a short line centred on
+                it barely bends while RECOGNISABLE, which spans the whole card,
+                takes the full bow — which is the drawing, where only the long
+                words visibly arch.
+
+                Two lines where the design breaks them — see BOXES. The path id
+                carries the box's key and the line's index because ids are
+                document-global and there are four cards of this. */}
             <p className="wanted-box-label">
               {box.label.map((line, j) => (
-                <span className="line" key={j}>
-                  {line}
-                </span>
+                <svg className="line" viewBox="0 0 100 20" key={j} focusable="false">
+                  {/* A VALLEY, NOT A CREST — the word follows the floor's own
+                      dip, ends high and middle low, the same curve the deep
+                      half above it is cut with. */}
+                  <path
+                    id={`wanted-arc-${box.id}-${j}`}
+                    d="M0,6 Q50,20 100,6"
+                    fill="none"
+                  />
+                  <text>
+                    <textPath
+                      href={`#wanted-arc-${box.id}-${j}`}
+                      startOffset="50%"
+                      textAnchor="middle"
+                    >
+                      {line}
+                    </textPath>
+                  </text>
+                </svg>
               ))}
             </p>
           </li>

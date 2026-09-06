@@ -86,7 +86,9 @@ export const CTA_PARALLAX = {
 export function initCtaParallax(root: HTMLElement): () => void {
   const sheet = root.querySelector<HTMLElement>(".about-cta-sheet");
   const img = sheet?.querySelector<HTMLElement>(".about-cta-bg");
-  const front = sheet?.querySelector<HTMLElement>(".about-cta-front");
+  /* Off the root, not the sheet: the crate moved into its own front box (the
+     sheet's twin, after the copy) so it could paint over the pill. */
+  const front = root.querySelector<HTMLElement>(".about-cta-front");
 
   /* A photograph drifting behind a headline is decoration by definition; "reduce
      motion" parks it, and parked is the crop the stylesheet already draws. */

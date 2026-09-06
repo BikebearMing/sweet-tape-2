@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 
 import Peel from "@/components/Peel";
 import { getHomepage } from "@/data/homepage";
+import Explore from "./Explore";
 import Stage from "./Stage";
 import RollPicker from "./RollPicker";
 import { stripOf } from "./strips";
@@ -165,6 +166,7 @@ export default async function TapeSlider() {
               })}
 
               <TopTitle />
+              <Explore />
 
               <div className="key-visual">
                 <img src={first.card} alt="" />

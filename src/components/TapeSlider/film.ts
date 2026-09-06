@@ -30,6 +30,7 @@
  * and the two are independent.
  */
 import {
+  type BufferGeometry,
   CanvasTexture,
   Color,
   type IUniform,
@@ -39,6 +40,7 @@ import {
   SRGBColorSpace,
   type Texture,
   Vector2,
+  Vector3,
 } from "three";
 
 /* ==========================================================================
@@ -125,7 +127,7 @@ export const FILM = {
      that layer's highlight is, and the two are not interchangeable: a big soft
      coat is lacquer and a small tight one is moulded plastic. 0.20 over a body
      at 0.38, both wide, was the lacquer. This is the small tight one. */
-  GLAZE: 0.12,
+  GLAZE: 0.1, // 0.12 scaled by the same 13% step as FILM_LIGHT
   /* And the coat's own roughness — the single most useful number in this file,
    * because it is the one that separates GLOSSY from BRIGHT.
    *
@@ -273,7 +275,7 @@ export const GLASS = {
      Small, and smaller since: this term is added AFTER the encode, so it is the
      one thing on the roll that can exceed the rest of the frame's range. On the
      clear tapes it was the last part still reading as glare. */
-  SHEEN: 0.07,
+  SHEEN: 0.06, // 0.07 scaled by the same 13% step as FILM_LIGHT
 };
 
 /* ==========================================================================
@@ -506,6 +508,67 @@ export function classify(size: { x: number; y: number; z: number }, midY: number
      axis, the back face at the high end — and the midpoint of the wall is what
      separates them. */
   return midY < 0 ? "label" : "end";
+}
+
+/* ==========================================================================
+   THE DOME — the hero's face treatment, ported (Hero/heroTape.ts, FILM.DOME)
+   ========================================================================== */
+
+/* WHY A FLAT DISC CANNOT BE LIT INTO DEPTH, and what this does about it. A
+ * disc has ONE normal over its whole area, so every term of the shading is
+ * constant across it: however the lights are angled, a flat label renders as a
+ * uniform wash the eye reads as exposure, not as form. Sheen is a GRADIENT —
+ * a bright region with a falloff — and the geometry has to supply one.
+ *
+ * So the face's normals are fanned radially outward, as if the label were very
+ * slightly domed — which a wound roll's face genuinely is. The normal then
+ * sweeps through the lights' half-vectors on a ring, and that ring is the
+ * highlight arc that travels as the roll turns. NORMALS ONLY: not one vertex
+ * moves, so the silhouette and the artwork's registration are exactly as
+ * exported — and it is a one-time pass at load, so it costs the frame nothing.
+ *
+ * The axis is each vertex's OWN exported normal (read through getX/Y/Z, which
+ * do the stride arithmetic — heroTape records the interleaved-buffer bug that
+ * makes .array unsafe), so a mesh carrying both discs domes each outward from
+ * its own face. DOME is the tilt at the rim in radians; DOME_BIAS shapes where
+ * the ring sits — above 1 the middle stays flatter and the curve piles up near
+ * the rim. Both are the hero's own figures. */
+const DOME = 1.3;
+const DOME_BIAS = 0.5;
+
+export function domeFace(geo: BufferGeometry): void {
+  const pos = geo.attributes.position;
+  const nor = geo.attributes.normal;
+  if (!pos || !nor) return;
+
+  geo.computeBoundingSphere();
+  const c = geo.boundingSphere!.center;
+
+  const p = new Vector3();
+  const n = new Vector3();
+  const r = new Vector3();
+  const radial = (i: number) => {
+    p.fromBufferAttribute(pos, i).sub(c);
+    n.set(nor.getX(i), nor.getY(i), nor.getZ(i));
+    return r.copy(p).addScaledVector(n, -p.dot(n)); // p flattened into the face
+  };
+
+  // The rim, so the tilt is a fraction of the disc's own radius and DOME means
+  // the same thing whatever units the export is in.
+  let rim = 0;
+  for (let i = 0; i < pos.count; i++) rim = Math.max(rim, radial(i).length());
+  if (rim < 1e-6) return; // not a disc — nothing to dome
+
+  for (let i = 0; i < pos.count; i++) {
+    const rad = radial(i).length();
+    if (rad > 1e-6) {
+      const a = DOME * (rad / rim) ** DOME_BIAS;
+      r.divideScalar(rad); // unit, and in the disc's plane
+      n.multiplyScalar(Math.cos(a)).addScaledVector(r, Math.sin(a)).normalize();
+      nor.setXYZ(i, n.x, n.y, n.z);
+    }
+  }
+  nor.needsUpdate = true;
 }
 
 /* ==========================================================================

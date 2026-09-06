@@ -26,6 +26,7 @@ import {
   NoToneMapping,
   PMREMGenerator,
   PerspectiveCamera,
+  PointLight,
   Scene,
   type Texture,
   Vector3,
@@ -33,7 +34,7 @@ import {
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-import { applyFilm, classify, cutMaps, disposeMaps, FILM } from "./film";
+import { applyFilm, classify, cutMaps, disposeMaps, domeFace, FILM } from "./film";
 
 const FOV = 35;
 /* Mouse parallax. Applied to the stage the flip groups hang off — NOT to the
@@ -47,8 +48,8 @@ const FOV = 35;
    The signs read as a camera that moves with the pointer rather than an object
    that follows it: cursor right shows more of the roll's right side and slides
    it left, which is what the eye expects from a thing sitting in a scene. */
-const MAX_YAW = 0.3; // rad at full deflection, ~17deg
-const MAX_PITCH = 0.2; // ~11deg; less than the yaw, as a head moves less vertically
+const MAX_YAW = 0.12; // rad at full deflection, ~7deg
+const MAX_PITCH = 0.08; // ~4.5deg; less than the yaw, as a head moves less vertically
 
 /* World units — the roll is ~1.0 across inside a canvas 1.3 wide, so there is
    0.15 of margin each side and the yaw's own foreshortening gives a little
@@ -140,9 +141,33 @@ export type ViewerLight = {
    * call site, which is the only caller that asks for it.
    */
   env?: number;
+
+  /**
+   * A CLOSE LAMP WITH FALLOFF — the one light here whose brightness varies
+   * ACROSS a face, which no directional can do: a flat disc has one normal, so
+   * a directional shades every point of it identically and the label comes out
+   * a uniform wash however the light is angled. A point light close to the
+   * scene falls off with distance instead — the disc's near side is lit and
+   * its far side is in shade, which is the left-to-right modelling the hero's
+   * bespoke stage gets from its domed normals and none of this viewer's
+   * callers could ask for.
+   *
+   * Position is in the scene's own units (the roll is about 1 across, camera
+   * at z 2.3); negative x is a lamp on the reader's left, so the face falls
+   * into shadow on the right. Power is candela — decay is inverse-square, so
+   * the working range against a lamp ~1.5 away is roughly 1..3. Built only
+   * when passed, like the fill: an unused light is still a light every
+   * material has to be shaded against.
+   *
+   * A caller that adds one usually wants `ambient` DOWN a step in the same
+   * breath: the falloff is an addition on top of the flat base, and a base
+   * already at the artwork's own brightness leaves the lit side nowhere to go
+   * but clipped. See Reason/roll.ts, the caller this was built for.
+   */
+  lamp?: { x: number; y: number; z: number; power: number };
 };
 
-const LIGHT: Required<ViewerLight> = { key: 0.7, ambient: 0.82, fill: 0, env: 0 };
+const LIGHT: Required<Omit<ViewerLight, "lamp">> = { key: 0.7, ambient: 0.82, fill: 0, env: 0 };
 
 /* THE FINISH — what a surface is made of, as opposed to what is shining on it.
  *
@@ -208,14 +233,18 @@ export type ViewerFilm = {
    *
    * It is per TAPE rather than a constant here because it is a fact about the
    * product: cellophane is clear, masking tape is paper, cloth tape is cloth.
-   * The value lives with the rest of the tape in src/data/tapes.ts and arrives
-   * through ProductIntro/roll.ts.
+   * The values live in CLARITY in ProductIntro/rolls.ts.
+   *
+   * A NUMBER FOR A ONE-MODEL VIEWER, A RECORD FOR A STAGE OF SEVERAL — the
+   * slider mounts six tapes in one viewer and paper must not go see-through
+   * because cellophane is; keyed by the model's own url, the thing this viewer
+   * already indexes everything by. A url not in the record is a solid roll.
    *
    * ONLY EVER THE WOUND SIDE. The printed label is picked out by geometry
    * before this is spent and is never handed it — see classify() in film.ts,
    * and the second, independent guard in the shader patch there.
    */
-  clarity?: number;
+  clarity?: number | Record<string, number>;
 };
 
 /* THE RIG THE FILM IS LIT BY, and it is a different room from the one above.
@@ -261,8 +290,13 @@ export type ViewerFilm = {
  *
  * Overridable by the caller like any other: a `light` passed alongside a `film`
  * wins over these, so a page can still say something about its own room. */
-const FILM_LIGHT: Required<ViewerLight> = { key: 0.85, ambient: 0.6, fill: 0, env: 0 };
-const KICK = { x: 2.7, y: 2.0, z: 1.0, power: 0.14 };
+/* Key and kick scaled by 0.87 from key 0.85 / kick 0.14 — the 13% step down
+   asked for after the ALL-GLB port. The ambient took the same step (0.6 to
+   0.52) and came all the way back: the rolls read dark, and ambient is the
+   right knob to give brightness back through because it carries no specular —
+   the faces brighten without the gloss returning. */
+const FILM_LIGHT: Required<Omit<ViewerLight, "lamp">> = { key: 0.74, ambient: 0.6, fill: 0, env: 0 };
+const KICK = { x: 2.7, y: 2.0, z: 1.0, power: 0.12 };
 
 export type TapeViewer = {
   /** True once this model is resident and can be flipped to. */
@@ -320,6 +354,15 @@ export function createTapeViewer(
     const kick = new DirectionalLight(0xffffff, KICK.power);
     kick.position.set(KICK.x, KICK.y, KICK.z);
     scene.add(kick);
+  }
+
+  /* The lamp — the caller's close light with falloff, for grading a FACE. See
+     `lamp` in ViewerLight, which is the whole argument. Decay 2 is the
+     inverse-square the falloff depends on; distance 0 is unlimited reach. */
+  if (light?.lamp) {
+    const lamp = new PointLight(0xffffff, light.lamp.power, 0, 2);
+    lamp.position.set(light.lamp.x, light.lamp.y, light.lamp.z);
+    scene.add(lamp);
   }
 
   /* The fill, and it is only built when it is asked for — an unused light is
@@ -581,6 +624,23 @@ export function createTapeViewer(
                   const size = bb.getSize(new Vector3());
                   const surface = classify(size, (bb.min.y + bb.max.y) / 2);
 
+                  /* THE DISCS ARE DOMED — the hero's face treatment, and the
+                     reason a lit label reads as a surface rather than a wash.
+                     One pass over the normals at load, nothing per frame; see
+                     domeFace in film.ts. Both discs, because each fans outward
+                     from its own exported normal and the back one costs the
+                     same nothing. */
+                  if (surface === "label" || surface === "end") {
+                    domeFace(mesh.geometry);
+                  }
+
+                  /* THIS TAPE'S OWN CLARITY — a plain number from a one-model
+                     caller, or looked up by url on a stage of several. */
+                  const clear =
+                    typeof film?.clarity === "object"
+                      ? film.clarity[url] ?? 0
+                      : film?.clarity ?? 0;
+
                   /* THE CLARITY GOES TO THE WOUND SIDE AND NOWHERE ELSE. This
                      is the first of the two guards named in film.ts: the label
                      is a disc and never reaches the branch that would flag it
@@ -588,12 +648,7 @@ export function createTapeViewer(
                      are tape too, and the core is what shows THROUGH a clear
                      wound side — but they stay solid, because a see-through
                      core is a hole in the roll rather than a clear roll. */
-                  applyFilm(
-                    mat,
-                    maps,
-                    surface,
-                    surface === "wound" ? (film?.clarity ?? 0) : 0
-                  );
+                  applyFilm(mat, maps, surface, surface === "wound" ? clear : 0);
                 }
               }
             });

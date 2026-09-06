@@ -34,14 +34,41 @@ import type { TapeViewer } from "@/components/TapeSlider/tape3d";
    changing by a pixel — and this section is a close-up. */
 const MODEL = "/assets/tapes/Header-Brown-Inner.glb";
 
-/* The room, and the finish, both straight off ProductIntro/roll.ts. See the note
-   at the top: these are corrections the metal label needs, not a second opinion
-   about how the object should look. */
+/* The room, the finish AND THE FILM, all straight off ProductIntro/roll.ts. See
+   the note at the top: these are corrections the metal label needs, not a second
+   opinion about how the object should look.
+
+   THE FILM IS WHAT WAS MISSING FOR A ROUND. Without it the viewer stages the
+   roll on the slider's deliberately flat orbit light (key 0.7 under a pi x 0.82
+   ambient), which is right for six thumbnails and wrong for a close-up — the
+   roll rendered plain: no relief, no coat, no moving highlight. Passing a film
+   switches the viewer onto FILM_LIGHT plus the face's own kick light and gives
+   the surface the product page's procedural roughness, relief and clear coat
+   (see ViewerFilm in tape3d.ts and TapeSlider/film.ts). The clarity is the OPP
+   tape's own 0.09, from CLARITY in ProductIntro/rolls.ts — the same object at
+   the same see-through, on the page that argues for it. */
 const ROOM = 0.25;
 const FINISH = {
-  "Face Brown": { metalness: 0.35, roughness: 2 },
+  "Face Brown": { metalness: 0.05, roughness: 2 },
   Tape: { roughness: 0.4 },
 };
+const FILM = { clarity: 0.09 };
+
+/* THE LAMP — what puts the shadow on the right of the face, the way the hero's
+   own stage models its roll. A directional cannot do it: the label is a flat
+   disc with one normal, so directional light shades all of it identically and
+   the face reads as a wash. This is a close point light on the reader's LEFT
+   whose inverse-square falloff is the gradient — lit at the label's left edge,
+   falling into shade across it. See `lamp` in TapeSlider/tape3d.ts.
+
+   AND THE AMBIENT COMES DOWN TO PAY FOR IT. The film stage's base (0.6) holds
+   the face at nearly the artwork's own brightness, which leaves a lamp nowhere
+   to add but past clipping; a step down makes the shade a real darkening and
+   the lamp brings the lit side back to the artwork rather than over it. */
+/* Both scaled by 0.87 from 0.38 / 2.6 — the site-wide 13% step down that
+   FILM_LIGHT took, applied to this section's own overrides too. */
+const AMBIENT = 0.33;
+const LAMP = { x: -1.6, y: 0.9, z: 1.3, power: 2.26 };
 
 /* THE POSE, AND IT IS THE ONE KNOB IN THIS FILE.
  *
@@ -61,11 +88,27 @@ const FINISH = {
 const TURN = 25;
 const LEAN = { x: -0.25, y: -0.3 };
 
+/* AND THE POSE FOLLOWS THE POINTER, which is the half of the home page this
+   section did not mimic and the half that carries the depth. A lit face is
+   still a still photograph; what the hero's roll has is PERSPECTIVE THAT
+   ANSWERS THE READER — the pointer moves, the roll leans a few degrees, and
+   the lamp's gradient and the kick's highlight slide across the label as it
+   does. The lean is the slider's own mechanism (point() in tape3d, eased
+   internally on a group above the flip); all this owns is where the pointer is
+   relative to the roll and how far out counts as full deflection.
+
+   TILT_REACH is the slider's figure. The base LEAN above stays the pose the
+   section is composed around: the pointer's offset is ADDED to it, so the roll
+   at rest — and under reduced motion, where none of this is wired — is exactly
+   the roll it was. */
+const TILT_REACH = 0.42;
+
 /** Mounts the roll into `box` and returns the teardown. Safe to call when three
     is unavailable: the promise is caught and the flat photograph simply stays. */
 export function mountRoll(box: HTMLElement, card: HTMLElement | null): () => void {
   let viewer: TapeViewer | null = null;
   let gone = false;
+  const ac = new AbortController();
 
   /* Hidden from MOUNT, not from viewer-ready — the slider's call, for its
      reason: once scripts are running the roll is coming, and letting the flat
@@ -76,18 +119,66 @@ export function mountRoll(box: HTMLElement, card: HTMLElement | null): () => voi
 
   import("@/components/TapeSlider/tape3d")
     .then(({ createTapeViewer }) =>
-      createTapeViewer(box, [MODEL], { env: ROOM }, FINISH),
+      createTapeViewer(
+        box,
+        [MODEL],
+        { env: ROOM, ambient: AMBIENT, lamp: LAMP },
+        FINISH,
+        FILM,
+      ),
     )
     .then((v) => {
       if (gone) return v.dispose();
       viewer = v;
       v.show(MODEL);
       v.spin(TURN);
-      /* Said once rather than held every frame: point() is a target the viewer
-         eases toward, not a pose it has to be reminded of, so the roll settles
-         into the angle over the same beat the entrance bounce is landing on and
-         then simply stays there. */
+      /* The rest pose — where the ease settles whenever the pointer is gone,
+         and the whole of the pose for a reader who has asked for less
+         motion. */
       v.point(LEAN.x, LEAN.y);
+
+      /* A roll swinging after the cursor is exactly what the setting asks
+         about; posed and lit, without the chase, is the reduced version. */
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+      /* The roll's centre, cached — the slider reads it on scroll rather than
+         per pointermove for the reason its engine gives: a rect per mouse
+         event is a forced layout per mouse event. Scroll and resize are when
+         it actually changes. */
+      let cx = 0;
+      let cy = 0;
+      const measure = () => {
+        const b = box.getBoundingClientRect();
+        cx = b.left + b.width / 2;
+        cy = b.top + b.height / 2;
+      };
+      measure();
+      window.addEventListener("scroll", measure, { signal: ac.signal, passive: true });
+      window.addEventListener("resize", measure, { signal: ac.signal });
+
+      window.addEventListener(
+        "pointermove",
+        (e) => {
+          const reach =
+            Math.min(window.innerWidth, window.innerHeight) * 0.5 * TILT_REACH;
+          viewer?.point(
+            LEAN.x + (e.clientX - cx) / reach,
+            LEAN.y + (e.clientY - cy) / reach,
+          );
+        },
+        { signal: ac.signal, passive: true },
+      );
+      // Pointer off the window or the tab blurred mid-lean: back to the pose.
+      window.addEventListener(
+        "blur",
+        () => viewer?.point(LEAN.x, LEAN.y),
+        { signal: ac.signal },
+      );
+      document.documentElement.addEventListener(
+        "pointerleave",
+        () => viewer?.point(LEAN.x, LEAN.y),
+        { signal: ac.signal },
+      );
     })
     .catch(() => {
       /* No three after all — put the photograph back and the section is the one
@@ -99,6 +190,7 @@ export function mountRoll(box: HTMLElement, card: HTMLElement | null): () => voi
 
   return () => {
     gone = true;
+    ac.abort();
     viewer?.dispose();
     viewer = null;
     if (card) card.style.visibility = "visible";

@@ -45,6 +45,7 @@ import {
   shiftDip,
 } from "@/components/wordDip";
 import type { TapeViewer } from "./tape3d";
+import { clarityOf } from "@/components/ProductIntro/rolls";
 
 import { onViewportChange, screenH } from "@/components/viewport";
 
@@ -67,6 +68,11 @@ export function initTapeSlider(root: HTMLElement): () => void {
   const letters = qa<HTMLImageElement>(".top-title img");
   const glyphs = qa<HTMLImageElement>(".bottom-title .glyph img");
   const topWord = q<HTMLElement>(".top-title");
+  /* EXPLORE, the sticker on the E's corner. Optional like everything else
+     queried here — the section works without it, it is just a section with
+     nothing to click. */
+  const explore = q<HTMLElement>(".explore-button");
+  const exploreText = explore?.querySelector<HTMLElement>(".button-text") ?? null;
   const bottomWord = q<HTMLElement>(".bottom-title");
   // The hidden heading that carries the word mark in text; see setWord.
   const srWord = q<HTMLElement>("h2.sr-only");
@@ -210,7 +216,26 @@ export function initTapeSlider(root: HTMLElement): () => void {
     TOP_AT: 0.1, // THE
     BOTTOM_AT: 0.26, // CREATIVE, trailing it as it does on a selection
     LEFT_AT: 0.2,
+    /* The sticker goes on last, and after the letter it is stuck to has
+       arrived: THE starts at TOP_AT and its E is the third of a 0.08 stagger
+       over a 0.42 rise, so the corner it laps is not there until 0.68. This
+       starts a beat before that and lands just after it. */
+    EXPLORE_AT: 0.6,
   };
+
+  /* The sticker going on. TWO OVERSHOOTS AT ONCE AND OUT OF STEP: the scale
+     settles while the drop is still coming back, so it lands with a second
+     small kick rather than one clean bounce — which is a thing being pressed
+     on rather than a thing appearing. Match the durations and the pair reads as
+     one move again. */
+  const EXPLORE_POP = 0.52;
+  const EXPLORE_FALL = 0.68;
+  const EXPLORE_TEXT = 0.5;
+  const EXPLORE_TEXT_AT = 0.16; // into the sub-timeline, as the disc settles
+  /* How far it rises, as a fraction of the window's WIDTH — the whole stage is
+     drawn in vw and a travel in px would be a different move on every screen. */
+  const EXPLORE_TRAVEL = 0.022;
+  const exploreRise = () => window.innerWidth * EXPLORE_TRAVEL;
 
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const spin = { rot: ACTIVE_ANGLE }; // tweened; index 0 starts in the active slot
@@ -226,6 +251,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
   let cardTl: gsap.core.Timeline | null = null;
   let showTl: gsap.core.Timeline | null = null;
   let pressTl: gsap.core.Timeline | null = null;
+  let exploreTl: gsap.core.Timeline | null = null;
 
   /* The 3D stage arrives asynchronously (its chunk, then two GLBs), so the
      engine runs with or without it: null until ready, and every card path
@@ -901,6 +927,37 @@ export function initTapeSlider(root: HTMLElement): () => void {
     strips.forEach((t) => t?.style.setProperty("--peel", "0"));
 
     // The key visual is deliberately absent — see the block comment above.
+
+    /* And the sticker not yet stuck on. autoAlpha rather than scale alone: at
+       scale 0 the box is still a hit target sitting over the roll, and a
+       visitor who reaches the section before the entrance fires would be able
+       to click something that is not there. */
+    if (explore) gsap.set(explore, { autoAlpha: 0, scale: 0, y: exploreRise() });
+    if (exploreText) gsap.set(exploreText, { yPercent: 115 });
+  }
+
+  function addExplore(tl: gsap.core.Timeline, at: number) {
+    if (!explore) return null;
+
+    const sub = gsap.timeline();
+    sub.set(explore, { autoAlpha: 1 }, 0);
+    sub.to(explore, { scale: 1, duration: EXPLORE_POP, ease: "back.out(2.4)" }, 0);
+    sub.to(explore, { y: 0, duration: EXPLORE_FALL, ease: "back.out(1.9)" }, 0);
+    if (exploreText) {
+      /* The word comes up out of the disc's own clip once the disc has
+         somewhere to hold it — see .explore-clip, which is the box it is
+         hidden behind. No overshoot: it is clipped, and anything that carries
+         it past its rest position shaves the top of the letters off, exactly
+         as WORD.EASE_UP is careful about. */
+      sub.to(
+        exploreText,
+        { yPercent: 0, duration: EXPLORE_TEXT, ease: "power3.out" },
+        EXPLORE_TEXT_AT
+      );
+    }
+
+    tl.add(sub, at);
+    return sub;
   }
 
   function addReturn(tl: gsap.core.Timeline, at: number) {
@@ -981,6 +1038,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
     /* Parked in the same handles the click path uses, so an impatient visitor
        who selects a tape mid-entrance is covered by goTo's existing interrupt
        handling rather than by a second copy of it. */
+    exploreTl = addExplore(enter, ENTER.EXPLORE_AT);
     showTl = addShowcaseIn(enter, ENTER.SHOW_AT);
     pressTl = addPress(enter, ENTER.TAPE_AT);
     leftTl = addReturn(enter, ENTER.LEFT_AT);
@@ -1285,8 +1343,39 @@ export function initTapeSlider(root: HTMLElement): () => void {
        flat card paint first just flashes artwork the roll is about to
        replace. The cost is an empty slot while the chunk and models load. */
     if (card) card.style.visibility = "hidden";
+    /* THE FILM, ON THE ORBIT TOO — the hero-family surface treatment every
+       other stage already wears: domed faces, relief, coat and the film stage's
+       own light. The maps are procedural, cut once and shared across all six
+       models, and the viewer renders on demand — so the orbit's idle cost is
+       exactly what it was; what changes is the shader the rolls compile once at
+       load. Clarity is per tape (paper must not go see-through because
+       cellophane is), keyed by each button's model url. */
+    const filmClarity = Object.fromEntries(
+      rolls
+        .filter((b) => modelOf(b))
+        .map((b) => [modelOf(b), clarityOf(b.dataset.index || "") ?? 0]),
+    );
     import("./tape3d")
-      .then(({ createTapeViewer }) => createTapeViewer(keyVisual, modelUrls))
+      .then(({ createTapeViewer }) =>
+        createTapeViewer(
+          keyVisual,
+          modelUrls,
+          undefined,
+          /* THE OPP FACE'S METAL, TAKEN OUT — ProductIntro's own correction
+             (see FINISH there). The export's "Face Brown" carries metalness
+             0.55, and metal has no diffuse: on a stage with no environment the
+             metallic share renders BLACK and the lime label leaves the
+             renderer at about half the artwork's brightness. The product page
+             pays for it with a room; the orbit shows six rolls and wants no
+             room, so the cheaper end of the same fix — a dielectric face — is
+             the right one here. The other five faces carry no metalness and
+             do not change. */
+          { "Face Brown": { metalness: 0.05 } },
+          {
+            clarity: filmClarity,
+          },
+        ),
+      )
       .then((v) => {
         if (viewerGone) return v.dispose();
         viewer = v;
@@ -1352,13 +1441,24 @@ export function initTapeSlider(root: HTMLElement): () => void {
     io?.disconnect();
     viewIo?.disconnect();
     gsap.ticker.remove(applyParallax);
-    [timeline, enter, wipe, word, bottom, leftTl, cardTl, showTl, pressTl].forEach((t) =>
-      t?.kill()
-    );
+    [
+      timeline,
+      enter,
+      wipe,
+      word,
+      bottom,
+      leftTl,
+      cardTl,
+      showTl,
+      pressTl,
+      exploreTl,
+    ].forEach((t) => t?.kill());
     gsap.killTweensOf([...rings, ...letters, ...glyphs, ...showcase, ...chips, spin]);
     // Back to the stylesheet's rest pose, which is the photograph taped down.
     strips.forEach((t) => t?.style.removeProperty("--peel"));
     if (card) gsap.killTweensOf(card);
+    if (explore) gsap.killTweensOf(explore);
+    if (exploreText) gsap.killTweensOf(exploreText);
     if (copyBox) gsap.killTweensOf(copyBox);
     // The dispose runs here OR in the loader's then-branch, never both:
     // viewerGone tells a load that resolves after teardown to discard itself.

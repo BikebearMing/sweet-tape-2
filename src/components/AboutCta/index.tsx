@@ -126,21 +126,6 @@ export default async function AboutCta() {
           decoding="async"
         />
 
-        {/* THE CRATE. alt="" and out of the tree: it is the same six tapes the
-            pill below already names and links to, photographed — a screen reader
-            that announced it would be reading the section's own copy back a
-            second time, in a worse form.
-
-            LAZY, LIKE THE CURTAIN BEHIND IT. Both are on the last section of the
-            route, several screens below the fold on any window; THE BELT'S
-            photographs take the same pair of attributes. */}
-        <img
-          className="about-cta-front"
-          src="/assets/front-cta.webp"
-          alt=""
-          loading="lazy"
-          decoding="async"
-        />
       </div>
 
       {/* THE COPY, AND IT IS A BOX OF ITS OWN so that it PAINTS OVER the sheet:
@@ -234,6 +219,27 @@ export default async function AboutCta() {
             <Chevron />
           </span>
         </Link>
+      </div>
+
+      {/* THE CRATE, IN FRONT OF EVERYTHING — including the pill, whose lower
+          edge the tapes now overlap. It used to live inside the sheet, which is
+          a stacking context (the arc mask makes one), so nothing in there could
+          paint over the copy; this twin box is the same geometry and the same
+          arc crop (same classes), placed after the copy so tree order does the
+          stacking. pointer-events are off on the whole box — the crate is
+          decoration and the pill under it has to stay clickable.
+
+          alt="" and out of the tree: it is the same six tapes the pill already
+          names and links to, photographed. Lazy like the curtain — the last
+          section of the route. */}
+      <div className="about-cta-sheet about-cta-frontbox arc-cut" aria-hidden="true">
+        <img
+          className="about-cta-front"
+          src="/assets/front-cta.webp"
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
       </div>
     </Stage>
   );

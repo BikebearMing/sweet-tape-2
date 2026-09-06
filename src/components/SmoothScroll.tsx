@@ -120,9 +120,23 @@ export default function SmoothScroll() {
        So the preloader keeps its own setting until the cover has gone (see
        initPreloader), and this takes over at the handoff — the same moment the
        scroll unlocks, which is the first moment any of this matters. Fires
-       immediately on a page with no preloader on it. */
+       immediately on a page with no preloader on it.
+
+       AND NOT AT THE HANDOFF EITHER — two seconds after it. The hero's
+       entrances are still running for nearly that long past the release (title
+       0.3s + 1.2s, corner mark 0.55s + 1.1s), and on a COLD load the worst
+       stall of the page's life lands inside that window: the GLB arrives late,
+       and three's first compile blocks the main thread on more or less the
+       frame the title starts rising. With smoothing already off, that one
+       stall advances the tween by its full length — the letters snap in
+       standing and only the tail of the stagger is seen to move. On a refresh
+       the model and the shader cache are warm, the compile happens behind the
+       cover, and it never showed. So the preloader's (120, 33) holds until the
+       entrances are done; the scroll gives up nothing unless a frame actually
+       stalls, which is exactly the frame it should give something up on. */
+    let settle: gsap.core.Tween | null = null;
     const stopGate = whenRevealed(() => {
-      gsap.ticker.lagSmoothing(0);
+      settle = gsap.delayedCall(2, () => gsap.ticker.lagSmoothing(0));
 
       /* AND EVERY PIN IS RE-MEASURED, which is a bug fix and not housekeeping.
        *
@@ -153,6 +167,7 @@ export default function SmoothScroll() {
     return () => {
       stopViewport();
       stopGate();
+      settle?.kill();
       gsap.ticker.remove(raf);
       gsap.ticker.lagSmoothing(500, 33); // GSAP's own defaults
       lenis.destroy();

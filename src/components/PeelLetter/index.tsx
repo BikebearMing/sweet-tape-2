@@ -145,17 +145,31 @@ export default function PeelLetter({ game = true }: { game?: boolean } = {}) {
       const onResize = () => scene.resize();
       window.addEventListener("resize", onResize);
 
+      /* Scrolled past. The canvas is fixed and full-bleed, so on a page that
+         is not the lab the letter would go on being drawn — off screen, at
+         full rate — for the rest of the document. An observer rather than a
+         rect read in the tick: the read was a forced layout per frame, paid on
+         every frame of the whole document below the hero — the exact case the
+         gate exists to make cheap. Same NEAR_VIEW margin as the hero's own
+         tickers, so the letter never sits still while straddling the edge. */
+      let onScreen = true;
+      const io = new IntersectionObserver(
+        ([entry]) => {
+          onScreen = entry.isIntersecting;
+        },
+        { rootMargin: "20% 0px" },
+      );
+      io.observe(el);
+
       const tick = (time: number) => {
-        /* Scrolled past. The canvas is fixed and full-bleed, so on a page that
-           is not the lab the letter would go on being drawn — off screen, at
-           full rate — for the rest of the document. */
-        if (el.getBoundingClientRect().bottom < 0) return;
+        if (!onScreen) return;
         scene.frame(time, S.peel.p, S.peel.wobble);
         paintChrome();
       };
       gsap.ticker.add(tick);
       stopTicker = () => {
         gsap.ticker.remove(tick);
+        io.disconnect();
         window.removeEventListener("resize", onResize);
       };
 

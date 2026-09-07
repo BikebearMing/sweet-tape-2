@@ -289,6 +289,13 @@ export function initTapeSlider(root: HTMLElement): () => void {
   }
 
   function applyParallax() {
+    /* Off screen, off the clock. Everything below is spent keeping the pointer
+       lean's cached centre honest, and aimRoll is already inView-gated — so
+       paying two forced layouts (offsetTop, measureRoll's rect) on every
+       scrolled frame of the REST of the document bought nothing. lastScroll is
+       left stale on purpose: the first in-view frame sees the gap and
+       re-measures. */
+    if (!inView) return;
     const y = window.scrollY || window.pageYOffset || 0;
     if (lastScroll !== null && Math.abs(y - lastScroll) < 0.5) return;
     lastScroll = y;

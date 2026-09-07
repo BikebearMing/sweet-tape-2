@@ -17276,6 +17276,12 @@ img#front {
   object-fit: cover;
   transform: translate3d(0, calc(-50% + var(--cta-pan, 0px)), 0)
     scale(var(--cta-zoom, 1));
+  /* The one parallax on the site that SCALES rather than translates, and a
+     changing scale on an unpromoted element is a re-raster of the whole
+     curtain every frame it moves. Promoted, the compositor stretches the
+     layer it already holds instead. Every translate-only sibling gets by
+     without this; the scale is why this one does not. */
+  will-change: transform;
 }
 
 /* THE CRATE, FULL BLEED AND CROPPED BY THE SHEET'S FOOT. Width 100% and the

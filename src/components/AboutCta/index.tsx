@@ -120,7 +120,7 @@ export default async function AboutCta() {
             there is picture above and below the crop to move into. */}
         <img
           className="about-cta-bg"
-          src="/assets/cta-bg.png"
+          src="/assets/cta-bg.webp"
           alt=""
           loading="lazy"
           decoding="async"

@@ -380,7 +380,13 @@ export function initCopyReveal(root: HTMLElement): () => void {
   let best = 0; // the ratchet: the playhead never goes back
 
   function frame() {
-    if (best >= 1) return;
+    /* Done is done — the ratchet never reopens, so the callback retires
+       rather than early-returning on every frame for the rest of the page.
+       The teardown's remove of an already-removed callback is a no-op. */
+    if (best >= 1) {
+      gsap.ticker.remove(frame);
+      return;
+    }
     const p = (window.scrollY - startY) / travel;
     if (p <= best) return;
     best = Math.min(p, 1);

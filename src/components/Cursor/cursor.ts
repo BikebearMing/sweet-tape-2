@@ -153,11 +153,20 @@ export function initCursor(): () => void {
 
   const tick = () => {
     if (!live) return;
+    /* Settled: the chase is asymptotic and would otherwise write the same two
+       transforms every frame forever. Within a tenth of a pixel it is snapped
+       home, written once more, and the ticker gets its frames back until the
+       pointer moves. */
+    if (ax === px && ay === py) return;
     /* Reduced motion gets the position, not the chase — a trailing element
        is exactly the kind of incidental movement the setting asks to lose. */
     const k = reduced ? 1 : Math.min(1, Math.max(0, CONFIG.CHASE));
     ax += (px - ax) * k;
     ay += (py - ay) * k;
+    if (Math.abs(px - ax) < 0.1 && Math.abs(py - ay) < 0.1) {
+      ax = px;
+      ay = py;
+    }
     setX(ax);
     setY(ay);
   };

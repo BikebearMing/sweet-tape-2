@@ -3,6 +3,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 
 import { initHandNote } from "@/components/HandNote/hand";
+import { initPress } from "@/components/ProductInfo/press";
 import { whenRevealed } from "@/components/Preloader/gate";
 
 import { initAboutReveal } from "./reveal";
@@ -49,6 +50,16 @@ export default function Stage({ children }: { children: ReactNode }) {
        double-mount re-binds cleanly rather than stacking two of either. */
     const stopReveal = initAboutReveal(root);
     const stopSpaceOut = initSpaceOut(root);
+    /* THE COLLAGE'S TAPE GOES ON HERE, once, and NOT through initPeel — the
+       strips are drive="manual" and press.ts is the hand (its header says why
+       neither of Peel's drivers fits). One strip after another, in markup
+       order. Under the preloader's gate like the note: this screen is the
+       first one, so its observer would otherwise fire under the cover and the
+       tape would be found already pressed. */
+    let stopPress: (() => void) | null = null;
+    const ungatePress = whenRevealed(() => {
+      stopPress = initPress(root, [".about-tape"]);
+    });
 
     /* Torn down before the cover lifts (StrictMode's double mount) and there is
        nothing to stop — which is why the teardown unsubscribes AND calls
@@ -71,6 +82,8 @@ export default function Stage({ children }: { children: ReactNode }) {
       stopNote?.();
       stopReveal();
       stopSpaceOut();
+      ungatePress();
+      stopPress?.();
     };
   }, []);
 

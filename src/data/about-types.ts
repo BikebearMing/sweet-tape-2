@@ -33,7 +33,13 @@ export type WantedBox = {
 
 /** /about, as its six sections want it. */
 export type About = {
-  open: { headline: string[]; kicker: string[]; note: string[] };
+  open: {
+    headline: string[];
+    kicker: string[];
+    note: string[];
+    /** The collage — src per piece, a placeholder until the upload lands. */
+    art: { logo: string; clipping: string; shop: string; strip: string };
+  };
   belt: BeltRow[];
   reason: {
     kicker: string;

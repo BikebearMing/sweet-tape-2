@@ -4,7 +4,47 @@ import HandNote from "@/components/HandNote";
 import { getAbout } from "@/data/about";
 import { letters } from "@/components/letters";
 
+import Peel from "@/components/Peel";
 import Stage from "./Stage";
+
+/* THE TAPE HOLDING THE COLLAGE DOWN — the site's own strips, peeling on the
+   loop the hero's do. Masking tape on the paper pieces (the lemon's strip, and
+   its underside), the clear roll on the photograph. ratio is the artwork's own
+   box, so a strip is stated by its length alone and the thickness follows —
+   the same bargain TopStory and MakeItStick strike. */
+const MASKING = {
+  src: "/assets/tape-on-lemon.webp",
+  ratio: 283 / 134,
+  back: "peel-back-masking",
+} as const;
+/* How far a strip stands up before the hand presses it — ProductInfo's own. */
+const LIFT = 0.34;
+const CLEAR = {
+  src: "/assets/stationery-silent-opp-tape.svg",
+  ratio: 141 / 92,
+  back: "peel-back-clear",
+} as const;
+
+/** A strip of `roll`, `length` vw long, as the props Peel wants. */
+function strip(roll: typeof MASKING | typeof CLEAR, length: number) {
+  return {
+    src: roll.src,
+    back: roll.back,
+    box: `${length}vw ${(length / roll.ratio).toFixed(3)}vw`,
+    /* End-first, like every strip stuck on this site: a quarter turn swings the
+       fold ACROSS the strip so it lifts from one end. */
+    direction: "90deg",
+    /* PUT ON ONCE AND LEFT ON. Neither of Peel's own drivers is that gesture —
+       "loop" lifts for ever, "scroll" takes the tape back off on the way up —
+       so these are manual and ProductInfo/press.ts is the hand: it lifts them
+       to `from` at mount and presses them to `to` when the screen is reached.
+       The stylesheet rests them flat (.about-art .about-tape) for the page
+       with no script. LIFT is the product page's own figure. */
+    drive: "manual" as const,
+    from: LIFT,
+    to: 0,
+  };
+}
 
 /* THE OPENING SCREEN of /about — the page's first statement and the box it
  * comes out of.
@@ -98,7 +138,7 @@ import Stage from "./Stage";
 
 export default async function AboutOpen() {
   const {
-    open: { headline, kicker, note },
+    open: { headline, kicker, note, art },
   } = await getAbout();
 
   return (
@@ -185,15 +225,20 @@ export default async function AboutOpen() {
           does not say. */}
       <HandNote className="about-note" lines={note} />
 
-      {/* THE TWO CUTTINGS, and they are drawn on the phone only — see the
-          .about-clipping / .about-shop rules in global.css, which say why and
-          where.
+      {/* THE COLLAGE — four flat pieces laid on the sheet either side of the
+          box. Where each sits and how far it is turned is the .about-art block
+          in global.css; the desktop draws all four and the phone draws the
+          cutting and the shophouse only.
 
           THE PRESS CUTTING is the first of the three generations: a column
-          about a tape release, torn out and kept. THE SHOPHOUSE is the last —
-          the building the company still works out of. They stand either side of
-          the box the hand comes out of, so the screen reads as the claim, then
-          what it is made of, then where it happens.
+          about a tape release, torn out and kept, with the old LOGO CARD pinned
+          behind it. THE SHOPHOUSE is the last — the building the company still
+          works out of — and a loose STRIP of tape lies under it. They stand
+          either side of the box the hand comes out of, so the screen reads as
+          the claim, then what it is made of, then where it happens.
+
+          THE SOURCES ARE THE RECORD'S — src/globals/About.ts, the Opening tab —
+          and a labelled placeholder until each upload lands.
 
           ALT IS EMPTY ON BOTH. The claim they illustrate is already set on this
           screen in type a foot high; a photograph of a clipping described in
@@ -204,15 +249,43 @@ export default async function AboutOpen() {
           piece of artwork on this site takes: the stylesheet sets the width in
           vw, so there is nothing for an optimiser to size and no intrinsic box
           worth declaring. */}
-      <img
-        className="about-clipping"
-        src="/assets/about-clipping.webp"
-        alt=""
-        draggable={false}
+      {/* EACH PIECE IS A BOX AND NOT AN <img>, because the strips of tape
+          holding it down have to turn WITH it: a strip placed against the
+          section would stay square while the cutting leans. The box carries
+          the place and the lean; the picture fills it; the strips are Peels on
+          its edges, in its own percentages, lifting on the loop. Where and how
+          long each one is: .about-tape in global.css. */}
+      <div className="about-art about-logo">
+        <img src={art.logo} alt="" draggable={false} />
+        <Peel
+          className="about-tape"
+          data-tape="logo"
+          {...strip(MASKING, 8.8)}
+        />
+      </div>
+      <div className="about-art about-clipping">
+        <img src={art.clipping} alt="" draggable={false} />
+        <Peel className="about-tape" data-tape="side" {...strip(MASKING, 11)} />
+        <Peel className="about-tape" data-tape="foot" {...strip(MASKING, 11)} />
+      </div>
+      <div className="about-art about-shop">
+        <img src={art.shop} alt="" draggable={false} />
+      </div>
+      {/* THE CLEAR STRIP IS ON THE SHEET, NOT IN THE PHOTOGRAPH'S BOX. It is
+          screen-blended (see .about-tape-clear), and a blend only sees the
+          backdrop of its own stacking context — inside the tilted box that is
+          the photograph and nothing else, so over the lime it came out as the
+          flat grey it is drawn in. Out here the lime is under it. Placed in vw
+          against the sheet like the pieces are, with the photograph's own lean
+          written into its rule. */}
+      <Peel
+        className="about-art about-tape about-tape-clear"
+        data-tape="shop"
+        {...strip(CLEAR, 12.3)}
       />
       <img
-        className="about-shop"
-        src="/assets/about-shop.webp"
+        className="about-art about-strip"
+        src={art.strip}
         alt=""
         draggable={false}
       />

@@ -140,6 +140,37 @@ export const About: GlobalConfig = {
               "we’ve believed that\neven the simplest\nproducts deserve\nthoughtful design.",
               "Written by pen as the screen arrives. Sentence case: this one is handwriting, not display type.",
             ),
+            /* THE COLLAGE — four flat pieces of artwork laid on the sheet. Each
+               is an upload and not a path because these are the one thing on
+               this screen that is content rather than drawing: a real cutting,
+               a real photograph. Left empty the page draws a labelled
+               placeholder of the same shape (public/assets/about), so the
+               composition can be tuned before the artwork lands. Where each one
+               sits and how far it is turned is in global.css, not here. */
+            ...[
+              [
+                "logoCard",
+                "Logo card",
+                "The torn card with the old Sweettape mark, top left, behind the cutting.",
+              ],
+              [
+                "clipping",
+                "Press cutting",
+                "The NEW TAPE RELEASE column, tape and all — the strips holding it down are part of the picture.",
+              ],
+              ["shop", "Shophouse", "The building, right of the carton."],
+              [
+                "strip",
+                "Loose tape strip",
+                "The one strip lying on its own, bottom right.",
+              ],
+            ].map(([name, label, description]) => ({
+              name,
+              type: "upload" as const,
+              relationTo: "media" as const,
+              label,
+              admin: { description },
+            })),
           ],
         },
 

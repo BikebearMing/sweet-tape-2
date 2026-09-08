@@ -887,6 +887,22 @@ export interface About {
    */
   note?: string | null;
   /**
+   * The torn card with the old Sweettape mark, top left, behind the cutting.
+   */
+  logoCard?: (number | null) | Media;
+  /**
+   * The NEW TAPE RELEASE column, tape and all — the strips holding it down are part of the picture.
+   */
+  clipping?: (number | null) | Media;
+  /**
+   * The building, right of the carton.
+   */
+  shop?: (number | null) | Media;
+  /**
+   * The one strip lying on its own, bottom right.
+   */
+  strip?: (number | null) | Media;
+  /**
    * Three rows, top to bottom. The middle one is the one that carries the mark, and where it stops is what leaves the mark alone in the window.
    */
   belt?:
@@ -1192,6 +1208,10 @@ export interface AboutSelect<T extends boolean = true> {
   headline?: T;
   kicker?: T;
   note?: T;
+  logoCard?: T;
+  clipping?: T;
+  shop?: T;
+  strip?: T;
   belt?:
     | T
     | {

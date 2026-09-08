@@ -13818,6 +13818,7 @@ li::marker {
       line-height: 0.71;
       letter-spacing: -0.094vw;
       color: #003900;
+      z-index: 10;
     }
   }
 
@@ -14149,6 +14150,10 @@ li::marker {
 .jack-in-box {
   position: absolute;
   inset: 0;
+  /* OVER THE COLLAGE. .wrapper's transform is a stacking context, so img#front's
+     own z-index never leaves it — this box has to carry a level of its own to
+     sit above .about-art (1) and the logo card (2). */
+  z-index: 3;
   /* A drawing is never what a click lands on, and this box now covers the whole
      screen rather than collapsing out of the way of one. */
   pointer-events: none;
@@ -14236,34 +14241,133 @@ img#front {
    The collage — the press cutting, the shophouse and the filing tab
    -------------------------------------------------------------------------- */
 
-/* NOT DRAWN ABOVE 767px, AND THAT IS A DECISION RATHER THAN AN OVERSIGHT.
+/* FOUR FLAT PIECES LAID ON THE SHEET, either side of the carton: the logo card
+ * with the cutting pinned over it on the left, the shophouse with a loose strip
+ * of tape under it on the right. All in vw of the 1320 mock, all turned a few
+ * degrees off square, because things pinned to a board are never square.
  *
- * These three are the PHONE'S drawing of this screen. The desktop composition is
- * settled — a headline the width of the window, a line prised open under it and
- * a box on the floor with a hand coming out — and there is nothing in it these
- * would join; the sheet is 72.222vw tall and the only empty corner in it is
- * where the note already is. The phone's sheet is a WINDOW tall, nearer two and
- * a half times its own width, and the same three objects leave a field of bare
- * lime through the middle of it. So the phone gets a middle: a cutting on the
- * left, the note and its tab on the right, and the shophouse standing beside
- * the carton.
+ * ABSOLUTE AGAINST THE SECTION, like the note — the sheet is the board they are
+ * pinned to. z-index 1 keeps them under img#front (3) so anything that drifts
+ * toward the carton is cropped by its flap rather than printed over it, and
+ * over .arc-foot. The logo card is under the cutting by source order alone.
  *
- * WHICH IS THE ONE PLACE ON THIS SITE A PHONE ADDS SOMETHING rather than
- * re-stating it, and it is worth saying why that is allowed here. Everywhere
- * else a phone block re-authors a composition that already works, because the
- * complaint is the FRAME — 16:9 shown in 9:19.5. This screen's complaint is the
- * opposite: the frame is twice as tall and the composition does not have enough
- * IN it. A drawing cannot be stretched into a hole.
+ * THE TAPE ON THE CUTTING'S CORNERS IS IN THE CUTTING'S OWN ARTWORK, not four
+ * more elements. One picture, one upload.
  *
- * WHEN A DESKTOP MOCK LANDS WITH THEM IN IT, this rule is the only thing that
- * has to go — the markup, the artwork and the phone's own placements all stay.
- *
- * display: none AND NOT opacity, deliberately. Two photographs the desktop never
- * shows should not be fetched by it either, and a `display: none` <img> is not
- * loaded by any engine that ships. */
-.about-clipping,
+ * ponytail: rotation and offsets are eyeballed off the mock; the red figures
+ * on it are the designer's and land here when they do. */
+.about-art {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* The picture fills its box; the box's width is the only size stated. */
+.about-art > img:first-child {
+  display: block;
+  width: 100%;
+}
+
+/* THE STRIPS ARE PEELS, placed in the box's own percentages so they ride its
+   lean. Peel sizes its wrapper off --peel-w/--peel-h (the `box` prop), so the
+   length is stated once, in the markup, and this only says where.
+
+   TWO CLASSES DEEP AND IT HAS TO BE: Peel's wrapper is `peel about-tape`, and
+   the Peel section further down declares position: relative at the same
+   specificity — a bare .about-tape lost on order and the strips came back into
+   flow, stretching every piece's box. The same trap .stick-tape names.
+
+   PLACED BY CENTRE, the way .stick-tape is: left/top name where the middle of
+   the strip goes and the margin pulls the box back by half of itself, so the
+   turn below spins it in place. Peel has already turned the wrapper a quarter
+   (direction 90deg — the fold comes across the strip, end-first) and turned the
+   artwork back inside it, and `rotate` and `transform` compose — so the angle
+   the strip LOOKS to lie at is this transform plus a half turn. Measured off
+   the render rather than derived; each rule names the visual angle. */
+.about-art .about-tape,
+.about-art.about-tape {
+  position: absolute;
+  width: var(--peel-w);
+  height: var(--peel-h);
+  margin: calc(var(--peel-h) / -2) 0 0 calc(var(--peel-w) / -2);
+  z-index: 1;
+
+  /* AT REST THE TAPE IS ON. These run lifted -> flat, so `from` is the lifted
+     end and 1 is stuck down — the right start for the press and the wrong
+     thing to leave on a page with no script or reduced motion. press.ts lifts
+     them itself on the one path where a hand is coming. Two classes deep so it
+     outranks the Peel block's reduced-motion rule, which parks --peel at 0 —
+     correct for a peel that lifts, backwards for one that sticks. The product
+     page's .reverse-peel-tape makes the identical statement. */
+  --peel: 1;
+}
+
+/* Screened, not painted — the artwork is a grey band drawn to lighten what is
+   under it. See .reimagine-prop-clear, which is the same statement. */
+.about-tape-clear {
+  mix-blend-mode: screen;
+}
+
+/* Across the card's top edge. -12deg visual. */
+.about-tape[data-tape="logo"] {
+  top: 2%;
+  left: 51.5%;
+  transform: rotate(168deg);
+}
+
+/* Down the cutting's right edge, a quarter of the way down. 75.5deg visual. */
+.about-tape[data-tape="side"] {
+  top: 28.1%;
+  left: 100%;
+  transform: rotate(-104.5deg);
+}
+
+/* Up the bottom-left corner. -104deg visual. */
+.about-tape[data-tape="foot"] {
+  top: 79.6%;
+  left: 1%;
+  transform: rotate(76deg);
+}
+
+/* Along the photograph's top edge — on the sheet, so its place is the
+   photograph's (right 18.6vw, top 42.5vw, 16.6vw wide) restated as the centre
+   of its top edge. -2.9deg visual, the photograph's own lean. */
+.about-tape[data-tape="shop"] {
+  top: 42.5vw;
+  right: 26.9vw;
+  margin-right: calc(var(--peel-w) / -2);
+  transform: rotate(-182.9deg);
+}
+
+.about-logo {
+  /* Over the cutting, which is over the sheet — the card is pinned last. */
+  z-index: 2;
+  left: 5.5vw;
+  top: 38.5vw;
+  width: 12.4vw;
+  transform: rotate(-2deg);
+}
+
+.about-clipping {
+  left: 11vw;
+  top: 41vw;
+  width: 18.5vw;
+  transform: rotate(-8deg);
+}
+
 .about-shop {
-  display: none;
+  right: 18.6vw;
+  top: 42.5vw;
+  width: 16.6vw;
+  transform: rotate(-3deg);
+}
+
+.about-strip {
+  right: 9vw;
+  top: 58vw;
+  width: 9.5vw;
+  transform: rotate(-15deg);
 }
 
 
@@ -16115,16 +16219,16 @@ img#front {
  * pixels and cover crops it by two. Neither is visible; cover is the one that
  * cannot leave a seam of paper along an edge.
  *
- * THE CORNERS ARE ROUNDED BECAUSE THE DESIGN'S ARE — about 12px at the 1440
- * width, which is 0.85 units. It is on the image and not on the box so the strip
- * of tape pinned over the corner is not clipped by it. */
+ * THE CORNERS ARE ROUNDED BECAUSE THE DESIGN'S ARE — 80px at the 1440 width,
+ * which is 5.67 units. It is on the image and not on the box so the strip of
+ * tape pinned over the corner is not clipped by it. */
 .reimagine-shot-img,
 .reimagine-mark {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: calc(0.85 * var(--prop-u));
+  border-radius: calc(5.67 * var(--prop-u));
 }
 
 /* THE PEN MARKS ARE INK ON PAPER AND HAVE NO EDGE TO ROUND. Same box, same
@@ -16170,19 +16274,19 @@ img#front {
    been put up rather than having landed. They overlap each other slightly and
    neither is level. */
 .rei-kraft-a {
-  --px: 14.9;
+  --px: 19.1;
   --py: 4.2;
-  --pw: 13.9;
+  --pw: 15.8;
   --ph: calc(var(--pw) * 0.4042);
   --pr: -4deg;
 }
 
 .rei-kraft-b {
-  --px: 26.1;
-  --py: 7.9;
-  --pw: 10;
+  --px: 32.8;
+  --py: 3.8;
+  --pw: 17.1;
   --ph: calc(var(--pw) * 0.4042);
-  --pr: -14deg;
+  --pr: 0.1deg;
 }
 
 /* THE THREE CLEAR STRIPS, at the top right, the left edge and the bottom left.
@@ -16190,37 +16294,37 @@ img#front {
    .reimagine-prop-clear, which is why being on the coloured ground rather than
    on the sheet is the whole of what makes them visible. */
 .rei-clear-a {
-  --px: 93;
-  --py: 10.2;
-  --pw: 11;
+  --px: 75;
+  --py: 6.7;
+  --pw: 30;
   --ph: calc(var(--pw) * 0.6525);
-  --pr: 62deg;
+  --pr: -180deg;
 }
 
 .rei-clear-b {
-  --px: 1;
+  --px: 3.2;
   --py: 42.3;
-  --pw: 10.5;
+  --pw: 26.4;
   --ph: calc(var(--pw) * 0.6525);
-  --pr: 72deg;
+  --pr: 83deg;
 }
 
 .rei-clear-c {
-  --px: 10.7;
-  --py: 65.8;
-  --pw: 10.5;
+  --px: 21.6;
+  --py: 63.3;
+  --pw: 21.6;
   --ph: calc(var(--pw) * 0.6525);
-  --pr: -12deg;
+  --pr: -4.3deg;
 }
 
 /* AND THE BROWN STRIP AT THE FOOT, which is the last prop to arrive and closes
    the diagonal the other five make across the sheet. */
 .rei-kraft-c {
-  --px: 88.1;
-  --py: 62.1;
-  --pw: 13.5;
+  --px: 85.6;
+  --py: 59.7;
+  --pw: 21.5;
   --ph: calc(var(--pw) * 0.4042);
-  --pr: 12deg;
+  --pr: 0.6deg;
 }
 
 /* THE TWO PHOTOGRAPHS. The masking roll sits high on the right, clear of the
@@ -16228,7 +16332,7 @@ img#front {
    it, which is why the whole layer is filed after .reimagine-copy in the markup.
    204 x 210, so --ph is a shade taller than --pw. */
 .rei-shot-a {
-  --px: 83.2;
+  --px: 77.7;
   --py: 31.7;
   --pw: 21;
   --ph: calc(var(--pw) * 1.0294);
@@ -16237,10 +16341,10 @@ img#front {
 
 .rei-shot-b {
   --px: 57.7;
-  --py: 53.3;
-  --pw: 27;
+  --py: 50.8;
+  --pw: 26.1;
   --ph: calc(var(--pw) * 1.0294);
-  --pr: -3deg;
+  --pr: -4.3deg;
 }
 
 /* THE STRIP PINNING EACH PHOTOGRAPH, and its --px and --py are measured from the
@@ -16251,19 +16355,19 @@ img#front {
    The consequence worth knowing: these do not follow when the photograph's --pw
    is changed. Re-size a shot and its strip wants re-placing. */
 .rei-shot-a-tape {
-  --px: 6.5;
-  --py: 0.5;
-  --pw: 8;
+  --px: 10.6;
+  --py: -0.5;
+  --pw: 14;
   --ph: calc(var(--pw) * 0.4042);
-  --pr: -22deg;
+  --pr: -2.3deg;
 }
 
 .rei-shot-b-tape {
-  --px: 7;
+  --px: 10.9;
   --py: 0.6;
-  --pw: 9;
+  --pw: 15;
   --ph: calc(var(--pw) * 0.4042);
-  --pr: 14deg;
+  --pr: 4.9deg;
 }
 
 /* THE HEART AND THE SQUIGGLE — boxes measured, files not yet drawn. MARKS in
@@ -17855,9 +17959,16 @@ img#front {
      hangs lower than the note because it is the taller object and the two are
      ranged from the same top edge, which is how two things pinned to a board sit
      rather than how two boxes in a row do. */
+  /* THE PHONE'S MIDDLE HAS ROOM FOR TWO, not four — the logo card and the
+     loose strip are the desktop's. display: none and not opacity: a picture
+     the phone never shows should not be fetched by it either. */
+  .about-logo,
+  .about-strip {
+    display: none;
+  }
+
   .about-clipping {
-    display: block;
-    position: absolute;
+    transform: none;
     /* Off the left edge on purpose — a cutting laid on the sheet rather than
        placed in a margin. .about-open crops it (overflow: clip). */
     left: -2vw;
@@ -17882,8 +17993,8 @@ img#front {
      flap crops the bottom of the photograph exactly as it crops the arm — the
      building is BEHIND the box rather than propped against it. */
   .about-shop {
-    display: block;
-    position: absolute;
+    transform: none;
+    top: auto;
     right: 0;
     bottom: 17vw;
     width: 36vw;

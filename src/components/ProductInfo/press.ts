@@ -58,10 +58,16 @@ export const PRESS = {
 /* The strips, in the order a hand would do them. */
 const STRIPS = [".info-shot-tape", ".info-story-tape"];
 
-export function initPress(root: HTMLElement): () => void {
-  const strips = STRIPS.map((sel) => root.querySelector<HTMLElement>(sel)).filter(
-    Boolean
-  ) as HTMLElement[];
+/** `selectors` is the strips in the order the hand does them, each declared
+ *  from={lifted} to={0} — see the note at UP. The default is this section's
+ *  pair; the about page's collage passes its own. */
+export function initPress(
+  root: HTMLElement,
+  selectors: readonly string[] = STRIPS,
+): () => void {
+  const strips = selectors.flatMap((sel) =>
+    Array.from(root.querySelectorAll<HTMLElement>(sel)),
+  );
   if (!strips.length) return () => {};
 
   /* Tape going on is a small, contained move, but it is still a thing arriving
@@ -109,11 +115,11 @@ export function initPress(root: HTMLElement): () => void {
             ease: PRESS.EASE,
             onUpdate: () => el.style.setProperty("--peel", String(at.p)),
           },
-          i * PRESS.LAG
+          i * PRESS.LAG,
         );
       });
     },
-    { rootMargin: PRESS.MARGIN }
+    { rootMargin: PRESS.MARGIN },
   );
   io.observe(root);
 

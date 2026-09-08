@@ -44,6 +44,14 @@ const FALLBACK = {
       "products deserve",
       "thoughtful design.",
     ],
+    /* Labelled placeholders of the artwork's own proportions, so the screen is
+       composable before an editor uploads the real pieces. */
+    art: {
+      logo: "/assets/about/logo.svg",
+      clipping: "/assets/about/clipping.svg",
+      shop: "/assets/about/shop.svg",
+      strip: "/assets/about/strip.svg",
+    },
   },
   belt: [
     {
@@ -234,6 +242,14 @@ export async function getAbout(): Promise<About> {
       headline: lines(doc.headline, FALLBACK.open.headline),
       kicker: lines(doc.kicker, FALLBACK.open.kicker),
       note: lines(doc.note, FALLBACK.open.note),
+      /* Per piece and not per section: one uploaded photograph beside three
+         placeholders is exactly the state an editor is in mid-way. */
+      art: {
+        logo: urlOf(doc.logoCard) || FALLBACK.open.art.logo,
+        clipping: urlOf(doc.clipping) || FALLBACK.open.art.clipping,
+        shop: urlOf(doc.shop) || FALLBACK.open.art.shop,
+        strip: urlOf(doc.strip) || FALLBACK.open.art.strip,
+      },
     },
     belt: belt.length ? belt : FALLBACK.belt,
     reason: {

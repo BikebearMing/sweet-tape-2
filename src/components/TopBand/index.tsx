@@ -143,7 +143,7 @@ export default function TopBand() {
           the stylesheet sets in vw, so there is nothing for an optimiser to
           resize and no intrinsic box worth declaring — the same call the rest of
           the site's artwork makes. */}
-      <a className="top-mark" href="/" aria-label="Sweet Tape — home">
+      <a className="top-mark" href="/" aria-label="SweetTape — home">
         <img src={MARK} alt="" draggable={false} />
       </a>
     </div>

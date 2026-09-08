@@ -104,7 +104,7 @@ import Stage from "./Stage";
  *
  * aria-hidden because the heading's own aria-label is what is announced — this
  * is the brand's mark set into the brand's name, and reading it out would be
- * saying "Sweet Tape" twice with "good things stick" in the middle of it. */
+ * saying "SweetTape" twice with "good things stick" in the middle of it. */
 function Mark({ lines }: { lines: string[] }) {
   return (
     <span className="reason-mark">
@@ -248,7 +248,7 @@ export default async function Reason() {
               <div className="reason-roll-in">
                 <img
                   src="/assets/opp-tape-inner-product.webp"
-                  alt="A roll of Sweet Tape"
+                  alt="A roll of SweetTape"
                   draggable={false}
                 />
               </div>

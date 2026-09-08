@@ -10,7 +10,7 @@ import {
   type FieldKey,
 } from "./contact-types";
 
-/* Sweet Tape — how to reach the company, and everything else /contact says.
+/* SweetTape — how to reach the company, and everything else /contact says.
  *
  * THE SEAM, NOW PLUGGED IN. This file used to hold the address and the number
  * as a frozen constant, and the page held its own headings; both are a global
@@ -67,9 +67,9 @@ const FALLBACK = {
   email: { label: "SALES@SBGROUP.COM.MY", href: "mailto:sales@sbgroup.com.my" },
   phone: { label: "+603 8946 3600", href: "tel:+60389463600" },
   tape: "/assets/tape-on-note.webp",
-  metaTitle: "Contact — Sweet Tape",
+  metaTitle: "Contact — SweetTape",
   metaDescription:
-    "Get in touch with Sweet Tape — S.B. Importer & Exporter (M) Sdn. Bhd.",
+    "Get in touch with SweetTape — SB Tape Group Sdn Bhd",
 } as const;
 
 /** Rows of `{ text }`, as the array of strings the design breaks by hand.

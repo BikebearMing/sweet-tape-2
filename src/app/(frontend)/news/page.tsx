@@ -36,8 +36,8 @@ import WhatsRolling from "@/components/WhatsRolling";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "What’s Rolling — Sweet Tape",
-  description: "News and events from Sweet Tape.",
+  title: "What’s Rolling — SweetTape",
+  description: "News and events from SweetTape.",
 };
 
 export default function News() {

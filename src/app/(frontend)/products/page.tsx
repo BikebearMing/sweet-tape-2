@@ -30,7 +30,7 @@ import Footer from "@/components/Footer";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Our Family — Sweet Tape",
+  title: "Our Family — SweetTape",
   description: "Six tapes, one for every job. Pick your player.",
 };
 

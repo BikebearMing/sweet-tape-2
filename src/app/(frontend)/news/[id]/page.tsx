@@ -54,7 +54,7 @@ export async function generateMetadata({
   if (!story) return {};
 
   return {
-    title: `${story.title} — Sweet Tape`,
+    title: `${story.title} — SweetTape`,
     /* The article's own first paragraph, which is what a description is for.
        Trimmed to a length a search result will show rather than sent whole — and
        cut at a word, with the ellipsis only where something was actually taken

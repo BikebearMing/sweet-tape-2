@@ -44,7 +44,7 @@ import Stage from "./Stage";
    closing key visual and the strip of tape across it is measured to it. */
 const SHOT = "/assets/make-it-stick.jpg";
 const SHOT_ALT =
-  "Six rolls of Sweet Tape held in someone’s arms — stationery, OPP, cloth, masking and double-sided tissue tape.";
+  "Six rolls of SweetTape held in someone’s arms — stationery, OPP, cloth, masking and double-sided tissue tape.";
 
 /* THE STRIP. The ratio is the only number this file needs out of the artwork:
  * it is what turns one length into the box Peel has to be told about, so the

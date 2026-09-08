@@ -46,7 +46,7 @@ import TopBand from "@/components/TopBand";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Sweet Tape",
+  title: "SweetTape",
   description: "Meet the one who sticks.",
 };
 

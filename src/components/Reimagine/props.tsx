@@ -169,12 +169,12 @@ const SHOTS = [
   {
     key: "rei-shot-a",
     src: "/assets/slider/masking/shot-1.webp",
-    alt: "A roll of Sweet Tape masking tape held against a wall of artwork",
+    alt: "A roll of SweetTape masking tape held against a wall of artwork",
   },
   {
     key: "rei-shot-b",
     src: "/assets/slider/double/shot-1.webp",
-    alt: "A roll of Sweet Tape double-sided tissue tape on a checkerboard cutout",
+    alt: "A roll of SweetTape double-sided tissue tape on a checkerboard cutout",
   },
 ];
 

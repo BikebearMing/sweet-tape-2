@@ -211,7 +211,7 @@ export const Contact: GlobalConfig = {
           name: "metaTitle",
           type: "text",
           required: true,
-          defaultValue: "Contact — Sweet Tape",
+          defaultValue: "Contact — SweetTape",
           admin: {
             description:
               "The browser tab and the search result's blue line. Not shown on the page.",

@@ -59,10 +59,10 @@ export async function generateMetadata({
   if (!tape) return {};
 
   return {
-    /* THE label, not the word mark. "Masking tape — Sweet Tape" is what a
+    /* THE label, not the word mark. "Masking tape — SweetTape" is what a
        search result and a browser tab want; THE CREATIVE is the drawing on the
        page and means nothing out of it. */
-    title: `${tape.label} — Sweet Tape`,
+    title: `${tape.label} — SweetTape`,
     description: tape.copy,
   };
 }

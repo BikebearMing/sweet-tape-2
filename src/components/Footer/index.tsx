@@ -42,7 +42,7 @@ const LINKS = [
    two: the break is set by design, not by wrapping. */
 const HEADLINE = ["STICK", "BY YOU"];
 
-const LEGAL = "Copyright © 2026. S.B. Importer & Exporter(M) Sdn. Bhd.";
+const LEGAL = "Copyright © 2026. SB Tape Group Sdn Bhd";
 
 /* The footer, server-rendered.
  *

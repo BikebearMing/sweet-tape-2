@@ -294,8 +294,9 @@ export type ViewerFilm = {
    asked for after the ALL-GLB port. The ambient took the same step (0.6 to
    0.52) and came all the way back: the rolls read dark, and ambient is the
    right knob to give brightness back through because it carries no specular —
-   the faces brighten without the gloss returning. */
-const FILM_LIGHT: Required<Omit<ViewerLight, "lamp">> = { key: 0.74, ambient: 0.6, fill: 0, env: 0 };
+   the faces brighten without the gloss returning. Then up one more step
+   (0.6 to 0.68), the "a little brighter" asked for on the slider's rolls. */
+const FILM_LIGHT: Required<Omit<ViewerLight, "lamp">> = { key: 0.74, ambient: 0.68, fill: 0, env: 0 };
 const KICK = { x: 2.7, y: 2.0, z: 1.0, power: 0.12 };
 
 export type TapeViewer = {

@@ -7521,6 +7521,10 @@ html[data-loading] {
    * line makes room for, and a turned strip overflows this box exactly as an
    * untuned one already does. */
   transform: rotate(var(--tape-turn, 0deg)) scaleY(var(--tape-squash, 1));
+
+  /* The transform above makes this a stacking context, so the film's screen
+     has to be stated HERE to reach the paper — see tapeVars in ProductInfo. */
+  mix-blend-mode: var(--strip-blend, normal);
 }
 
 /* Centred in its slot and lifted a shade off the baseline, so it sits ON the
@@ -9560,6 +9564,21 @@ html[data-loading] {
   will-change: transform;
 }
 
+/* THE BOARD, PAINTED INSIDE THE CANVAS AS WELL AS ON THE SECTION. The canvas
+   is transformed, so it is a stacking context and anything screened inside it
+   — the clear film's two strips — can only see what the canvas itself paints.
+   The section's colour is outside that group, and against nothing the film
+   came out as a grey slab. Same colour, so no seam; run far right because the
+   pieces stand well past the canvas's own 100% box. A pseudo, so pin.ts —
+   which measures the row off its element children — never sees it. */
+.reel-canvas::before {
+  content: "";
+  position: absolute;
+  inset: -100vh -300vw -100vh 0;
+  background: var(--reel-bg);
+  z-index: -1;
+}
+
 /* Everything on the canvas is placed the same way, off the same two variables,
    so a new piece needs no rule of its own — just --rx / --ry. Same seam as
    .giant-canvas > * on the home page. */
@@ -9710,6 +9729,15 @@ html[data-loading] {
  * tape rather than about the pair. */
 .reel-kraft {
   --rx: calc(115vw * var(--reel-scale));
+  /* THE CLEAR FILM, when the product dispenses one (see strips.ts ROLL_OF).
+     Screened like every other strip of it, and stated on this wrapper because
+     the leaning strips are stacking contexts of their own. Its artwork is
+     stubbier than the kraft's (38 x 130 against 159 x 755), so it keeps the
+     kraft's height and takes the width that aspect gives it. */
+  mix-blend-mode: var(--strip-blend, normal);
+  &[data-film] {
+    --reel-tape-w: calc(15.31vw * var(--reel-scale));
+  }
   --ry: 0;
   /* The two strips' own spread — see --sx below. Not a shape, a measurement of
      one. */

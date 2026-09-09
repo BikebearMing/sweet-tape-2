@@ -137,6 +137,11 @@ function tapeVars(
      it. */
   if (o.width !== undefined) vars["--info-tape-w"] = `${vwOf(o.width).toFixed(3)}vw`;
   if (o.rotate !== undefined) vars["--tape-turn"] = `${o.rotate}deg`;
+  /* ON THE SLOT, NOT THE STRIP. The slot's transform makes it a stacking
+     context, and a blend inside one only sees what is inside it — the clear
+     film screened against nothing came out as a grey slab. .info-tape-slot
+     reads this; the strip inherits it and blends within, which is harmless. */
+  vars["--strip-blend"] = s.blend;
   if (o.height !== undefined) {
     const natural = (vwOf(o.width) * 14.4) / s.art;
     vars["--tape-squash"] = (o.height / natural).toFixed(4);
@@ -477,9 +482,6 @@ export default function ProductInfo({ tape }: { tape: Tape }) {
                         from={LIFT}
                         to={0}
                         aria-hidden="true"
-                        style={
-                          { "--strip-blend": story.blend } as CSSProperties
-                        }
                       />
                     </span>{" "}
                   </>

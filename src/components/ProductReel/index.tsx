@@ -1,8 +1,10 @@
+import type { CSSProperties } from "react";
 /* eslint-disable @next/next/no-img-element */
 import HandNote from "@/components/HandNote";
 import Peel from "@/components/Peel";
 import { letters } from "@/components/letters";
 import { reelVars } from "@/data/tapes";
+import { stripOf } from "@/components/TapeSlider/strips";
 import type { Tape } from "@/data/tapes";
 import Stage from "./Stage";
 
@@ -42,6 +44,10 @@ import Stage from "./Stage";
 /* THE KRAFT STRIP, and it is the site's own — the same file wherever a length of
    brown tape is drawn. Named here rather than written into the markup twice. */
 const KRAFT = "/assets/long-tape.webp";
+/* And the clear film standing up — the slider's own strip (strips.ts `clear`)
+   cropped to its artwork and turned a quarter, for the tapes that dispense
+   film rather than kraft. */
+const FILM = "/assets/clear-tape-tall.svg";
 
 /* The box Peel measures its fold against, in the stylesheet's own words rather
    than a second copy of the figures. --reel-tape-w / --reel-tape-h are the
@@ -76,6 +82,10 @@ export default function ProductReel({ tape }: { tape: Tape }) {
      and a screen reader wants the sentence — so the breaks are joined back out
      here rather than announced as four separate headings. */
   const claim = headline.join(" ");
+
+  /* Which tape the two strips are: the product's own, as the slider decides
+     it. Only kraft and film are drawn here; everything else stays kraft. */
+  const film = stripOf(tape.id).blend === "screen";
 
   return (
     <Stage style={reelVars(tape.sections)}>
@@ -172,7 +182,13 @@ export default function ProductReel({ tape }: { tape: Tape }) {
               footprint the two rotated strips occupy, which is what the camera
               measures. See .reel-kraft in global.css, which says why a rotated
               box cannot be measured directly. */}
-          <div className="reel-kraft" aria-hidden="true" data-reel-cue>
+          <div
+            className="reel-kraft"
+            aria-hidden="true"
+            data-reel-cue
+            data-film={film || undefined}
+            style={film ? ({ "--strip-blend": "screen" } as CSSProperties) : undefined}
+          >
             {[1, 2].map((n) => (
               /* TWO ELEMENTS PER STRIP, and the split is not incidental. The
                  outer one is WHERE THE TAPE IS — placed and leaning; the Peel
@@ -187,7 +203,7 @@ export default function ProductReel({ tape }: { tape: Tape }) {
               >
                 <Peel
                   className="reel-kraft-tape"
-                  src={KRAFT}
+                  src={film ? FILM : KRAFT}
                   /* Neither of Peel's own drivers is this gesture: "loop"
                      alternates for ever, so the tape would either rest flat and
                      periodically lift off by itself or rest curled and
@@ -212,7 +228,7 @@ export default function ProductReel({ tape }: { tape: Tape }) {
                      colour rather than the board's paper — see BACKS in
                      components/Peel, where every one of those is the median of
                      its own file's opaque pixels. */
-                  back="peel-back-kraft"
+                  back={film ? "peel-back-clear" : "peel-back-kraft"}
                 />
               </span>
             ))}

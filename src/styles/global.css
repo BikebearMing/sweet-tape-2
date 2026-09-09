@@ -9729,15 +9729,11 @@ html[data-loading] {
  * tape rather than about the pair. */
 .reel-kraft {
   --rx: calc(115vw * var(--reel-scale));
-  /* THE CLEAR FILM, when the product dispenses one (see strips.ts ROLL_OF).
-     Screened like every other strip of it, and stated on this wrapper because
-     the leaning strips are stacking contexts of their own. Its artwork is
-     stubbier than the kraft's (38 x 130 against 159 x 755), so it keeps the
-     kraft's height and takes the width that aspect gives it. */
+  /* THE STRIP'S BLEND — screen for the clear film, normal for the rest — and
+     it is stated on this wrapper because the leaning strips are stacking
+     contexts of their own. ProductReel writes it, with --reel-tape-w for the
+     roll's own aspect, off strips.ts. */
   mix-blend-mode: var(--strip-blend, normal);
-  &[data-film] {
-    --reel-tape-w: calc(15.31vw * var(--reel-scale));
-  }
   --ry: 0;
   /* The two strips' own spread — see --sx below. Not a shape, a measurement of
      one. */

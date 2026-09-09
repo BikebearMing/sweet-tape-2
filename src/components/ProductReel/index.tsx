@@ -41,13 +41,10 @@ import Stage from "./Stage";
  * this line is a client component.
  */
 
-/* THE KRAFT STRIP, and it is the site's own — the same file wherever a length of
-   brown tape is drawn. Named here rather than written into the markup twice. */
-const KRAFT = "/assets/long-tape.webp";
-/* And the clear film standing up — the slider's own strip (strips.ts `clear`)
-   cropped to its artwork and turned a quarter, for the tapes that dispense
-   film rather than kraft. */
-const FILM = "/assets/clear-tape-tall.svg";
+/* THE STRIPS ARE THE PRODUCT'S OWN TAPE — kraft on the OPP page, film on the
+   low-noise one, white tissue on double-sided, black cloth on cloth. strips.ts
+   is the one table that says which, and each roll there carries its standing
+   file (`tall`), so nothing here names a picture. */
 
 /* The box Peel measures its fold against, in the stylesheet's own words rather
    than a second copy of the figures. --reel-tape-w / --reel-tape-h are the
@@ -83,9 +80,13 @@ export default function ProductReel({ tape }: { tape: Tape }) {
      here rather than announced as four separate headings. */
   const claim = headline.join(" ");
 
-  /* Which tape the two strips are: the product's own, as the slider decides
-     it. Only kraft and film are drawn here; everything else stays kraft. */
-  const film = stripOf(tape.id).blend === "screen";
+  const roll = stripOf(tape.id);
+  /* The strip is the design's box whichever roll it is — the flat files are
+     stubbier than the kraft drawing, and their standing copies are set to
+     stretch along their length to fill it (preserveAspectRatio="none"). A
+     length of tape pulled longer is still a length of tape; a strip twice as
+     wide as the design's is a different picture. */
+  const kraftVars = { "--strip-blend": roll.blend } as CSSProperties;
 
   return (
     <Stage style={reelVars(tape.sections)}>
@@ -186,8 +187,7 @@ export default function ProductReel({ tape }: { tape: Tape }) {
             className="reel-kraft"
             aria-hidden="true"
             data-reel-cue
-            data-film={film || undefined}
-            style={film ? ({ "--strip-blend": "screen" } as CSSProperties) : undefined}
+            style={kraftVars}
           >
             {[1, 2].map((n) => (
               /* TWO ELEMENTS PER STRIP, and the split is not incidental. The
@@ -203,7 +203,7 @@ export default function ProductReel({ tape }: { tape: Tape }) {
               >
                 <Peel
                   className="reel-kraft-tape"
-                  src={film ? FILM : KRAFT}
+                  src={roll.tall.src}
                   /* Neither of Peel's own drivers is this gesture: "loop"
                      alternates for ever, so the tape would either rest flat and
                      periodically lift off by itself or rest curled and
@@ -228,7 +228,7 @@ export default function ProductReel({ tape }: { tape: Tape }) {
                      colour rather than the board's paper — see BACKS in
                      components/Peel, where every one of those is the median of
                      its own file's opaque pixels. */
-                  back={film ? "peel-back-clear" : "peel-back-kraft"}
+                  back={roll.back}
                 />
               </span>
             ))}

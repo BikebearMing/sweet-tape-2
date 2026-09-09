@@ -70,6 +70,14 @@ type Roll = {
    * level is what the artwork was drawn expecting.
    */
   blend?: "screen";
+  /** The same strip STANDING UP, for the product reel — which lays two long
+   *  lengths down the page and cannot turn the flat file to get them: Peel
+   *  spends `rotate` on the fold. Each is the flat artwork turned a quarter
+   *  and set to stretch along its length into the reel's box (the film and
+   *  tissue keep their 2000px rasters; the cloth and masking files are small
+   *  and come out soft at reel size — a taller export is the fix, and it is
+   *  one file here). The kraft is its own drawing. `box` is the file's own. */
+  tall: { src: string; box: [number, number] };
 };
 
 const ROLLS = {
@@ -85,6 +93,7 @@ const ROLLS = {
     ink: 0.924,
     art: 3.091,
     back: "peel-back-masking",
+    tall: { src: "/assets/masking-tape-tall.svg", box: [68, 184] },
   },
   tissue: {
     src: "/assets/double-side.svg",
@@ -92,6 +101,7 @@ const ROLLS = {
     ink: 0.925,
     art: 3.707,
     back: "peel-back-tissue",
+    tall: { src: "/assets/tissue-tape-tall.svg", box: [43, 120] },
   },
   clear: {
     src: "/assets/stationery-silent-opp-tape.svg",
@@ -99,6 +109,7 @@ const ROLLS = {
     ink: 0.858,
     art: 4.267,
     back: "peel-back-clear",
+    tall: { src: "/assets/clear-tape-tall.svg", box: [38, 130] },
     blend: "screen",
   },
   cloth: {
@@ -107,6 +118,7 @@ const ROLLS = {
     ink: 0.916,
     art: 2.654,
     back: "peel-back-black",
+    tall: { src: "/assets/cloth-tape-tall.svg", box: [106, 213] },
   },
   /* THE BROWN PACKING TAPE — the OPP rolls' own strip, and the reason they are
      no longer sent to `clear`.
@@ -129,6 +141,7 @@ const ROLLS = {
     ink: 0.972,
     art: 2.94,
     back: "peel-back-masking",
+    tall: { src: "/assets/long-tape.webp", box: [159, 755] },
   },
 } as const satisfies Record<string, Roll>;
 
@@ -191,6 +204,8 @@ export type Strip = {
   w: number;
   h: number;
   blend: "normal" | "screen";
+  /** The roll standing up — see Roll.tall. */
+  tall: Roll["tall"];
   /**
    * The roll's own `ink` — how much of the file is artwork and how much is the
    * transparent margin Figma exported around it, 0..1.
@@ -221,6 +236,7 @@ function strip(name: RollName): Strip {
     w,
     h: (w * bh) / bw,
     blend: roll.blend ?? "normal",
+    tall: roll.tall,
     ink: roll.ink,
     art: roll.art,
   };

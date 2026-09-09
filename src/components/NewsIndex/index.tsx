@@ -1,6 +1,6 @@
 import { letters } from "@/components/letters";
 import StoryCard from "@/components/StoryCard";
-import { countOf, getAll, getStories, KINDS } from "@/data/news";
+import { countOf, getAll, KINDS } from "@/data/news";
 import Stage from "./Stage";
 
 /* THE INDEX — the rest of the newsroom, and the page's last screen before the
@@ -40,12 +40,11 @@ import Stage from "./Stage";
  * client component.
  */
 export default async function NewsIndex() {
-  const stories = await getStories();
-  /* THE COUNTS INCLUDE THE LEAD. The grid leaves the featured story out — it
-     is the highlight card above — but a tab that says ALL (01) over a page
-     with two stories on it reads as a mistake, so the figures beside the tabs
-     are every story, and the grid is the rest. */
-  const all = await getAll();
+  /* EVERY STORY, THE LEAD INCLUDED. The highlight card above is the editor's
+     pick; this is the archive, and an archive that leaves out the story
+     currently being pushed is one a reader cannot find that story in once it
+     scrolls off the top. So the grid and the tab counts are the whole list. */
+  const stories = await getAll();
 
   return (
     <Stage>
@@ -87,7 +86,7 @@ export default async function NewsIndex() {
               <button
                 className="index-tab"
                 type="button"
-                aria-label={`${label}, ${countOf(id, all)} stories`}
+                aria-label={`${label}, ${countOf(id, stories)} stories`}
                 {...(id ? { "data-kind": id } : {})}
               >
                 <span className="index-tab-label" aria-hidden="true">
@@ -99,7 +98,7 @@ export default async function NewsIndex() {
                     rather than in the KINDS list. It is inside the label for a
                     screen reader, which is why this copy is hidden. */}
                 <span className="index-tab-count" aria-hidden="true">
-                  ({countOf(id, all)})
+                  ({countOf(id, stories)})
                 </span>
               </button>
 

@@ -5,6 +5,13 @@ import TapeSlider from "@/components/TapeSlider";
 import GiantPinning from "@/components/GiantPinning";
 import MakeItStick from "@/components/MakeItStick";
 import Footer from "@/components/Footer";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "SweetTape — Stick By You",
+  description:
+    "Cloth, masking, stationery, double-sided and more. Six tapes made in Malaysia, one for every job. Meet the one who sticks.",
+};
 
 export default function Home() {
   return (

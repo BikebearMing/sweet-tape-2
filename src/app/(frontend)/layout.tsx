@@ -20,6 +20,7 @@ import Menu from "@/components/Menu";
 import { PeelDefs } from "@/components/Peel";
 import Preloader from "@/components/Preloader";
 import { getMenu } from "@/data/menu";
+import { SITE_URL } from "@/data/site";
 import { getPalette } from "@/data/tapes";
 import SmoothScroll from "@/components/SmoothScroll";
 import TopBand from "@/components/TopBand";
@@ -45,9 +46,20 @@ import TopBand from "@/components/TopBand";
  */
 export const dynamic = "force-dynamic";
 
+/* metadataBase is what turns every relative image and canonical below and on
+   the pages into the absolute URL a crawler and a share card need. The
+   description and the card image are the site's defaults; a page with a better
+   one of its own (a news story's photo) overrides just that field. */
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "SweetTape",
-  description: "Meet the one who sticks.",
+  description: "Meet the one who sticks. Tapes made in Malaysia, for every job.",
+  openGraph: {
+    type: "website",
+    siteName: "SweetTape",
+    images: ["/assets/og.jpg"],
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 /* The site's root layout. The admin has its own, in the (payload) group — the

@@ -60,6 +60,7 @@ export async function generateMetadata({
        cut at a word, with the ellipsis only where something was actually taken
        off. */
     description: summarise(story.body[0] ?? ""),
+    openGraph: story.image ? { images: [story.image] } : undefined,
   };
 }
 

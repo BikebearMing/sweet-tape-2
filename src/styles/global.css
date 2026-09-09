@@ -18999,6 +18999,18 @@ img#front {
   height: var(--footer-bottom-h);
 }
 
+/* The mark over the headline's top edge — the hero's badge at the hero's ratio
+   (191 x 118), centred, in flow, so the headline's padding-top below is
+   measured from under it. */
+.footer-mark {
+  display: block;
+  width: 9vw;
+  height: calc(9vw * 118 / 191);
+  margin: 4.4vw auto 0;
+  pointer-events: none;
+  user-select: none;
+}
+
 /* The sign-off, the hero's headline said again. Two thirds of the hero's size:
    the hero's is the page arriving and fills the screen, this one has to leave
    room for the rolls to be arranged around it, and the mark sits over its top
@@ -19012,7 +19024,7 @@ img#front {
      likely to move: the mark lands over the headline's top edge and the rolls
      are arranged around its sides, so what reads as "centred" here is settled
      by things that are not in the box yet. */
-  padding-top: 7.7vw;
+  padding-top: 1.2vw;
   font-size: 14.4vw;
   font-weight: 800;
   line-height: 0.73;
@@ -19322,8 +19334,14 @@ img#front {
   /* The sign-off, filling the width the way the hero's does. The arc is a
      length and so does not carry over — same correction the desktop footer
      makes against the hero, one step further. */
+  .footer-mark {
+    width: 24vw;
+    height: calc(24vw * 118 / 191);
+    margin-top: 10vw;
+  }
+
   .footer-headline {
-    padding-top: 16vw;
+    padding-top: 2vw;
     font-size: 26vw;
     --arc-drop: 1.6vw;
   }

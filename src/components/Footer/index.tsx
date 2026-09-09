@@ -42,6 +42,8 @@ const LINKS = [
    two: the break is set by design, not by wrapping. */
 const HEADLINE = ["STICK", "BY YOU"];
 
+const MARK = "/assets/preloader-image.svg";
+
 const LEGAL = "Copyright © 2026. SB Tape Group Sdn Bhd";
 
 /* The footer, server-rendered.
@@ -98,7 +100,17 @@ export default function Footer() {
       </nav>
 
       <div className="footer-bottom">
-        {/* The mark goes here, above the headline. */}
+        {/* The mark, above the headline — the same file the hero and the
+            masthead print, so it is one logo everywhere. Decoration here: the
+            headline under it is the readable sign-off, and the masthead's copy
+            is the one that links home. */}
+        <img
+          className="footer-mark"
+          src={MARK}
+          alt=""
+          draggable={false}
+          loading="lazy"
+        />
 
         {/* One heading, two lines — splitting it across two would put STICK and
             BY YOU in the outline as separate headings. Split to letters like

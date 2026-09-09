@@ -11256,6 +11256,16 @@ html[data-loading] {
   color: var(--index-ink);
 }
 
+/* WHEN THERE IS NO LEAD STORY. components/TopStory renders nothing until an
+   editor ticks one as featured, and then this section is what stands under the
+   title card — whose lime foot bulges --curve-depth down over whatever is next.
+   The lead story pays that room in --stick-pad-y; with it gone, nothing did, and
+   the first row of cards sat under the curve. Same clearance the lead story
+   keeps: the curve's depth plus 3.5vw of air over the nearest card's corner. */
+.whats-rolling + .news-index {
+  padding-top: calc(var(--curve-depth) + 3.5vw);
+}
+
 /* NO PAPER GRAIN ON THE DARK GREEN, and it is the one sheet on the site without
    it. The overlay is a photograph of creased paper — light on the creases, dark
    in the folds — and it was written for the lime sheets, where the ground is

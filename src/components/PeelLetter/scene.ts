@@ -53,7 +53,7 @@ import {
   WebGLRenderer,
 } from "three";
 
-import { rasterise, type LetterRaster } from "./glyph";
+import { rasterise, rasteriseImage, type LetterRaster } from "./glyph";
 
 const FOV = 30;
 const DPR_CAP = 2;
@@ -137,8 +137,8 @@ export type Letter = {
 };
 
 export type PeelStage = {
-  /** Rasterise one .char and stand a plane in its place. Null if the glyph
-      came out blank (a space, or a font that has not landed). */
+  /** Rasterise one .char (or an <img>) and stand a plane in its place. Null
+      if it came out blank (a space, a font or image that has not landed). */
   addLetter(charEl: HTMLElement, phi: number, back?: string): Letter | null;
   /** Advance the idle and redraw, if anything on the stage is moving. */
   frame(seconds: number): void;
@@ -221,7 +221,10 @@ export function createPeelStage(mount: HTMLElement): PeelStage {
   };
 
   function addLetter(charEl: HTMLElement, phi: number, backColour = COLOUR.BACK): Letter | null {
-    const raster = rasterise(charEl, COLOUR.FACE, backColour);
+    const raster =
+      charEl instanceof HTMLImageElement
+        ? rasteriseImage(charEl, backColour)
+        : rasterise(charEl, COLOUR.FACE, backColour);
     if (!raster) return null;
     const R: LetterRaster = raster;
 
@@ -353,7 +356,8 @@ export function createPeelStage(mount: HTMLElement): PeelStage {
       active: false,
 
       hitRect() {
-        const clip = charEl.parentElement!;
+        /* A letter's box is its .clip; an image is its own box. */
+        const clip = charEl instanceof HTMLImageElement ? charEl : charEl.parentElement!;
         const r = clip.getBoundingClientRect();
         const m = mount.getBoundingClientRect();
         /* Grown by a share of the letter each way, and by most of a letter

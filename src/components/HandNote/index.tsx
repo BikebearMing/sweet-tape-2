@@ -1,11 +1,12 @@
 import type { CSSProperties } from "react";
 
-import { LINE_SEP, NOTE_LINES } from "./copy";
+import { NOTE_LINES } from "./copy";
 
 /* Sweet Tape — the hand-written note.
  *
- * A margin ruled in two strokes with the copy written beside it. Server-rendered
- * markup only; components/HandNote/hand.ts draws it.
+ * A corner ruled in two thin lines with the copy typed inside it in Nothing You
+ * Could Do. Server-rendered markup only; components/HandNote/hand.ts draws the
+ * lines out and types the copy.
  *
  * It appears TWICE on the page and knows nothing about either place. The hero
  * writes it in the board's lime, on the dark green above the taped-down lemon
@@ -37,60 +38,6 @@ type Props = {
   lines?: string[];
 };
 
-/* The ruled margin, drawn rather than ruled: a long stroke down the left and a
- * shorter one across the top, crossing near the corner with both ends run past
- * the crossing — which is what a corner looks like when a hand made it and not
- * a border property.
- *
- * The viewBox is the wrapper's box at ten units to the vw (global.css sizes
- * .hand-note at 32vw, so 320 units across), which is what lets the numbers here
- * and the numbers in the stylesheet be read against each other: the copy starts
- * 6.2vw from the left, and the down-stroke stands at x = 46..59.
- *
- * Both strokes are cubics with a real bow in them, off-axis on purpose — a
- * straight line drawn stroke-first reads as a loading bar. They are two paths
- * rather than one so the pen visibly lifts between them.
- *
- * The bow is what a shoulder and a wrist do: the top stroke sags through the
- * middle and picks up at the end, and the down-stroke pulls away from the
- * margin before coming back across it, so the two lines are arcs of two
- * different joints rather than one shape used twice. Around five units of
- * deviation off the chord — enough to see at a glance without the corner
- * starting to look drawn by someone in a hurry.
- *
- * overflow is visible in the stylesheet, because the round caps sit half a
- * stroke outside the box at both ends.
- */
-function Rule() {
-  return (
-    <svg
-      className="hand-rule"
-      viewBox="0 0 320 200"
-      fill="none"
-      aria-hidden="true"
-      focusable="false"
-    >
-      {/* Across the top, rising to the right, starting left of the down-stroke
-          and sagging through the middle. It began at x = 10, which put 36 units
-          of tail past the crossing; the overhang is what makes the corner read
-          as drawn rather than mitred, but that much of it read as a mistake. */}
-      <path className="hand-stroke" d="M 22 67 C 105 63 210 49 305 30" />
-      {/* And down the margin, starting above the crossing and leaning right as
-          it falls, the way a hand pulling toward itself does — away from the
-          margin at first, then back across it.
-
-          IT USED TO RUN TO 196 and it now stops at 172. The end of a margin
-          rule wants to finish a little under the last line of writing, not a
-          third of the box below it — the copy ends around y = 142 on a
-          three-line note and 153 on a four-line one, and this clears both
-          without leaving the stroke dangling into empty board. Its head is
-          trimmed by the same hand as the top stroke's tail, for the same
-          reason. */}
-      <path className="hand-stroke" d="M 45 44 C 43 86 49 138 55 172" />
-    </svg>
-  );
-}
-
 export default function HandNote({
   className,
   style,
@@ -102,26 +49,32 @@ export default function HandNote({
       className={className ? `hand-note ${className}` : "hand-note"}
       style={style}
       aria-hidden={decorative || undefined}
-      /* The copy handed to the drawing, which reads it back off the element —
-         see LINE_SEP in copy.ts for why it travels as an attribute and not as a
-         prop. Written on every instance, the board's included, so hand.ts has
-         one place to look rather than a value and a fallback that can drift. */
-      data-lines={lines.join(LINE_SEP)}
     >
-      {/* The written copy exists only as SVG strokes, which carry no text.
-          aria-label is not honoured on a div, so the readable version is a real
-          (hidden) text node — the same call the kicker and the corner mark make
-          in Hero/index.tsx. Dropped entirely on a decorative copy rather than
-          left inside an aria-hidden wrapper, so there is no hidden text sitting
-          in the markup pretending to be read. */}
+      {/* The visible copy is split into one span per character to be typed, so
+          assistive tech gets the sentence from here instead. Dropped entirely on
+          a decorative copy rather than left inside an aria-hidden wrapper. */}
       {!decorative && <span className="sr-only">{lines.join(" ")}</span>}
 
-      <Rule />
-
-      {/* hand.ts sets the copy into here as one svg. Empty by design, and it
-          stays empty without JS: the note is decoration and the copy above it is
-          not. */}
-      <div className="hand-ink" aria-hidden="true" />
+      {/* Real text, so without JS the note simply stands. hand.ts splits each
+          line into characters and types them out. */}
+      <div className="hand-ink" aria-hidden="true">
+        {/* The ruled corner, wrapped around the copy so it fits whatever the
+            copy is, each line bowed the way a hand pulls it: the top sags
+            through the middle and picks up at the end, the margin bows away
+            from the words and comes back. Stretched to its box (the stroke
+            stays one weight — see global.css); hand.ts draws them out. */}
+        <svg className="hand-rule hand-rule--x" viewBox="0 0 100 10" preserveAspectRatio="none">
+          <path d="M 0 3 C 30 8 65 8 100 1" />
+        </svg>
+        <svg className="hand-rule hand-rule--y" viewBox="0 0 10 100" preserveAspectRatio="none">
+          <path d="M 6 0 C 2 33 3 70 6 100" />
+        </svg>
+        {lines.map((line, i) => (
+          <span className="hand-line" key={i}>
+            {line}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }

@@ -117,12 +117,6 @@ export default async function Hero() {
             ))}
           </p>
 
-          {/* STICK ME BACK! — a second note in the same hand, small, on the lime
-              field's right side beside the roll. Its own copy and its own
-              placement (.hand-note--stick in global.css); everything else about
-              the pen is the board's. */}
-          <HandNote className="hand-note--stick" lines={["stick me", "back!"]} />
-
           <div className="title">
             {/* The kicker is one line with a gap wide enough for the roll to
                 sit in the middle of it, so each half needs to be its own box:

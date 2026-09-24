@@ -21,8 +21,8 @@ export default async function Home() {
   return (
     <>
       <Hero />
-      {/* The headline coming unstuck, one letter at a time, and the reader
-          pressing it back — see components/PeelLetter. */}
+      {/* The hero's badge coming unstuck, and the reader pressing it back —
+          see components/PeelLetter. */}
       <PeelLetter palette={palette} />
       <WaveBand />
       <TapeSlider />

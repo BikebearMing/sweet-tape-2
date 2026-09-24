@@ -12,17 +12,12 @@
  * properties are all --cue / .pick-cue.
  *
  * IT IS A HANDNOTE IN EVERYTHING BUT ITS RELEASE, and the pen is literally that
- * component's — cue.ts sets the copy with HandNote/hand.ts's own setCopy and
- * writes it with its own timing. What is different is the two ends of it: the
+ * component's — cue.ts types the copy with HandNote/hand.ts's own typeset/type
+ * and its own timing. What is different is the two ends of it: the
  * ruled margin is an ARROW here, because the note is pointing at something
  * rather than sitting beside it, and the release is a hover rather than a
  * scroll. See the note at the top of hand.ts on why the drawing is shared and
  * the trigger is not.
- *
- * THE ARROW IS IN THE MARKUP AND THE WRITING IS NOT, which is the same split
- * HandNote makes and for the same reason: the arrow is three fixed strokes and
- * belongs in a viewBox this stylesheet can be read against, and the copy is
- * built at runtime out of a folder of drawn glyphs.
  *
  * DECORATION, ALL OF IT. The roll is already a link with the tape's name on it
  * (see the <a> in index.tsx), so "click me!" is a gesture and not information —
@@ -93,10 +88,12 @@ export default function ClickMe({ side }: { side: CueSide }) {
        it with [data-side] and every other figure in .pick-cue is shared. */
     <div className="pick-cue" data-side={side} aria-hidden="true">
       <Arrow />
-      {/* cue.ts sets "click me!" into here as one svg. Empty by design, and it
-          stays empty without JS — which costs nothing, because without JS there
-          is no hover to reveal it either (the row's picking is fan.ts's). */}
-      <div className="pick-cue-ink" />
+      {/* Two lines on purpose — see the note on the cue's width in global.css.
+          cue.ts types them out in the notes' font (HandNote/hand.ts). */}
+      <div className="pick-cue-ink">
+        <span className="hand-line">click</span>
+        <span className="hand-line">me!</span>
+      </div>
     </div>
   );
 }

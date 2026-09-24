@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Nothing_You_Could_Do } from "next/font/google";
 import { preload } from "react-dom";
 
 import "@fontsource-variable/inter-tight";
@@ -26,6 +27,14 @@ import { SITE_URL } from "@/data/site";
 import { getPalette } from "@/data/tapes";
 import SmoothScroll from "@/components/SmoothScroll";
 import TopBand from "@/components/TopBand";
+
+/* The notes' hand (components/HandNote, PickYourPlayer's cue). Self-hosted by
+   next/font and exposed as --font-note on <html>. */
+const noteFont = Nothing_You_Could_Do({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-note",
+});
 
 /* THE WHOLE FRONT END RENDERS ON DEMAND, and this is the line that decides it.
  *
@@ -114,7 +123,7 @@ export default async function FrontendLayout({
        change from then on. So the hold is site-wide too, and the transition
        closes it again on each navigation rather than the page ever being
        uncovered while something is on its way in. */
-    <html lang="en" data-loading="">
+    <html lang="en" data-loading="" className={noteFont.variable}>
       <head>
         {/* Futura PT Condensed. The kit is domain-locked: every host you serve
             from, localhost included, has to be listed at fonts.adobe.com or it

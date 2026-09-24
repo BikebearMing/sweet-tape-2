@@ -215,3 +215,41 @@ export function placementOf(charEl: HTMLElement) {
     angle: angleOf(getComputedStyle(clip).transform),
   };
 }
+
+/** The same raster for an <img> — the hero's badge. Its own colours on the
+    face, its silhouette flat in `backColour` on the back. Null until the image
+    has decoded. */
+export function rasteriseImage(
+  img: HTMLImageElement,
+  backColour: string,
+): LetterRaster | null {
+  const box = { w: img.offsetWidth, h: img.offsetHeight };
+  if (!box.w || !box.h || !img.complete || !img.naturalWidth) return null;
+
+  const rect = img.getBoundingClientRect();
+  const centre = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  const angle = angleOf(getComputedStyle(img).transform);
+
+  const want = (window.devicePixelRatio || 1) * OVERSAMPLE;
+  const scale = Math.min(want, MAX_PX / Math.max(box.w, box.h));
+
+  const draw = (fill?: string) => {
+    const c = document.createElement("canvas");
+    c.width = Math.round(box.w * scale);
+    c.height = Math.round(box.h * scale);
+    const ctx = c.getContext("2d")!;
+    ctx.scale(scale, scale);
+    ctx.drawImage(img, 0, 0, box.w, box.h);
+    if (fill) {
+      ctx.globalCompositeOperation = "source-in";
+      ctx.fillStyle = fill;
+      ctx.fillRect(0, 0, box.w, box.h);
+    }
+    return c;
+  };
+
+  const face = draw();
+  const ink = inkOf(face, scale);
+  if (!ink) return null;
+  return { box, centre, angle, scale, ink, face, back: draw(backColour) };
+}

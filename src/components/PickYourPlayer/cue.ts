@@ -6,10 +6,9 @@
  * on whichever shoulder has room — see CUE_SIDE in PickYourPlayer/index.tsx.
  * Markup in PickYourPlayer/ClickMe.tsx.
  *
- * THE PEN IS HANDNOTE'S, NOT A SECOND ONE. setCopy, park, write and the DRAW
- * timings all come from HandNote/hand.ts — the same setting, the same masks, the
- * same alphabet — so this note and the four on the rest of the site are one hand
- * and a re-export of the glyphs corrects all five. What this file owns is the
+ * THE PEN IS HANDNOTE'S, NOT A SECOND ONE. park, write, typeset, type and the
+ * DRAW timings all come from HandNote/hand.ts, so this note and the ones on the
+ * rest of the site type the same way. What this file owns is the
  * two things that are genuinely different about a cue: the ruled margin is an
  * ARROW, and the release is a HOVER.
  *
@@ -36,25 +35,7 @@
  */
 import gsap from "gsap";
 
-import { loadGlyphs, type Glyph } from "@/components/HandNote/glyphs";
-import { DRAW, park, setCopy, unpark, write } from "@/components/HandNote/hand";
-
-/* WHAT IT SAYS, and it says it on two lines.
- *
- * ON TWO LINES BECAUSE OF THE HEADLINE. The cue stands clear of the roll, which
- * means it stands ABOVE the row — and there are only 3.2vw between PLAYER's line
- * box and the top of the rolls. Set on one line "click me!" is about five times
- * as wide as it is tall, so it wants a cue of about 14vw, and a cue that wide is
- * one that cannot be moved out from under the type on either shoulder: at that
- * size four of the six collide whichever way they are flipped. Broken, the block
- * is half as wide and twice as tall, an 8.2vw cue carries it, and three-and-three
- * is enough to fit the whole row (CUE_SIDE in PickYourPlayer/index.tsx).
- *
- * It reads better broken anyway, which is the argument that would have won on
- * its own: two short lines is what somebody actually scribbles beside an arrow.
- * The breaks are the drawing, exactly as they are in HandNote/copy.ts — nothing
- * wraps these. */
-const LINES = ["click", "me!"];
+import { DRAW, park, type, typeset, write } from "@/components/HandNote/hand";
 
 const CUE = {
   /* THE HOLD BEFORE THE PEN TOUCHES DOWN, in seconds — see the note above. It
@@ -83,21 +64,12 @@ const CUE = {
   FADE_OUT: 0.16,
 };
 
-/* The pen, when the stylesheet has not named one — see --cue-ink in global.css,
-   which points it at the tape's own --ink. The hero's dark green, because a cue
-   in no colour at all is a cue nobody can see. */
-const INK = "#013900";
-
 type Cue = {
   /* The .pick-cue box: what fades, and what carries --cue-ink. */
   el: HTMLElement;
-  /* Built once, on the glyphs arriving. Null until then, and null for good on a
-     roll whose markup is missing a piece. */
+  /* Null for good on a roll whose markup is missing a piece, and under reduced
+     motion, where the cue simply appears. */
   tl: gsap.core.Timeline | null;
-  /* The svg this build put in the mount, so the teardown takes down its own
-     work — the alphabet arrives asynchronously and a build can land after the
-     section has gone. */
-  drawn: SVGSVGElement | null;
   /* The wait between the pointer settling and the pen touching down. Kept so it
      can be killed: a cue left in its hold would write itself onto a roll the
      pointer has already left. */
@@ -124,8 +96,8 @@ export function initPickCue(root: HTMLElement): PickCue {
   /* NOTHING IS BUILT WHERE THERE IS NO POINTER. fan.ts asks the same question
      before it binds its listeners — on a touch screen a tap synthesises a
      mousemove and never sends the mouseleave — so `show` could never be called
-     here anyway. Asking it too is what stops the phone fetching the alphabet and
-     building six svgs that nothing can ever reveal. */
+     here anyway. Asking it too is what stops the phone building six timelines
+     that nothing can ever reveal. */
   if (!window.matchMedia("(hover: hover)").matches) {
     return { show: () => {}, stop: () => {} };
   }
@@ -142,70 +114,29 @@ export function initPickCue(root: HTMLElement): PickCue {
     /* A roll with no cue is simply a roll that does not carry one. It still
        lifts and still recolours the page — unlike the row's own halves, these
        are independent of each other. */
-    if (el) cues.set(roll, { el, tl: null, drawn: null, held: null });
+    if (el) cues.set(roll, { el, tl: null, held: null });
   }
 
-  let stopped = false;
   /* The cue that is showing, or on its way to showing. Written the moment the
      pointer settles, which is also the moment the last one is told to go. */
   let current: Cue | null = null;
 
-  function build(cue: Cue, glyphs: Map<string, Glyph>) {
+  function build(cue: Cue) {
     const mount = cue.el.querySelector<HTMLElement>(".pick-cue-ink");
     const arrow = Array.from(
       cue.el.querySelectorAll<SVGPathElement>(".pick-cue-stroke"),
     );
-    if (!mount || !arrow.length) return;
-
-    /* The pen, off the cue itself — the same custom property the stylesheet
-       already paints the arrow's strokes with, so the arrow and the writing
-       cannot disagree about what colour this tape is. Trimmed because a custom
-       property keeps the whitespace it was written with, which is not a
-       colour. */
-    const ink =
-      getComputedStyle(cue.el).getPropertyValue("--cue-ink").trim() || INK;
-
-    const { svg, pen } = setCopy(mount, LINES, glyphs, ink);
-    cue.drawn = svg;
-    if (!pen.length) return;
-    const letters = pen.flat();
-
-    if (reduced) {
-      /* Standing, in ink, the moment it is asked for. The cue is a gesture and
-         the drawing is the flourish; this is the page with the flourishes turned
-         off, and a cue that appears is still a cue. */
-      arrow.forEach(unpark);
-      letters.forEach(unpark);
-      return;
-    }
+    /* Reduced motion leaves the markup as it is — arrow drawn, words standing —
+       and reveal() just shows it. */
+    if (!mount || !arrow.length || reduced) return;
 
     arrow.forEach(park);
-    letters.forEach(park);
-
     cue.tl = gsap.timeline({ paused: true });
 
-    /* THE ARROW FIRST, at a constant pen speed, then the lift, then the note
-       over it — which is the ruled margin's own order in hand.ts and the same
-       gesture: something is drawn for the writing to sit against, the pen comes
-       off the page, and the words follow. */
-    let cursor = write(cue.tl, arrow, 0, DRAW.RULE * CUE.PACE) + DRAW.LIFT * CUE.PACE;
-
-    /* And the copy, a letter at a time with each one starting before the last
-       has finished. The cursor walks the whole block so the line break costs
-       nothing — a hand does not pause at the end of a line, it is already moving
-       when it gets there. Spaces are counted off the COPY rather than off the
-       glyphs, so a space and a character with no export are the same beat. */
-    let g = 0;
-    for (const line of LINES) {
-      for (const ch of line.toLowerCase()) {
-        if (ch === " " || !glyphs.get(ch)) {
-          cursor += DRAW.PER * DRAW.SPACE * CUE.PACE;
-          continue;
-        }
-        write(cue.tl, pen[g++], cursor, DRAW.PER * CUE.PACE);
-        cursor += DRAW.PER * (1 - DRAW.OVERLAP) * CUE.PACE;
-      }
-    }
+    /* THE ARROW FIRST, at a constant pen speed, then the lift, then the words —
+       the ruled margin's own order in hand.ts. */
+    const drawn = write(cue.tl, arrow, 0, DRAW.RULE * CUE.PACE);
+    type(cue.tl, typeset(mount), drawn + DRAW.LIFT * CUE.PACE, CUE.PACE);
   }
 
   function reveal(cue: Cue) {
@@ -217,8 +148,6 @@ export function initPickCue(root: HTMLElement): PickCue {
       gsap.set(cue.el, { autoAlpha: 1 });
       return;
     }
-    /* Nothing to play yet — the alphabet is still in flight. `current` already
-       points here, so the build will reveal it when it lands. */
     if (!cue.tl) return;
 
     /* Back to nothing before the hold, not after it: a cue re-entered while its
@@ -258,16 +187,7 @@ export function initPickCue(root: HTMLElement): PickCue {
     });
   }
 
-  /* THE ALPHABET, then the drawing — and one round of requests for the whole
-     row, because glyphs.ts caches by document and all six cues spell the same
-     two words. The cue the pointer is already on is revealed as soon as it can
-     be: a reader whose hand was on a roll before this resolved would otherwise
-     have to leave it and come back. */
-  loadGlyphs(LINES).then((glyphs) => {
-    if (stopped) return;
-    for (const cue of cues.values()) build(cue, glyphs);
-    if (current) reveal(current);
-  });
+  for (const cue of cues.values()) build(cue);
 
   return {
     show(roll) {
@@ -278,19 +198,16 @@ export function initPickCue(root: HTMLElement): PickCue {
       if (next) reveal(next);
     },
     stop() {
-      stopped = true;
       current = null;
       for (const cue of cues.values()) {
         gsap.killTweensOf(cue.el);
         cue.held?.kill();
         cue.tl?.kill();
         gsap.set(cue.el, { clearProps: "opacity,visibility" });
-        /* THIS build's svg rather than whatever the mount currently holds: a
-           build that lands after a teardown writes into a detached mount and is
-           dropped at the next collection, and must not be able to reach into a
-           live cue and clear it. */
-        cue.drawn?.remove();
-        cue.drawn = null;
+        /* Back to plain text, so a rebuild splits the words and not the spans. */
+        cue.el
+          .querySelectorAll<HTMLElement>(".hand-line")
+          .forEach((line) => (line.textContent = line.textContent));
       }
     },
   };

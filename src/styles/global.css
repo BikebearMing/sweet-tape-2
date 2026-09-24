@@ -1831,27 +1831,6 @@ html[data-loading] {
   z-index: 2;
 }
 
-/* STICK ME BACK! — the small note on the lime field, up by the roll. Placed
-   by eye against the design, turned a little; the writing about 100px wide,
-   on two lines — the box is wider than the writing because
-   the ruled margin is part of it (the writing is 0.778 of --hand-w, starting
-   0.205 in). In the
-   field's ink, not the board's lime, which is the ground here. Waits a beat
-   after the cover clears so it is not writing across the headline's arrival —
-   the same hold the about page's note takes, for the same reason. */
-.hero-section .hand-note--stick {
-  /* "stick me" is the longer of the two lines and the writing is fitted to
-     it: 0.778 of this is the design's 99px. */
-  --hand-w: 8.85vw;
-  --hand-ink: #013900;
-  --hand-delay: 1.6;
-  top: 15.8vw;
-  left: auto;
-  right: 16.8vw;
-  rotate: 12deg;
-  z-index: 3;
-}
-
 /* --------------------------------------------------------------------------
    Hero — the phone
    --------------------------------------------------------------------------
@@ -2138,17 +2117,6 @@ html[data-loading] {
     top: 246vw;
     left: -1vw;
 }
-
-  /* The small note on the phone: off the section's FOOT now, on the right —
-     tuned by hand. It was hung from the top (21vw, under the tab), so `top` is
-     released for `bottom` to take. */
-  .hero-section .hand-note--stick {
-    --hand-w: 26vw;
-    top: auto;
-    bottom: 15vw;
-    left: auto;
-    right: 4vw;
-  }
 
   /* The painting, and the strip holding it down at 48% across its top edge —
      the desktop's fractions again. */
@@ -6425,38 +6393,27 @@ html[data-loading] {
   stroke-linejoin: round;
 }
 
-/* Where the writing sits: across the top of the box, clear of the arrow that
-   comes out from under it. Its WIDTH is what sets the size of the hand — cue.ts
-   fits the finished artwork to this box, exactly as hand.ts fits a note to
-   .hand-ink — so the longer of the two lines is this long and every other figure
-   follows from it.
+/* Where the words sit: across the top of the box, clear of the arrow that
+   comes out from under it. Typed in the notes' font at the notes' one size
+   (see .hand-note .hand-ink).
 
-   0.66 of an 8.2vw cue is 5.4vw, which is 78px at the design width. "click" is
-   five glyphs of the drawn alphabet, so that comes out at about a 14px x-height
-   — the smallest this hand can be set at and still read as writing rather than
-   as a squiggle.
-
-   ROTATED HERE AND NOT ON THE BOX, which is the same call .hand-ink makes: the
-   arrow's geometry is stated in a viewBox against the cue's own edges, and
-   turning the whole cue would turn the tip off the shoulder it is aimed at.
-   Only the words lean — and the mirrored cue above leans them the same way,
-   from the other edge. */
+   ROTATED HERE AND NOT ON THE BOX: the arrow's geometry is stated in a viewBox
+   against the cue's own edges, and turning the whole cue would turn the tip off
+   the shoulder it is aimed at. Only the words lean — and the mirrored cue above
+   leans them the same way, from the other edge. */
 .pick-cue-ink {
   position: absolute;
   top: 0;
   left: 2%;
-  width: calc(var(--cue-w) * 0.66);
+  font-family: var(--font-note), cursive;
+  font-weight: 400;
+  font-size: var(--note-fs);
+  line-height: var(--note-lh);
+  letter-spacing: 0;
+  white-space: nowrap;
+  color: var(--cue-ink);
   transform: rotate(354deg);
   transform-origin: left top;
-}
-
-/* cue.ts gives the svg a viewBox and no width or height of its own, so the box
-   above is the only thing that decides the size. */
-.pick-cue-ink svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  overflow: visible;
 }
 
 /* The artwork, and the only thing that slides when a NEIGHBOUR is picked up.
@@ -7726,12 +7683,6 @@ html[data-loading] {
 .product-inner-info,
 .product-reel {
   --line-w: max(1.2px, 0.087vw);
-}
-
-/* Three classes, to outrank .hand-note .hand-stroke further down the file. */
-.product-inner-info .hand-note .hand-stroke,
-.product-reel .hand-note .hand-stroke {
-  stroke-width: calc(320 * tan(atan2(var(--line-w), var(--hand-w))));
 }
 
 .product-inner-info .info-arrow path {
@@ -19537,42 +19488,7 @@ img#front {
   padding: 1.4vw var(--menu-pad-r) 0.5vw var(--menu-pad-l);
 }
 
-/* The same paper grain the hero, the band and the stage all carry, so the
-   panel reads as another piece of the same printed sheet. Lighter than their
-   0.2 — that weight is tuned for saturated colour and over near-white it stops
-   being grain and starts being grey.
-
-   A SMALL copy of that sheet, and it is the only place on the site that wants
-   one. `background-size: 100% auto` scales the image to the box, and this box
-   is --menu-w wide — a fraction of the viewport the full-bleed uses everywhere
-   else, so the browser cannot hand this any raster it has already made and has
-   to resample the 5824px original down to about 450 on its own. That resample
-   is worth something like 380ms, it is unavoidably spent on the FIRST frame the
-   panel paints — the panel is height: 0 until then, so nothing in it has ever
-   been drawn — and the first frame the panel paints is the first frame of the
-   drop. Which is why the menu used to hitch once, on the first pull of the
-   session, and never again: after that the tile is in the raster cache.
-
-   Same picture, cut to the size this box actually draws it at, so the work is
-   already done. Nothing else points here — the full-bleed sections still take
-   the original, where its resolution is the point. */
-.menu-panel::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: url("/assets/paper-overlay.webp");
-  background-size: 100% auto;
-  background-repeat: repeat-y;
-  opacity: 0.12;
-  pointer-events: none;
-}
-
-/* Positioned only to lift the links over the grain above — a positioned
-   pseudo-element otherwise paints over ordinary content whatever the source
-   order says. The hero's .title and the slider's copy do the same. */
 .menu-list {
-  position: relative;
-  z-index: 1;
   list-style: none;
   padding: 0;
 }
@@ -20123,40 +20039,6 @@ img#front {
      value and an instance overrides both at once by setting it. */
   --hand-ink: #b6fe00;
 
-  /* AND THE SECOND DIAL: how big the WRITING is inside the note, as a fraction
-   * of --hand-w. The artwork is fitted to the width of .hand-ink, so this one
-   * number is the whole of the note's type size and it is per-instance on
-   * purpose — the figures in HandNote/hand.ts are all in em and say nothing
-   * about how big anything is, which is exactly what lets one component be the
-   * hero's note and the pinning section's at a third of it.
-   *
-   * IT IS A SECOND DIAL AND NOT THE ONLY ONE because the two things it could
-   * mean are different: --hand-w scales the WHOLE note, ruled margin and all,
-   * and this scales the writing INSIDE that margin. A section that wants the
-   * same size of note with a smaller hand in it moves this; one that wants a
-   * smaller note moves --hand-w.
-   *
-   * 0.778 IS 0.648 PLUS A FIFTH, and the fifth is the point: every note on the
-   * site is written a fifth bigger than it was. It is one figure and not five
-   * because no instance overrides this — the hero's note, the pinning section's,
-   * the opening screen's and the news page's all take the default, and each one
-   * is already a share of its own --hand-w. So the hand grows by a fifth
-   * everywhere and every note stays the size it was RELATIVE to the section it
-   * is written on, which is what "bigger" has to mean on a site where the same
-   * note appears at a third the size two screens later.
-   *
-   * WHAT IT COSTS IS WIDTH, and there is one instance to keep an eye on. The
-   * writing starts at 0.205 of --hand-w and is now 0.778 of it wide, so it ends
-   * at 0.983 — inside the note's own box, but only just, and the box is rotated
-   * 353deg on top of that. The hero's is the tight one: its note is 25vw in a
-   * band that ends where the lemon painting's diagonal begins, and its own
-   * comment says going much past 27vw puts the last line on the paper.
-   *
-   * It is the default for the same reason every other figure in this rule is
-   * one: an instance that says nothing gets the note the site is drawn with, and
-   * any section can still override it. */
-  --hand-ink-w: 0.778;
-
   /* PLACEMENT IS NOT HERE, and that is the whole reason the note can appear
      twice. Everything in this rule is what the note IS — its size dial, its
      pen, its own box — and every rule below reads only from --hand-w. Where it
@@ -20360,15 +20242,12 @@ img#front {
  *
  * IT IS WITH THE OTHER INSTANCES AND NOT WITH ITS SECTION for the reason
  * .about-note's comment sets out at length — .hand-note above sets --hand-w,
- * --hand-ink and --hand-ink-w at the same specificity this rule has, so an
+ * and --hand-ink at the same specificity this rule has, so an
  * instance written earlier in the file (and the conveyor's block is five
  * thousand lines earlier) keeps only the properties the base does not name. The
  * pill's own geometry is up there with the belt; the note's dials are here.
  *
- * THE SIZE. 7.5vw is 108px at the 1440 design width, which puts the writing —
- * 0.778 of the note's width, see --hand-ink-w — at 84px across for three lines,
- * and leaves 31px of green between the last letter and the torn end of the tape
- * beside it. That is small, and it is meant to be: this is an aside muttered on
+ * THE SIZE. 11.5vw is 166px at the 1440 design width. That is small, and it is meant to be: this is an aside muttered on
  * the belt, not one of the three claims, and it shares its pill with a
  * photograph that has to stay the thing the eye lands on. The 5.156vw of height
  * that comes with it is the note's own aspect and not a choice — see the note
@@ -20409,81 +20288,117 @@ img#front {
     left: 1.764vw;
 }
 
-/* Ten units to the vw at the default width: the markup's viewBox is 0 0 320 200
-   against this box, which is what lets the path data and the figures here be
-   read against each other. Height is left to the aspect ratio rather than set —
-   only one of the two should be a fact.
+/* The typed copy, in Nothing You Could Do (--font-note, app layout).
 
-   overflow visible because the round caps sit half a stroke outside the box at
-   all four ends, and two of the strokes start hard against the edge. */
-.hand-note .hand-rule {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: auto;
-  overflow: visible;
+   ONE SIZE ON EVERY PAGE, whatever the note's --hand-w: 14px type on a 15px
+   line, 0 tracking, set ~17px right and ~13px down from where the rules cross — in
+   vw off the 1440 design, and restated off a 390 phone below 768px. Only the
+   corner moves with --hand-w (x 45, y 66.5 of the 320-unit artwork, plus half
+   a stroke); the type and the indent do not. The click-me cue shares the size
+   (.pick-cue-ink).
+
+   Rotated with the top rule (it rises ~7deg) about the corner, so the indent
+   holds and the lines step right the way the down-stroke leans. Lower case
+   because the old drawn hand was, and the CMS copy was written for it. */
+:root {
+  --note-fs: 0.9722vw; /* 14px at 1440 */
+  --note-lh: 1.0417vw; /* 15px */
+  --note-indent-x: 1.2vw; /* 17.3px — margin rule to the copy */
+  --note-indent-y: 0.9vw; /* 13px — top rule to the copy */
+  --note-bow: 0.486vw; /* 7px — how far each rule bows */
+  --note-lead-x: 1.667vw; /* 24px — the across rule, back past the crossing */
+  --note-lead-y: 1.319vw; /* 19px — the down rule, up past the crossing */
+  --note-tail: 1.25vw; /* 18px — both rules, on past the copy */
+  --note-rule: max(1.2px, 0.087vw); /* 1.25px */
 }
 
-/* 2.6 units, so 0.26vw at the default width — the same weight the letters are
-   drawn at, which is what makes the margin and the writing one pen rather than a
-   rule and a note.
+@media (max-width: 767px) {
+  :root {
+    --note-fs: 3.59vw; /* 14px at 390 */
+    --note-lh: 3.846vw; /* 15px */
+    --note-indent-x: 4.431vw; /* 17.3px at 390 */
+    --note-indent-y: 3.323vw; /* 13px at 390 */
+    --note-bow: 1.795vw;
+    --note-lead-x: 6.154vw;
+    --note-lead-y: 4.872vw;
+    --note-tail: 4.615vw;
+  }
+}
 
-   The dash pattern that hides them is written by hand.ts on mount: undrawn is a
-   state this stylesheet must not park them in, or a page without JS would be a
-   note with no lines. */
-.hand-note .hand-stroke {
+.hand-note .hand-ink {
+  position: absolute;
+  top: calc(var(--hand-w) * 0.2119 + var(--note-indent-y));
+  left: calc(var(--hand-w) * 0.1447 + var(--note-indent-x));
+  font-family: var(--font-note), cursive;
+  font-weight: 400;
+  font-size: var(--note-fs);
+  line-height: var(--note-lh);
+  letter-spacing: 0;
+  text-transform: lowercase;
+  white-space: nowrap;
+  color: var(--hand-ink);
+  transform: rotate(353deg);
+  transform-origin: 0 0;
+}
+
+/* THE RULED CORNER, wrapped round the copy rather than drawn at the note's size,
+   so it fits whatever the copy is. Two thin bowed lines crossing clear of the
+   text's top-left (--note-indent-x to the margin, --note-indent-y to the top
+   rule), each run well back past the crossing (--note-lead-*) and a little on
+   past the copy (--note-tail) — measured off the design's comp.
+
+   Each is an svg stretched to its box (preserveAspectRatio none); the weight
+   is the site's thin pen, --note-rule, 1.25px at 1440 — see the path rule
+   below. hand.ts draws them out by scaling the box from the crossing. The bow
+   is --note-bow across the line: the box's depth. The crossing sits ~0.43 into
+   the bow on both paths, which is where the offsets below put it.
+
+   The across rule rises with the copy (.hand-ink's 353deg); the down rule is
+   turned back 3deg against it so it leans ~4deg on screen, as drawn — and
+   stands off the lower lines, which the copy's rotation steps right. `rotate`,
+   not `transform`, which hand.ts owns while it draws them out. */
+.hand-note .hand-rule {
+  position: absolute;
+  overflow: visible;
+  /* The reset caps every svg at its container's width, which would clip the
+     across rule at the copy's edge — the tail has to run past it. */
+  max-width: none;
+}
+
+/* The weight, in the svg's OWN units rather than via vector-effect:
+   non-scaling-stroke — iOS Safari rendered that far heavier than Chrome.
+   Each rule is 10 units deep and stretched to --note-bow, and both lines run
+   along their box's long axis, so their painted weight follows only the short
+   axis: units = 10 x rule / bow. tan(atan2(a, b)) is a / b as a plain number
+   (the product pages' --line-w strokes use the same trick). */
+.hand-note .hand-rule path {
   fill: none;
   stroke: var(--hand-ink);
-  stroke-width: 2.6;
+  stroke-width: calc(10 * tan(atan2(var(--note-rule), var(--note-bow))));
   stroke-linecap: round;
 }
 
-/* Where the writing sits: clear of the down-stroke (x = 46..59) and a little
-   below the top rule. Its WIDTH is what sets the size of the hand — hand.ts fits
-   the finished artwork to this box, so the longest line is exactly this long and
-   every other figure in the note follows from it.
-
-   IT IS ALSO WHERE THE LAB'S `size` WENT. The setting in HandNote/hand.ts is all
-   in em and says nothing about how big the note is; this box is what decides
-   that. Which is what lets the pinning section's copy be a third the size and
-   still be the same hand.
-
-   THE FRACTION IS --hand-ink-w AND IT IS PER INSTANCE — see the note by its
-   default at the top of this block. It is here rather than a constant because
-   re-tuning the setting in hand.ts moves the writing's size under every note at
-   once: the artwork is fitted to this width, so a wider word gap or a looser
-   tracking makes the same sentence longer and therefore smaller in the same box.
-   This is the dial that puts that back, section by section, without anything in
-   hand.ts having to know where the note is.
-
-   NO font-family any more. It was here because Vara MEASURED it — the scale it
-   drew at came from a reference glyph rendered in this element's CSS font, which
-   made a font nobody would ever see decide how big something was. The glyphs are
-   artwork with their own units now and nothing consults a font at any point. */
-.hand-note .hand-ink {
-  top: calc(var(--hand-w) * 0.215);
-  left: calc(var(--hand-w) * 0.205);
-  /* Brought down from .703, which is a hand about 3.5px smaller at the 1440
-       design width — the writing measured a 24.6px x-height there, and against
-       Inter Tight's 0.546 x-height per em that is the same apparent size as a
-       45px font, so this is 41.5px of one. Everything else about the note is
-       untouched: the ruled margin is drawn from --hand-w and does not pass
-       through here, and every figure in HandNote/hand.ts is in the FONT's own
-       units, so the stroke weight, the line spacing and the drift all come down
-       with the letters rather than needing to be re-tuned after them. */
-  width: calc(var(--hand-w) * var(--hand-ink-w));
-  position: absolute;
-  transform: rotate(353deg);
+.hand-note .hand-rule--x {
+  top: calc(-1 * (var(--note-indent-y) + var(--note-rule) / 2 + var(--note-bow) * 0.435));
+  left: calc(-1 * (var(--note-indent-x) + var(--note-rule) / 2 + var(--note-lead-x)));
+  width: calc(100% + var(--note-indent-x) + var(--note-rule) / 2 + var(--note-lead-x) + var(--note-tail));
+  height: var(--note-bow);
+  transform-origin: var(--note-lead-x) 50%;
 }
 
-/* hand.ts gives the svg a viewBox and no width or height of its own, so the box
-   above is the only thing that decides the size. */
-.hand-note .hand-ink svg {
+.hand-note .hand-rule--y {
+  left: calc(-1 * (var(--note-indent-x) + var(--note-rule) / 2 + var(--note-bow) * 0.418));
+  top: calc(-1 * (var(--note-indent-y) + var(--note-rule) / 2 + var(--note-lead-y)));
+  width: var(--note-bow);
+  height: calc(100% + var(--note-indent-y) + var(--note-rule) / 2 + var(--note-lead-y) + var(--note-tail));
+  transform-origin: 50% var(--note-lead-y);
+  rotate: 3deg;
+}
+
+/* One line box per written line — the breaks are the copy's, nothing wraps. */
+.hand-note .hand-line,
+.pick-cue-ink .hand-line {
   display: block;
-  width: 100%;
-  height: auto;
-  overflow: visible;
 }
 
 /* --------------------------------------------------------------------------

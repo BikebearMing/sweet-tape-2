@@ -1637,6 +1637,12 @@ html[data-loading] {
   transform: none;
 }
 
+/* Masks off while the headline is being poked (Hero/poke.ts) — a hop is taller
+   than the mask's headroom. Only set once the entrance is done. */
+.hero-section .h1[data-poke] .clip {
+  overflow: visible;
+}
+
 /* The cardboard copy's words — see words() in Hero/index.tsx. Inline flex
    boxes of letter clips: the letters row up inside, the line wraps BETWEEN
    the boxes exactly where the unsplit text would break, and the real spaces
@@ -7569,6 +7575,12 @@ html[data-loading] {
    in, it points from the top of the story at nothing, an inch below the roll it
    means. A mark that has lost what it was pointing at is not a mark. */
 @media (max-width: 767px) {
+  /* No underline under the story's last word on a phone — it rendered as a
+     heavy bar there. */
+  .product-inner-info .info-underline {
+    display: none;
+  }
+
   .product-inner-info {
     --info-pad-x: 4vw;
     --info-pad-y: 14vw;

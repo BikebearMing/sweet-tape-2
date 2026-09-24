@@ -434,6 +434,10 @@ export function siblingsVars(s?: SectionColours): CSSProperties {
 export function powersVars(s?: SectionColours): CSSProperties {
   return sectionVars([
     ["--pow-bg", s?.powersBg],
+    /* The curve at the head of the sheet is THE SIBLINGS' ground bulging down
+       into this one, so it is that section's colour and not one of this
+       section's own — see .powers-stage::before in global.css. */
+    ["--pow-lip", s?.siblingsBg],
     ["--pow-ink", s?.powersHeading],
     ["--pow-card-bg", s?.powersCard],
     ["--pow-card-rest", s?.powersCardRest],

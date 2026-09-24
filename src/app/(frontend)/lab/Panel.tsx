@@ -15,6 +15,10 @@ type Props<P extends Params> = {
   apply: (p: P) => void;
   /** Slider bounds for a field; default is what the value looks like it is. */
   range?: (group: string, field: string) => [number, number];
+  /** Slider step for a field; default 0.1. */
+  step?: (group: string, field: string) => number;
+  /** What the copy button and the footer show; default is the JSON. */
+  dump?: (p: P) => string;
 };
 
 function guess(field: string, v: number): [number, number] {
@@ -27,6 +31,8 @@ export default function Panel<P extends Params>({
   defaults,
   apply,
   range,
+  step,
+  dump: render,
 }: Props<P>) {
   const [p, setP] = useState<P>(defaults);
   const [open, setOpen] = useState(true);
@@ -36,7 +42,7 @@ export default function Panel<P extends Params>({
   const set = (g: string, f: string, v: number) =>
     setP((o) => ({ ...o, [g]: { ...o[g], [f]: v } }));
 
-  const json = JSON.stringify(p, null, 2);
+  const json = render ? render(p) : JSON.stringify(p, null, 2);
 
   return (
     <aside style={{ ...panel, ...(open ? null : { width: "auto" }) }}>
@@ -49,7 +55,7 @@ export default function Panel<P extends Params>({
           reset
         </button>
         <button style={btn} onClick={() => navigator.clipboard.writeText(json)}>
-          copy json
+          copy
         </button>
       </div>
       {open && (
@@ -59,6 +65,7 @@ export default function Panel<P extends Params>({
               <legend style={legend}>{g}</legend>
               {Object.entries(p[g]).map(([f, v]) => {
                 const [min, max] = range?.(g, f) ?? guess(f, defaults[g][f]);
+                const st = step?.(g, f) ?? 0.1;
                 return (
                   <label key={f} style={row}>
                     <span style={{ width: 50 }}>{f}</span>
@@ -66,14 +73,14 @@ export default function Panel<P extends Params>({
                       type="range"
                       min={min}
                       max={max}
-                      step={0.1}
+                      step={st}
                       value={v}
                       onChange={(e) => set(g, f, parseFloat(e.target.value))}
                       style={{ flex: 1 }}
                     />
                     <input
                       type="number"
-                      step={0.1}
+                      step={st}
                       value={v}
                       onChange={(e) =>
                         set(g, f, parseFloat(e.target.value) || 0)

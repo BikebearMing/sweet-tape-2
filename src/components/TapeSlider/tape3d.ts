@@ -17,6 +17,7 @@
  */
 import {
   AmbientLight,
+  Color,
   Box3,
   DirectionalLight,
   Group,
@@ -34,7 +35,17 @@ import {
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-import { applyFilm, classify, cutMaps, disposeMaps, domeFace, FILM } from "./film";
+import {
+  applyFilm,
+  classify,
+  cutMaps,
+  disposeMaps,
+  domeFace,
+  FILM,
+  GLASS,
+  type Maps,
+  type Surface,
+} from "./film";
 
 const FOV = 35;
 /* Mouse parallax. Applied to the stage the flip groups hang off — NOT to the
@@ -167,7 +178,7 @@ export type ViewerLight = {
   lamp?: { x: number; y: number; z: number; power: number };
 };
 
-const LIGHT: Required<Omit<ViewerLight, "lamp">> = { key: 0.7, ambient: 0.82, fill: 0, env: 0 };
+export const LIGHT: Required<Omit<ViewerLight, "lamp">> = { key: 0.7, ambient: 0.82, fill: 0, env: 0 };
 
 /* THE FINISH — what a surface is made of, as opposed to what is shining on it.
  *
@@ -245,6 +256,14 @@ export type ViewerFilm = {
    * and the second, independent guard in the shader patch there.
    */
   clarity?: number | Record<string, number>;
+  /**
+   * THIS STAGE'S OWN FILM AND GLASS NUMBERS, over the defaults in film.ts.
+   * The product page, the slider and the reason section were tuned apart at
+   * /lab/tape-3d and want different coats; film.ts stays the shared base and
+   * each caller carries only what it moved.
+   */
+  knobs?: Partial<typeof FILM>;
+  glass?: Partial<typeof GLASS>;
 };
 
 /* THE RIG THE FILM IS LIT BY, and it is a different room from the one above.
@@ -296,7 +315,7 @@ export type ViewerFilm = {
    right knob to give brightness back through because it carries no specular —
    the faces brighten without the gloss returning. Then up one more step
    (0.6 to 0.68), the "a little brighter" asked for on the slider's rolls. */
-const FILM_LIGHT: Required<Omit<ViewerLight, "lamp">> = { key: 0.74, ambient: 0.68, fill: 0, env: 0 };
+export const FILM_LIGHT: Required<Omit<ViewerLight, "lamp">> = { key: 0.74, ambient: 0.68, fill: 0, env: 0 };
 const KICK = { x: 2.7, y: 2.0, z: 1.0, power: 0.12 };
 
 export type TapeViewer = {
@@ -310,15 +329,46 @@ export type TapeViewer = {
    *  lean is eased toward it internally, so this may be called raw. */
   point(nx: number, ny: number): void;
   dispose(): void;
+  /** THE LAB'S HANDLE — /lab/tape-3d turns the scene's numbers while it runs.
+   *  Nothing on the site calls this; every page mounts, shows and spins. */
+  tune: {
+    light(l: ViewerLight): void;
+    finish(f: MaterialFinishes): void;
+    /** Re-run the film off FILM/GLASS as they stand; recut redraws the maps. */
+    refilm(o: { recut?: boolean; clarity?: number; knobs?: Partial<typeof FILM>; glass?: Partial<typeof GLASS> }): void;
+    /** The visible model's materials as the export shipped them. */
+    materials(): { name: string; metalness: number; roughness: number }[];
+  };
 };
 
 export function createTapeViewer(
   container: HTMLElement,
   urls: string[],
   light?: ViewerLight,
-  finish?: MaterialFinishes,
+  finishArg?: MaterialFinishes,
   film?: ViewerFilm
 ): Promise<TapeViewer> {
+  let finish = finishArg;
+  let filmOpts = film;
+
+  /* ponytail: film.ts reads FILM/GLASS as module globals in a dozen places, so
+     a stage's own numbers are swapped in around each read rather than threaded
+     through as parameters. Synchronous, restored on the way out; nothing else
+     runs in between. Thread them through applyFilm/cutMaps if a third reader
+     ever appears. */
+  function withKnobs<T>(fn: () => T): T {
+    const f0 = { ...FILM };
+    const g0 = { ...GLASS };
+    Object.assign(FILM, filmOpts?.knobs);
+    Object.assign(GLASS, filmOpts?.glass);
+    try {
+      return fn();
+    } finally {
+      Object.assign(FILM, f0);
+      Object.assign(GLASS, g0);
+    }
+  }
+  const filmOn = () => !!film && withKnobs(() => FILM.AMOUNT > 0);
   /* The film brings its own room with it — see FILM_LIGHT. A caller that passes
      both still wins: `light` is spread last either way, so a page can take the
      treatment and light it its own way. */
@@ -346,12 +396,13 @@ export function createTapeViewer(
      to the rim and side without pushing the face past the artwork. */
   const dir = new DirectionalLight(0xffffff, lit.key);
   dir.position.set(2, 3, 4);
-  scene.add(dir, new AmbientLight(0xffffff, Math.PI * lit.ambient));
+  const amb = new AmbientLight(0xffffff, Math.PI * lit.ambient);
+  scene.add(dir, amb);
 
   /* The face's own kicker, and only where there is a film to light — see KICK.
      Built rather than dialled to zero for the same reason the fill is: an unused
      light is still a light every material has to be shaded against. */
-  if (film && FILM.AMOUNT > 0) {
+  if (filmOn()) {
     const kick = new DirectionalLight(0xffffff, KICK.power);
     kick.position.set(KICK.x, KICK.y, KICK.z);
     scene.add(kick);
@@ -360,8 +411,9 @@ export function createTapeViewer(
   /* The lamp — the caller's close light with falloff, for grading a FACE. See
      `lamp` in ViewerLight, which is the whole argument. Decay 2 is the
      inverse-square the falloff depends on; distance 0 is unlimited reach. */
+  let lamp: PointLight | null = null;
   if (light?.lamp) {
-    const lamp = new PointLight(0xffffff, light.lamp.power, 0, 2);
+    lamp = new PointLight(0xffffff, light.lamp.power, 0, 2);
     lamp.position.set(light.lamp.x, light.lamp.y, light.lamp.z);
     scene.add(lamp);
   }
@@ -371,8 +423,9 @@ export function createTapeViewer(
      BELOW the key rather than mirroring it: what it is there to do is put a
      gradient across the wound side's curve, and a second light at the key's own
      height simply flattens the cylinder from the other direction. */
+  let back: DirectionalLight | null = null;
   if (lit.fill > 0) {
-    const back = new DirectionalLight(0xffffff, lit.fill);
+    back = new DirectionalLight(0xffffff, lit.fill);
     back.position.set(-3, -0.5, 2);
     scene.add(back);
   }
@@ -388,9 +441,8 @@ export function createTapeViewer(
      Held so teardown can release it: a PMREM target is a cube render target and
      it does not go away with the renderer. */
   let envTex: Texture | null = null;
-  const room =
-    lit.env > 0
-      ? import("three/addons/environments/RoomEnvironment.js")
+  const buildRoom = () =>
+    import("three/addons/environments/RoomEnvironment.js")
           .then(({ RoomEnvironment }) => {
             /* gone: an import that lands after dispose has a renderer whose
                context is already released, and generating into it throws. */
@@ -413,8 +465,8 @@ export function createTapeViewer(
           /* A room that will not load must not take the roll down with it. The
              metal face comes out dark, which is exactly what it was before this
              existed, and every other tape is unaffected. */
-          .catch(() => {})
-      : null;
+      .catch(() => {});
+  const room = lit.env > 0 ? buildRoom() : null;
 
   const canvas = renderer.domElement;
   // Arrives invisible and fades up once the first real frame has been
@@ -519,6 +571,95 @@ export function createTapeViewer(
 
   const loader = new GLTFLoader();
 
+  /* Full anisotropy on every map, or the wound side's weave collapses to its
+     flat grey mip average wherever the surface grazes the view — a grey sheet
+     along the rim mid-flip on real GPUs. */
+  const maxAniso = renderer.capabilities.getMaxAnisotropy();
+
+  /* Cut once for the whole viewer rather than once per material or once per
+     model: the maps are 256px of noise and six models sharing one set is one
+     upload instead of thirty. Only when there is a film to wear them. */
+  let maps: Maps | null = null;
+  const mapsFor = () =>
+    (maps ??= filmOn() ? withKnobs(() => cutMaps(maxAniso)) : null);
+
+  /* What the export shipped, kept so the look can be written AGAIN from the
+     same starting point — the finish and the film both read a material and
+     write it, and a second pass over an already-written one compounds (the
+     cast's lerp, for one). Nothing on the site takes a second pass; the lab
+     does, on every slider. */
+  type Base = {
+    metalness: number;
+    roughness: number;
+    color: Color;
+    transparent: boolean;
+    depthWrite: boolean;
+    surface: Surface | null;
+    clear: number;
+  };
+
+  /* THE LOOK, in the order the site has always applied it: the export, then
+     the caller's finish, then the room's per-material switch, then the film. */
+  function restyle(mesh: Mesh) {
+    const mat = mesh.material as MeshStandardMaterial;
+    const b = mesh.userData.base as Base;
+    mat.metalness = b.metalness;
+    mat.roughness = b.roughness;
+    mat.color.copy(b.color);
+    mat.transparent = b.transparent;
+    mat.depthWrite = b.depthWrite;
+    mat.premultipliedAlpha = false;
+    mat.roughnessMap = null;
+    mat.normalMap = null;
+    const phys = mat as MeshPhysicalMaterial;
+    phys.clearcoat = 0;
+    phys.anisotropy = 0;
+    mat.onBeforeCompile = () => {};
+
+    /* THE FINISH, BEFORE THE ROOM, and the order is the point: an override
+       that sets metalness to 0 must be seen by the line below, or the material
+       would keep an environment it no longer has any use for. `*` first so a
+       named material can contradict it. */
+    for (const key of ["*", mat.name]) {
+      const f = finish?.[key];
+      if (!f) continue;
+      if (f.metalness !== undefined) mat.metalness = f.metalness;
+      if (f.roughness !== undefined) mat.roughness = f.roughness;
+      if (f.colour !== undefined) mat.color.set(f.colour);
+    }
+
+    /* THE ROOM IS FOR THE METAL AND NOTHING ELSE. scene.environment lights
+       every material in the scene, and on this model that is the wrong answer
+       for five of the six: the rim, the wound side, the core and the two flat
+       colours are fully dielectric, already render at the artwork's own colour
+       off key and ambient, and only get washed out by a second source. Only
+       the face has metalness — see `env` above — and only the face has a hole
+       the room is filling. So the room is switched off per material rather
+       than dialled down globally. */
+    if (lit.env > 0) mat.envMapIntensity = mat.metalness > 0 ? 1 : 0;
+
+    /* AND THE FILM LAST, so it reads a material the caller has already had
+       its say about rather than the export. THE CLARITY GOES TO THE WOUND
+       SIDE AND NOWHERE ELSE — the core and the end take the finish but stay
+       solid, because a see-through core is a hole in the roll. */
+    if (maps && b.surface) {
+      withKnobs(() =>
+        applyFilm(mat, maps!, b.surface!, b.surface === "wound" ? b.clear : 0),
+      );
+    } else {
+      mat.needsUpdate = true;
+    }
+  }
+
+  const restyleAll = () => {
+    for (const g of groups.values()) {
+      g.traverse((o) => {
+        if ((o as Mesh).isMesh && o.userData.base) restyle(o as Mesh);
+      });
+    }
+    dirty = true;
+  };
+
   /* Set by teardown, checked by every background load still in flight. A model
      that lands after dispose has a scene to add itself to and a renderer that
      has already released its context — the group would be retained by a Map
@@ -537,12 +678,11 @@ export function createTapeViewer(
                collapses to its flat grey mip average wherever the surface
                grazes the view — a grey sheet along the rim mid-flip on real
                GPUs. */
-            const maxAniso = renderer.capabilities.getMaxAnisotropy();
-            /* Cut once for the whole viewer rather than once per material or
-               once per model: the maps are 256px of noise and six models sharing
-               one set is one upload instead of thirty. Only when there is a film
-               to wear them. */
-            const maps = film && FILM.AMOUNT > 0 ? cutMaps(maxAniso) : null;
+            /* Every material's look is written by restyle(), below the
+               loader, so the lab can write it again with different numbers.
+               What is decided HERE, once, is what the export shipped and which
+               surface each primitive is — see the notes at restyle. */
+            const maps = mapsFor();
             model.traverse((o) => {
               if ((o as Mesh).isMesh) {
                 const mesh = o as Mesh;
@@ -584,37 +724,17 @@ export function createTapeViewer(
                   mat.map.anisotropy = maxAniso;
                   mat.map.needsUpdate = true;
                 }
-                /* THE FINISH, BEFORE THE ROOM, and the order is the point: an
-                   override that sets metalness to 0 must be seen by the line
-                   below, or the material would keep an environment it no longer
-                   has any use for. Every knob a caller can turn is turned here,
-                   and everything after it reads the result rather than the
-                   export. `*` first so a named material can contradict it. */
-                for (const key of ["*", mat.name]) {
-                  const f = finish?.[key];
-                  if (!f) continue;
-                  if (f.metalness !== undefined) mat.metalness = f.metalness;
-                  if (f.roughness !== undefined) mat.roughness = f.roughness;
-                  if (f.colour !== undefined) mat.color.set(f.colour);
-                }
 
-                /* THE ROOM IS FOR THE METAL AND NOTHING ELSE.
-                   scene.environment lights every material in the scene, and on
-                   this model that is the wrong answer for five of the six: the
-                   rim, the wound side, the core and the two flat colours are
-                   fully dielectric, already render at the artwork's own colour
-                   off key and ambient, and only get washed out by a second
-                   source. Only the face has metalness — see `env` above — and
-                   only the face has a hole the room is filling.
-                   So the room is switched off per material rather than dialled
-                   down globally: a dial low enough to leave the flank alone is
-                   too low to bring the face back, and the two cannot be
-                   traded off against each other. Anything metal takes it in
-                   full and the intensity is set once, at the scene. */
-                if (lit.env > 0) mat.envMapIntensity = mat.metalness > 0 ? 1 : 0;
+                const base: Base = {
+                  metalness: mat.metalness,
+                  roughness: mat.roughness,
+                  color: mat.color.clone(),
+                  transparent: mat.transparent,
+                  depthWrite: mat.depthWrite,
+                  surface: null,
+                  clear: 0,
+                };
 
-                /* AND THE FILM LAST, so it reads a material the caller has
-                   already had its say about rather than the export. */
                 if (maps) {
                   /* WHICH SURFACE THIS IS, measured off its own geometry —
                      see classify() in film.ts for why it is not a name. The box
@@ -623,7 +743,7 @@ export function createTapeViewer(
                   mesh.geometry.computeBoundingBox();
                   const bb = mesh.geometry.boundingBox!;
                   const size = bb.getSize(new Vector3());
-                  const surface = classify(size, (bb.min.y + bb.max.y) / 2);
+                  base.surface = classify(size, (bb.min.y + bb.max.y) / 2);
 
                   /* THE DISCS ARE DOMED — the hero's face treatment, and the
                      reason a lit label reads as a surface rather than a wash.
@@ -631,26 +751,19 @@ export function createTapeViewer(
                      domeFace in film.ts. Both discs, because each fans outward
                      from its own exported normal and the back one costs the
                      same nothing. */
-                  if (surface === "label" || surface === "end") {
+                  if (base.surface === "label" || base.surface === "end") {
                     domeFace(mesh.geometry);
                   }
 
                   /* THIS TAPE'S OWN CLARITY — a plain number from a one-model
                      caller, or looked up by url on a stage of several. */
-                  const clear =
+                  base.clear =
                     typeof film?.clarity === "object"
                       ? film.clarity[url] ?? 0
                       : film?.clarity ?? 0;
-
-                  /* THE CLARITY GOES TO THE WOUND SIDE AND NOWHERE ELSE. This
-                     is the first of the two guards named in film.ts: the label
-                     is a disc and never reaches the branch that would flag it
-                     transparent. The core and the end take the finish — they
-                     are tape too, and the core is what shows THROUGH a clear
-                     wound side — but they stay solid, because a see-through
-                     core is a hole in the roll rather than a clear roll. */
-                  applyFilm(mat, maps, surface, surface === "wound" ? clear : 0);
                 }
+                mesh.userData.base = base;
+                restyle(mesh);
               }
             });
             // Centre on the geometry, not the export's origin — the flip has
@@ -743,6 +856,69 @@ export function createTapeViewer(
         },
 
         dispose: teardown,
+
+        tune: {
+          light(l) {
+            if (l.key !== undefined) dir.intensity = lit.key = l.key;
+            if (l.ambient !== undefined) {
+              amb.intensity = Math.PI * (lit.ambient = l.ambient);
+            }
+            if (l.fill !== undefined) {
+              lit.fill = l.fill;
+              if (!back && l.fill > 0) {
+                back = new DirectionalLight(0xffffff, l.fill);
+                back.position.set(-3, -0.5, 2);
+                scene.add(back);
+              } else if (back) back.intensity = l.fill;
+            }
+            if (l.lamp) {
+              if (!lamp) {
+                lamp = new PointLight(0xffffff, l.lamp.power, 0, 2);
+                scene.add(lamp);
+              }
+              lamp.intensity = l.lamp.power;
+              lamp.position.set(l.lamp.x, l.lamp.y, l.lamp.z);
+            }
+            if (l.env !== undefined) {
+              lit.env = l.env;
+              scene.environmentIntensity = l.env;
+              if (l.env > 0 && !envTex) void buildRoom();
+              restyleAll();
+            }
+            dirty = true;
+          },
+          finish(f) {
+            finish = f;
+            restyleAll();
+          },
+          refilm({ recut, clarity, knobs, glass }) {
+            if (knobs || glass) filmOpts = { ...filmOpts, knobs, glass };
+            if (recut && maps) {
+              disposeMaps();
+              maps = withKnobs(() => cutMaps(maxAniso));
+            }
+            if (clarity !== undefined) {
+              active?.traverse((o) => {
+                const b = o.userData.base as Base | undefined;
+                if (b) b.clear = clarity;
+              });
+            }
+            restyleAll();
+          },
+          materials() {
+            const out: { name: string; metalness: number; roughness: number }[] = [];
+            active?.traverse((o) => {
+              const b = o.userData.base as Base | undefined;
+              if (b) {
+                const name = ((o as Mesh).material as MeshStandardMaterial).name;
+                if (!out.some((m) => m.name === name)) {
+                  out.push({ name, metalness: b.metalness, roughness: b.roughness });
+                }
+              }
+            });
+            return out;
+          },
+        },
       };
     },
     (e) => {

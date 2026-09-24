@@ -27,12 +27,13 @@
  * without any of this.
  */
 import type { TapeViewer } from "@/components/TapeSlider/tape3d";
+import { onViewportChange, screenH, screenW } from "@/components/viewport";
 
 /* THE BROWN PACKING ROLL, and the INNER export rather than the home page's.
    src/data/tapes.ts splits this one tape in two — Header-Brown-Inner.glb is the
    copy the close-up pages are free to re-export without the orbit of six
    changing by a pixel — and this section is a close-up. */
-const MODEL = "/assets/tapes/Header-Brown-Inner.glb";
+export const MODEL = "/assets/tapes/Header-Brown-Inner.glb";
 
 /* The room, the finish AND THE FILM, all straight off ProductIntro/roll.ts. See
    the note at the top: these are corrections the metal label needs, not a second
@@ -47,12 +48,12 @@ const MODEL = "/assets/tapes/Header-Brown-Inner.glb";
    (see ViewerFilm in tape3d.ts and TapeSlider/film.ts). The clarity is the OPP
    tape's own 0.09, from CLARITY in ProductIntro/rolls.ts — the same object at
    the same see-through, on the page that argues for it. */
-const ROOM = 0.25;
-const FINISH = {
+export const ROOM = 0.16; // lab 2026-09-11 — was 0.25
+export const FINISH = {
   "Face Brown": { metalness: 0.05, roughness: 2 },
   Tape: { roughness: 0.4 },
 };
-const FILM = { clarity: 0.09 };
+export const FILM = { clarity: 0.09 };
 
 /* THE LAMP — what puts the shadow on the right of the face, the way the hero's
    own stage models its roll. A directional cannot do it: the label is a flat
@@ -67,8 +68,16 @@ const FILM = { clarity: 0.09 };
    the lamp brings the lit side back to the artwork rather than over it. */
 /* Both scaled by 0.87 from 0.38 / 2.6 — the site-wide 13% step down that
    FILM_LIGHT took, applied to this section's own overrides too. */
-const AMBIENT = 0.33;
-const LAMP = { x: -1.6, y: 0.9, z: 1.3, power: 2.26 };
+export const AMBIENT = 0.58; // lab 2026-09-11 — was 0.33
+export const LAMP = { x: 1.75, y: 0.1, z: -0.4, power: 1.4 }; // was { x: -1.6, y: 0.9, z: 1.3, power: 2.26 }
+
+/* THE KEY AND THE FILL, which this section used to leave at FILM_LIGHT's
+   defaults (key 0.74, fill 0 — none). Set at /lab/tape-3d on 2026-09-11 with
+   the four above as one set. NOTE THE LAMP MOVED TO THE READER'S RIGHT and
+   behind the face's plane (z negative): the long note above describes the
+   left-side lamp this replaced. */
+export const KEY = 0.26;
+export const FILL = 0.12;
 
 /* THE POSE, AND IT IS THE ONE KNOB IN THIS FILE.
  *
@@ -122,7 +131,7 @@ export function mountRoll(box: HTMLElement, card: HTMLElement | null): () => voi
       createTapeViewer(
         box,
         [MODEL],
-        { env: ROOM, ambient: AMBIENT, lamp: LAMP },
+        { key: KEY, ambient: AMBIENT, fill: FILL, env: ROOM, lamp: LAMP },
         FINISH,
         FILM,
       ),
@@ -147,20 +156,38 @@ export function mountRoll(box: HTMLElement, card: HTMLElement | null): () => voi
          it actually changes. */
       let cx = 0;
       let cy = 0;
+      let onScreen = false;
       const measure = () => {
+        if (!onScreen) return;
         const b = box.getBoundingClientRect();
         cx = b.left + b.width / 2;
         cy = b.top + b.height / 2;
       };
-      measure();
+
+      /* Off screen, nothing here runs: no rect per scrolled frame and no
+         render per mouse move for a roll five screens away. The scroll
+         listener stays because the stage is sticky and the curtain scrubs the
+         wrapper, so the centre genuinely moves while the section is on show.
+         Viewport changes come from viewport.ts, never the raw resize the
+         address bar fires mid-flick. */
+      const io = new IntersectionObserver(([entry]) => {
+        onScreen = entry.isIntersecting;
+        if (onScreen) measure();
+        else viewer?.point(LEAN.x, LEAN.y);
+      });
+      io.observe(box);
+      const stopVp = onViewportChange(measure);
+      ac.signal.addEventListener("abort", () => {
+        io.disconnect();
+        stopVp();
+      });
       window.addEventListener("scroll", measure, { signal: ac.signal, passive: true });
-      window.addEventListener("resize", measure, { signal: ac.signal });
 
       window.addEventListener(
         "pointermove",
         (e) => {
-          const reach =
-            Math.min(window.innerWidth, window.innerHeight) * 0.5 * TILT_REACH;
+          if (!onScreen) return;
+          const reach = Math.min(screenW(), screenH()) * 0.5 * TILT_REACH;
           viewer?.point(
             LEAN.x + (e.clientX - cx) / reach,
             LEAN.y + (e.clientY - cy) / reach,

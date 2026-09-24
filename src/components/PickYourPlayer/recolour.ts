@@ -36,24 +36,11 @@
  * leaves and returns is a deliberate act, and it also hides the one frame where
  * the ink would otherwise be the wrong colour against the new ground.
  *
- * THE SMALL PRINT DIPS TOO, but not the same way. The headline goes letter by
- * letter because that is how the headline arrives; the notes go a LINE at a
- * time, every word in a line moving together, because that is how body copy
- * arrives on this site — a paragraph is read rather than looked at, and forty
- * little boxes dropping out of a sentence one after another is a wipe across
- * it. Same gesture, told at the scale each kind of type is set at.
- *
- * A line is not in the markup and cannot be: where the copy breaks is settled
- * by the font, the measure and the window. So the grouping is measured, with
- * the entrance's own bodyLines() — one implementation of "which words are on a
- * line", asked again every time rather than kept.
- *
  * The guide is the one thing left that simply crosses over. It is a dashed line;
  * there is nothing to dip.
  */
 import gsap from "gsap";
 
-import { bodyLines } from "@/components/bodyReveal";
 
 export const PICK_WASH = {
   /* The sheet's slide. Half the slider's 0.85 — that one answers a click and
@@ -77,39 +64,6 @@ export const PICK_WASH = {
   /* A beat after the letters start dropping, so the sheet is not already
      changing the ground while the ink is still standing on it. */
   SHEET_AT: 0.1,
-
-  /* The dip. Down, a held beat at the bottom, then up — the hold is
-     load-bearing for the same reason it is in the slider: with no pause the up
-     tween renders in the same tick as the recolour and an ease-out brings a
-     tenth of the letter back into view before the new colour has been written. */
-  DOWN: 0.24,
-  HOLD: 0.05,
-  UP: 0.34,
-  EASE_DOWN: "power2.in",
-  EASE_UP: "power3.out", // no overshoot, or the tops clip at the peak
-
-  /* Between letters. Sixteen of them, so the slider's 0.08 would be more than a
-     second of stagger on its own. */
-  STAGGER: 0.028,
-
-  /* WHERE A WORD OF BODY COPY WAITS, as a percentage of its own height, and it
-     is not the letters' 130. A .body-clip is the word's whole line box,
-     half-leading included, so one box height is already past the mask's floor.
-     BODY_REVEAL.HIDDEN is the same figure and the two have to agree — this is
-     the same park that reveal drops the copy in from. */
-  BODY_HIDDEN: 110,
-
-  /* When the notes start dropping, from the headline's own start. Behind it by
-     enough that the page reads top to bottom — the big type leaves, then the
-     small — rather than everything on the sheet moving at once. */
-  BODY_AT: 0.1,
-
-  /* Between LINES of a note, not between its words. The words of a line share
-     one tween and no stagger at all, which is what makes it read as a line
-     moving rather than as a wipe across one — the entrance says the same thing
-     with BODY_REVEAL.STAGGER, and this is a shade tighter because a hover is
-     answered faster than a scroll. */
-  BODY_STAGGER: 0.07,
 
   /* How long the pointer has to have settled on a roll before the page agrees
      to become it — see the note on paint(). Not part of the move: it is the
@@ -200,23 +154,6 @@ export function initPickRecolour(root: HTMLElement): PickRecolour {
   const chars = Array.from(
     root.querySelectorAll<HTMLElement>(".pick-title .char"),
   );
-  /* The small print, block by block — each note dips as one object, so what is
-     wanted here is the paragraph and the words inside it separately: the words
-     are what moves, and the paragraph is what carries the colour and the
-     `data-arrived` that says whether the words are free to be moved at all. */
-  const notes = Array.from(
-    root.querySelectorAll<HTMLElement>(".pick-note"),
-  ).map((block) => ({
-    block,
-    words: Array.from(block.querySelectorAll<HTMLElement>(".body-rise")),
-  }));
-  const noteWords = notes.flatMap((n) => n.words);
-
-  /* The cut line is the one thing that simply crosses over — it is a dashed
-     rule and there is nothing to dip. Tweened on `color` rather than on a
-     border colour: the dash is drawn in currentColor precisely so that one
-     property covers it. */
-  const guides = Array.from(root.querySelectorAll<HTMLElement>(".pick-guide"));
 
   if (!base || !next || !wash || !rise || !riseNext) {
     return { paint: () => {}, stop: () => {} };
@@ -237,7 +174,6 @@ export function initPickRecolour(root: HTMLElement): PickRecolour {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   let sheet: gsap.core.Tween | null = null;
-  let dip: gsap.core.Timeline | null = null;
   let fade: gsap.core.Tween | null = null;
   let settling: gsap.core.Tween | null = null;
 
@@ -273,8 +209,6 @@ export function initPickRecolour(root: HTMLElement): PickRecolour {
     rise!.style.background = p.rise;
     riseNext!.style.transform = "translateY(-100%)";
     for (const el of chars) el.style.color = p.word;
-    for (const n of notes) n.block.style.color = p.ink;
-    for (const el of guides) el.style.color = p.guide;
     paintTop(p.word);
   }
 
@@ -347,7 +281,6 @@ export function initPickRecolour(root: HTMLElement): PickRecolour {
        and reveal it again at the edges. The slider settles a fast second click
        the same way. */
     if (sheet?.isActive()) sheet.progress(1);
-    dip?.kill();
     fade?.kill();
 
     /* Measured per run, not cached: every length on this page is in vw, so a
@@ -410,116 +343,19 @@ export function initPickRecolour(root: HTMLElement): PickRecolour {
       },
     });
 
-    /* The cut line, straight across on the sheet's own clock. */
-    fade = gsap.to(guides, {
-      color: p.guide,
+    paintTop(p.word);
+
+    /* THE HEADLINE CROSSES OVER IN PLACE. It used to dip — each letter down
+       under its mask, recoloured at the bottom, and back up — and the shift was
+       asked off, so the letters now simply change colour on the sheet's own
+       clock, the way the cut line did. Not gated on data-arrived: this is
+       `color`, not the transform the entrance owns, and a letter still under
+       its mask just arrives in the new ink. */
+    fade = gsap.to(chars, {
+      color: p.word,
       duration: PICK_WASH.SHEET,
       delay: PICK_WASH.SHEET_AT,
       ease: PICK_WASH.SHEET_EASE,
-    });
-    paintTop(p.word);
-
-    dip = gsap.timeline();
-
-    /* THE DIP RUNS ONLY ON TYPE THAT HAS ARRIVED, and it is asked block by
-       block rather than once for the section. Every entrance on this page
-       drives the very elements this dip drives, on the very property it drives
-       them with, and two tweens on one transform is a word jittering between
-       two ideas of where it should be. The headline's entrance says so with
-       data-arrived on the section (reveal.ts); each note's says so with
-       data-arrived on itself (components/bodyReveal.ts). Whatever has not
-       arrived simply changes colour, which cannot be seen anyway — until it
-       arrives it is under its own mask. */
-
-    /* THE HEADLINE, letter by letter: each one down, recoloured at the bottom of
-       its own drop, and back up. Built as one timeline with both halves placed
-       by hand rather than as two staggered tweens, so a letter's return is tied
-       to ITS OWN departure — a second stagger would let the first letter come
-       back before the last had left. */
-    if (root.dataset.arrived === undefined) {
-      for (const el of chars) el.style.color = p.word;
-    } else {
-      chars.forEach((el, i) => {
-        const at = i * PICK_WASH.STAGGER;
-        dip!.to(
-          el,
-          {
-            yPercent: PICK_WASH.HIDDEN,
-            duration: PICK_WASH.DOWN,
-            ease: PICK_WASH.EASE_DOWN,
-            onComplete: () => {
-              el.style.color = p.word;
-            },
-          },
-          at,
-        );
-        dip!.to(
-          el,
-          { yPercent: 0, duration: PICK_WASH.UP, ease: PICK_WASH.EASE_UP },
-          at + PICK_WASH.DOWN + PICK_WASH.HOLD,
-        );
-      });
-    }
-
-    /* THE SMALL PRINT, A LINE AT A TIME — the entrance's own unit, and the
-       reason it is not a word at a time is the reason that one gives: the words
-       of a line share one tween and no stagger at all, or what reads is a wipe
-       across the sentence rather than a line moving. Which words are on a line
-       is a measurement, and bodyLines is the entrance's own — imported rather
-       than reimplemented, and asked afresh here so a resized window or a late
-       font is already accounted for.
-
-       Its own hidden figure, and not the letters': a word's mask is its whole
-       line box, so it is clear a good deal sooner. */
-    notes.forEach(({ block, words }) => {
-      if (!words.length) return;
-      if (block.dataset.arrived === undefined) {
-        block.style.color = p.ink;
-        return;
-      }
-
-      const lines = bodyLines(words);
-
-      /* ONE HOLD SHARED BY THE WHOLE BLOCK, and it is the slider's rule rather
-         than a per-line one. Give each line its own DOWN + HOLD and the first
-         is on its way back up before the last has left — so half the note is
-         standing in the new ink over the old ground while the other half is
-         still leaving, which is precisely the frame the dip exists to hide.
-         Every line waits until the last one has landed, then they come back in
-         the same order they went. */
-      const backAt =
-        PICK_WASH.BODY_AT +
-        (lines.length - 1) * PICK_WASH.BODY_STAGGER +
-        PICK_WASH.DOWN +
-        PICK_WASH.HOLD;
-
-      lines.forEach((line, i) => {
-        dip!.to(
-          line,
-          {
-            yPercent: PICK_WASH.BODY_HIDDEN,
-            duration: PICK_WASH.DOWN,
-            ease: PICK_WASH.EASE_DOWN,
-            /* The colour goes on the BLOCK, not on the line — it owns the ink
-               and the words merely inherit it — so it can only be written once
-               the LAST line is down. Written on any earlier one and the lines
-               still on screen change colour in place, which is the flicker this
-               whole manoeuvre is here to avoid. */
-            onComplete:
-              i === lines.length - 1
-                ? () => {
-                    block.style.color = p.ink;
-                  }
-                : undefined,
-          },
-          PICK_WASH.BODY_AT + i * PICK_WASH.BODY_STAGGER,
-        );
-        dip!.to(
-          line,
-          { yPercent: 0, duration: PICK_WASH.UP, ease: PICK_WASH.EASE_UP },
-          backAt + i * PICK_WASH.BODY_STAGGER,
-        );
-      });
     });
   }
 
@@ -528,21 +364,13 @@ export function initPickRecolour(root: HTMLElement): PickRecolour {
     stop() {
       settling?.kill();
       sheet?.kill();
-      dip?.kill();
       fade?.kill();
       gsap.killTweensOf(chars);
-      gsap.killTweensOf(noteWords);
-      gsap.killTweensOf(guides);
       /* Everything back to the stylesheet's. A teardown mid-wipe must not leave
          the page half one colour and half another, or a row of letters — or a
          sentence — parked under a mask with nothing left running to lift it. */
       gsap.set(chars, { clearProps: "transform" });
-      if (noteWords.length) {
-        gsap.set(noteWords, { clearProps: "transform" });
-      }
       for (const el of chars) el.style.removeProperty("color");
-      for (const n of notes) n.block.style.removeProperty("color");
-      for (const el of guides) el.style.removeProperty("color");
       base!.style.removeProperty("background");
       rise!.style.removeProperty("background");
       next!.style.transform = "translateY(-100%)";

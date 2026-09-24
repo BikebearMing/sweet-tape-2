@@ -101,42 +101,6 @@ export const TRANSITION = {
    * below has something to refresh. */
   SETTLE: 0.1,
 
-  /* THE PAGE GOING OUT OF FOCUS, which is the only part of this that is not
-   * paper.
-   *
-   * The route being left does not simply get covered: for the beat before the
-   * first sheet arrives it goes soft, so the cover falls onto something that
-   * has already stopped being readable rather than onto a page still sitting
-   * there sharp. It makes the sheets the SECOND thing that happens in the
-   * transition, which is what stops them reading as an interruption — and it
-   * is the click being answered on the frame it is made, before any paper has
-   * had time to travel.
-   *
-   * A LOT OF IT, deliberately. This is the whole gesture rather than the trim
-   * on one, so a radius that merely took the edge off the type would read as a
-   * mistake rather than as a move. At 28px a headline is gone and the page is
-   * down to its blocks of colour, which is the point: what the reader is left
-   * looking at is the palette of the page they are leaving, and the palette of
-   * the page they are getting is what falls over it.
-   *
-   * LEAD is the whole of the timing: the stack's schedule starts there instead
-   * of at 0, so this has that long on its own. Two tenths, which is the least
-   * that reads as a separate beat and the most the reader will wait for paper
-   * they have already asked for.
-   *
-   * IT OUTLASTS THE LEAD ON PURPOSE. DURATION is longer than the cover takes
-   * to go opaque, so the page is still softening underneath as the sheets land
-   * on it — the two overlap into one gesture. Nothing sees the end of it; the
-   * tween is killed the frame the screen seals (see the note there), which is
-   * also the frame the haze has to be off for.
-   *
-   * The ease is not the sheets'. Theirs starts from a dead stop and has to hand
-   * a still page over; this one only has to leave, and an out-ease that takes
-   * most of its radius immediately is what makes the page read as dropping away
-   * from the click rather than as a slow defocus. */
-  LEAVE_BLUR: 28, // px, the backdrop-filter's radius at full strength
-  LEAVE_DURATION: 0.9,
-  LEAVE_EASE: "power2.out",
   LEAD: 0.2,
 
   /* How long to wait for a route that never lands before lifting the cover
@@ -206,13 +170,6 @@ function targetOf(e: MouseEvent): string | null {
   return url.pathname + url.search + url.hash;
 }
 
-/** The box the softness is painted in — see components/Preloader, and the note
-    on .site-haze in global.css for why it is a sibling of the cover and not a
-    child of it. */
-function hazeOf(): HTMLElement | null {
-  return document.querySelector<HTMLElement>(".site-haze");
-}
-
 /* The controller. `navigate` is the router's push, handed in rather than
    imported: this module is plain DOM and timelines like every other engine on
    the site, and useRouter is a hook that only the component may call. */
@@ -243,31 +200,33 @@ export function createTransition(
   let landed = false;
 
   let tl: gsap.core.Timeline | null = null;
-  /* The page's own step back, on a timeline of its own rather than in `tl`.
-     It has to be killed on a different beat from the sheets — the frame the
-     screen seals, well before the cover has finished arranging itself — and a
-     tween that has to end early is easier to hold than to hunt for. */
-  let leaving: gsap.core.Timeline | null = null;
+
+  /* THE PRODUCT PAGES ARRIVE IN THEIR OWN COLOUR. A link into /products/<id>
+     paints every sheet in that tape's bg for the length of the transition, so
+     the cover that comes down is the sheet the page opens on and the lift off
+     it is seamless. The colour is read off the layer that already carries it
+     (data-tape, set in index.tsx from the palette) — no second copy of the
+     palette here. Any other destination keeps the rainbow. `untint` puts the
+     inline values back once the sweep is done, so the next cover is the
+     stack again. */
+  let untint: (() => void) | null = null;
+  function tint(href: string): void {
+    const id = href.match(/^\/products\/([^/?#]+)/)?.[1];
+    const bg =
+      id &&
+      root.querySelector<HTMLElement>(`[data-tape="${CSS.escape(id)}"]`)?.style
+        .background;
+    if (!bg) return;
+    const sheets = sheetsOf(root);
+    const prev = sheets.map((s) => s.style.background);
+    for (const s of sheets) s.style.background = bg;
+    untint = () => {
+      sheets.forEach((s, i) => (s.style.background = prev[i]));
+      untint = null;
+    };
+  }
   let giveUp: gsap.core.Tween | null = null;
   let settle: gsap.core.Tween | null = null;
-
-  /* The haze off, now.
-   *
-   * IT IS NOT A TIDY-UP, it is a precondition. What is behind the cover from
-   * here on is the page ARRIVING, and it must not arrive out of focus — the
-   * softness belongs to the route being left. The declaration goes with it:
-   * backdrop-filter costs a second pass every frame whatever its radius, and
-   * from this moment it would be spent on a screen nobody can see through.
-   * Hence the one caller that matters, the frame the screen goes opaque. */
-  function clearHaze(): void {
-    leaving?.kill();
-    leaving = null;
-
-    const box = hazeOf();
-    if (!box) return;
-    box.style.removeProperty("--pre-haze");
-    delete box.dataset.leaving;
-  }
 
   function to(href: string): void {
     if (phase !== "idle") return;
@@ -292,43 +251,7 @@ export function createTransition(
        sweep left it — which is exactly where this starts from, so there is
        nothing else to reset. */
     gsap.set(root, { visibility: "visible" });
-
-    /* THE PAGE GOING SOFT, and it starts on this frame rather than with the
-       paper — see LEAVE_BLUR above for the beat that buys.
-
-       The attribute is what turns the backdrop-filter on at all; the note on
-       .site-haze in global.css has why it is not simply always declared, and
-       why the box it goes on is a sibling of the cover rather than a child.
-       NOTHING HERE TOUCHES THE PAGE, which is the whole reason this is a filter
-       on a box of the cover's own rather than one on the route being left. That
-       route keeps its own boxes, its own scroll position and — the one that
-       would really have hurt — its own pins: a filter or a transform anywhere
-       above them makes the transformed element the containing block for every
-       `position: fixed` inside it, and every section ScrollTrigger is holding
-       on screen would jump by the whole scroll offset on the frame it went on.
-       The softness happens IN FRONT of the page instead, and the page never
-       learns about it. */
-    const box = hazeOf();
-    if (box) {
-      box.dataset.leaving = "";
-
-      const haze = { px: 0 };
-      leaving = gsap.timeline();
-      leaving.to(
-        haze,
-        {
-          px: TRANSITION.LEAVE_BLUR,
-          duration: TRANSITION.LEAVE_DURATION,
-          ease: TRANSITION.LEAVE_EASE,
-          /* Written as a variable rather than as the filter itself: the
-             declaration belongs to the stylesheet, which is where the rule that
-             switches the whole thing on lives — and where the note on why it
-             carries no -webkit- copy lives with it. */
-          onUpdate: () => box.style.setProperty("--pre-haze", `${haze.px}px`),
-        },
-        0,
-      );
-    }
+    tint(href);
 
     /* DEEPEST FIRST. The reverse of the sweep's order, and the reason is in the
        note on scheduleSheets: the frontmost sheet is opaque, so if it led it
@@ -376,12 +299,6 @@ export function createTransition(
     const opaque = schedule[0];
     tl.call(
       () => {
-        /* AND THE HAZE COMES OFF HERE, on the far side of an opaque screen and
-           one statement before React is handed the new route. Going soft is a
-           gesture about the page being left; the page arriving must not inherit
-           the end of it. */
-        clearHaze();
-
         /* BACK TO THE TOP BEFORE THE ROUTE CHANGES, not after, and this is the
            one piece of the order here that is not obvious.
 
@@ -497,6 +414,7 @@ export function createTransition(
     /* Out of the page again, so the cover is not a fixed box swallowing clicks
        over the route it just delivered. */
     tl.set(root, { visibility: "hidden" });
+    tl.call(() => untint?.());
   }
 
   /* Capture phase, so a click is claimed before anything on the way down can
@@ -523,16 +441,13 @@ export function createTransition(
       settle?.kill();
       tl?.kill();
       tl = null;
-      /* Whatever else a teardown mid-transition has to undo, the page coming
-         back into focus is the one piece of it the reader would be left
-         looking at. */
-      clearHaze();
       /* A teardown mid-transition must not leave the site behind a curtain that
          has nothing left to lift it. StrictMode's double mount is the caller
          that matters and it happens before any of this has run, but the rule is
          the same either way: the page comes back. */
       if (phase !== "idle") {
         gsap.set(root, { visibility: "hidden" });
+        untint?.();
         gsap.set(sheetsOf(root), { yPercent: -100 });
         release();
         gsap.ticker.lagSmoothing(0);

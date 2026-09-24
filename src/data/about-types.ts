@@ -1,5 +1,3 @@
-import type { MarkKind } from "@/components/WeWanted/Mark";
-
 /* /about's shape, and the half of it that is safe anywhere.
  *
  * Split for the reason contact-types.ts and homepage-types.ts are: its sibling,
@@ -26,7 +24,8 @@ export type WantedBox = {
   id: string;
   num: string;
   label: string[];
-  mark: MarkKind;
+  /** Unused since the cards became images — kept to match the CMS field. */
+  mark: "strip" | "parcel" | "roll" | "person";
   /** How far down the stage the box sits, in vh, measured to its top edge. */
   y: number;
 };

@@ -61,8 +61,8 @@ const SHOT_ALT =
  * rather than as a label stuck on the join.
  */
 const TAPE = {
-  src: "/assets/tape top.webp",
-  ratio: 428 / 173,
+  src: "/assets/opp-tape-x4.png",
+  ratio: 449 / 142,
   /* The roll's own colour, so the turned-back end shows the stuff the strip is
      made of rather than a sheet of paper grey. See BACKS in components/Peel. */
   back: "peel-back-kraft",

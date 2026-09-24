@@ -198,13 +198,17 @@ type Slot = {
  * In em of the giant type, like everything else inside a phrase, so a strip
  * scales with --giant-size along with the card it is holding down. */
 const TAPES = {
-  kraft: { src: "/assets/tape top.webp", ratio: 428 / 173, back: "peel-back-kraft" },
-  black: { src: "/assets/black-tape.webp", ratio: 213 / 106, back: "peel-back-black" },
+  kraft: { src: "/assets/opp-tape-x4.png", ratio: 449 / 142, back: "peel-back-kraft" },
+  black: { src: "/assets/black-cloth-tape-x4.png", ratio: 489 / 166, back: "peel-back-black" },
 } as const;
 
 type TapeName = keyof typeof TAPES;
 
 const TAPE_W = 0.62;
+/* Every roll tag at ONE width — the photo card's own square (.giant-slot is
+   0.5947em of a 38.194vw em, 22.71vw). Six different sizes read as a size
+   chart; the phone block flattens them to 45vw regardless. */
+const TAG_W = 22.71;
 const tapeBox = (name: TapeName) =>
   `${TAPE_W}em ${(TAPE_W / TAPES[name].ratio).toFixed(4)}em`;
 
@@ -272,9 +276,9 @@ const PANELS: Panel[] = [
     },
     props: [
       { src: "/assets/slider/double/shot-1.webp", kind: "shot", x: 98, y: -15, w: 15, r: -8, z: 2, p: -0.03, e: "none" },
-      { src: "/assets/slider/double/card.webp", kind: "tag", x: 69, y: -24, w: 17, r: -6, z: 1, p: 0.03, e: "sine.inOut" },
-      { src: "/assets/slider/masking/card.webp", kind: "tag", x: 53, y: 58, w: 20, r: 5, z: 1, p: 0.03, e: "power1.inOut" },
-      { src: "/assets/slider/opp-quiet/card.webp", kind: "tag", x: 94, y: 54, w: 18, r: -14, z: 1, p: -0.02, e: "power2.inOut" },
+      { src: "/assets/slider/double/card.webp", kind: "tag", x: 69, y: -24, w: TAG_W, r: -6, z: 1, p: 0.03, e: "sine.inOut" },
+      { src: "/assets/slider/masking/card.webp", kind: "tag", x: 53, y: 50, w: TAG_W, r: 5, z: 1, p: 0.03, e: "power1.inOut" },
+      { src: "/assets/slider/opp-quiet/card.webp", kind: "tag", x: 94, y: 46, w: TAG_W, r: -14, z: 1, p: -0.02, e: "power2.inOut" },
     ],
     /* Centred under the slot and just clear of it: the card spans 22.5%..37.4%
        of the row and ends at 73.8% of its height, and the note is 7.9% of the
@@ -298,7 +302,7 @@ const PANELS: Panel[] = [
     },
     props: [
       { src: "/assets/slider/cloth/shot-2.webp", kind: "shot", x: 32, y: 22, w: 21, r: -5, z: 1, p: -0.025, e: "power1.inOut" },
-      { src: "/assets/slider/cloth/card.webp", kind: "tag", x: -5, y: 54, w: 16, r: 12, z: 1, p: 0.04, e: "sine.inOut" },
+      { src: "/assets/slider/cloth/card.webp", kind: "tag", x: -5, y: 47, w: TAG_W, r: 12, z: 1, p: 0.04, e: "sine.inOut" },
     ],
     /* Above and to the left of BOTH pictures — the slot standing in the phrase's
        gap and the shot below it — so it reads as written about the pair rather
@@ -340,8 +344,8 @@ const PANELS: Panel[] = [
          positive at 0.045 because that is the arrangement that was chosen; the
          one number to flip if it ever reads as sliding rather than as depth. */
       { src: "/assets/slider/opp/shot-2.webp", kind: "shot", x: 98, y: 12, w: 17, r: 5, z: 3, p: 0.045, e: "none" },
-      { src: "/assets/slider/opp/card.svg", kind: "tag", x: 61, y: -66, w: 11, r: 6, z: 1, p: -0.02, e: "power2.inOut" },
-      { src: "/assets/slider/opp/card.svg", kind: "tag", x: 43, y: 71, w: 16, r: 9, z: 1, p: 0.032, e: "power1.inOut" },
+      { src: "/assets/slider/opp/card.svg", kind: "tag", x: 61, y: -66, w: TAG_W, r: 6, z: 1, p: -0.02, e: "power2.inOut" },
+      { src: "/assets/slider/opp/card.svg", kind: "tag", x: 43, y: 49, w: TAG_W, r: 9, z: 1, p: 0.032, e: "power1.inOut" },
     ],
     /* Under the slot, the same reading TO CREATE's note takes — and NOT the
        same numbers, because --px/--py are percentages of the ROW and this row

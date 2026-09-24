@@ -463,10 +463,28 @@ export function initPreloader(root: HTMLElement): () => void {
          because they are one gesture: the sticker being smoothed onto the
          sheet. sine.inOut, and FLEX.UNROLL says why it is not the elastic this
          used to be. */
+      const unrollAt = at + pop.DURATION * flex.START;
       tl.to(
         pose,
-        { bend: 0, fold: 0, duration: flex.UNROLL, ease: "sine.inOut" },
-        at + pop.DURATION * flex.START,
+        { fold: 0, duration: flex.UNROLL, ease: "sine.inOut" },
+        unrollAt,
+      );
+      /* THE ARC OVERSHOOTS. It is tweened PAST flat in one move, so it crosses
+         zero with speed rather than settling onto it and setting off again —
+         then a second tween brings it home. See FLEX.REBOUND. */
+      tl.to(
+        pose,
+        {
+          bend: -flex.BEND * flex.REBOUND.DEPTH,
+          duration: flex.UNROLL,
+          ease: "sine.inOut",
+        },
+        unrollAt,
+      );
+      tl.to(
+        pose,
+        { bend: 0, duration: flex.REBOUND.DURATION, ease: "sine.inOut" },
+        unrollAt + flex.UNROLL,
       );
 
       /* AND THE WOBBLE, which is where the elastic belongs: the residual flex
@@ -510,7 +528,7 @@ export function initPreloader(root: HTMLElement): () => void {
       tl.call(
         () => stopSticker?.(),
         undefined,
-        at + pop.DURATION * flex.START + flex.SETTLE,
+        unrollAt + Math.max(flex.SETTLE, flex.UNROLL + flex.REBOUND.DURATION),
       );
     }
   }
@@ -579,6 +597,11 @@ export function initPreloader(root: HTMLElement): () => void {
      that would drop the transforms GSAP is holding and, on a teardown
      mid-flight, leave the sheets back over the page. */
   tl.set(root, { visibility: "hidden" });
+
+  /* And the sticker's columns go with it: 192 masked, will-change nodes and a
+     live ResizeObserver have no business outliving the cover. destroy is
+     idempotent, so the teardown below calling it again is fine. */
+  tl.call(() => killSticker?.());
 
   /* Back to the start, not to the end — this teardown's real caller is
      StrictMode's double mount, and the second build has to find the cover

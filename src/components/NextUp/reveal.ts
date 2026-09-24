@@ -92,6 +92,15 @@ export const NEXTUP_REVEAL = {
    * under the green rather than one appearing on top of it. */
   ROLL_AT: 0.42,
   ROLL_TRAVEL: 0.4767, // 14.6vw of ProductIntro's 30.625vw roll
+
+  /* THE HOVER, on the whole panel because the whole panel is the link: the
+     label grows a little under the pointer. Here and not in the stylesheet
+     because GSAP owns the label's transform and pins the CSS `scale` property
+     at none — see the note by .next-up .bottom-roll. Attached only once the
+     arrival has landed, so the two never drive one transform at once. */
+  HOVER_SCALE: 1.08,
+  HOVER_DURATION: 0.45,
+  HOVER_EASE: "power3.out",
 };
 
 /* Fisher–Yates, the hero's. The shuffle IS the effect: reveal the same letters
@@ -207,6 +216,30 @@ export function initNextUpReveal(root: HTMLElement): () => void {
     );
   }
 
+  /* overwrite: "auto", so a pointer crossing the panel twice in a second kills
+     the grow it interrupts rather than leaving two tweens fighting over one
+     scale. (Not quickTo — that cannot retarget the compound `scale`.) */
+  const grow =
+    panel && roll && window.matchMedia("(hover: hover)").matches
+      ? (scale: number) =>
+          gsap.to(roll, {
+            scale,
+            duration: NEXTUP_REVEAL.HOVER_DURATION,
+            ease: NEXTUP_REVEAL.HOVER_EASE,
+            overwrite: "auto",
+          })
+      : null;
+  const enter = () => grow?.(NEXTUP_REVEAL.HOVER_SCALE);
+  const leave = () => grow?.(1);
+  if (grow) {
+    tl.eventCallback("onComplete", () => {
+      panel!.addEventListener("pointerenter", enter);
+      panel!.addEventListener("pointerleave", leave);
+      /* A pointer already resting on the panel as it lands. */
+      if (panel!.matches(":hover")) enter();
+    });
+  }
+
   const st = ScrollTrigger.create({
     trigger: root,
     start: NEXTUP_REVEAL.START,
@@ -217,6 +250,11 @@ export function initNextUpReveal(root: HTMLElement): () => void {
   return () => {
     st.kill();
     tl.kill();
+    if (grow) {
+      panel!.removeEventListener("pointerenter", enter);
+      panel!.removeEventListener("pointerleave", leave);
+      gsap.killTweensOf(roll!);
+    }
     /* A teardown mid-arrival must leave the section readable — the name
        standing, the chip face on and the label down. Back to the stylesheet,
        which with the attribute still set is home rather than hidden. */

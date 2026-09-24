@@ -117,6 +117,12 @@ export default async function Hero() {
             ))}
           </p>
 
+          {/* STICK ME BACK! — a second note in the same hand, small, on the lime
+              field's right side beside the roll. Its own copy and its own
+              placement (.hand-note--stick in global.css); everything else about
+              the pen is the board's. */}
+          <HandNote className="hand-note--stick" lines={["stick me", "back!"]} />
+
           <div className="title">
             {/* The kicker is one line with a gap wide enough for the roll to
                 sit in the middle of it, so each half needs to be its own box:
@@ -272,7 +278,7 @@ export default async function Hero() {
               The wrapper is what #tape-on-note sizes and places; the two copies
               of the artwork live inside it. */}
           <Peel
-            src="./assets/tape-on-note.webp"
+            src="/assets/masking-tape-x2.png"
             id="tape-on-note"
             back="peel-back-masking"
             drive="scroll"
@@ -320,7 +326,7 @@ export default async function Hero() {
           <HandNote />
           <div className="sticky-note" aria-hidden="true" />
           <img id="paperclip" src="./assets/paper-clip-1.webp" alt="" />
-          <img src="./assets/tape top.webp" alt="" id="tape-top" />
+          <img src="/assets/opp-tape-x4.png" alt="" id="tape-top" />
         </div>
       </div>
     </Stage>

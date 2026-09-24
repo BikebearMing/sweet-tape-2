@@ -56,3 +56,36 @@ export function clarityOf(id: string): number | undefined {
 export function modelOf(tape: { id: string; model: string }): string {
   return INNER_MODEL[tape.id] ?? tape.model;
 }
+
+/* THE HOME SLIDER'S FINISH — the OPP face's metal, taken out. The export's
+   "Face Brown" carries metalness 0.55, and metal has no diffuse: on a stage
+   with no environment the metallic share renders BLACK and the lime label
+   leaves the renderer at about half the artwork's brightness. The product page
+   pays for it with a room (ROOM in roll.ts); the orbit shows six rolls and
+   wants no room, so the cheaper end of the same fix — a dielectric face — is
+   the right one there. The other five faces carry no metalness. Here rather
+   than in the engine so /lab/tape-3d mounts the orbit with the same object. */
+export const HOME_FINISH = { "Face Brown": { metalness: 0.05 } };
+
+/* THE HOME SLIDER'S LIGHT AND COAT. Tuned at /lab/tape-3d on the double tape,
+   2026-09-11. Before this the orbit passed no light (FILM_LIGHT: key 0.74,
+   ambient 0.68, no room) and wore film.ts as it stands. The room is on at
+   0.14, which costs the orbit one RoomEnvironment import and one PMREM at
+   mount — the thing tape3d's `env` note says the orbit never wanted; the lab
+   said otherwise, so it has it. */
+export const HOME_LIGHT = { key: 0, ambient: 0.97, fill: 0, env: 0.14 };
+export const HOME_FILM = {
+  knobs: {
+    AMOUNT: 0.6,
+    GLOSS: 0.42,
+    MOTTLE: 0.22,
+    SMUDGE: 1.2,
+    TOOTH: 0.41,
+    GLAZE: 0.18,
+    GLAZE_ROUGH: 0.36,
+    FACE_GLOSS: 0.41,
+    GRAIN: 4,
+    ANISO: 0.11,
+  },
+  glass: { AMOUNT: 0.41, EDGE: 3.8, SHEEN: 0.155 },
+};

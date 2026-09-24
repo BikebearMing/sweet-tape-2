@@ -1,7 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import type { CSSProperties } from "react";
 
-import { bodyCopy } from "@/components/body";
 import { letters } from "@/components/letters";
 import { cssVars, getTapes, type Tape } from "@/data/tapes";
 import ClickMe, { type CueSide } from "./ClickMe";
@@ -136,9 +135,6 @@ function rollsOf(tapes: Tape[]): Tape[] {
    strings buried in the markup. The heading's break is set by design and not by
    wrapping, which is why it is two strings and not one. */
 const HEADING = ["PICK YOUR", "PLAYER"];
-const NOTE_LEFT = "Not all tape is created for the same task.";
-const NOTE_RIGHT =
-  "We’ve made it easy to choose the right tape — so you don’t have to guess.";
 
 export default async function PickYourPlayer() {
   const ROLLS = rollsOf(await getTapes());
@@ -214,7 +210,6 @@ export default async function PickYourPlayer() {
         <div className="pick-rise" aria-hidden="true">
           <div className="pick-rise-next arc-cut" />
         </div>
-        <div className="pick-guide" aria-hidden="true" />
 
         {/* A list, because that is what it is: six products, in a set order,
             read across. THE ROUTES HAVE LANDED — /products/<id>, one page per
@@ -290,26 +285,6 @@ export default async function PickYourPlayer() {
             </li>
           ))}
         </ul>
-      </div>
-
-      {/* The two lines under the row, set to the outer edges — the sheet's own
-          margins are the measure. Body copy, so both take the BODY entrance and
-          not the headline's: split to words and revealed a measured line at a
-          time.
-
-          aria-label is not honoured on a paragraph, so the readable copy is a
-          real (hidden) text node and the split version is taken out of the tree;
-          the footer's legal line and the closing key visual's sub-line make the
-          same call for the same reason. */}
-      <div className="pick-notes">
-        <p className="pick-note body-copy">
-          <span className="sr-only">{NOTE_LEFT}</span>
-          <span aria-hidden="true">{bodyCopy(NOTE_LEFT)}</span>
-        </p>
-        <p className="pick-note pick-note--end body-copy">
-          <span className="sr-only">{NOTE_RIGHT}</span>
-          <span aria-hidden="true">{bodyCopy(NOTE_RIGHT)}</span>
-        </p>
       </div>
     </Stage>
   );

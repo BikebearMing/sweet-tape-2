@@ -447,7 +447,7 @@ function toothTex(aniso: number) {
 
 /* Cut once per viewer rather than once per material — six models share one set,
    and six copies of the same 256px noise is six uploads of the same bytes. */
-type Maps = { tint: Texture; rough: Texture; tooth: Texture };
+export type Maps = { tint: Texture; rough: Texture; tooth: Texture };
 export function cutMaps(aniso: number): Maps {
   return {
     tint: mottleTex(1, FILM.MOTTLE_TINT, true, aniso),

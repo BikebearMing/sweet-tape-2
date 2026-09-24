@@ -38,8 +38,10 @@ export const SHEET = { W: 1, H: 0.94 };
  * loads — pass null for a face that is only ever drawn.
  */
 export type NoteFace = {
-  /** Draws the sheet's face into a fresh canvas. May be called again. */
-  draw(): HTMLCanvasElement;
+  /** Draws the sheet's face into a fresh canvas. May be called again.
+   *  `width` is the sheet's on-screen size in device pixels — a face drawn at
+   *  it maps one texel to one pixel, which is the sharpest a texture gets. */
+  draw(width?: number): HTMLCanvasElement;
   /** Artwork that supersedes the drawing when it arrives, or null for none. */
   url?: string | null;
 };

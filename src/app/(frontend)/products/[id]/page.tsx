@@ -123,8 +123,15 @@ export default async function TapePage({
           NOT DANGEROUSLY-SET, AND NOT UNSAFE. The two values are hex literals
           from a file in this repository, not anything a request can reach —
           but React escapes the children of <style> anyway, so a stray `<` could
-          not close the tag even if one were ever typed into tapes.ts. */}
-      <style>{`:root{--sb-track:${tape.colours.bg};--sb-thumb:${tape.colours.word}}`}</style>
+          not close the tag even if one were ever typed into tapes.ts.
+
+          --top-ink RIDES ALONG: the masthead's claim in the top-left corner
+          lives outside every section (components/TopBand) and reads that one
+          property off the document. It is the tape's `word` — the colour THE
+          and the name are drawn in on this same sheet — which is also what the
+          index hands it on hover (PickYourPlayer/recolour.ts), so the corner
+          arrives here already the colour it was when the roll was picked. */}
+      <style>{`:root{--sb-track:${tape.colours.bg};--sb-thumb:${tape.colours.word};--top-ink:${tape.colours.word}}`}</style>
       <ProductIntro tape={tape} />
       <ProductInfo tape={tape} />
       {/* The same tape in its three grades. Directly under the origin story and

@@ -274,18 +274,31 @@ export function initGiantPinning(root: HTMLElement): () => void {
       opens.push(stops.length);
       const l = row.offsetLeft;
       const w = row.offsetWidth;
+      /* The row's REACH, not its width. The props hang past the last letter, and
+         the ending stop is what frames the phrase's right edge — so it frames
+         the furthest thing on that side, with the same inset the letters get.
+         Rects relative to the row's own, which cancels the camera's translate
+         and keeps a tilted prop's true corner. */
+      const rowLeft = row.getBoundingClientRect().left;
+      let reach = w;
+      for (const prop of row.querySelectorAll<HTMLElement>(".giant-prop")) {
+        reach = Math.max(reach, prop.getBoundingClientRect().right - rowLeft);
+      }
       /* Vertical is always centred, for both stops of a swept phrase — the
          staircase is the camera's vertical story and a phrase should not also
          drift up or down while you are reading it. */
       const y = vh / 2 - (row.offsetTop + row.offsetHeight / 2);
 
-      if (w <= vw - inset * 2) {
+      if (reach <= vw - inset * 2) {
         stops.push({ x: vw / 2 - (l + w / 2), y });
         ends.push(true);
       } else {
         stops.push({ x: inset - l, y }); // its opening, against the left edge
         ends.push(false);
-        stops.push({ x: vw - inset - (l + w), y }); // its ending, against the right
+        /* Twice the inset when a prop is what ends the row: a photograph flush
+           to the letters' margin reads as cut off where a letter does not. */
+        const pad = reach > w ? inset * 2 : inset;
+        stops.push({ x: vw - pad - (l + reach), y }); // its ending, against the right
         ends.push(true);
       }
     }

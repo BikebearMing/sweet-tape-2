@@ -47,6 +47,7 @@
  */
 import gsap from "gsap";
 
+import { whenRevealed } from "@/components/Preloader/gate";
 import { LINE_SEP, NOTE_LINES } from "./copy";
 import { COMP, loadGlyphs, type Glyph } from "./glyphs";
 
@@ -559,6 +560,7 @@ function initOne(note: HTMLElement): () => void {
      Nothing here reacts to a resize: the observer works off the rendered box, so
      a new viewport is a new box and nothing to re-measure. */
   let io: IntersectionObserver | null = null;
+  let unsubReveal: (() => void) | null = null;
   /* The svg this build put in the mount, so the teardown takes down ITS OWN work
      and not whatever is in there — a rebuild that lands after a teardown must
      not be able to clear a live note. */
@@ -635,23 +637,32 @@ function initOne(note: HTMLElement): () => void {
      * START_AT becomes the root's bottom margin: shrinking the viewport box up
      * from the bottom means the note counts as seen once it has climbed past that
      * line, which is what the number always meant. */
-    io = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        /* The hold, if this instance asked for one — a delayedCall rather than
-           the timeline's own `delay`, which on a paused timeline is ambiguous
-           about what it is measured from. This one is measured from HERE, the
-           moment the note counted as seen, which is the only thing it could
-           mean. The site's other deferred entrances are built the same way (see
-           the delayedCalls in WhatsRolling/reveal.ts). */
-        if (delay > 0) held = gsap.delayedCall(delay, () => tl?.play());
-        else tl?.play();
-        io?.disconnect(); // once written, it stays written
-        io = null;
-      },
-      { rootMargin: `0px 0px ${-(1 - START_AT) * 100}% 0px` },
-    );
-    io.observe(note);
+    /* NOT UNTIL THE COVER HAS CLEARED. A note on the opening screen is in view
+       from the first frame — under the preloader — and its observer would fire
+       there, so on a cold load it was fully written by the time anything could
+       be seen. whenRevealed runs at once when there is no cover to wait for
+       (every other page, every client-side navigation), so nothing else
+       changes. */
+    unsubReveal = whenRevealed(() => {
+      if (stopped) return;
+      io = new IntersectionObserver(
+        ([entry]) => {
+          if (!entry.isIntersecting) return;
+          /* The hold, if this instance asked for one — a delayedCall rather than
+             the timeline's own `delay`, which on a paused timeline is ambiguous
+             about what it is measured from. This one is measured from HERE, the
+             moment the note counted as seen, which is the only thing it could
+             mean. The site's other deferred entrances are built the same way (see
+             the delayedCalls in WhatsRolling/reveal.ts). */
+          if (delay > 0) held = gsap.delayedCall(delay, () => tl?.play());
+          else tl?.play();
+          io?.disconnect(); // once written, it stays written
+          io = null;
+        },
+        { rootMargin: `0px 0px ${-(1 - START_AT) * 100}% 0px` },
+      );
+      io.observe(note);
+    });
   }
 
   /* THE ALPHABET, then the drawing. Only the characters this note actually uses
@@ -670,6 +681,7 @@ function initOne(note: HTMLElement): () => void {
 
   return () => {
     stopped = true;
+    unsubReveal?.();
     io?.disconnect();
     io = null;
     held?.kill();

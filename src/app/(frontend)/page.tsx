@@ -1,5 +1,6 @@
 import Hero from "@/components/Hero";
 import PeelLetter from "@/components/PeelLetter";
+import { getPalette } from "@/data/tapes";
 import WaveBand from "@/components/WaveBand";
 import TapeSlider from "@/components/TapeSlider";
 import GiantPinning from "@/components/GiantPinning";
@@ -13,13 +14,16 @@ export const metadata: Metadata = {
     "Cloth, masking, stationery, double-sided and more. Six tapes made in Malaysia, one for every job. Meet the one who sticks.",
 };
 
-export default function Home() {
+export default async function Home() {
+  /* The six tapes' colours, for the backs of the peeling letters. The same
+     query the layout runs for the preloader — six rows, one column. */
+  const palette = await getPalette();
   return (
     <>
       <Hero />
-      {/* The U of BY YOU lifting off the wall. game={false} — the peel and the
-          breathing only; the taping is still the lab's (lab/peel-letter). */}
-      <PeelLetter game={false} />
+      {/* The headline coming unstuck, one letter at a time, and the reader
+          pressing it back — see components/PeelLetter. */}
+      <PeelLetter palette={palette} />
       <WaveBand />
       <TapeSlider />
       {/* After the products, not before: TO CREATE / TO FIX / TO PROTECT is the

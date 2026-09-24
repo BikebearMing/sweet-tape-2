@@ -1,5 +1,6 @@
 "use client";
 
+import { initChipFlip } from "@/components/chipFlip";
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 
 import { initProductIntro } from "./reveal";
@@ -43,10 +44,13 @@ export default function Stage({
 
     const stopIntro = initProductIntro(root);
     const stopRoll = initProductRoll(root);
+    /* The chip turns in like every other chip on the site — see chipFlip.ts. */
+    const stopChip = initChipFlip(root.querySelector<HTMLElement>(".pi-back"));
 
     return () => {
       stopIntro();
       stopRoll();
+      stopChip();
     };
   }, []);
 

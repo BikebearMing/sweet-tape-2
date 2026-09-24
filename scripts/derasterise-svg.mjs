@@ -26,7 +26,7 @@ import sharp from "sharp";
  */
 
 const FILES = [
-  "public/assets/stationery-silent-opp-tape.svg",
+  "public/assets/clear-film.svg",
   "public/assets/double-side.svg",
   "public/assets/cursor.svg",
   "public/assets/new-cursor.svg",

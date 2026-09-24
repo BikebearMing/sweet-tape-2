@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import type { CSSProperties } from "react";
 
+import { bodyCopy } from "@/components/body";
 import Peel from "@/components/Peel";
 import { getHomepage } from "@/data/homepage";
 import Explore from "./Explore";
@@ -116,7 +117,15 @@ export default async function TapeSlider() {
                 </div>
 
                 <div className="subtext">
-                  <h5 className="h5">{first.copy}</h5>
+                  {/* Split to words for the line reveal, like every other run of
+                      body copy on the site (see components/body). data-reveal is
+                      set here rather than by bodyReveal.ts because the engine
+                      owns this block's clock: it parks the lines itself on mount
+                      and re-splits the copy on every swap (setCopy in engine.ts).
+                      Without JS the words simply stand. */}
+                  <h5 className="h5 body-copy" data-reveal="live">
+                    {bodyCopy(first.copy)}
+                  </h5>
                 </div>
               </div>
             </div>

@@ -3,6 +3,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { REVEAL } from "@/components/Hero/reveal";
 import { BODY_REVEAL } from "@/components/bodyReveal";
+import { TAG } from "@/components/WhatsRolling/reveal";
 import { screenH } from "@/components/viewport";
 import { mountRoll } from "./roll";
 
@@ -110,13 +111,6 @@ const PLAY_AT = 0.82;
  * and a longer duration than any single beat above so it is still settling as
  * the last of them lands — it is the biggest object on the screen and the last
  * thing to come to rest. */
-/* THE CHIP, WHICH GOES FIRST AND IS THE ONE BEAT THAT IS NOT A REVEAL. There is
-   no mask on it and nothing for it to come out of — it is a small finished
-   object, held at nothing by the stylesheet and simply turned on. A short rise
-   with it so it arrives rather than appears; well under the sentence's, because
-   a label that travels as far as a headline is a label pretending to be one. */
-const CHIP = { DURATION: 0.45, EASE: "power2.out", FROM_Y: 1.6 };
-
 /* THE PARK IS THIS SECTION'S OWN AND NOT THE HERO'S, which is the one figure in
    here that is a bug fix rather than a beat. A letter is parked at a percentage
    of its own BOX, and this section's boxes are smaller than the letters in them —
@@ -276,15 +270,18 @@ export function initReason(root: HTMLElement): () => void {
        autoAlpha writes visibility with it — so the chip is out of the
        accessibility tree and out of hit-testing while it is held, rather than
        being an invisible target sitting over the sentence. */
+    /* THE SITE'S ONE CHIP ENTRANCE — the turn on the vertical axis, TAG in
+       WhatsRolling/reveal.ts. It used to rise a little and fade, which was the
+       only chip on the site doing that. */
     tl.fromTo(
       chip,
-      { autoAlpha: 0, yPercent: CHIP.FROM_Y * 10 },
       {
-        autoAlpha: 1,
-        yPercent: 0,
-        duration: CHIP.DURATION,
-        ease: CHIP.EASE,
+        autoAlpha: 0,
+        rotateY: TAG.FROM,
+        transformPerspective: TAG.PERSPECTIVE,
+        transformOrigin: TAG.ORIGIN,
       },
+      { autoAlpha: 1, rotateY: 0, duration: TAG.DURATION, ease: TAG.EASE },
       0,
     );
   }

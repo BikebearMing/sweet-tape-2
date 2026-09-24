@@ -33,7 +33,18 @@ import { initRollingReveal } from "./reveal";
  * subscription and this component remounts per route, so a return to the page
  * gets a fresh one — see Preloader/gate.ts.
  */
-export default function Stage({ children }: { children: ReactNode }) {
+/* className is a prop, with the news page's own as the default, because the 404
+   is this same object: a lime title card with an arced headline, a chip over it
+   and a note beside it. It wears `whats-rolling not-found` — the base class so
+   every rule above and the reveal's own selectors still find it, the modifier so
+   it can drop the bulge and stand full height. See components/NotFound. */
+export default function Stage({
+  children,
+  className = "whats-rolling",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -70,7 +81,7 @@ export default function Stage({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <section ref={ref} className="whats-rolling">
+    <section ref={ref} className={className}>
       {children}
     </section>
   );

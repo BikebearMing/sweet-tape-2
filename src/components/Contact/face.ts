@@ -171,12 +171,14 @@ function rule(g: CanvasRenderingContext2D, y: number, W: number) {
 export type NoteWriting = { email: string; phone: string };
 
 /** The face, drawn fresh. Pure — see the note at the top of the file. */
-export function drawContactFace(writing: NoteWriting): HTMLCanvasElement {
-  /* 1024 rather than the placeholder's 512: this face carries a twenty-
-     character address at a tenth of the sheet's width, where the hero's carries
-     three short phrases, and small type is the only thing on a texture that
-     shows the difference. */
-  const c = noteCanvas(1024);
+export function drawContactFace(
+  writing: NoteWriting,
+  width = 1024,
+): HTMLCanvasElement {
+  /* AT THE SHEET'S OWN PIXEL SIZE, handed in by stickyNote.ts. A fixed 1024
+     against a sheet ~780 device px wide put the sampler part-way into the
+     512 mipmap, and small type is the first thing that goes soft there. */
+  const c = noteCanvas(width);
   const W = c.width;
   const H = c.height;
   const g = c.getContext("2d")!;
@@ -217,5 +219,5 @@ export function drawContactFace(writing: NoteWriting): HTMLCanvasElement {
    once on mount with what the server read; the closure is what carries the
    details into the redraw, which is where a pure `draw()` needed them. */
 export function contactFace(writing: NoteWriting): NoteFace {
-  return { draw: () => drawContactFace(writing), url: null };
+  return { draw: (w) => drawContactFace(writing, w), url: null };
 }

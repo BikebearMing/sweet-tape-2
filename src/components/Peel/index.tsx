@@ -216,9 +216,9 @@ const BACKS = {
      roll with the printed marks and the soft torn edges outvoted. Re-sample if
      the artwork is ever replaced — a value picked by eye off a screenshot picks
      up whatever the page was showing through it. */
-  "peel-back-kraft": "#dcad81", // tape top.webp — the brown packing roll
-  "peel-back-black": "#2b2b2b", // black-tape.webp
-  "peel-back-masking": "#d3c393", // tape-on-note / tape-on-lemon, the pale roll
+  "peel-back-kraft": "#dbac80", // opp-tape-x4.png — the brown packing roll
+  "peel-back-black": "#2f2f2f", // black-cloth-tape-x4.png
+  "peel-back-masking": "#d3c393", // tape-on-note / tape-on-lemon / masking-tape-x2 (#d2c393), the pale roll
 
   /* The slider's two, sampled the same way — median of the fully opaque pixels
      of each file. The method checks out: re-run on black-tape.webp it returns
@@ -231,8 +231,8 @@ const BACKS = {
      answer here anyway: the underside of a turned-back clear strip is two
      thicknesses of it over itself, which is exactly the darker grey the file
      already is. */
-  "peel-back-tissue": "#e1e1e1", // double-side.svg — white tissue tape
-  "peel-back-clear": "#6a6a6a", // stationery-silent-opp-tape.svg
+  "peel-back-tissue": "#e3e3e3", // double-side-x4.png — white tissue tape
+  "peel-back-clear": "#6a6a6a", // low-noise-x4-clear.png — kept: the underside is the film doubled over itself
 
   /* The preloader's mark, which is not paper — it is a sticker, and its back is
      a mid green. Taken off the gif it replaces rather than picked: through the

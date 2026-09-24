@@ -420,7 +420,7 @@ export const About: GlobalConfig = {
               name: "wantedSentence",
               type: "text",
               label: "The sentence",
-              defaultValue: "WE WANTED TO BE.",
+              defaultValue: "WE DIDN’T WANT TO BE LOUDER. WE WANTED TO BE",
               admin: {
                 description:
                   "Bent round the wave and crawled in from the right. One line — the curve is what breaks it.",

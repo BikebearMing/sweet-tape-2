@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import type gsap from "gsap";
+import { FaVolumeHigh, FaVolumeXmark } from "react-icons/fa6";
 
 /* The arrow printed on each row's lime disc. Shared rather than local since the
    news cards took the same mark — see components/Arrow. The disc under it, and
@@ -17,6 +19,7 @@ import {
   type MenuTimelines,
 } from "./reveal";
 
+import { onSoundChange, setSoundOn } from "@/components/sound";
 import { onViewportChange } from "@/components/viewport";
 
 /* THE ROWS COME IN AS A PROP and are not a constant here any more.
@@ -71,8 +74,24 @@ import { onViewportChange } from "@/components/viewport";
  * rather than at the first click, their `from` values are what the panel holds
  * from the start.
  */
+/* THE WAY HOME. Not a row of the CMS's menu — the home page has no business
+   listing itself — so it is put on here, first, and hidden while the reader is
+   already there. ALWAYS IN THE MARKUP: the reveal below binds its timelines to
+   the rows once, at mount, and a row that appeared later would have no
+   entrance. Hidden inline rather than left out. The preview is the shared
+   fallback the CMS rows use. */
+const HOME: MenuItem = { label: "HOME", href: "/", thumb: "/assets/mask-image-1.jpg" };
+
 export default function Menu({ items }: { items: MenuItem[] }) {
   const [open, setOpen] = useState(false);
+  const here = usePathname();
+  /* Mirrors components/sound, which owns the truth — the hero's engine reads
+     it from there, outside React. Off on every visit: see the note there. */
+  const [sound, setSound] = useState(false);
+  useEffect(() => onSoundChange(setSound), []);
+  /* The drop's measured height, retaken when the HOME row comes or goes —
+     see remeasure below, which the mount effect hands out through this. */
+  const remeasureRef = useRef<(() => void) | null>(null);
   const rootRef = useRef<HTMLElement>(null);
   const tlRef = useRef<MenuTimelines | null>(null);
   /* The close is a tween ON the drop's playhead rather than the drop itself,
@@ -107,9 +126,11 @@ export default function Menu({ items }: { items: MenuItem[] }) {
        depend on the window's, so a toolbar move would have been a rebuild that
        changed nothing except the frame it landed on. */
     const stopVp = onViewportChange(remeasure);
+    remeasureRef.current = remeasure;
 
     return () => {
       stopVp();
+      remeasureRef.current = null;
       tlRef.current = null;
       closeRef.current?.kill();
       closeRef.current = null;
@@ -133,6 +154,12 @@ export default function Menu({ items }: { items: MenuItem[] }) {
      NOT one-shot, which is why this is onHold and not whenRevealed's shape: it
      has to work on the second navigation as well as the first. */
   useEffect(() => onHold(() => setOpen(false)), []);
+
+  /* The panel is one row taller off the home page than on it. Retaken after
+     the row's display has changed, which is what an effect on the path is. */
+  useEffect(() => {
+    remeasureRef.current?.();
+  }, [here]);
 
   /* The tab's own arrival, once, after the preloader — its own effect because
      it shares nothing with the pair above: it is on a different clock, it
@@ -198,8 +225,14 @@ export default function Menu({ items }: { items: MenuItem[] }) {
       <div className="menu-panel" id="site-menu-panel">
         <div className="menu-sheet">
           <ul className="menu-list">
-            {items.map(({ label, href, thumb }) => (
-              <li className="menu-item" key={href}>
+            {[HOME, ...items].map(({ label, href, thumb }) => (
+              <li
+                className="menu-item"
+                key={href}
+                /* Inline, so it wins over whatever the row's own rule says
+                   about display — see HOME above. */
+                style={href === "/" && here === "/" ? { display: "none" } : undefined}
+              >
                 {/* A real element, not a ::before — the reveal has to be able
                   to reach it, and a pseudo-element is not addressable. */}
                 <span className="menu-rule" aria-hidden="true" />
@@ -251,6 +284,20 @@ export default function Menu({ items }: { items: MenuItem[] }) {
         onClick={() => setOpen((o) => !o)}
       >
         <span className="menu-tab-sheet">PULL ME</span>
+      </button>
+
+      {/* Beside the tab rather than in the panel: sound is a setting of the
+          whole visit and has to be reachable without opening anything. The
+          click is also the gesture the browser wants before it will play a
+          note — see components/sound. */}
+      <button
+        className="menu-sound"
+        type="button"
+        aria-label="Sound"
+        aria-pressed={sound}
+        onClick={() => setSoundOn(!sound)}
+      >
+        {sound ? <FaVolumeHigh aria-hidden="true" /> : <FaVolumeXmark aria-hidden="true" />}
       </button>
     </nav>
   );

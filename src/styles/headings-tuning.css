@@ -1,0 +1,275 @@
+/* ==========================================================================
+   Heading tuning — HAND-WRITTEN. Edit this file freely.
+   ==========================================================================
+   Per-letter nudges for the site's arced headings: the hero's (home), the
+   about page's, the news page's, the contact page's and the footer's. Each
+   letter box (.clip) on those takes three custom properties on top of the arc
+   it already sits on — see the arc rules in global.css:
+
+     --dx / --dy  additive nudges, in vw
+     --dr         additive rotation, in degrees, clockwise positive; a delta on
+                  the arc's own tilt, not a final angle
+
+   WRITTEN BY /lab/headings. Pick a heading there, drag the sliders, press copy,
+   and paste the blocks over that heading's section here. A letter with no
+   block is exactly where the arc puts it. Selectors are line-and-letter
+   positions (nth-child), so a change to the copy re-numbers the letters after
+   it — re-tune from the lab rather than editing indices by hand.
+
+   Imported after global.css and letters-tuning.css (see the frontend layout),
+   so these win on source order with no extra specificity. */
+
+/* --------------------------------------------------------------------------
+   Home — the hero's STICK BY YOU (.hero-section .h1)
+   -------------------------------------------------------------------------- */
+.hero-section .h1 .line:nth-child(1) .clip:nth-child(1) {
+  --dx: -1vw;
+  --dy: 0vw;
+  --dr: 1deg;
+} /* S */
+.hero-section .h1 .line:nth-child(1) .clip:nth-child(3) {
+  --dx: 0vw;
+  --dy: 0.1vw;
+  --dr: 0.6deg;
+} /* I */
+.hero-section .h1 .line:nth-child(2) .clip:nth-child(1) {
+  --dx: 0vw;
+  --dy: -0.2vw;
+  --dr: 2.5deg;
+} /* B */
+.hero-section .h1 .line:nth-child(2) .clip:nth-child(2) {
+  --dx: 0vw;
+  --dy: 0.3vw;
+  --dr: 0deg;
+} /* Y */
+.hero-section .h1 .line:nth-child(2) .clip:nth-child(5) {
+  --dx: -0.7vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* O */
+.hero-section .h1 .line:nth-child(2) .clip:nth-child(6) {
+  --dx: -0.6vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* U */
+
+/* --------------------------------------------------------------------------
+   About — THREE GENERATION (.about-hero .h1)
+   -------------------------------------------------------------------------- */
+.about-hero .h1 .line:nth-child(1) .clip:nth-child(2) {
+  --dx: 0vw;
+  --dy: -0.2vw;
+  --dr: 0deg;
+} /* H */
+.about-hero .h1 .line:nth-child(1) .clip:nth-child(3) {
+  --dx: 0vw;
+  --dy: -0.2vw;
+  --dr: 0deg;
+} /* R */
+.about-hero .h1 .line:nth-child(1) .clip:nth-child(4) {
+  --dx: -0.4vw;
+  --dy: -0.1vw;
+  --dr: 0.8deg;
+} /* E */
+.about-hero .h1 .line:nth-child(1) .clip:nth-child(5) {
+  --dx: 0vw;
+  --dy: 0.1vw;
+  --dr: 0deg;
+} /* E */
+.about-hero .h1 .line:nth-child(2) .clip:nth-child(1) {
+  --dx: 0.5vw;
+  --dy: 0.1vw;
+  --dr: 0deg;
+} /* G */
+.about-hero .h1 .line:nth-child(2) .clip:nth-child(7) {
+  --dx: 0.2vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* T */
+.about-hero .h1 .line:nth-child(2) .clip:nth-child(9) {
+  --dx: 0vw;
+  --dy: -0.2vw;
+  --dr: 0deg;
+} /* O */
+.about-hero .h1 .line:nth-child(2) .clip:nth-child(10) {
+  --dx: 0vw;
+  --dy: -0.1vw;
+  --dr: 0deg;
+} /* N */
+
+/* --------------------------------------------------------------------------
+   News — WHAT'S ROLLING (.rolling-title)
+   -------------------------------------------------------------------------- */
+.rolling-title .line:nth-child(1) .clip:nth-child(1) {
+  --dx: -0.3vw;
+  --dy: -0.1vw;
+  --dr: 0deg;
+} /* W */
+.rolling-title .line:nth-child(1) .clip:nth-child(5) {
+  --dx: 0.4vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* ' */
+.rolling-title .line:nth-child(1) .clip:nth-child(6) {
+  --dx: 0vw;
+  --dy: 0.8vw;
+  --dr: 0deg;
+} /* S */
+.rolling-title .line:nth-child(2) .clip:nth-child(1) {
+  --dx: -0.2vw;
+  --dy: 0vw;
+  --dr: 2.5deg;
+} /* R */
+.rolling-title .line:nth-child(2) .clip:nth-child(2) {
+  --dx: -0.2vw;
+  --dy: 0.4vw;
+  --dr: 1deg;
+} /* O */
+.rolling-title .line:nth-child(2) .clip:nth-child(3) {
+  --dx: 0vw;
+  --dy: 0.2vw;
+  --dr: -0.5deg;
+} /* L */
+.rolling-title .line:nth-child(2) .clip:nth-child(5) {
+  --dx: 0vw;
+  --dy: 0.1vw;
+  --dr: 0deg;
+} /* I */
+.rolling-title .line:nth-child(2) .clip:nth-child(6) {
+  --dx: 0vw;
+  --dy: 0.2vw;
+  --dr: 0deg;
+} /* N */
+
+/* --------------------------------------------------------------------------
+   Contact — LET'S STICK TOGETHER (.contact-title)
+   -------------------------------------------------------------------------- */
+.contact-title .line:nth-child(1) .clip:nth-child(1) {
+  --dx: -0.7vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* L */
+.contact-title .line:nth-child(1) .clip:nth-child(2) {
+  --dx: -0.6vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* E */
+.contact-title .line:nth-child(1) .clip:nth-child(4) {
+  --dx: 0.3vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* ' */
+.contact-title .line:nth-child(1) .clip:nth-child(5) {
+  --dx: 0.5vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* S */
+.contact-title .line:nth-child(1) .clip:nth-child(7) {
+  --dx: -0.4vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* S */
+.contact-title .line:nth-child(1) .clip:nth-child(8) {
+  --dx: 0vw;
+  --dy: 0.2vw;
+  --dr: 0deg;
+} /* T */
+.contact-title .line:nth-child(1) .clip:nth-child(9) {
+  --dx: 0vw;
+  --dy: 0.3vw;
+  --dr: 0deg;
+} /* I */
+.contact-title .line:nth-child(1) .clip:nth-child(10) {
+  --dx: 0vw;
+  --dy: 0.4vw;
+  --dr: 0deg;
+} /* C */
+.contact-title .line:nth-child(1) .clip:nth-child(11) {
+  --dx: 0vw;
+  --dy: 0.3vw;
+  --dr: 0deg;
+} /* K */
+.contact-title .line:nth-child(2) .clip:nth-child(1) {
+  --dx: -0.6vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* T */
+.contact-title .line:nth-child(2) .clip:nth-child(2) {
+  --dx: -0.3vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* O */
+.contact-title .line:nth-child(2) .clip:nth-child(3) {
+  --dx: -0.3vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* G */
+.contact-title .line:nth-child(2) .clip:nth-child(4) {
+  --dx: -0.4vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* E */
+.contact-title .line:nth-child(2) .clip:nth-child(6) {
+  --dx: 0.2vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* H */
+.contact-title .line:nth-child(2) .clip:nth-child(7) {
+  --dx: 0.3vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* E */
+.contact-title .line:nth-child(2) .clip:nth-child(8) {
+  --dx: 0.7vw;
+  --dy: 0vw;
+  --dr: -1.7deg;
+} /* R */
+
+/* --------------------------------------------------------------------------
+   Footer — STICK BY YOU (.footer-headline)
+   -------------------------------------------------------------------------- */
+.footer-headline .line:nth-child(1) .clip:nth-child(1) {
+  --dx: -0.6vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* S */
+.footer-headline .line:nth-child(1) .clip:nth-child(3) {
+  --dx: 0.5vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* I */
+.footer-headline .line:nth-child(1) .clip:nth-child(4) {
+  --dx: 0.4vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* C */
+.footer-headline .line:nth-child(1) .clip:nth-child(5) {
+  --dx: 0.4vw;
+  --dy: 0vw;
+  --dr: 0deg;
+} /* K */
+.footer-headline .line:nth-child(2) .clip:nth-child(1) {
+  --dx: 0vw;
+  --dy: -0.5vw;
+  --dr: 4.9deg;
+} /* B */
+.footer-headline .line:nth-child(2) .clip:nth-child(2) {
+  --dx: 0.7vw;
+  --dy: 0.2vw;
+  --dr: 0.8deg;
+} /* Y */
+.footer-headline .line:nth-child(2) .clip:nth-child(4) {
+  --dx: 0.4vw;
+  --dy: 0.3vw;
+  --dr: 0deg;
+} /* Y */
+.footer-headline .line:nth-child(2) .clip:nth-child(5) {
+  --dx: 1.2vw;
+  --dy: -0.1vw;
+  --dr: -6.9deg;
+} /* O */
+.footer-headline .line:nth-child(2) .clip:nth-child(6) {
+  --dx: 1.1vw;
+  --dy: -0.7vw;
+  --dr: -6.4deg;
+} /* U */

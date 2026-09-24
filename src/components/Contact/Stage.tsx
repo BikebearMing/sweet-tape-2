@@ -56,7 +56,9 @@ export default function Stage({
     if (!root) return;
 
     const stopReveal = initContactReveal(root);
-    const stopNote = initNote(root, contactFace({ email, phone }));
+    /* Half the hero's weather: this note carries the address and is read,
+       where the hero's is a prop in the corner of the eye. */
+    const stopNote = initNote(root, contactFace({ email, phone }), 0.5);
 
     /* THE FORM HAS NOWHERE TO GO YET, and this is the one line standing between
      * that and a page reload.

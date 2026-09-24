@@ -24,8 +24,10 @@ const NEAR_VIEW = "25% 0px";
  * @param face what is printed on the sheet. Omitted, it is the hero's pinboard
  *   note — everything about the paper, the wind and the light is the same
  *   object either way, and only the printing is a page's own business.
+ * @param calm how much of the wind this note gets, 1 being the hero's. See
+ *   createStickyNote.
  */
-export function initNote(root: HTMLElement, face?: NoteFace): () => void {
+export function initNote(root: HTMLElement, face?: NoteFace, calm = 1): () => void {
   const mount = root.querySelector<HTMLElement>(".sticky-note");
   if (!mount) return () => {};
 
@@ -137,7 +139,7 @@ export function initNote(root: HTMLElement, face?: NoteFace): () => void {
   import("./stickyNote")
     .then((mod) => {
       if (gone) return;
-      note = mod.createStickyNote(mount, face);
+      note = mod.createStickyNote(mount, face, calm);
       if (reduced) {
         // One pose, one render: the resting curl, standing still.
         note.frame(0);

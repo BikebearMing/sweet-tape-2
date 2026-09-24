@@ -176,7 +176,7 @@ const REACH = 0.42;
  * export is fully dielectric, so they render identically with this on or off —
  * which is why it is passed here, per page, rather than turned on in the viewer
  * for everything including the home page's orbit of six. */
-const ROOM = 0.25;
+export const ROOM = 0.25;
 
 /* ===========================================================================
    THE FINISH — WHAT THE ROLL IS MADE OF ON THIS PAGE, and the dial to turn for
@@ -218,9 +218,38 @@ const ROOM = 0.25;
  *
  * NOTHING HERE REACHES THE HOME PAGE. It is an argument to this page's viewer,
  * and this page's viewer now loads this page's own file. */
-const FINISH = {
+export const FINISH = {
   "Face Brown": { metalness: 0.05, roughness: 2 },
-  "Tape": { roughness: 0.4 },
+  "Tape": { metalness: 0, roughness: 0 },
+  "Tape Inner": { metalness: 0, roughness: 0.86 },
+  "Material.001": { metalness: 0, roughness: 0.63 },
+};
+
+/* THE STAGE LIGHT, over FILM_LIGHT's defaults. Tuned at /lab/tape-3d on the
+   masking tape, 2026-09-11, together with FINISH above and the FILM/GLASS
+   numbers in TapeSlider/film.ts — one set, carried across as one.
+
+   BEFORE THAT SET, if it wants reverting (git has it too):
+     light   { env: 0.25 }  (so key 0.74, ambient 0.68, fill 0 from FILM_LIGHT)
+     FINISH  { "Face Brown": { metalness: 0.05, roughness: 2 }, Tape: { roughness: 0.4 } }
+     film    none — STAGE_FILM below is new; film.ts is the old look */
+export const STAGE_LIGHT = { key: 0.11, ambient: 0.6, fill: 0.67, env: 0.22 };
+
+/* And this page's coat, over film.ts — see `knobs` on ViewerFilm. Before this
+   set every page wore film.ts as it stands. */
+export const STAGE_FILM = {
+  knobs: {
+    AMOUNT: 0.6,
+    GLOSS: 0.42,
+    MOTTLE: 0.22,
+    SMUDGE: 1.2,
+    TOOTH: 0.41,
+    GLAZE: 0.06,
+    FACE_GLOSS: 0.4,
+    GRAIN: 4,
+    ANISO: 0.11,
+  },
+  glass: { AMOUNT: 0.48, EDGE: 4.2, SHEEN: 0.155 },
 };
 
 /* THE TURN. One whole revolution across the journey, which is the only figure
@@ -486,7 +515,7 @@ export function initProductRoll(root: HTMLElement): () => void {
          about the tape. Absent — masking, cloth — is a solid roll, which is
          both the right answer for crepe paper and the exact roll this page had
          before any of this. */
-      createTapeViewer(mount, [model], { env: ROOM }, FINISH, { clarity })
+      createTapeViewer(mount, [model], STAGE_LIGHT, FINISH, { clarity, ...STAGE_FILM })
     )
     .then((v) => {
       if (gone) return v.dispose();

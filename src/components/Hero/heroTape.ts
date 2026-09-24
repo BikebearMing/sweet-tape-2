@@ -106,9 +106,9 @@ export const STRIP = {
  *
  * Live-tweak in dev: hero.END.ROUGH = 0.8; hero.tune()  (tune re-tears it) */
 export const END = {
-  DEPTH: 0.09, // ~16px at the 1440 design width, against a ~213px width
+  DEPTH: 0.18, // lab 2026-09-11 — was 0.09 | ~16px at the 1440 design width, against a ~213px width
   SEGMENTS: 180, // resolution across the width
-  ROUGH: 0.82, // 0 is a soft wandering edge, 1 is a hard rip
+  ROUGH: 0.57, // lab 2026-09-11 — was 0.82 | 0 is a soft wandering edge, 1 is a hard rip
 };
 
 /* Key light high and to the LEFT, slightly in front — the sheen.
@@ -124,7 +124,8 @@ export const END = {
  * AMBIENT is in units of pi, where 1 means an unlit surface leaves the renderer
  * at its texture's own colour. Live-tweak in dev: hero.LIGHT.POWER = 3;
  * hero.tune() */
-export const LIGHT = { X: -1.5, Y: 5, Z: 2.5, POWER: 3.5, AMBIENT: 0.66 };
+export const LIGHT = { X: -1.6, Y: 3.6, Z: 2.5, POWER: 1.44, AMBIENT: 1.36 };
+// lab 2026-09-11 — was { X: -1.5, Y: 5, Z: 2.5, POWER: 3.5, AMBIENT: 0.66 }
 
 /* The face's own key — the kicker.
  *
@@ -191,7 +192,7 @@ export const FILM = {
      which is the trap COAT_GLOSS's note describes.
 
      Live-tweak in dev: hero.FILM.GLOSS = 0.6; hero.tune() */
-  GLOSS: 0.5,
+  GLOSS: 0.41, // lab 2026-09-11 — was 0.5
   /* How uneven the film is, and it is the one knob to reach for if the surface
      is reading as PATTERNED rather than as material.
    *
@@ -231,8 +232,8 @@ export const FILM = {
    *
    * Live-tweak in dev: hero.FILM.MOTTLE = 0.2; hero.tune() — tune() rebuilds
    * both maps, unlike the streak maps this replaced, which needed a reload. */
-  MOTTLE: 0.22,
-  MOTTLE_TINT: 0.05,
+  MOTTLE: 0.335, // lab 2026-09-11 — was 0.22
+  MOTTLE_TINT: 0.4, // lab 2026-09-11 — was 0.05
   /* THE SMUDGE — how skewed the unevenness is, and the knob that separates a
    * dirty piece of tape from a textured one.
    *
@@ -254,7 +255,7 @@ export const FILM = {
    * stains rather than as prints. 1 is the old behaviour exactly.
    *
    * Live-tweak in dev: hero.FILM.SMUDGE = 1; hero.tune() */
-  SMUDGE: 2.1,
+  SMUDGE: 3.08, // lab 2026-09-11 — was 2.1
   /* The film's TOOTH — how deep its micro-relief reads. See toothTex.
    *
    * The knob to reach for when the surface wants to be ROUGHER rather than
@@ -292,7 +293,7 @@ export const FILM = {
    * from the roughness map instead.
    *
    * Live-tweak in dev: hero.FILM.TOOTH = 1.4; hero.tune() */
-  TOOTH: 0.05,
+  TOOTH: 0.025, // lab 2026-09-11 — was 0.05
   /* Exposure on the FILM — the wound side and the strip, never the label. The
      exact counterpart of FACE below, and it exists for the same reason that
      one does: the two surfaces are lit by one set of lights, so without a knob
@@ -319,7 +320,7 @@ export const FILM = {
      PUNCH), which is the level GLAZE's white coat was tuned to read against.
 
      Live-tweak in dev: hero.FILM.TONE = 0.7; hero.tune() */
-  TONE: 0.72,
+  TONE: 0.595, // lab 2026-09-11 — was 0.72
 
   /* THE FILM'S OWN COLOUR — the roll's wound side and the dispensed strip, which
    * are one surface and take one value.
@@ -523,8 +524,8 @@ export const FILM = {
    * same time is what keeps the pair reading as a slick skin over a hazy body.
    *
    * Live-tweak in dev: hero.FILM.GLAZE = 0.7; hero.tune() */
-  GLAZE: 0.3,
-  GLAZE_GLOSS: 0.18,
+  GLAZE: 0.32, // lab 2026-09-11 — was 0.3
+  GLAZE_GLOSS: 0.225, // lab 2026-09-11 — was 0.18
   /* The extrusion grain, 0..1 — the film's specular stretched along one axis.
    *
    * Tape is extruded, and an extruded surface is not equally rough in every
@@ -546,7 +547,7 @@ export const FILM = {
    *
    * At 0 the whole feature is compiled out. Live-tweak in dev:
    * hero.FILM.STRETCH = 0.8; hero.tune() */
-  STRETCH: 0.55,
+  STRETCH: 0.23, // lab 2026-09-11 — was 0.55
   /* Saturation and contrast, applied to a map the moment it is sampled.
    *
    * These two are the FILM — the wound side and the dispensed strip, which are
@@ -573,8 +574,8 @@ export const FILM = {
    * against the ceiling with it, and the clear coat's highlight then has nothing
    * left to be brighter than. Just over 1 keeps the unevenness legible without
    * spending the headroom the sheen needs. */
-  SAT: 1,
-  PUNCH: 1.05,
+  SAT: 0.61, // lab 2026-09-11 — was 1
+  PUNCH: 0.915, // lab 2026-09-11 — was 1.05
   /* Exposure on the roll's FACE alone — the artwork, not the wound side or the
      strip. It scales the texture on its way in, so nothing else in the scene
      moves, and the face's own shading is untouched.
@@ -658,10 +659,10 @@ export const FILM = {
      sheen and starts being a hole.
 
      Live-tweak in dev: hero.FILM.COAT_GLOSS = 0.22; hero.tune() */
-  FACE_GLOSS: 0.14,
-  FACE_METAL: 0.1,
-  COAT: 0.3,
-  COAT_GLOSS: 0.18,
+  FACE_GLOSS: 0.275, // lab 2026-09-11 — was 0.14
+  FACE_METAL: 0.03, // lab 2026-09-11 — was 0.1
+  COAT: 0.085, // lab 2026-09-11 — was 0.3
+  COAT_GLOSS: 0.155, // lab 2026-09-11 — was 0.18
   /* The face's fake dome, in radians at the rim — the flat-disc problem, and
      the exact counterpart of CURL below.
    *
@@ -681,8 +682,8 @@ export const FILM = {
    * DOME_BIAS shapes where the ring sits. At 1 the tilt grows linearly with
    * radius; above it the middle of the disc stays flatter and the curve piles
    * up near the rim, which pushes the arc outward and tightens it. */
-  DOME: 1.3,
-  DOME_BIAS: 0.5,
+  DOME: 0.7, // lab 2026-09-11 — was 1.3
+  DOME_BIAS: 0.105, // lab 2026-09-11 — was 0.5
   /* How far the strip's normals fan across its width, in radians.
    *
    * The strip is a flat plane facing the camera, and a flat plane under a

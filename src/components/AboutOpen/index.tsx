@@ -20,8 +20,8 @@ const MASKING = {
 /* How far a strip stands up before the hand presses it — ProductInfo's own. */
 const LIFT = 0.34;
 const CLEAR = {
-  src: "/assets/stationery-silent-opp-tape.svg",
-  ratio: 141 / 92,
+  src: "/assets/low-noise-x4-clear.png",
+  ratio: 564 / 369,
   back: "peel-back-clear",
 } as const;
 

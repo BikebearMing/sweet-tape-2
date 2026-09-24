@@ -30,6 +30,7 @@ import gsap from "gsap";
 import type { HeroTape } from "./heroTape";
 import { createRollIdle, IDLE, type RollIdle } from "./idle";
 
+import { createLoop, playOnce, SOUNDS } from "@/components/sound";
 import { onViewportChange, screenH } from "@/components/viewport";
 
 /** Served straight from /public. Preloaded in index.tsx — see the note there.
@@ -93,6 +94,21 @@ export const CUT = {
   OVERLAP: 0.35, // the turn starts this long into the rewind
 };
 
+/* The tape's voice — silent unless the reader has turned sound on (see
+ * components/sound). The stretch is a LOOP whose level follows how fast the
+ * strip is actually paying out, so it is the tape that is heard and not the
+ * scroll: nothing while the roll is only turning, nothing on the way back up
+ * (the ratchet feeds no tape), and it dies away as the strip meets its stop.
+ * The cut is a one-shot as the finale starts.
+ * Live-tweak in dev: hero.SOUND.FULL_SPEED = 3 */
+export const SOUND = {
+  FULL_SPEED: 2, // px of tape per ms at which the stretch is at full volume
+  VOLUME: 0.8,
+  RATE_MIN: 0.85, // playbackRate at a crawl…
+  RATE_MAX: 1.25, // …and at FULL_SPEED: a faster pull is a higher pitch
+  CUT_VOLUME: 1,
+};
+
 /* The yaw is the scroll's to drive, so both ends of it live here rather than
    with the scene's resting pose. YAW_REST is where the roll sits before the
    sequence starts; YAW_END is side-on, where the axle lies along X and the roll
@@ -151,6 +167,11 @@ export function initHero(root: HTMLElement): () => void {
      the end of the finale rather than up front: until then the scroll owns the
      pose, and the two writing to it at once would be two hands on one object. */
   let idle: RollIdle | null = null;
+  const stretch = createLoop(SOUNDS.TAPE_STRETCH);
+  /* The strip's length as of the last frame, for the stretch's level. -1 is
+     "no last frame": the first one back from off screen re-syncs the pose in
+     one jump, and that jump is not tape being pulled. */
+  let lenSeen = -1;
   const board = root.querySelector<HTMLElement>(".cardboard-wrapper");
 
   function docTop(el: HTMLElement) {
@@ -199,6 +220,8 @@ export function initHero(root: HTMLElement): () => void {
   function startFinale() {
     if (!tape || phase !== "scrub") return;
     phase = "finale";
+    stretch.set(0);
+    playOnce(SOUNDS.TAPE_CUT, SOUND.CUT_VOLUME);
     const stop = stopPx();
     const s = { cut: 0, home: 0 };
     finale = gsap.timeline({
@@ -286,6 +309,14 @@ export function initHero(root: HTMLElement): () => void {
     tape.pose(yaw, maxLen);
     tape.draw(); // no-ops unless the pose actually moved
 
+    const speed = lenSeen < 0 || deltaMs <= 0 ? 0 : (maxLen - lenSeen) / deltaMs;
+    lenSeen = maxLen;
+    const pull = clamp01(speed / SOUND.FULL_SPEED);
+    stretch.set(
+      pull * SOUND.VOLUME,
+      SOUND.RATE_MIN + (SOUND.RATE_MAX - SOUND.RATE_MIN) * pull
+    );
+
     /* The smin ceilings approach the stop asymptotically, so "arrived" is a
        few px shy of it — close enough that the finale's own first frames
        cover the difference. */
@@ -299,6 +330,11 @@ export function initHero(root: HTMLElement): () => void {
   const io = new IntersectionObserver(
     ([entry]) => {
       onScreen = entry.isIntersecting;
+      if (!onScreen) {
+        // frame() is about to stop running, and the loop holds its last level.
+        stretch.set(0);
+        lenSeen = -1;
+      }
     },
     { rootMargin: NEAR_VIEW }
   );
@@ -355,6 +391,7 @@ export function initHero(root: HTMLElement): () => void {
             hero: {
               SCROLL,
               CUT,
+              SOUND,
               IDLE,
               CONFIG: mod.CONFIG,
               STRIP: mod.STRIP,
@@ -385,6 +422,7 @@ export function initHero(root: HTMLElement): () => void {
     gsap.ticker.remove(frame);
     finale?.kill();
     finale = null;
+    stretch.stop();
     // Before the tape is disposed: stop() hands the roll back to its posed
     // rotation, which needs the scene still standing.
     idle?.stop();

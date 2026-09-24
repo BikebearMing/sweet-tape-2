@@ -121,51 +121,51 @@
    ------------------------------------------------------------------ */
 .bottom-title[data-word="creative"] .glyph:nth-child(1) {
   --l: 1;
-  --dx: 1.389vw;
-  --dy: 0vw;
+  --dx: 0vw;
+  --dy: -0.3vw;
   --dr: -4deg;
 } /* C */
 .bottom-title[data-word="creative"] .glyph:nth-child(2) {
   --l: 2;
-  --dx: 0.2vw;
+  --dx: -1vw;
   --dy: 0.2vw;
   --dr: -2deg;
 } /* R */
 .bottom-title[data-word="creative"] .glyph:nth-child(3) {
   --l: 3;
-  --dx: 0vw;
+  --dx: -0.7vw;
   --dy: 0.2vw;
   --dr: 0deg;
 } /* E */
 .bottom-title[data-word="creative"] .glyph:nth-child(4) {
   --l: 4;
-  --dx: 0vw;
+  --dx: -0.7vw;
   --dy: 0.2vw;
   --dr: 0deg;
 } /* A */
 .bottom-title[data-word="creative"] .glyph:nth-child(5) {
   --l: 5;
-  --dx: 0vw;
+  --dx: -0.8vw;
   --dy: 0.2vw;
   --dr: 0deg;
 } /* T */
 .bottom-title[data-word="creative"] .glyph:nth-child(6) {
   --l: 6;
-  --dx: 0vw;
+  --dx: -0.6vw;
   --dy: 0.2vw;
   --dr: 0deg;
 } /* I */
 .bottom-title[data-word="creative"] .glyph:nth-child(7) {
   --l: 7;
-  --dx: 0vw;
+  --dx: -0.6vw;
   --dy: 0.2vw;
   --dr: 0deg;
 } /* V */
 .bottom-title[data-word="creative"] .glyph:nth-child(8) {
   --l: 8;
-  --dx: 1.181vw;
-  --dy: -0.486vw;
-  --dr: -2deg;
+  --dx: -0.6vw;
+  --dy: -0.2vw;
+  --dr: 3.7deg;
 } /* E */
 
 /* TRUSTY — and the thing to know before tuning ANY of these words.
@@ -229,7 +229,7 @@
 .bottom-title[data-word="trusty"] .glyph:nth-child(2) {
     --l: 2;
     --dx: 0vw;
-    --dy: 2.8vw;
+    --dy: 3vw;
     --dr: 0deg;
 } /* R */
 .bottom-title[data-word="trusty"] .glyph:nth-child(3) {
@@ -246,14 +246,14 @@
 } /* S */
 .bottom-title[data-word="trusty"] .glyph:nth-child(5) {
     --l: 5;
-    --dx: 2vw;
+    --dx: 2.5vw;
     --dy: 3vw;
     --dr: -15deg;
 } /* T */
 .bottom-title[data-word="trusty"] .glyph:nth-child(6) {
     --l: 6;
     --dx: -1vw;
-    --dy: 0.7vw;
+    --dy: 0.1vw;
     --dr: 0deg;
 } /* Y */
 
@@ -265,13 +265,13 @@
 .bottom-title[data-word="buddy"] .glyph:nth-child(1) {
   --l: 1;
   --dx: 0vw;
-  --dy: -1vw;
+  --dy: 0vw;
   --dr: 0deg;
 } /* B */
 .bottom-title[data-word="buddy"] .glyph:nth-child(2) {
   --l: 2;
   --dx: 0.4vw;
-  --dy: 1vw;
+  --dy: 1.6vw;
   --dr: 0deg;
 } /* U */
 .bottom-title[data-word="buddy"] .glyph:nth-child(3) {
@@ -289,7 +289,7 @@
 .bottom-title[data-word="buddy"] .glyph:nth-child(5) {
   --l: 5;
   --dx: 1vw;
-  --dy: 1vw;
+  --dy: -0.1vw;
   --dr: 4deg;
 } /* Y */
 
@@ -316,14 +316,14 @@
 } /* X */
 .bottom-title[data-word="fixer"] .glyph:nth-child(4) {
   --l: 4;
-  --dx: 1vw;
-  --dy: 1vw;
+  --dx: 1.1vw;
+  --dy: 0.6vw;
   --dr: 1deg;
 } /* E */
 .bottom-title[data-word="fixer"] .glyph:nth-child(5) {
   --l: 5;
   --dx: 0vw;
-  --dy: 0vw;
+  --dy: -0.3vw;
   --dr: 6deg;
 } /* R */
 

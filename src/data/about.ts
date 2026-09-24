@@ -126,7 +126,7 @@ const FALLBACK = {
     "AND / FULL OF HEART.",
   ],
   wanted: {
-    sentence: "WE WANTED TO BE.",
+    sentence: "WE DIDN’T WANT TO BE LOUDER. WE WANTED TO BE",
     boxes: [
       { id: "clearer", num: "01", label: ["CLEARER"], mark: "strip", y: 45 },
       {

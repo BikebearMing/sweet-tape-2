@@ -32,6 +32,9 @@
  */
 import gsap from "gsap";
 
+import { BODY_REVEAL, bodyLines } from "@/components/bodyReveal";
+import { playOnce, SOUNDS } from "@/components/sound";
+
 /* The word marks' motion, shared with a product's inner page — which sets the
    same two marks and arrives on the same rise. See components/wordDip.ts for
    why the RISE moved out and the DROP below did not. */
@@ -45,9 +48,9 @@ import {
   shiftDip,
 } from "@/components/wordDip";
 import type { TapeViewer } from "./tape3d";
-import { clarityOf } from "@/components/ProductIntro/rolls";
+import { clarityOf, HOME_FILM, HOME_FINISH, HOME_LIGHT } from "@/components/ProductIntro/rolls";
 
-import { onViewportChange, screenH } from "@/components/viewport";
+import { onViewportChange, screenH, screenW } from "@/components/viewport";
 
 export function initTapeSlider(root: HTMLElement): () => void {
   const q = <T extends Element>(sel: string) => root.querySelector<T>(sel);
@@ -55,6 +58,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
     Array.from(root.querySelectorAll<T>(sel));
 
   const parent = q<HTMLElement>(".roll-parent");
+  const rollIt = parent?.querySelector<HTMLElement>(".roll-it");
   const track = parent?.querySelector<HTMLElement>(".rail-track");
   if (!track) return () => {};
 
@@ -126,6 +130,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
 
   const BG_REVEAL = 0.85; // colour sheet sweeping down over the stage
   const BG_EASE = "power2.out";
+  const NAV_ARC_LAG = 0.2; // see sheetClears — the step buttons are mid-sheet
 
   /* THE DROP IS THIS SECTION'S OWN — it exists to hide a swap, and nowhere else
      on the site swaps a word. The RISE is shared (WORD, in components/wordDip.ts):
@@ -173,9 +178,14 @@ export function initTapeSlider(root: HTMLElement): () => void {
   const CHIP_IN = 0.5;
   const CHIP_STAGGER = 0.07;
   const CHIP_HOLD = 0.06;
-  const LEFT_OUT = 0.26; // the paragraph fades rather than slides
-  const LEFT_IN = 0.5;
-  const LEFT_SHIFT = 18;
+  /* The paragraph goes a LINE at a time, under the same masks the rest of the
+     site's body copy arrives through (components/body, bodyReveal.ts): the
+     lines drop out top to bottom, the copy is swapped while every one is
+     under its floor, and the new lines rise in the same order. The rise takes
+     BODY_REVEAL's own duration, stagger and ease — same voice as the footer
+     and the product page — so only the exit is timed here. */
+  const LEFT_OUT = 0.26;
+  const LINE_OUT_STAGGER = 0.05;
 
   /* The entrance.
    *
@@ -263,51 +273,6 @@ export function initTapeSlider(root: HTMLElement): () => void {
     radius = track!.getBoundingClientRect().width / 2;
   }
 
-  /* Scroll parallax. --parallax is the share of the scroll distance an element
-     gives back: positive lags behind the page and reads as further away,
-     negative runs ahead of it and reads as nearer.
-
-     NOTHING IN THIS SECTION DECLARES ONE ANY MORE — see global.css. The roll
-     stopped drifting when it got a lean of its own, and the pair in front of it
-     followed, because two photographs sliding past a stationary object they are
-     arranged around is the composition coming apart rather than depth. The
-     machinery is kept, and the query below still names all three elements, so
-     any of them can be given a drift again with one line of CSS. What still
-     earns the ticker callback is measureRoll, which the pointer lean reads.
-
-     Driven off GSAP's ticker, which is also driving Lenis, so the offset is
-     computed from the same scroll value the page was just laid out with. */
-  let drifters: { el: HTMLElement; k: number }[] = [];
-  let lastScroll: number | null = null;
-
-  function collectParallax() {
-    drifters = [];
-    qa<HTMLElement>(".key-visual, .middle .showcase").forEach((el) => {
-      const k = parseFloat(getComputedStyle(el).getPropertyValue("--parallax"));
-      if (k) drifters.push({ el, k });
-    });
-  }
-
-  function applyParallax() {
-    /* Off screen, off the clock. Everything below is spent keeping the pointer
-       lean's cached centre honest, and aimRoll is already inView-gated — so
-       paying two forced layouts (offsetTop, measureRoll's rect) on every
-       scrolled frame of the REST of the document bought nothing. lastScroll is
-       left stale on purpose: the first in-view frame sees the gap and
-       re-measures. */
-    if (!inView) return;
-    const y = window.scrollY || window.pageYOffset || 0;
-    if (lastScroll !== null && Math.abs(y - lastScroll) < 0.5) return;
-    lastScroll = y;
-    const rel = y - root.offsetTop;
-    drifters.forEach((d) => gsap.set(d.el, { y: rel * d.k }));
-    // Measured here, after the drift has been written, because the roll's own
-    // parallax is one of the things that moves it. Same gate: the centre only
-    // changes when the page has scrolled, so pointermove reads a cached pair
-    // instead of forcing a layout on every move.
-    measureRoll();
-  }
-
   /* Mouse parallax on the 3D roll. The lean itself lives in tape3d, on a group
      above the flip so the two run concurrently rather than overwriting each
      other; all this side does is say where the pointer is, relative to the
@@ -317,19 +282,26 @@ export function initTapeSlider(root: HTMLElement): () => void {
      travel across most of the section rather than only at the extremes. */
   const TILT_REACH = 0.42;
   let rollX = 0;
-  let rollY = 0;
+  let rollDocY = 0;
   let inView = true;
 
+  /* The roll's centre, measured on arrival (mount, viewport change, the section
+     scrolling into view) and never per frame: the y is held in document space
+     so pointermove subtracts the scroll instead of forcing a layout.
+     ponytail: a layout shift above the section while it is on screen leaves
+     the centre stale until the next enter; hook ScrollTrigger's refresh if
+     that ever shows. */
   function measureRoll() {
     if (!keyVisual) return;
     const b = keyVisual.getBoundingClientRect();
     rollX = b.left + b.width / 2;
-    rollY = b.top + b.height / 2;
+    rollDocY = b.top + b.height / 2 + window.scrollY;
   }
 
   function aimRoll(e: PointerEvent) {
     if (!viewer || !inView) return;
-    const reach = Math.min(window.innerWidth, screenH()) * 0.5 * TILT_REACH;
+    const reach = Math.min(screenW(), screenH()) * 0.5 * TILT_REACH;
+    const rollY = rollDocY - window.scrollY;
     viewer.point((e.clientX - rollX) / reach, (e.clientY - rollY) / reach);
   }
 
@@ -380,12 +352,17 @@ export function initTapeSlider(root: HTMLElement): () => void {
      element may come back on screen in the new colour. The + depth accounts for
      the arc's shallow ends trailing its centre. The ease is scanned rather than
      inverted; power2.out is monotonic so the first sample past the target wins. */
-  function sheetClears(el: HTMLElement | null) {
+  /* `lag` is how much of the arc's depth to wait out: 1 for something that
+     reaches the sheet's sides, where the edge trails its centre by the whole
+     depth; less for something standing in the middle of the sheet, where the
+     edge arrives first. */
+  function sheetClears(el: HTMLElement | null, lag = 1) {
     if (!hasBg || !el) return 0;
     const box = bgOverlay!.getBoundingClientRect();
     const depth = arcDepth(box);
     const travel = box.height + depth + 2;
-    const need = (el.getBoundingClientRect().bottom - box.top + depth) / travel;
+    const need =
+      (el.getBoundingClientRect().bottom - box.top + depth * lag) / travel;
     const ease = gsap.parseEase(BG_EASE);
     for (let i = 0; i <= 100; i++) {
       if (ease(i / 100) >= need) return (i / 100) * BG_REVEAL;
@@ -414,6 +391,15 @@ export function initTapeSlider(root: HTMLElement): () => void {
     const cs = getComputedStyle(btn);
     nav.style.setProperty("--nav-face", cs.getPropertyValue("--ring").trim());
     nav.style.setProperty("--nav-ink", cs.getPropertyValue("--word").trim());
+  }
+
+  /* ROLL IT!'s ink. On a swap it is called AS THE SHEET PASSES THE CAPTION
+     (sheetClears, scheduled in goTo) — not with the left column's refill,
+     which runs while the sheet is still above it, and not with the sheet's
+     commit, which is a beat after it has gone by. */
+  function paintRollIt(btn: HTMLElement) {
+    const ink = getComputedStyle(btn).getPropertyValue("--ink").trim();
+    rollIt?.style.setProperty("--ink", ink);
   }
 
   const varOf = (btn: HTMLElement, name: string) =>
@@ -483,9 +469,9 @@ export function initTapeSlider(root: HTMLElement): () => void {
           // Repaint before parking the copy, or the chip flicks back to the old
           // colour for a frame.
           paintChip(subhead, rolls[index]);
-          /* WITH THE SHEET'S COMMIT AND NOT BEFORE. The pair sits at the very
-             foot of the stage, which is the last thing the colour sweeps over —
-             so the frame the new colour lands is the frame these may wear it. */
+          /* A BACKSTOP, NOT THE CUE. The step buttons are repainted as the
+             sheet passes them — see the call scheduled in goTo — and this only
+             covers a sweep that was cut short before that call ran. */
           paintNav(rolls[index]);
           if (sweep) sweep.style.transform = "translateY(-100%)";
         },
@@ -852,7 +838,70 @@ export function initTapeSlider(root: HTMLElement): () => void {
       gsap.set(c, { rotation: rotOf(c) });
     });
 
-    if (copyBox) copyBox.textContent = btn.dataset.copy || "";
+    setCopy(btn.dataset.copy || "");
+  }
+
+  /* THE COPY, RE-SPLIT. The words are the largest unit that survives a reflow
+     and the lines are measured off them at the moment they move (bodyLines),
+     so the split is rebuilt on every swap and nothing is guessed. Parked under
+     the mask on arrival, except on the reduced-motion path, where the change
+     simply happens. */
+  const risesOf = () =>
+    copyBox ? Array.from(copyBox.querySelectorAll<HTMLElement>(".body-rise")) : [];
+
+  function setCopy(text: string) {
+    if (!copyBox) return;
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    copyBox.replaceChildren(
+      ...words.flatMap((word, i) => {
+        const clip = document.createElement("span");
+        clip.className = "body-clip";
+        const rise = document.createElement("span");
+        rise.className = "body-rise";
+        rise.textContent = word;
+        clip.appendChild(rise);
+        return i ? [" ", clip] : [clip];
+      })
+    );
+    gsap.set(risesOf(), { yPercent: reduced ? 0 : BODY_REVEAL.HIDDEN });
+  }
+
+  /* Lines down, top first. Built from the lines as they stand, so it must be
+     called while the copy it is about to hide is the copy on the page. Returns
+     when the last line is under its floor. */
+  function linesOut(sub: gsap.core.Timeline, at: number) {
+    const lines = bodyLines(risesOf());
+    lines.forEach((line, i) => {
+      sub.to(
+        line,
+        { yPercent: BODY_REVEAL.HIDDEN, duration: LEFT_OUT, ease: "power2.in" },
+        at + i * LINE_OUT_STAGGER
+      );
+    });
+    return at + Math.max(0, lines.length - 1) * LINE_OUT_STAGGER + LEFT_OUT;
+  }
+
+  /* Lines up, top first — ADDED AT PLAY, not at build. The copy that rises is
+     the copy fillLeft puts in at the swap, which does not exist when the
+     timeline is authored, and where its lines break is a measurement of that
+     copy in this window. So the timeline is handed a call at the moment the
+     lines are due, and the call groups what is on the page then and adds the
+     tweens to the same timeline at that position: killed with it, completed
+     with it, nothing running loose. */
+  function linesIn(sub: gsap.core.Timeline, at: number) {
+    sub.call(
+      () => {
+        bodyLines(risesOf()).forEach((line, i) => {
+          sub.to(
+            line,
+            { yPercent: 0, duration: BODY_REVEAL.DURATION, ease: BODY_REVEAL.EASE },
+            at + i * BODY_REVEAL.STAGGER
+          );
+        });
+      },
+      undefined,
+      at
+    );
   }
 
   /* One shared exit distance, measured off the column's right edge so even the
@@ -872,25 +921,24 @@ export function initTapeSlider(root: HTMLElement): () => void {
 
     const sub = gsap.timeline();
     const outX = chipOutX();
-    const lastOut = (chips.length - 1) * CHIP_STAGGER + CHIP_OUT;
-    // Floored, so the gate can only delay the return, never pull it into the exit.
-    const backAt = Math.max(lastOut + CHIP_HOLD, (returnAt || 0) - at);
-
     chips.forEach((c, i) => {
       sub.to(c, { x: outX, duration: CHIP_OUT, ease: "power2.in" }, i * CHIP_STAGGER);
     });
-    if (copyBox) {
-      sub.to(copyBox, { opacity: 0, y: LEFT_SHIFT, duration: LEFT_OUT, ease: "power2.in" }, 0);
-    }
+    // The swap waits for the last thing to leave, chip or line — a long
+    // paragraph must not have its tail re-written on screen.
+    const lastOut = Math.max(
+      (chips.length - 1) * CHIP_STAGGER + CHIP_OUT,
+      copyBox ? linesOut(sub, 0) : 0
+    );
+    // Floored, so the gate can only delay the return, never pull it into the exit.
+    const backAt = Math.max(lastOut + CHIP_HOLD, (returnAt || 0) - at);
 
     sub.call(() => fillLeft(index), undefined, lastOut);
 
     chips.forEach((c, i) => {
       sub.to(c, { x: 0, duration: CHIP_IN, ease: "power3.out" }, backAt + i * CHIP_STAGGER);
     });
-    if (copyBox) {
-      sub.to(copyBox, { opacity: 1, y: 0, duration: LEFT_IN, ease: "power3.out" }, backAt);
-    }
+    if (copyBox) linesIn(sub, backAt);
 
     tl.add(sub, at);
     return sub;
@@ -921,7 +969,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
     if (left && chips.length) {
       const x = chipOutX();
       chips.forEach((c) => gsap.set(c, { x }));
-      if (copyBox) gsap.set(copyBox, { opacity: 0, y: LEFT_SHIFT });
+      gsap.set(risesOf(), { yPercent: BODY_REVEAL.HIDDEN });
     }
 
     // Edge-on and withdrawn, the same pose addShowcase swaps the artwork at.
@@ -974,9 +1022,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
     chips.forEach((c, i) => {
       sub.to(c, { x: 0, duration: CHIP_IN, ease: "power3.out" }, i * CHIP_STAGGER);
     });
-    if (copyBox) {
-      sub.to(copyBox, { opacity: 1, y: 0, duration: LEFT_IN, ease: "power3.out" }, 0);
-    }
+    if (copyBox) linesIn(sub, 0);
 
     tl.add(sub, at);
     return sub;
@@ -1063,6 +1109,9 @@ export function initTapeSlider(root: HTMLElement): () => void {
   function goTo(index: number) {
     if (index === activeIndex) return;
     activeIndex = index;
+    /* One note per selection, whichever way it was made — a roll, an arrow or
+       the keyboard all land here. Silent until the reader turns sound on. */
+    playOnce(SOUNDS.SLIDE_CHANGE);
 
     // Land on the nearest equivalent angle, so the ring takes the short way
     // round instead of unwinding 270deg.
@@ -1133,6 +1182,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
       gsap.set(showcase, { rotationY: 0, z: 0 });
       paintChip(subhead, rolls[index]);
       paintNav(rolls[index]);
+      paintRollIt(rolls[index]);
       fillLeft(index);
       return dispatch(index);
     }
@@ -1156,6 +1206,27 @@ export function initTapeSlider(root: HTMLElement): () => void {
     const wordColour = varOf(rolls[index], "--word");
 
     if (hasBg) wipe = addWipe(timeline, index, atOpen);
+    timeline.call(
+      () => paintRollIt(rolls[index]),
+      undefined,
+      hasBg ? atOpen + sheetClears(rollIt ?? null) : 0
+    );
+
+    /* AND THE STEP BUTTONS, THE SAME WAY — as the sheet's edge passes them. They
+       used to wait for the sheet's commit, on the argument that they are at the
+       foot of the stage and so the last thing swept. They are near it, not at
+       it, and the sweep is a power2.out: it covers nine tenths of its travel in
+       two thirds of its time and spends the rest crawling. So the new colour
+       went by and the buttons stood in the old one for a quarter of a second,
+       which on a phone — the only place they exist — read as out of sync.
+       sheetClears measures where they actually are. */
+    timeline.call(
+      () => paintNav(rolls[index]),
+      undefined,
+      /* The pair stands in the middle third of the sheet, where the curve is
+         within a fifth of its full depth. */
+      hasBg ? atOpen + sheetClears(nav ?? null, NAV_ARC_LAG) : 0
+    );
 
     // Both words drop on the click and are gone before the sheet is released.
     // Each returns the moment the sheet has finished passing it, so they come
@@ -1268,7 +1339,8 @@ export function initTapeSlider(root: HTMLElement): () => void {
        rather than holding the last lean it was given. */
     viewIo = new IntersectionObserver(([entry]) => {
       inView = entry.isIntersecting;
-      if (!inView) restRoll();
+      if (inView) measureRoll();
+      else restRoll();
     });
     viewIo.observe(root);
   }
@@ -1287,8 +1359,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
   const stopVp = onViewportChange(() => {
     measure();
     place();
-    lastScroll = null; // offsetTop may have moved, so force a recompute
-    applyParallax();
+    measureRoll();
   });
 
   measure();
@@ -1367,19 +1438,11 @@ export function initTapeSlider(root: HTMLElement): () => void {
         createTapeViewer(
           keyVisual,
           modelUrls,
-          undefined,
-          /* THE OPP FACE'S METAL, TAKEN OUT — ProductIntro's own correction
-             (see FINISH there). The export's "Face Brown" carries metalness
-             0.55, and metal has no diffuse: on a stage with no environment the
-             metallic share renders BLACK and the lime label leaves the
-             renderer at about half the artwork's brightness. The product page
-             pays for it with a room; the orbit shows six rolls and wants no
-             room, so the cheaper end of the same fix — a dielectric face — is
-             the right one here. The other five faces carry no metalness and
-             do not change. */
-          { "Face Brown": { metalness: 0.05 } },
+          HOME_LIGHT,
+          HOME_FINISH,
           {
             clarity: filmClarity,
+            ...HOME_FILM,
           },
         ),
       )
@@ -1406,11 +1469,10 @@ export function initTapeSlider(root: HTMLElement): () => void {
   // visual already has its own and the two want independent vanishing points.
   gsap.set(showcase, { transformPerspective: SHOW_PERSPECTIVE });
   setShowcase(activeIndex);
-  collectParallax();
-  applyParallax();
-  gsap.ticker.add(applyParallax);
+  measureRoll();
   paintChip(subhead, rolls[activeIndex]);
   paintNav(rolls[activeIndex]);
+  paintRollIt(rolls[activeIndex]);
   buildChips();
   fillLeft(activeIndex);
   /* Hold everything back until the section is reached — see ENTER above.
@@ -1447,7 +1509,6 @@ export function initTapeSlider(root: HTMLElement): () => void {
     stopVp();
     io?.disconnect();
     viewIo?.disconnect();
-    gsap.ticker.remove(applyParallax);
     [
       timeline,
       enter,
@@ -1466,7 +1527,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
     if (card) gsap.killTweensOf(card);
     if (explore) gsap.killTweensOf(explore);
     if (exploreText) gsap.killTweensOf(exploreText);
-    if (copyBox) gsap.killTweensOf(copyBox);
+    gsap.killTweensOf(risesOf());
     // The dispose runs here OR in the loader's then-branch, never both:
     // viewerGone tells a load that resolves after teardown to discard itself.
     viewerGone = true;

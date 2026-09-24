@@ -171,15 +171,6 @@ export default async function Reimagine() {
 
   return (
     <Stage>
-      {/* WITHOUT JAVASCRIPT THE SECTION IS STILL A SECTION. The letters are
-          parked under their masks by global.css and released here; the sheet,
-          the tape and the props rest in their finished poses and need nothing.
-          Costs nothing when scripting is on: the contents of a noscript element
-          are not even parsed. */}
-      <noscript>
-        <style>{`.reimagine .char { transform: none }`}</style>
-      </noscript>
-
       {/* THE SHEET'S BOX — the flat sheet's own shape, which is what the design
           measures everything on the paper against. See .reimagine-sheet in
           global.css. */}
@@ -280,7 +271,7 @@ export default async function Reimagine() {
                       <span className="reimagine-gap">
                         <Peel
                           className="reimagine-tape"
-                          src="/assets/tape top.webp"
+                          src="/assets/opp-tape-x4.png"
                           drive="manual"
                           from={0}
                           to={1}

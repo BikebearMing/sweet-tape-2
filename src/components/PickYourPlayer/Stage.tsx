@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 
-import { initBodyReveal } from "@/components/bodyReveal";
 import { initPickCue } from "./cue";
 import { initPickFan } from "./fan";
 import { initPickRecolour } from "./recolour";
@@ -39,7 +38,6 @@ export default function Stage({ children }: { children: ReactNode }) {
     if (!root) return;
 
     const stopReveal = initPickReveal(root);
-    const stopBody = initBodyReveal(root);
 
     /* THE THREE THAT ARE WIRED TOGETHER, and they are wired HERE rather than by
        one importing another. The fan knows which roll the pointer is over and
@@ -62,7 +60,6 @@ export default function Stage({ children }: { children: ReactNode }) {
 
     return () => {
       stopReveal();
-      stopBody();
       stopFan();
       recolour.stop();
       cue.stop();

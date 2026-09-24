@@ -3,6 +3,7 @@
 import { useEffect, useRef, type ReactNode, type CSSProperties } from "react";
 
 import { initHandNote } from "@/components/HandNote/hand";
+import { clipToDisc } from "./disc";
 import { initReelPin } from "./pin";
 
 /* The run's client boundary — a ref, and the two drivers hung off it.
@@ -44,6 +45,9 @@ export default function Stage({
 
     const stopPin = initReelPin(root);
     const stopNote = initHandNote(root);
+    /* No drop shadow on the label — it is in the file, so it is clipped off. */
+    const badge = root.querySelector<HTMLImageElement>(".reel-badge");
+    if (badge) clipToDisc(badge);
 
     return () => {
       stopPin();

@@ -1,5 +1,6 @@
 "use client";
 
+import { initChipFlip } from "@/components/chipFlip";
 import { useEffect, useRef, type ReactNode } from "react";
 import { initTapeSlider } from "./engine";
 import { initSliderFit } from "./fit";
@@ -28,10 +29,13 @@ export default function Stage({ children }: { children: ReactNode }) {
        start is still a section that should be the right size. */
     const stopEngine = initTapeSlider(root);
     const stopFit = initSliderFit(root);
+    /* The chip turns in like every other chip on the site — see chipFlip.ts. */
+    const stopChip = initChipFlip(root.querySelector<HTMLElement>(".subhead:not(.subhead--next)"));
 
     return () => {
       stopEngine();
       stopFit();
+      stopChip();
     };
   }, []);
 

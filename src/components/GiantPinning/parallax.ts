@@ -77,11 +77,17 @@ export const GIANT_PARALLAX = {
    * the curve is not wasting most of its shape out of frame.
    */
   RANGE: 0.65,
+
+  /* How far a roll tag turns across its drift, in degrees. Written to --prot
+     and composed into the tag's rotate in the stylesheet. "Just a bit." */
+  ROLL: 8,
 };
 
 type Layer = {
   el: HTMLElement;
   set: (value: string) => void;
+  /* Only the roll tags turn; the photographs and the card keep their tilt. */
+  rot: ((value: string) => void) | null;
   /** Centre of the object in canvas coordinates. Re-measured on every refresh. */
   home: number;
   /** --pp as the stylesheet resolves it, the fallback for the live read below. */
@@ -101,13 +107,23 @@ export type Parallax = {
 
 const NONE: Parallax = { measure: () => {}, update: () => {}, destroy: () => {} };
 
+/* WHICH ELEMENTS, and the defaults are the home page's. The product page's reel
+   hands in its own three — the maths does not know whose canvas it is on. */
+const GIANT = {
+  canvas: ".giant-canvas",
+  layers: ".giant-prop, .giant-slot",
+  /** The layers that also turn — see ROLL. */
+  turn: ".giant-prop--tag",
+};
+
 /**
  * Builds the parallax layers for `root`.
  *
- * @param root the <section class="giant-pinning">
+ * @param root the pinned <section>
+ * @param sel  the canvas, its drifting layers, and which of those turn
  */
-export function initGiantParallax(root: HTMLElement): Parallax {
-  const canvas = root.querySelector<HTMLElement>(".giant-canvas");
+export function initGiantParallax(root: HTMLElement, sel = GIANT): Parallax {
+  const canvas = root.querySelector<HTMLElement>(sel.canvas);
   if (!canvas) return NONE;
 
   /* The scattered props AND the card standing in each phrase's own gap — the
@@ -115,7 +131,7 @@ export function initGiantParallax(root: HTMLElement): Parallax {
      flex item between TO and the noun, so a speed of any size slides it out of
      the gap the letters made for it. Its numbers in index.tsx are accordingly a
      third of the props'. */
-  const els = gsap.utils.toArray<HTMLElement>(".giant-prop, .giant-slot", root);
+  const els = gsap.utils.toArray<HTMLElement>(sel.layers, root);
   if (!els.length) return NONE;
 
   /* Distance from the canvas's left edge to the object's centre, walking the
@@ -150,6 +166,9 @@ export function initGiantParallax(root: HTMLElement): Parallax {
        writing a transform here would silently replace one of them. The
        stylesheet composes --pdx into what is already there. */
     set: gsap.quickSetter(el, "--pdx") as (value: string) => void,
+    rot: el.matches(sel.turn)
+      ? (gsap.quickSetter(el, "--prot") as (value: string) => void)
+      : null,
     home: 0,
     drift: GIANT_PARALLAX.DEFAULT_DRIFT,
     easeName: GIANT_PARALLAX.DEFAULT_EASE,
@@ -201,6 +220,7 @@ export function initGiantParallax(root: HTMLElement): Parallax {
       const t = Math.max(-1, Math.min(1, (cameraX + layer.home - middle) / range));
       const shaped = Math.sign(t) * layer.ease(Math.abs(t));
       layer.set(`${-drift * vw * shaped}px`);
+      layer.rot?.(`${-GIANT_PARALLAX.ROLL * shaped}deg`);
     }
   };
 
@@ -212,7 +232,10 @@ export function initGiantParallax(root: HTMLElement): Parallax {
     destroy: () => {
       /* Back to the stylesheet's zero. A teardown mid-section must not leave the
          scenery frozen at the offset it happened to be carrying. */
-      for (const layer of layers) layer.el.style.removeProperty("--pdx");
+      for (const layer of layers) {
+        layer.el.style.removeProperty("--pdx");
+        layer.el.style.removeProperty("--prot");
+      }
     },
   };
 }

@@ -39,6 +39,7 @@
  */
 import gsap from "gsap";
 
+import { playOnce, SOUNDS } from "@/components/sound";
 import { onViewportChange } from "@/components/viewport";
 
 export const BALLS = {
@@ -136,6 +137,20 @@ export const BALLS = {
      rebound, not pogo. It is also what lets the pile actually come to rest —
      a springy stack keeps handing energy back and forth and never settles. */
   RESTITUTION: 0.32,
+
+  /* The knock — silent unless sound is on (components/sound). At most one per
+     step, the hardest contact in it, at a level set by how fast the two bodies
+     were closing along the contact normal, in vw per second. Under MIN is a
+     pile settling or a ball rolled gently into a neighbour, which is not a
+     knock; a fall down the whole bed arrives at about 73, which is FULL. The
+     restitution above does the rest: a rebound lands at a third of the speed,
+     so a dropped roll thuds, taps once, and goes quiet.
+   *
+     GAP, ms, is the shortest time between two knocks. A dragged ball ground
+     into its neighbours makes and breaks contact every frame, and a knock
+     retriggered at 60Hz is a buzz, with the voices stacking into distortion.
+     Nothing real knocks faster than this anyway. */
+  HIT: { MIN: 10, FULL: 70, VOLUME: 0.5, GAP: 90 },
 
   /* Surface grip, which is what makes a ball spin at all: Matter turns the
      tangential part of a contact impulse into angular velocity through this. At
@@ -314,7 +329,7 @@ function run(
   bed: HTMLElement,
   els: HTMLElement[],
 ): () => void {
-  const { Bodies, Body, Composite, Constraint, Engine, Sleeping, Vector } =
+  const { Bodies, Body, Composite, Constraint, Engine, Events, Sleeping, Vector } =
     Matter;
 
   /* Collision categories, and there are only two things to separate: the side
@@ -356,6 +371,7 @@ function run(
   };
 
   let world: World | null = null;
+  let lastHit = -Infinity; // performance.now() of the last knock — see BALLS.HIT.GAP
 
   /* The cursor, in the bed's own coordinates, plus the distance it covered on
      the last frame — the push below is a function of both where it is and how
@@ -402,6 +418,28 @@ function run(
        every window size rather than slower on a wide screen. */
     engine.gravity.y = 1;
     engine.gravity.scale = (BALLS.GRAVITY * vw(1)) / 1_000_000;
+
+    /* collisionStart fires before the solver has touched the pair, so these
+       velocities are still the ones the bodies arrived with. A wall's is 0. */
+    Events.on(engine, "collisionStart", ({ pairs }) => {
+      let hardest = 0;
+      for (const { bodyA: a, bodyB: b, collision } of pairs) {
+        const n = collision.normal;
+        const closing = Math.abs(
+          (a.velocity.x - b.velocity.x) * n.x + (a.velocity.y - b.velocity.y) * n.y,
+        );
+        hardest = Math.max(hardest, (closing * 60) / vw(1)); // px/step → vw/s
+      }
+      const H = BALLS.HIT;
+      const now = performance.now();
+      if (hardest > H.MIN && now - lastHit >= H.GAP) {
+        lastHit = now;
+        playOnce(
+          SOUNDS.BALL_HIT,
+          Math.min((hardest - H.MIN) / (H.FULL - H.MIN), 1) * H.VOLUME,
+        );
+      }
+    });
 
     const P = BALLS.POUR;
     const floorY = h - vw(BALLS.FLOOR);
@@ -778,11 +816,12 @@ function run(
      there or the balls stop responding exactly when they are moving most. The
      coordinates are converted to the bed's box on the way in.
 
-     Touch is deliberately not wired to the grab. Preventing default on a
-     touchmove is what a drag needs, and these discs cover most of the bed —
-     doing that would mean a reader who happens to start a swipe on a roll
-     cannot scroll past the footer. The push still works on touch, since it only
-     needs a position. */
+     TOUCH GRABS TOO, NOW. It was kept off so a swipe starting on a roll could
+     still scroll the page — but with the browser scrolling, every touch fired
+     pointercancel a few px in and the push never saw a move either, so on a
+     phone the balls simply did nothing. The trade is made in the stylesheet
+     instead: .footer-ball carries touch-action: none, so a finger that lands
+     ON a roll drags it and a finger on the paper between them scrolls. */
   function toBed(e: PointerEvent) {
     const r = bed.getBoundingClientRect();
     const nx = e.clientX - r.left;
@@ -798,6 +837,10 @@ function run(
   }
 
   function onMove(e: PointerEvent) {
+    /* Off screen, off the clock — the rect read in toBed is a forced layout
+       per mouse move, site-wide, for a section at the foot of the page. A
+       drag in flight still tracks if the bed dips out of view mid-pull. */
+    if (!live && !grab) return;
     toBed(e);
     if (grab && Math.hypot(px - pressX, py - pressY) > BALLS.DRAG_SLOP) {
       dragged = true;
@@ -806,7 +849,7 @@ function run(
   }
 
   function onDown(e: PointerEvent) {
-    if (e.pointerType === "touch" || e.button !== 0) return;
+    if (e.button !== 0) return;
     if (!world) return;
     toBed(e);
 

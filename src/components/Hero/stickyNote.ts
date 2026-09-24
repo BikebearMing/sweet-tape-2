@@ -44,7 +44,9 @@ export { noteCanvas };
 export type { NoteFace };
 
 const FOV = 35;
-const DPR_CAP = 2;
+/* 3, not the site's usual 2: one sheet in a small box is cheap, and on a 3x phone
+   a 2x frame is upscaled by the browser, which is what blurred the writing. */
+const DPR_CAP = 3;
 
 /** Served straight from /public. Drop the Figma export of the note's face here
     and it replaces the placeholder on the next load; until the file exists the
@@ -134,7 +136,7 @@ export type StickyNote = {
     blow?: number,
     pokeX?: number,
     pokeY?: number,
-    pokeS?: number
+    pokeS?: number,
   ): void;
   resize(): void;
   /** Renders if anything moved since the last draw. */
@@ -195,6 +197,11 @@ const PINBOARD_FACE: NoteFace = { draw: placeholderFace, url: NOTE_URL };
 export function createStickyNote(
   mount: HTMLElement,
   face: NoteFace = PINBOARD_FACE,
+  /* How much of the weather this sheet gets — 1 is the hero's. A page can ask
+     for a calmer note (the contact page does) without the constants above,
+     which are what paper IS, changing for every note on the site. Scales the
+     motion only; the resting curl is shape, not wind. */
+  calm = 1,
 ): StickyNote {
   const scene = new Scene();
   const camera = new PerspectiveCamera(FOV, 1, 0.01, 100);
@@ -212,6 +219,17 @@ export function createStickyNote(
      light-bleed artefacts have nowhere to happen. */
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = VSMShadowMap;
+  /* THE PAGE'S TILT, DRAWN BY THE CAMERA. A CSS rotate on a WebGL canvas makes
+     the browser resample every frame it composites, which softens the type on
+     the face; so a note given --note-tilt has its canvas turned back to square
+     in the stylesheet and the camera rolls instead. Same picture, no resample. */
+  camera.rotation.z =
+    ((Number.parseFloat(
+      getComputedStyle(mount).getPropertyValue("--note-tilt"),
+    ) || 0) *
+      Math.PI) /
+    180;
+
   const canvas = renderer.domElement;
   mount.appendChild(canvas);
 
@@ -231,14 +249,22 @@ export function createStickyNote(
   dir.shadow.camera.far = 10;
   scene.add(dir, new AmbientLight(0xffffff, Math.PI * LIGHT.AMBIENT));
 
-  const drawn = new CanvasTexture(face.draw());
+  /* The face at the sheet's on-screen size in device px — see NoteFace.draw.
+     ponytail: sized once at mount; a window resized after load keeps it. */
+  const faceW = Math.round(
+    mount.clientHeight *
+      NOTE.SPAN *
+      (NOTE.W / NOTE.H) *
+      Math.min(window.devicePixelRatio || 1, DPR_CAP),
+  );
+  const drawn = new CanvasTexture(face.draw(faceW || undefined));
   drawn.colorSpace = SRGBColorSpace;
   drawn.anisotropy = renderer.capabilities.getMaxAnisotropy();
   // The Adobe kit may land after the face is first drawn; one redraw picks the
   // real heading font up. Irrelevant once artwork replaces the canvas.
   document.fonts?.ready.then(() => {
     if (mat.map === drawn) {
-      drawn.image = face.draw();
+      drawn.image = face.draw(faceW || undefined);
       drawn.needsUpdate = true;
       dirty = true;
     }
@@ -327,7 +353,7 @@ export function createStickyNote(
       Math.pow(
         Math.max(0, Math.sin(0.31 * T) * Math.sin(0.117 * T + 2.0) - 0.25) /
           0.75,
-        1.6
+        1.6,
       ) +
       blow * WIND.SCROLL;
     const gust = WIND.GUST * surge;
@@ -369,7 +395,8 @@ export function createStickyNote(
          breathes toward a nearby hand without ever pivoting hard. */
       const poke =
         WIND.POKE * pokeS * (0.5 + 0.9 * (x * pokeX + (down - 0.5) * pokeY));
-      const z = f * (WIND.CURL + flutter + tremble + gust * roll + poke);
+      const z =
+        f * (WIND.CURL + calm * (flutter + tremble + gust * roll + poke));
 
       pos[i + 2] = z;
       /* Arc length, cheaply: a sheet that bows out must give that length up

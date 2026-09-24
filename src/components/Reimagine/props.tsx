@@ -31,43 +31,19 @@ import Peel from "@/components/Peel";
  * them. The hero's strips carry the long version of the argument.
  */
 
-/* THE TWO ROLLS THESE ARE TORN OFF, and there are only two.
+/* THE ROLL THESE ARE TORN OFF, and there is one: MASKING, the torn-edged cream
+ * strip the product page is designed around — the file and the underside
+ * TapeSlider/strips.ts gives the masking roll.
  *
- * KRAFT is the brown packing tape — the same file and the same underside as the
- * strip in the third line of the statement, which is not a saving so much as
- * the point: the tape holding the sheet down and the tape laid across the
- * sentence are one roll.
- *
- * CLEAR is the OPP film, and it is the one prop on this sheet that needs
- * something said about how it is painted. Its artwork is drawn with
- * mix-blend-mode: screen INSIDE the file — it is a set of highlights meant to be
- * ADDED to whatever it is lying on, not a picture of a strip — so painted
- * normally it composites against nothing and arrives as a flat mid-grey slab.
- * The stylesheet screens it at page level (see .reimagine-prop-clear), which is
- * what the artwork was drawn expecting. TapeSlider/strips.ts hit exactly this
- * and its `blend` note is the long version.
- *
- * AND IT IS WHY THE CLEAR STRIPS ARE AT THE EDGES. Screen against the off-white
- * paper is very nearly nothing; against the lime and the dark green either side
- * of --rei-split it is a strip of tape catching the light, which is what the
- * design has them doing. If one of these moves onto the middle of the sheet it
- * will disappear, and the fix is `blend: normal`, not a bigger strip. */
-type Roll = { src: string; back: "peel-back-kraft" | "peel-back-clear"; cls: string };
+ * THERE WERE TWO ROLLS AND EIGHT STRIPS — three brown, three clear film, and one
+ * pinning each photograph. All of it came off bar two, asked for: the sheet is
+ * held at two opposite corners, and that is the whole of the taping. */
+type Roll = { src: string; back: "peel-back-masking"; cls: string };
 
-const KRAFT: Roll = {
-  src: "/assets/tape top.webp",
-  back: "peel-back-kraft",
-  cls: "reimagine-prop-kraft",
-};
-
-const CLEAR: Roll = {
-  src: "/assets/stationery-silent-opp-tape.svg",
-  back: "peel-back-clear",
-  /* THE CLASS IS WHERE THE SCREEN BLEND IS HUNG, and it is on the ROLL rather
-     than on each strip's own rule for the reason Peel's `back` prop is: how a
-     material is painted is a fact about the artwork, not about the place it is
-     used. Three strips, one file, one statement about it. */
-  cls: "reimagine-prop-clear",
+const MASKING: Roll = {
+  src: "/assets/masking-tape-x2.png",
+  back: "peel-back-masking",
+  cls: "reimagine-prop-masking",
 };
 
 /* THE ARTWORK'S BOX, READ OFF THE STYLESHEET. Every prop rule declares --pw and
@@ -135,36 +111,10 @@ function Strip({ roll, className }: { roll: Roll; className: string }) {
  * top-left-to-bottom-right look like a hand working across the page; props that
  * arrive in the order somebody happened to draw them look like a list. */
 const STRIPS: Array<{ key: string; roll: Roll }> = [
-  { key: "rei-kraft-a", roll: KRAFT },
-  { key: "rei-kraft-b", roll: KRAFT },
-  { key: "rei-clear-a", roll: CLEAR },
-  { key: "rei-clear-b", roll: CLEAR },
-  { key: "rei-clear-c", roll: CLEAR },
-  { key: "rei-kraft-c", roll: KRAFT },
+  { key: "rei-mask-a", roll: MASKING },
+  { key: "rei-mask-b", roll: MASKING },
 ];
 
-/* THE TWO PRODUCT PHOTOGRAPHS, EACH WITH THE STRIP THAT PINS IT.
- *
- * THE STRIP IS INSIDE THE PHOTOGRAPH'S BOX AND THAT IS THE WHOLE REASON THIS IS
- * NOT SIX STRIPS AND TWO IMAGES IN ONE FLAT LIST. A photograph that lands with a
- * bounce and a piece of tape that stays where it was put is a photograph that has
- * come loose from its tape for a fifth of a second. Nested, the tape is carried
- * by whatever the picture does — it is stuck to it, which is what the drawing
- * says.
- *
- * THE FILES ARE THE SLIDER'S OWN SHOTS. /assets/slider/double/shot-1 is the
- * checkerboard the design shows; /assets/slider/masking/shot-1 is the closest
- * thing in the tree to the watercolour it wants, and it is the roll being used
- * on somebody's artwork, which is the same sentence in a different photograph.
- * They are 204 x 210, which is small for the box they are drawn in — the design's
- * are about 230 across at 1440 — so they are placeholders in resolution and not
- * in content. Swap the two `src`s when the real crops land and nothing else here
- * moves.
- *
- * ALT TEXT AND NOT aria-hidden. The strips around them are decoration and Peel
- * gives its artwork an empty alt for that reason; these two are photographs of
- * the product being used, which is the only thing on this sheet besides the
- * statement that a reader who cannot see it is missing. */
 const SHOTS = [
   {
     key: "rei-shot-a",
@@ -249,8 +199,6 @@ export default function Props() {
               loading="eager"
               decoding="async"
             />
-
-            <Strip roll={KRAFT} className={`${key}-tape`} />
           </div>
         </div>
       ))}

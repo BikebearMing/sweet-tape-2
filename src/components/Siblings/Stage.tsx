@@ -15,9 +15,7 @@ import { initSiblingsReveal } from "./reveal";
  *
  * One thing runs here, so there is one call. It returns its own teardown, so a
  * StrictMode double mount tears down cleanly and re-binds rather than stacking a
- * second tween on the same letters or leaving an orphaned pin behind — and an
- * orphaned pin is not a leak like the others, it is three screens of spacer left
- * in the document.
+ * second tween on the same letters.
  */
 /* THE STYLE PROP CARRIES THIS TAPE'S OVERRIDES, and nothing else ever sets it.
    The stylesheet declares this section's colour tokens on this very element, so
@@ -39,12 +37,8 @@ export default function Stage({
     return initSiblingsReveal(root);
   }, []);
 
-  /* THE STAGE IS WHAT GETS PINNED, and it is a box of its own rather than the
-     section itself: ScrollTrigger holds it with position: fixed and pushes the
-     rest of the page down with a spacer, which it can only do to an element that
-     is the window's height inside something taller. The section is that
-     something — it ends up as tall as the whole pinned sequence. The pinning
-     section up the page is built the same way and calls its box .wrapper. */
+  /* THE STAGE IS THE WINDOW'S HEIGHT AND CLIPS THE DEAL — see .siblings-stage.
+     It was the pinned box; nothing is pinned any more. */
   return (
     <section ref={ref} className="siblings-section" style={style}>
       <div className="siblings-stage">{children}</div>

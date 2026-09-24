@@ -25,6 +25,11 @@ import { stripAttr } from "./strips";
 export default function RollPicker({ rolls }: { rolls: Slide[] }) {
   return (
     <div className="roll-parent">
+      {/* The caption above the active slot. Decorative — the buttons carry
+          the labels — and painted in the slide's ink by the engine. */}
+      <span className="roll-it" aria-hidden="true">
+        ROLL IT!
+      </span>
       <div className="rail-track">
         {rolls.map((tape) => (
           <button

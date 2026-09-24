@@ -193,15 +193,24 @@ export const STICKER = {
        peel this replaced used on exactly this move, and for the same words: a
        sticker let go rather than one yanked flat. */
     UNROLL: 0.74,
+    /* THE REBOUND. The arc does not stop at flat — it passes through it, bows
+       the other way, and comes back to rest. DEPTH is how far the other way,
+       as a fraction of BEND (negative bows the SAME way again); DURATION is
+       the trip back to flat. 0 depth is the old one-way unroll. The fold does
+       not rebound — a flap folding past flat is a page turning, not a spring. */
+    REBOUND: {
+      DEPTH: 0.72,
+      DURATION: 0.4,
+    },
 
     /* The wobble's own clock, which is where the elastic belongs — it is the
        residual flex in a thing that has landed, not the landing. */
-    SETTLE: 1.35,
-    RUBBER: 0.36,
+    SETTLE: 2,
+    RUBBER: 0.42,
   },
 
   /* THE LIGHT ON THE SURFACE. Per column, off its own angle. */
-  SHADE: 0.6,
+  SHADE: 0.48,
 
   /* THE UNDERSIDE. Not a new colour: components/Peel's BACKS already carries
      one for this exact artwork, "peel-back-mark", and this is it. Measured off

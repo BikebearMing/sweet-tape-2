@@ -1,5 +1,6 @@
 "use client";
 
+import { initChipFlip } from "@/components/chipFlip";
 import { useEffect, useRef, type ReactNode } from "react";
 
 import { initPeel } from "@/components/Peel/peel";
@@ -47,11 +48,14 @@ export default function Stage({ children }: { children: ReactNode }) {
     const stopPeel = initPeel(root);
     const stopReveal = initStickReveal(root);
     const stopParallax = initStickParallax(root);
+    /* The chip turns in like every other chip on the site — see chipFlip.ts. */
+    const stopChip = initChipFlip(root.querySelector<HTMLElement>(".story-chip"));
 
     return () => {
       stopPeel();
       stopReveal();
       stopParallax();
+      stopChip();
     };
   }, []);
 

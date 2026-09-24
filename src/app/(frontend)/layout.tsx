@@ -13,6 +13,8 @@ import "@/styles/global.css";
    counterpart to the generated letters.css, and being last is what lets a typed
    value beat a measured one without inventing specificity. Keep it below. */
 import "@/styles/letters-tuning.css";
+/* And the headings' per-letter nudges, for the same reason. */
+import "@/styles/headings-tuning.css";
 
 import Cursor from "@/components/Cursor";
 import LivePreview from "@/components/LivePreview";

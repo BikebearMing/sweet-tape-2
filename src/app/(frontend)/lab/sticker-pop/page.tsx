@@ -153,8 +153,10 @@ const DEFAULTS = {
      within a couple of frames of each other. */
   flexAt: 0.26, // when the unroll starts, x popDur
   unroll: 0.74, // seconds the curled edge takes to lay down
-  settle: 1.35, // seconds the wobble after it takes to die
-  elastic: 0.36, // elastic.out damping on the wobble — lower is rubberier
+  reboundDepth: 0.72, // how far past flat the arc bows back, x bend0
+  reboundDur: 0.4, // seconds from the far side of that back to flat
+  settle: 2, // seconds the wobble after it takes to die
+  elastic: 0.42, // elastic.out damping on the wobble — lower is rubberier
 
   /* THE LIGHT, ON THE POP'S OWN BEAT. It was 0.5 — with the fold rather than
      with the pop, on the reasoning that a highlight wants a shape to run across.
@@ -170,7 +172,7 @@ const DEFAULTS = {
   sheenScreen: 1, // blend it rather than paint it
 
   /* the light on the surface */
-  shade: 0.6,
+  shade: 0.48,
 
   /* the underside. Full shade: the back of a sticker is the sheet's own colour
      with no light on it, and anything less reads as a translucent card. */
@@ -294,8 +296,20 @@ export default function StickerPopLab() {
        and back into it, a sticker let go rather than one yanked flat. */
     tl.to(
       s,
-      { bend: 0, fold: 0, duration: p.unroll, ease: "sine.inOut" },
+      { fold: 0, duration: p.unroll, ease: "sine.inOut" },
       p.popDur * p.flexAt,
+    );
+    /* THE REBOUND — the arc is tweened PAST flat in the same move, so it
+       crosses zero with speed, then comes home. 0 depth is the plain unroll. */
+    tl.to(
+      s,
+      { bend: -p.bend0 * p.reboundDepth, duration: p.unroll, ease: "sine.inOut" },
+      p.popDur * p.flexAt,
+    );
+    tl.to(
+      s,
+      { bend: 0, duration: p.reboundDur, ease: "sine.inOut" },
+      p.popDur * p.flexAt + p.unroll,
     );
 
     /* AND THE WOBBLE AFTER IT, which is where the elastic belongs — it is the
@@ -704,6 +718,8 @@ export default function StickerPopLab() {
           <S l="wave speed" v={p.waveSpin} set={set("waveSpin")} min={0} max={4} step={0.1} u="/s" />
           <S l="unroll at" v={p.flexAt} set={set("flexAt")} min={0} max={1} step={0.02} u="" />
           <S l="unroll" v={p.unroll} set={set("unroll")} min={0.2} max={2} step={0.02} u="s" />
+          <S l="rebound" v={p.reboundDepth} set={set("reboundDepth")} min={-1} max={1} step={0.02} u="x" />
+          <S l="rebound s" v={p.reboundDur} set={set("reboundDur")} min={0.1} max={2} step={0.02} u="s" />
           <S l="settle" v={p.settle} set={set("settle")} min={0.3} max={3} step={0.05} u="s" />
           <S l="rubber" v={p.elastic} set={set("elastic")} min={0.15} max={1} step={0.01} u="" />
           <S l="shading" v={p.shade} set={set("shade")} min={0} max={1} step={0.02} u="" />

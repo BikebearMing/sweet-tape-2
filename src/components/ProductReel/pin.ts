@@ -30,6 +30,8 @@
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+import { initGiantParallax } from "@/components/GiantPinning/parallax";
+
 import { initReelReveal } from "./reveal";
 
 export const REEL = {
@@ -130,6 +132,31 @@ export function initReelPin(root: HTMLElement): () => void {
      nothing. */
   gsap.registerPlugin(ScrollTrigger);
 
+  /* ON A PHONE THE ROW IS A COLUMN and there is no camera — the stylesheet
+     stacks the pieces down the page (see "The run — the phone" in global.css),
+     because a row three windows long read through a 390px window was a band a
+     third the height of the screen. Each piece is cued as it is scrolled to.
+     Pieces the stack hides (the kraft) have no box and are skipped.
+     ponytail: decided once at mount; a window dragged across 767px keeps the
+     mode it loaded in until the next navigation. */
+  if (window.matchMedia("(max-width: 767px)").matches) {
+    const cued = gsap.utils
+      .toArray<HTMLElement>("[data-reel-cue]", root)
+      .filter((el) => el.offsetParent !== null)
+      .map((el) =>
+        ScrollTrigger.create({
+          trigger: el,
+          start: "top 82%",
+          once: true,
+          onEnter: () => reveals.play(el),
+        }),
+      );
+    return () => {
+      cued.forEach((st) => st.kill());
+      reveals.destroy();
+    };
+  }
+
   /* Where a piece sits along the row, in the canvas's own coordinates.
    *
    * offsetLeft and not getBoundingClientRect: the rect is where the element is
@@ -174,7 +201,15 @@ export function initReelPin(root: HTMLElement): () => void {
     return Math.max(0, far + near - window.innerWidth);
   };
 
-  /* NO PARALLAX, AND IT IS A DECISION RATHER THAN AN OMISSION.
+  /* A LITTLE PARALLAX, ASKED FOR, and it is the home page's own module. THE
+   * PHOTOGRAPHS' IS AN INNER ONE: the frame rides the row and the picture slides
+   * inside it (.reel-shot-img reads the --pdx written to its frame). The label
+   * and the kraft drift a few px themselves, and turn a few degrees as they
+   * cross (--prot). All of it is --pp in the stylesheet. The type stays put.
+   *
+   * IT WAS TAKEN OUT ONCE, and the note that said why is kept below because the
+   * argument still bounds the numbers — keep them minimal:
+   *
    *
    * This section had one and it came out in pieces: the label and the note
    * first, then the photographs — which had an inner drift of their own,
@@ -192,6 +227,12 @@ export function initReelPin(root: HTMLElement): () => void {
    * contradiction: its camera stops on each phrase, and the scenery drifts
    * around the stops. This camera never stops.
    */
+  const parallax = initGiantParallax(root, {
+    canvas: ".reel-canvas",
+    layers: ".reel-shot, .reel-badge, .reel-kraft",
+    turn: ".reel-badge, .reel-kraft",
+  });
+  const place = () => parallax.update(Number(gsap.getProperty(canvas, "x")));
 
   /* ONE TWEEN, one second long, so a cue's position in the timeline IS its
      fraction of the journey and there is no second unit to convert between.
@@ -249,6 +290,13 @@ export function initReelPin(root: HTMLElement): () => void {
        when the page loaded. */
     invalidateOnRefresh: true,
     animation: tl,
+    /* The scenery follows the camera, frame by frame, and re-reads where its
+       pieces stand whenever the row is re-measured. */
+    onUpdate: place,
+    onRefresh: () => {
+      parallax.measure();
+      place();
+    },
   });
 
   /* THE PIECES THAT ARE ALREADY IN SHOT, on the section's own arrival — see
@@ -272,6 +320,7 @@ export function initReelPin(root: HTMLElement): () => void {
     st.kill();
     enter?.kill();
     tl.kill();
+    parallax.destroy();
     reveals.destroy();
     /* Back to the stylesheet. A teardown mid-scrub must not leave the canvas
        parked at whatever camera position it happened to be at — with the pin

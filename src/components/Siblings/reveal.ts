@@ -1,35 +1,30 @@
 /* Sweet Tape — THE SIBLINGS arriving: one label, then the rest, then the name.
  *
- * THE SECTION HOLDS STILL WHILE THE PAGE SCROLLS PAST IT and the range is dealt
- * onto it a card at a time. It is the arrangement the pinning section already
- * uses on this site — a box the height of the window, held with position: fixed
- * while a length of scroll is spent — and it is here for the same reason: this
- * row is a handful of objects arriving one after another, and that many arrivals
- * inside the second and a half a section takes to cross the screen is a row that
- * assembles itself while the reader is still on the one above it.
+ * IT PLAYS ON A CLOCK AND NOT ON THE SCROLLBAR. Reaching the section starts it,
+ * once, and the page is never held: it was a pin with the deal stepped off the
+ * scroll position, which was asked to go. The sequence is one card per DEAL_GAP
+ * and then the name, so how long it runs is how many cards the row has — three
+ * take longer than two, and a lone card is over almost as it lands — with no
+ * figure here that knows the count.
  *
  * THE ORDER, WHICH IS THE WHOLE EFFECT — written here for the three-card row the
  * section was drawn as, which is the longest it gets:
  *
  *   1. The first label arrives on its own, IN THE MIDDLE OF THE SCREEN and
- *      standing square, on the way in — before the pin takes hold, so the card is
- *      put down while the section is still coming up rather than onto a page that
- *      has already stopped. It comes UP into its place and it does not fade in;
+ *      standing square. It comes UP into its place and it does not fade in;
  *      nothing here fades. See CARD_RISE.
- *   2. The pin engages and the second is dealt to its right: the fan swings, the
- *      first slides left and takes on half its lean, and the pair stays centred.
- *      What the eye sees is the row GROWING rather than cards stacked onto one
- *      end.
+ *   2. The second is dealt to its right: the fan swings, the first slides left
+ *      and takes on half its lean, and the pair stays centred. What the eye sees
+ *      is the row GROWING rather than cards stacked onto one end.
  *   3. The third is dealt, the fan swings again, and they land on the
  *      arrangement the design draws — every card at its own lean.
  *   4. THE SIBLINGS writes itself in the gap the arrangement has just made.
- *   5. A beat with the whole thing standing, and the pin lets go.
  *
  * HOW MANY CARDS IS THE TAPE'S BUSINESS AND NOT THIS FILE'S. The range is not
  * three grades of everything — see `faces` in src/data/tape-types.ts — so a row
  * can be one card or two, and every number in here is read off the row that was
  * actually rendered rather than typed. A shorter row is the same deal with fewer
- * beats in it; nothing above changes but the count.
+ * cards in it; nothing above changes but the count.
  *
  * THE NAME COMES LAST, AND THAT IS A GEOMETRY DECISION RATHER THAN A TASTE ONE.
  * Its place is under the RAISED card — a gap that does not exist until the row
@@ -37,16 +32,8 @@
  * is standing in the middle of the screen, and a name that shifts to make room is
  * a worse answer than a name that waits for its room to exist.
  *
- * THE CARDS ARE DEALT ON A STEP AND NOT SCRUBBED. Scroll position picks WHICH
- * beat you are on; the move itself then plays at its own pace. That is the one
- * thing that cannot be done the other way round — the settle is a spring, and a
- * spring scrubbed off a scrollbar is not a spring: it is a shape being dragged,
- * and it stops dead the moment the wheel does.
- *
- * IT RUNS BACKWARDS. Scroll up and the last card dealt is taken back off and the
- * row re-centres; go back above the pin entirely and the name goes under its
- * masks again. A pinned sequence that only assembles is a section that is spent
- * the first time it is passed.
+ * IT PLAYS ONCE, like the product page's other arrivals (ProductInfo, NextUp):
+ * scrolled back to, the row is simply standing.
  *
  * THE DEAL IS A ROTATION AND NOT A SLIDE, which is the reference effect's move
  * and this arrangement's own logic. The row is an arc: the raised card square,
@@ -75,40 +62,37 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { REVEAL } from "../Hero/reveal";
 
-import { screenH } from "@/components/viewport";
+/* The phone's one move — see the phone branch in initSiblingsReveal. RISE is a
+   share of the card's own height and SCALE is where it starts; the trigger is
+   measured on the card's resting box, so START is where its top has to be. */
+const PHONE_ARRIVE = {
+  RISE: 0.22,
+  SCALE: 0.82,
+  DURATION: 0.8,
+  EASE: "back.out(1.5)",
+  START: "top 88%",
+};
 
 export const SIBLINGS_REVEAL = {
-  /* WHERE THE FIRST CARD ARRIVES, on the way in and before the pin. The stage's
-     top edge a quarter of the way down the window — and the stage is the
-     window's height with the row centred in it, so that puts the row three
-     quarters of the way down: on screen, low, and rising into the middle as the
-     last quarter of the section is scrolled. Earlier and the card is dealt below
-     the fold; later and it is dealt onto a section that has already stopped,
-     which reads as the pin having stuck. */
-  ARRIVE_START: "top 25%",
+  /* WHERE IT STARTS. The stage's top edge just above the middle of the window —
+     and the stage is the window's height with the row centred in it, so the
+     first card lands with its top half over the fold and the rest of the row is
+     dealt as the section comes up. It was "top 25%" while a pin was coming to
+     hold the page; nothing holds it now, and a clock started that late is still
+     dealing when a steady scroll has the section halfway off the top. Much
+     earlier and the first card is dealt below the fold. */
+  START: "top 45%",
 
-  /* And where the section takes the screen. Full bleed, so its top at the top —
-     the pinning section's own start, and the honest one for a box that is
-     exactly the window's height. */
-  PIN_START: "top top",
+  /* ONE CARD TO THE NEXT, in seconds — and the one number that decides how long
+     the whole thing runs, since the sequence is this once per card and then the
+     name. Shorter than SPRING_DURATION on purpose: an elastic.out is home in
+     the first half of its length and only ringing after that, so the next card
+     is dealt as the last one settles rather than after it has gone still. Much
+     shorter and the row is flicked at you; longer and there is dead air between
+     two cards. */
+  DEAL_GAP: 0.6,
 
-  /* THE BEATS WITH NOTHING BEING DEALT IN THEM: the name's, and one to stand and
-   * look at the whole thing before the pin lets go. See beatsFor, just below,
-   * which is where the deals are counted and the whole length is put together.
-   *
-   * Equal slices of the pin's length, which is what makes the step below a floor
-   * of the progress. */
-  EXTRA_STEPS: 2,
-
-  /* And how long a beat is, in windows of scrolling — the one number that
-     decides how long the section is, since the pin's whole length is this times
-     the count above. At 0.7 across five beats the section costs about three and a
-     half screens. Shorter and cards are dealt faster than the moves themselves
-     play, which reads as the row being flicked at you; longer and there is dead
-     scrolling between two cards with nothing happening in it. */
-  BEAT: 0.7,
-
-  /* The beat between the last card landing and the name starting. Long enough
+  /* And a little more than that between the last card and the name. Long enough
      that the two read as cause and effect rather than as one event: the row is
      what is being named, so it has to be there first — and the gap it is written
      into is one the arrangement has only just made. */
@@ -171,32 +155,8 @@ export const SIBLINGS_REVEAL = {
      was full size. elastic.out(0.6, 0.3), where the amplitude under 1 keeps the
      overshoot to a fraction of the move: a label pressed down and giving a
      little, which is what a printed card put on a table does. */
-  SPRING_DURATION: 0.9,
+  SPRING_DURATION: 0.75,
   SPRING_EASE: "elastic.out(0.6, 0.3)",
-
-  /* AND TAKING ONE BACK OFF, on the way up: DOWN THE SPOKE IT CAME UP.
-   *
-   * The reference takes a class off and the card is simply gone, which is right
-   * for a deck of twenty where the one being dropped is behind four others. Here
-   * there are three, they are the size of the screen, and the reader is watching
-   * the one that vanishes — so it goes back the way it came, shrinking as it
-   * nears the hub, and leaves through the bottom of the held screen. The stage
-   * clips, so it is out of sight before it is switched off and there is no pop
-   * and still no fade anywhere in this section.
-   *
-   * .in, which is the mirror of the entrance's .out: slowest at the start, so the
-   * move begins as a card being drawn back rather than as one being dropped. No
-   * spring on the way out — an elastic here would have the card hesitate on its
-   * way off the table, which is a section arguing with somebody who has decided
-   * to leave. */
-  LEAVE_DURATION: 0.45,
-  LEAVE_EASE: "power2.in",
-
-  /* How far past the bottom edge it goes before it is switched off, as a
-     fraction of its own width. Enough that the corner is clear of the edge on
-     the last frame of the move — the cards lean, so the trailing corner is lower
-     than the box's bottom. */
-  LEAVE_CLEAR: 0.15,
 
   /* THE FAN TURNING under the card just dealt. The same spring, because it is
      the same gesture seen from the other side — the cards already down swing
@@ -204,55 +164,9 @@ export const SIBLINGS_REVEAL = {
      arrives at its place. A shade longer than the deal, so the turn is still
      settling as the card lands beside it. This is the reference effect's own
      pairing: the card springs and the wheel springs after it. */
-  SHIFT_DURATION: 1,
+  SHIFT_DURATION: 0.8,
   SHIFT_EASE: "elastic.out(0.6, 0.3)",
-
 };
-
-/** HOW THE PIN'S BEATS ARE SPENT, for a row of this many cards.
- *
- *  IT WAS A FLAT FIVE while the row was always three, and then `cards + 2` when
- *  the row became the tape's list. Both were too long at the short end, and the
- *  reason is what this function now says out loud: the beats that carry no card
- *  do not shrink with the row, so the shorter the range the more of the pin is
- *  scrolling past nothing. Three cards spend two of five beats that way; one
- *  card used to spend two of three, which is two-thirds of a two-screen hold
- *  with a single label sitting on it.
- *
- *  THE PIN NEVER DEALS THE FIRST CARD. It arrives on the way in, before the pin
- *  takes hold — see CARD_ONE — so what the pin has to deal is everything after
- *  it, and a row of one has nothing to deal at all.
- *
- *  THE INTRODUCTORY BEAT IS SPENT ONLY WHEN A ROW IS COMING. Its job is to let
- *  card one stand alone in the middle of the held screen before the row grows
- *  AROUND it. That is a real beat when two more cards are on their way. With one
- *  card left to deal there is no row growing — there is one more label arriving
- *  — and the beat that shows card one alone is the same beat that brings the
- *  other, so spending a second one on it is a held screen with nothing in it.
- *
- *  AND CARD ONE HAS ALREADY BEEN LOOKED AT BY THEN, which is what makes dropping
- *  it safe rather than brisk. It is dealt at ARRIVE_START — the stage's top a
- *  quarter of the way down the window — and the pin does not engage until that
- *  edge reaches the top, so there is three quarters of a screen in which the
- *  card is the only thing there, rising into the middle. The introductory beat
- *  is a second helping of that, and a short row does not need one.
- *
- *  Three cards still comes to five, which is the figure the section was drawn
- *  to. Two comes to three and one to two, which is where the time was going. */
-function beatsFor(cards: number) {
-  const deals = Math.max(0, cards - 1);
-  const intro = deals > 1 ? 1 : 0;
-  return {
-    /* The beats spent dealing, the intro's included — and so the beat the name
-       is written on, since it comes on the one after the last card. */
-    deal: intro + deals,
-    /* How many cards should be down on beat 0. One when the intro is spent
-       (card one, already there); two when it is not, because that beat is the
-       deal. dealTo clamps, so a lone card asks for two and gets its one. */
-    lead: intro ? 1 : 2,
-    total: intro + deals + SIBLINGS_REVEAL.EXTRA_STEPS,
-  };
-}
 
 /* Fisher–Yates, the hero's. The shuffle IS the effect for TYPE: reveal the same
    letters left to right and it reads as a wipe. It is used on the name and never
@@ -273,13 +187,10 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
   const chars = Array.from(
     root.querySelectorAll<HTMLElement>(".siblings-title .char"),
   );
-  const cards = Array.from(root.querySelectorAll<HTMLElement>(".siblings-card"));
+  const cards = Array.from(
+    root.querySelectorAll<HTMLElement>(".siblings-card"),
+  );
   if (!chars.length && !cards.length) return () => {};
-
-  /* How the pin's length is spent, in beats. Read once off the row that was
-     rendered — the count cannot change without this component remounting. */
-  const beats = beatsFor(cards.length);
-  const steps = beats.total;
 
   /* Hand both over from the stylesheet.
    *
@@ -300,12 +211,59 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
   root.dataset.reveal = "live";
 
   /* Twelve letters flying in from nowhere and three labels being dealt onto the
-     screen are exactly what the setting is asking about — and holding the page
-     still for three and a half screens to do it is more so than either. The
-     attribute alone has already put the whole arrangement where it belongs: the
-     row as the design draws it, the name standing, and no pin at all. */
+     screen are exactly what the setting is asking about. The attribute alone
+     has already put the whole arrangement where it belongs: the row as the
+     design draws it and the name standing. */
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     return () => {};
+  }
+
+  /* A PHONE shows the cards in one column with no pin and no deal — see "The
+     siblings — the phone" in global.css, which lifts the parks itself. What is
+     left is each card's own small arrival as it is scrolled to: up a little and
+     up to size, once. The spring is the desktop deal's, so it is the same
+     object landing.
+
+     The lean is written with the move because GSAP writes the WHOLE transform
+     the moment it touches one, and the stylesheet's rotate() would be lost —
+     the same reason every tween below carries it.
+     ponytail: decided once at mount; a window dragged across 767px keeps the
+     mode it loaded in until the next navigation. */
+  if (window.matchMedia("(max-width: 767px)").matches) {
+    gsap.registerPlugin(ScrollTrigger);
+    const arrivals = cards.map((card) => {
+      const tilt =
+        parseFloat(getComputedStyle(card).getPropertyValue("--sib-tilt")) || 0;
+      return gsap.fromTo(
+        card,
+        {
+          autoAlpha: 0,
+          y: card.offsetHeight * PHONE_ARRIVE.RISE,
+          scale: PHONE_ARRIVE.SCALE,
+          rotation: tilt,
+        },
+        {
+          autoAlpha: 1,
+          y: 0,
+          scale: 1,
+          rotation: tilt,
+          duration: PHONE_ARRIVE.DURATION,
+          ease: PHONE_ARRIVE.EASE,
+          scrollTrigger: {
+            trigger: card,
+            start: PHONE_ARRIVE.START,
+            once: true,
+          },
+        },
+      );
+    });
+    return () => {
+      arrivals.forEach((t) => {
+        t.scrollTrigger?.kill();
+        t.kill();
+      });
+      gsap.set(cards, { clearProps: "transform,opacity,visibility" });
+    };
   }
 
   /* Registered here rather than at module scope: this file is imported by a
@@ -409,9 +367,8 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
       ? (Math.atan((stops[count - 1] ?? 0) / wheel.length) * 180) / Math.PI
       : 0;
 
-  /* HOW MANY ARE DOWN. Everything below moves this towards a number and animates
-     only what changed, so a restored scroll position landing three cards in is
-     three cards standing rather than three cards dealt on one frame. */
+  /* HOW MANY ARE DOWN — kept so a refresh mid-deal can put the fan back where
+     that many cards want it. */
   let shown = 0;
 
   /* WHERE A CARD IS DEALT FROM: down its own spoke, and how much smaller it is
@@ -431,22 +388,11 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
     return { rise, scale: Math.max(scale, SIBLINGS_REVEAL.CARD_SCALE_MIN) };
   };
 
-  const deal = (card: HTMLElement, animated: boolean) => {
-    /* THE EXIT IS KILLED RATHER THAN OVERWRITTEN, and it has to be: it switches
-       the card off when it finishes, and a tween that merely has its properties
-       taken over still runs to the end and still fires that. Dealt on top of a
-       card on its way out, the card would arrive and then blink off half a
-       second later. Killing it takes the callback with it. */
-    gsap.killTweensOf(card);
-
+  const deal = (card: HTMLElement) => {
     /* ON THE TABLE FIRST AND IN ONE STEP — see CARD_RISE. The card is simply
        there, at its full weight and at the lean the stylesheet gave it; what
        moves is where along its spoke it is. */
     gsap.set(card, { autoAlpha: 1, rotation: tiltOf(card) });
-    if (!animated) {
-      gsap.set(card, { y: 0, scale: 1 });
-      return;
-    }
     const from = entrance(card);
     gsap.fromTo(
       card,
@@ -464,47 +410,6 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
     );
   };
 
-  /* AND TAKING ONE BACK OFF, on the way up: off the table, in one step. The
-     mirror of the deal would be a card being un-dealt in the same loving detail
-     it was dealt with, which is a section arguing with somebody who has decided
-     to leave — and the reference does the same thing, by taking a class off. */
-  const undeal = (card: HTMLElement, animated: boolean) => {
-    gsap.killTweensOf(card);
-    if (!animated) {
-      gsap.set(card, { autoAlpha: 0, y: 0, scale: 1 });
-      return;
-    }
-
-    /* HOW FAR DOWN IS OFF THE SCREEN, measured from where the card is NOW rather
-       than from where it belongs — it may be halfway up its own entrance when
-       the reader turns round, and a fixed distance would leave it short. The
-       stage is the held screen, so its bottom edge is the one to clear.
-
-       The shrink is the entrance's arithmetic on the exit's distance: the card
-       is going back toward the hub, and how far along the spoke it is IS its
-       size. See `entrance`. */
-    const from = card.getBoundingClientRect();
-    const floor = stage?.getBoundingClientRect().bottom ?? screenH();
-    const drop =
-      Math.max(0, floor - from.top) +
-      card.offsetWidth * SIBLINGS_REVEAL.LEAVE_CLEAR;
-    const scale = wheel.length
-      ? Math.max(1 - drop / wheel.length, SIBLINGS_REVEAL.CARD_SCALE_MIN / 2)
-      : 1;
-
-    gsap.to(card, {
-      y: "+=" + Math.round(drop),
-      scale,
-      duration: SIBLINGS_REVEAL.LEAVE_DURATION,
-      ease: SIBLINGS_REVEAL.LEAVE_EASE,
-      overwrite: "auto",
-      /* Switched off only once it is out of the frame, and put back at its place
-         in the same breath — so the next deal starts from the card's own spoke
-         rather than from wherever this move left it. */
-      onComplete: () => gsap.set(card, { autoAlpha: 0, y: 0, scale: 1 }),
-    });
-  };
-
   /* THE FAN SWINGING so the cards dealt so far sit in the middle of the screen.
      One turn of one box rather than a translation per card — see the note at the
      top: the swing is what leans them, and a card's lean is not a decoration on
@@ -519,31 +424,21 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
     });
   };
 
-  const dealTo = (count: number, animated: boolean) => {
-    const want = Math.max(1, Math.min(count, cards.length));
-    if (want === shown) return;
-
-    if (want > shown) {
-      /* Only the newest is dealt — anything a jump skipped is simply put down,
-         which is what makes a restored scroll position land as a standing row
-         rather than as three cards arriving on one frame. */
-      for (let i = shown; i < want; i++) {
-        deal(cards[i], animated && i === want - 1);
-      }
-    } else {
-      for (let i = shown - 1; i >= want; i--) undeal(cards[i], animated);
-    }
-
-    shown = want;
-    turn(want, animated);
+  const dealTo = (count: number) => {
+    deal(cards[count - 1]);
+    shown = count;
+    turn(count, true);
   };
 
-  /* THE NAME, on a timeline of its own: it is played by the pin's first beat and
-     rewound if the reader leaves above the section, neither of which a tween
-     queued inside a sequence can do. */
-  const nameTl = chars.length ? gsap.timeline({ paused: true }) : null;
-  if (nameTl) {
-    nameTl.fromTo(
+  /* THE WHOLE SEQUENCE, ON ONE CLOCK: a card every DEAL_GAP, and the name a gap
+     after the last of them. This is where the length follows the row — nothing
+     counts cards but the loop. */
+  const tl = gsap.timeline({ paused: true });
+  cards.forEach((_, i) => {
+    tl.call(dealTo, [i + 1], i * SIBLINGS_REVEAL.DEAL_GAP);
+  });
+  if (chars.length) {
+    tl.fromTo(
       shuffle(chars),
       { yPercent: REVEAL.HIDDEN },
       {
@@ -552,7 +447,7 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
         stagger: SIBLINGS_REVEAL.STAGGER,
         ease: REVEAL.EASE,
       },
-      SIBLINGS_REVEAL.TITLE_GAP,
+      cards.length * SIBLINGS_REVEAL.DEAL_GAP + SIBLINGS_REVEAL.TITLE_GAP,
     );
   }
 
@@ -571,97 +466,31 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
     });
   }
 
-  /* CARD ONE, ON THE WAY IN — its own trigger and not the pin's first beat, for
-     the reason ARRIVE_START gives. */
-  const arriveSt = ScrollTrigger.create({
+  /* NOT `once`, though it only ever plays once: the trigger has to outlive the
+     entrance to keep hearing refreshes, and play() on a finished timeline does
+     nothing. */
+  const st = ScrollTrigger.create({
     trigger: stage ?? root,
-    start: SIBLINGS_REVEAL.ARRIVE_START,
-    once: true,
-    onEnter: () => dealTo(1, true),
+    start: SIBLINGS_REVEAL.START,
+    onEnter: () => tl.play(),
+    /* The deal's geometry is layout, and layout is what a refresh means. Re-
+       measured and re-applied on the spot: a refresh that leaves the row at an
+       offset computed for the old window is a row standing off centre. */
+    onRefresh: () => {
+      stops = spots();
+      wheel = pivot();
+      if (fan) {
+        gsap.set(fan, {
+          transformOrigin: `50% ${Math.round(wheel.origin)}px`,
+        });
+      }
+      turn(shown || 1, false);
+    },
   });
 
-  /* THE PIN, and the beats spent on it. */
-  let step = -1;
-  const pinSt = stage
-    ? ScrollTrigger.create({
-        trigger: stage,
-        start: SIBLINGS_REVEAL.PIN_START,
-        /* Measured off the window rather than typed as a length, so the section
-           costs the same number of SCREENS whatever screen it is read on. */
-        end: () =>
-          "+=" +
-          Math.round(screenH() * SIBLINGS_REVEAL.BEAT * steps),
-        pin: stage,
-        /* True pinning, not fake: the stage is the window's height in ordinary
-           document flow, so it can be held with position: fixed and the rest of
-           the page pushed down by a spacer. */
-        pinSpacing: true,
-        /* Re-reads `end` on every refresh, which includes every resize. Without
-           it the pin keeps the length it was built with on the old window. */
-        invalidateOnRefresh: true,
-        /* The deal's geometry is layout, and layout is what a refresh means. Re-
-           measured and re-applied on the spot: a refresh that leaves the row at
-           an offset computed for the old window is a row standing off centre. */
-        onRefresh: () => {
-          stops = spots();
-          wheel = pivot();
-          if (fan) {
-            gsap.set(fan, {
-              transformOrigin: `50% ${Math.round(wheel.origin)}px`,
-            });
-          }
-          if (shown) turn(shown, false);
-        },
-        onUpdate: (self) => {
-          const next = Math.min(
-            Math.floor(self.progress * steps),
-            steps - 1,
-          );
-          if (next === step) return;
-          step = next;
-
-          /* One card per beat, counted from whatever beat 0 is asking for —
-             the card already down when the introductory beat is spent, the
-             second card when it is not. dealTo clamps at the row's length, which
-             leaves the two beats after the last card free for the name and the
-             hold. See beatsFor, which is where `lead` is argued. */
-          dealTo(step + beats.lead, shown > 0);
-
-          /* And the name on the beat AFTER the last card, not on the same one:
-             the row has to be finished for the gap to be there, and the two
-             landing together would be the arrangement and its name arriving as
-             one event rather than as cause and effect. Rewound if the reader
-             goes back past that beat, so it is watched again on the way down. */
-          /* AND REVERSED RATHER THAN SNAPPED BACK on the way up: the letters go
-             back down under their masks in the order they came out of them,
-             which is the same move read backwards. Jumping the timeline to zero
-             is the name being deleted, and the reader who scrolled up by one
-             beat did not ask for that — they asked to see the last thing
-             again. */
-          /* AND THE NAME ON THE BEAT AFTER THE LAST CARD, which is the beat
-             after the dealing ends — not `cards.length`, which was the same
-             number only while every card got a beat of its own. */
-          if (step >= beats.deal) nameTl?.play();
-          else nameTl?.reverse();
-        },
-        onLeaveBack: () => {
-          /* Back above the section: the row goes back to the one card that
-             arrived on the way in and the name back under its masks. Both are
-             what the reader will watch arrive again on the way down. */
-          step = -1;
-          nameTl?.reverse();
-          dealTo(1, true);
-        },
-      })
-    : null;
-
   return () => {
-    /* The pin first: killing it takes the spacer out of the document, and doing
-       that after the transforms are cleared would leave one frame with the row
-       home and the page three screens too tall. */
-    pinSt?.kill();
-    arriveSt.kill();
-    nameTl?.kill();
+    st.kill();
+    tl.kill();
     gsap.killTweensOf(cards);
     /* A teardown mid-deal must leave the section readable — the name standing
        and all three labels in place. Back to the stylesheet, which with the

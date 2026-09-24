@@ -3,9 +3,11 @@
  * THE FLIPBOOK AND THE PIN ARE GONE. The section used to hold the screen for
  * two screens of scroll while six stills of a ball of paper opened; now the
  * sheet rests open from the first paint — one photograph, no held screen — and
- * what animates is everything ON it: the statement's letters rise under their
- * masks, the strip of tape rolls down over the hole in the third line, and the
- * props dress the sheet around them. The old choreography survives with the
+ * what animates is everything ON it BAR THE STATEMENT: the strip of tape rolls
+ * down over the hole in the third line and the props dress the sheet around it.
+ * THE LETTERS DO NOT MOVE — they rose under their masks in a shuffled order, and
+ * that was asked out; the sentence is simply there, written, from the first
+ * paint. The old choreography survives with the
  * unfold cut off its front; every beat below is measured from the reveal
  * starting instead of from the last cut landing.
  *
@@ -23,8 +25,6 @@
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-import { REVEAL } from "../Hero/reveal";
-
 export const REIMAGINE = {
   /* WHERE THE REVEAL STARTS: the stage's top reaching six tenths down the
      window, which has the sheet's upper half well inside the frame before a
@@ -33,16 +33,15 @@ export const REIMAGINE = {
      sheet they have already begun to read. */
   START: "top 60%",
 
-  /* WHERE THE WRITING STARTS, in seconds from the reveal. The props open at
-     PROPS.AT before it, so the hand is already dressing the sheet as the
-     statement begins — the same overlap the two had when an unfold ran ahead
-     of them. */
+  /* WHEN THE SENTENCE'S OWN STRIP GOES DOWN, in seconds from the reveal. It was
+     where the writing started, with the strip lagging the last letter; there is
+     no writing now, so it is simply the strip's cue — after the props open at
+     PROPS.AT, so the sheet is being dressed before the sentence is taped. */
   TEXT_AT: 0.67,
 
   /* THE STRIP OF TAPE over the hole in the third line — see the markup in
-     ./index.tsx for which end and how big; this is only when. LAG is measured
-     from the last letter landing: the sentence is written and THEN it is
-     taped, an order of events rather than two things at once. */
+     ./index.tsx for which end and how big; this is only when. LAG is seconds
+     after TEXT_AT. */
   TAPE: {
     LAG: 0,
     DURATION: 0.55,
@@ -74,21 +73,7 @@ export const REIMAGINE = {
       FADE: 0.2,
     },
   },
-
-  /* Between letters, in shuffled order. Well under the hero's 0.025: there are
-     ninety-odd characters here against a headline's twenty. */
-  STAGGER: 0.011,
 };
-
-/* Fisher–Yates, the hero's and the footer's. The shuffle IS the effect. */
-function shuffle<T>(items: T[]): T[] {
-  const out = [...items];
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
-}
 
 /* ROLL A STRIP OF TAPE DOWN, on this timeline, at this moment.
  *
@@ -120,21 +105,12 @@ function roll(
 }
 
 export function initReimagine(root: HTMLElement): () => void {
-  const chars = Array.from(root.querySelectorAll<HTMLElement>(".char"));
   const tape = root.querySelector<HTMLElement>(".reimagine-tape");
 
-  /* Hand the letters over from the stylesheet — the site's usual hand-off, and
-     the reason it has to happen before the tween is built: global.css parks
-     them with a percentage translate, GSAP reads that as resolved px and would
-     ADD its own yPercent to it, leaving every letter a full height low. With
-     the attribute on, the computed transform is `none` and GSAP owns it. */
-  root.dataset.reveal = "live";
-
-  /* Ninety letters flying up and props landing are exactly what this setting
-     is asking about. The stylesheet's rest pose IS the finished section — the
-     sheet open, the statement on it, the tape flat (--peel is never written,
-     so it rests at 0) — and the attribute above has already handed the letters
-     home. Nothing to do but stay out of the way. */
+  /* Props landing are exactly what this setting is asking about. The
+     stylesheet's rest pose IS the finished section — the sheet open, the
+     statement on it, the tape flat (--peel is never written, so it rests at
+     0). Nothing to do but stay out of the way. */
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     return () => {};
   }
@@ -145,35 +121,10 @@ export function initReimagine(root: HTMLElement): () => void {
 
   const tl = gsap.timeline({ paused: true });
 
-  if (chars.length) {
-    tl.fromTo(
-      shuffle(chars),
-      { yPercent: REVEAL.HIDDEN },
-      {
-        yPercent: 0,
-        duration: REVEAL.DURATION,
-        stagger: REIMAGINE.STAGGER,
-        ease: REVEAL.EASE,
-      },
-      REIMAGINE.TEXT_AT,
-    );
-  }
-
-  /* THE TAPE, after the last letter: the end of the writing is read off the
-     other constants rather than typed, so tuning any of them moves this with
-     them. */
+  /* THE SENTENCE'S OWN STRIP. There is no writing to wait for any more — see
+     TEXT_AT. */
   if (tape) {
-    const written =
-      chars.length > 0
-        ? REVEAL.DURATION + REIMAGINE.STAGGER * (chars.length - 1)
-        : 0;
-
-    roll(
-      tl,
-      tape,
-      REIMAGINE.TEXT_AT + written + REIMAGINE.TAPE.LAG,
-      REIMAGINE.TAPE,
-    );
+    roll(tl, tape, REIMAGINE.TEXT_AT + REIMAGINE.TAPE.LAG, REIMAGINE.TAPE);
   }
 
   /* AND THE SHEET IS DRESSED. One query and not two lists — document order is
@@ -244,7 +195,6 @@ export function initReimagine(root: HTMLElement): () => void {
        stylesheet's own rest pose, so everything is handed back to it. --peel
        is an inline custom property and comes off with removeProperty rather
        than through GSAP, which never owned it. */
-    gsap.set(chars, { clearProps: "transform" });
     if (tape) {
       tape.style.removeProperty("--peel");
       gsap.set(tape, { clearProps: "opacity,visibility" });

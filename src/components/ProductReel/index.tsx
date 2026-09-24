@@ -127,11 +127,16 @@ export default function ProductReel({ tape }: { tape: Tape }) {
               THERE, and the only thing that moves in the whole row is the tape.
               It was worth trying the other way and it was worth taking back
               out — see LAYERS in pin.ts. */}
-          <img
-            className="reel-shot reel-shot--open"
-            src={shots[0]}
-            alt={`${tape.label} at work`}
-          />
+          {/* A FRAME AND AN OVERSIZED PICTURE INSIDE IT — the inner parallax:
+              the frame rides the row and the picture lags a little behind it.
+              See .reel-shot-img in global.css. */}
+          <div className="reel-shot reel-shot--open">
+            <img
+              className="reel-shot-img"
+              src={shots[0]}
+              alt={`${tape.label} at work`}
+            />
+          </div>
 
           {/* THE PRINTED LABEL, over the corner of the opener. The tape's own
               face — the same circle the slider hangs at the middle of its stage
@@ -238,12 +243,13 @@ export default function ProductReel({ tape }: { tape: Tape }) {
               gap between them. Indexed off the same array as the opener so the
               order in the data is the order on the page. */}
           {shots.slice(1).map((src, i) => (
-            <img
-              key={i}
-              className={`reel-shot reel-shot--${i + 1}`}
-              src={src}
-              alt={`${tape.label} at work`}
-            />
+            <div key={i} className={`reel-shot reel-shot--${i + 1}`}>
+              <img
+                className="reel-shot-img"
+                src={src}
+                alt={`${tape.label} at work`}
+              />
+            </div>
           ))}
         </div>
       </div>

@@ -1,7 +1,8 @@
 import type { CSSProperties } from "react";
 
-import Mark, { type MarkKind } from "./Mark";
 import { getAbout } from "@/data/about";
+
+import { words } from "@/components/letters";
 
 import Stage from "./Stage";
 import { START_OFFSET } from "./crawl";
@@ -109,7 +110,8 @@ const WAVE_SWING = 60;
 const WAVE_CENTER = 280;
 const WAVE_HALF = 850; /* node to node — half of the 1700-unit wavelength */
 /* Nodes at 320 +/- 425 + k*850 put the crest at x=320, as measured. Ten half
-   cycles of runway before the frame, eleven after. */
+   cycles of runway before the frame, twelve after — a glyph past the path's end
+   is simply not drawn, and the sentence (~4400 units at 222) never gets there. */
 const WAVE_FIRST_NODE = 320 - WAVE_HALF / 2 - 10 * WAVE_HALF;
 const WAVE = [
   `M ${WAVE_FIRST_NODE},${WAVE_CENTER}`,
@@ -137,16 +139,10 @@ export default async function WeWanted() {
           The sentence needs no escape: its resting offset is in the markup
           below, and with no script it simply never crawls. */}
       <noscript>
-        <style>{`.we-wanted .wanted-box { transform: none }`}</style>
+        <style>{`.we-wanted .wanted-box, .we-wanted .wanted-plain .char { transform: none }`}</style>
       </noscript>
 
       {/* THE SENTENCE, AND IT IS THE SECTION'S HEADING.
-       *
-       * A heading with an <svg> inside it rather than an aria-label on a
-       * decorative graphic: SVG <text> is real text, so what a screen reader
-       * announces here is the sentence itself, once, from the same characters
-       * the reader sees bent round the wave. Nothing is written twice and there
-       * is no second copy to keep in step.
        *
        * THE VIEWBOX IS THE FRAME. 1600 wide against a box that is 100vw wide,
        * so path-x 0 is the left edge of the screen and 1600 is the right edge,
@@ -162,7 +158,17 @@ export default async function WeWanted() {
        * figures move together: the swing in WAVE, this depth, and the matching
        * aspect-ratio in global.css. */}
       <h2 className="wanted-band">
-        <svg viewBox="0 0 1600 560" xmlns="http://www.w3.org/2000/svg">
+        {/* ONE COPY IS READ, two are drawn: the wave on desktop, the flat
+            letters on the phone (.wanted-plain), and each hidden on the other. */}
+        <span className="sr-only">{sentence}</span>
+        <span className="wanted-plain" aria-hidden="true">
+          {words(sentence)}
+        </span>
+        <svg
+          viewBox="0 0 1600 560"
+          xmlns="http://www.w3.org/2000/svg"
+          aria-hidden="true"
+        >
           <defs>
             <path id="wanted-path" d={WAVE} fill="none" />
           </defs>
@@ -196,61 +202,17 @@ export default async function WeWanted() {
                and the stylesheet is where the arrangement is assembled. */
             style={{ "--n": i, "--y": box.y } as CSSProperties}
           >
-            {/* THE DEEP HALF OF THE CARD, WITH A BITE OUT OF ITS TOP EDGE.
-                An element rather than a pseudo-element on the box, because it
-                needs a pseudo-element of its own for the bitten crown and the
-                box's ::before is spoken for. See .wanted-box-fill. */}
-            <span className="wanted-box-fill" aria-hidden="true" />
-
-            {/* The order printed on the ceiling. aria-hidden: it is a list, the
-                order is already announced, and "01" read out before every claim
-                is four pieces of furniture in the way of four words. */}
-            <span className="wanted-box-num" aria-hidden="true">
-              {box.num}
-            </span>
-
-            <Mark kind={box.mark} />
-
-            {/* The claim across the floor, ARCHED — the drawing bows the word
-                up through the middle, so each line rides a shallow quadratic
-                exactly the way the sentence overhead rides its wave: an SVG
-                path, a textPath, and the browser doing the bending. SVG <text>
-                is real text, so a screen reader gets the claim from the same
-                characters the eye does — the heading above makes the same
-                argument.
-
-                ONE ARC FOR EVERY LINE, and it is self-adjusting: the crest of
-                a quadratic is its flattest stretch, so a short line centred on
-                it barely bends while RECOGNISABLE, which spans the whole card,
-                takes the full bow — which is the drawing, where only the long
-                words visibly arch.
-
-                Two lines where the design breaks them — see BOXES. The path id
-                carries the box's key and the line's index because ids are
-                document-global and there are four cards of this. */}
-            <p className="wanted-box-label">
-              {box.label.map((line, j) => (
-                <svg className="line" viewBox="0 0 100 20" key={j} focusable="false">
-                  {/* A VALLEY, NOT A CREST — the word follows the floor's own
-                      dip, ends high and middle low, the same curve the deep
-                      half above it is cut with. */}
-                  <path
-                    id={`wanted-arc-${box.id}-${j}`}
-                    d="M0,6 Q50,20 100,6"
-                    fill="none"
-                  />
-                  <text>
-                    <textPath
-                      href={`#wanted-arc-${box.id}-${j}`}
-                      startOffset="50%"
-                      textAnchor="middle"
-                    >
-                      {line}
-                    </textPath>
-                  </text>
-                </svg>
-              ))}
-            </p>
+            {/* THE WHOLE CARD IS ONE DRAWING — fill, number, mark and claim
+                baked into public/assets/about/wanted/<key>.svg, so the key
+                picks the file. The claim is the alt, which is what a screen
+                reader got from the old SVG text. */}
+            <img
+              src={`/assets/about/wanted/${box.id}.svg`}
+              alt={box.label.join(" ")}
+              width={272}
+              height={271}
+              draggable={false}
+            />
           </li>
         ))}
       </ul>

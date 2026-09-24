@@ -59,15 +59,14 @@ type Roll = {
   art: number;
   back: "peel-back-masking" | "peel-back-tissue" | "peel-back-clear" | "peel-back-black";
   /**
-   * How the strip meets the photograph underneath it. "normal" for a tape you
-   * cannot see through, which is three of the four.
-   *
-   * The clear roll is the exception and it is not a stylistic choice: its file
-   * is drawn with mix-blend-mode: screen INSIDE it, so its artwork is a set of
-   * highlights meant to be added to whatever it is lying on. Painted normally
-   * it composites against nothing and arrives as the flat mid-grey slab that
-   * blending was supposed to turn into clear tape. Screening it at the page
-   * level is what the artwork was drawn expecting.
+   * How the strip meets the photograph underneath it. Nobody sets it now: the
+   * clear roll used to ask for "screen" because its file was a grey raster
+   * drawn to be screened, and a page-level screen only reaches the backdrop
+   * inside the strip's own stacking context — wherever the strip hung off the
+   * photograph onto the stage it painted as the raw grey slab. The screen is
+   * baked into the file instead (white, luminance as alpha, which is the same
+   * arithmetic), so it composites right on anything. The knob stays for a
+   * future file that needs it.
    */
   blend?: "screen";
   /** The same strip STANDING UP, for the product reel — which lays two long
@@ -88,37 +87,36 @@ const ROLLS = {
      the photograph beside it, and the showcase shots on the home page's stage.
      That is the point of the table. */
   masking: {
-    src: "/assets/masking-tape-product-inner.webp",
-    box: [184, 68],
-    ink: 0.924,
-    art: 3.091,
+    src: "/assets/masking-tape-x2.png",
+    box: [651, 187],
+    ink: 0.975,
+    art: 3.414,
     back: "peel-back-masking",
-    tall: { src: "/assets/masking-tape-tall.svg", box: [68, 184] },
+    tall: { src: "/assets/masking-tape-x2-tall.png", box: [186, 635] },
   },
   tissue: {
-    src: "/assets/double-side.svg",
-    box: [120, 43],
-    ink: 0.925,
-    art: 3.707,
+    src: "/assets/double-side-x4.png",
+    box: [1050, 390],
+    ink: 0.908,
+    art: 3.543,
     back: "peel-back-tissue",
-    tall: { src: "/assets/tissue-tape-tall.svg", box: [43, 120] },
+    tall: { src: "/assets/double-side-x4-tall.png", box: [274, 958] },
   },
   clear: {
-    src: "/assets/stationery-silent-opp-tape.svg",
-    box: [141, 92],
-    ink: 0.858,
-    art: 4.267,
+    src: "/assets/low-noise-x4-clear.png",
+    box: [564, 369],
+    ink: 0.853,
+    art: 4.183,
     back: "peel-back-clear",
-    tall: { src: "/assets/clear-tape-tall.svg", box: [38, 130] },
-    blend: "screen",
+    tall: { src: "/assets/low-noise-x4-clear-tall.png", box: [115, 481] },
   },
   cloth: {
-    src: "/assets/black-tape.webp",
-    box: [213, 106],
-    ink: 0.916,
-    art: 2.654,
+    src: "/assets/black-cloth-tape-x4.png",
+    box: [489, 166],
+    ink: 0.81,
+    art: 2.829,
     back: "peel-back-black",
-    tall: { src: "/assets/cloth-tape-tall.svg", box: [106, 213] },
+    tall: { src: "/assets/black-cloth-tape-x4-tall.png", box: [140, 397] },
   },
   /* THE BROWN PACKING TAPE — the OPP rolls' own strip, and the reason they are
      no longer sent to `clear`.
@@ -136,10 +134,10 @@ const ROLLS = {
    * opaque picture of a strip, not a set of highlights to be added to whatever
    * is underneath. */
   brown: {
-    src: "/assets/tape top.webp",
-    box: [428, 173],
-    ink: 0.972,
-    art: 2.94,
+    src: "/assets/opp-tape-x4.png",
+    box: [449, 142],
+    ink: 0.978,
+    art: 3.301,
     back: "peel-back-masking",
     tall: { src: "/assets/long-tape.webp", box: [159, 755] },
   },

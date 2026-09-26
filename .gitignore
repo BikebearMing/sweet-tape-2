@@ -22,3 +22,6 @@ scripts/.tape-media-map.json
 
 # Design screenshots the labs lay over the live section (see lab/Compare.tsx)
 public/lab/
+
+# Tablet-pass before/after filmstrips — reviewed on disk, too heavy for history
+tablet-screenshots/

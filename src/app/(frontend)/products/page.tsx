@@ -30,8 +30,9 @@ import Footer from "@/components/Footer";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Our Family — SweetTape",
-  description: "Six tapes, one for every job. Pick your player.",
+  title: "Our Family — Six Tapes, One for Every Job | SweetTape",
+  description:
+    "Pick your player: cloth for strength, masking for clean lines, stationery for the desk, double-sided for the invisible fix. Six tapes, one family.",
 };
 
 export default function Products() {

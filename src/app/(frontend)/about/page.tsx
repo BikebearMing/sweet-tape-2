@@ -92,9 +92,9 @@ import Reimagine from "@/components/Reimagine";
  * so the About block in global.css turns it lime for the length of the route.
  */
 export const metadata: Metadata = {
-  title: "About — SweetTape",
+  title: "About SweetTape — Three Generations of Tape, One Face",
   description:
-    "Three generations of tape. We wanted to be clearer, easier to choose, recognisable, and more human.",
+    "Three generations of tape. We wanted to be clearer, easier to choose, recognisable and more human — the same tape as always, finally with a face.",
 };
 
 export default function AboutPage() {

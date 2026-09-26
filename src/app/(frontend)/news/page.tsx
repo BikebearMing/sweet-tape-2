@@ -36,8 +36,9 @@ import WhatsRolling from "@/components/WhatsRolling";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "What’s Rolling — SweetTape",
-  description: "News and events from SweetTape.",
+  title: "What’s Rolling — News, Events & Stories from SweetTape",
+  description:
+    "Launches, store shelves and stories from the SweetTape family — what’s rolling right now, where to find us, and what we’re sticking together next.",
 };
 
 export default function News() {

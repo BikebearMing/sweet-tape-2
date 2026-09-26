@@ -9,9 +9,9 @@ import Footer from "@/components/Footer";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "SweetTape — Stick By You",
+  title: "SweetTape — Stick By You | Cloth, Masking & OPP Tapes",
   description:
-    "Cloth, masking, stationery, double-sided and more. Six tapes made in Malaysia, one for every job. Meet the one who sticks.",
+    "Six tapes made in Malaysia, one for every job — cloth, masking, stationery, double-sided and more. Three generations of tape; meet the one who sticks.",
 };
 
 export default async function Home() {

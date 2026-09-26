@@ -65,9 +65,13 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: "SweetTape",
   description: "Meet the one who sticks. Tapes made in Malaysia, for every job.",
+  /* "./" resolves against the route being rendered, so every page names its own
+     URL as canonical (and as og:url below) without each one having to say so. */
+  alternates: { canonical: "./" },
   openGraph: {
     type: "website",
     siteName: "SweetTape",
+    url: "./",
     images: ["/assets/og.jpg"],
   },
   twitter: { card: "summary_large_image" },

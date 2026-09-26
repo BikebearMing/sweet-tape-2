@@ -3415,7 +3415,15 @@ html[data-loading] {
      (.bg-overlay, inset: 0) stretch over the full box on their own, which is
      the point: the stage's colour, and its wipes, run all the way up behind
      the band. */
-  height: calc(var(--screen) + 12vw + var(--stage-air));
+  /* THE SCREEN TERM IS CAPPED AT 110vw, and the cap is what a portrait tablet
+     feels instead of a media query: a landscape or desktop window is nowhere
+     near 110vw tall, so min() hands them exactly the --screen they had. On a
+     768x1024 screen --screen is 133vw, of which the last 40 were bare orange
+     under a drawing that hangs from the top in vw and never grows — a screen
+     of stage for a composition that ends two thirds of the way down it. 95
+     holds the ~22vw that falls below CREATIVE plus the air, and the section
+     ends where the drawing does. */
+  height: calc(min(var(--screen), 95vw) + 12vw + var(--stage-air));
   /* clip, not hidden: hidden leaves the box programmatically scrollable, and
      focusing a roll that pokes past an edge (keyboard, or a test runner's
      scrollIntoView) drags the whole stage sideways. clip paints identically
@@ -4818,7 +4826,10 @@ html[data-loading] {
   position: absolute;
   left: var(--px);
   top: var(--py);
-  width: var(--pw);
+  /* --gp-scale is the tablet's one knob on the scatter — 1 everywhere else.
+     It multiplies here rather than on --pw because --pw arrives inline from
+     PANELS, and a custom property cannot be rewritten in terms of itself. */
+  width: calc(var(--pw) * var(--gp-scale, 1));
   height: auto;
   /* --prot is the scroll-driven roll parallax.ts writes onto the tags — a few
      degrees either way as they drift, so a roll reads as rolling. */
@@ -4882,7 +4893,9 @@ html[data-loading] {
  * are two halves of one ratio. */
 .giant-prop--shot {
   border-radius: 3.1vw;
-  font-size: calc(var(--pw) * 1.6815);
+  /* The same --gp-scale as the box, so the strip stays a fraction of its
+     photograph at every size. */
+  font-size: calc(var(--pw) * var(--gp-scale, 1) * 1.6815);
 
   /* THE PHOTOGRAPHS THROW FURTHER THAN THE TAGS DO.
    *
@@ -5037,6 +5050,84 @@ html[data-loading] {
 
   .giant-row .giant {
     white-space: normal;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Giant pinning — the tablet, portrait
+   --------------------------------------------------------------------------
+   THE PHONE'S PROBLEM AT A GENTLER ANGLE. The staircase is drawn in vw, so a
+   768x1024 window shows the same drawing as 1440x900 — in a frame over twice
+   as tall relative to it. A phrase that is half the desktop's window is a
+   quarter of a portrait tablet's, floating in lime, and over half the pin's
+   scroll shows more canvas than drawing.
+
+   SO THE ARRANGEMENT IS SCALED BY 1.8, THE PHONE'S MOVE AT THE PHONE'S
+   RATIO'D-DOWN FACTOR (2.4 serves a screen 2.16 widths tall; 1.8 serves 1.33).
+   Every staircase figure below is its desktop counterpart times 1.8, for the
+   phone block's reason: they clear each other only if they move together.
+   The heading is set separately, to the width it has to fill, under the same
+   15vw wrap ceiling the phone block measured.
+
+   UNLIKE THE PHONE, THE SCATTER SURVIVES. The desktop props run 11 to 21vw;
+   times 1.8 the small end is still a readable photograph on a 768 screen, so
+   the depth the size differences carry is kept rather than flattened —
+   --gp-scale multiplies the inline --pw instead of replacing it. Only the
+   hand-written note is re-set outright, at the phone's reasoning: --hand-w is
+   a physical width, and 12.8vw of a tablet is a note too small to be one.
+
+   PORTRAIT ONLY. A landscape tablet is the desktop's aspect and takes the
+   desktop staircase as it is. pin.ts measures whatever is laid out, as ever. */
+@media (min-width: 768px) and (max-width: 1279px) and (orientation: portrait) {
+  .giant-pinning {
+    --gp-scale: 1.8;
+    --giant-size: 68.75vw;
+    /* 38.194 x 1.8 */
+    --giant-open-gx: 1.8vw;
+    --giant-tail: 32.4vw;
+  }
+
+  .giant-pinning .top-title {
+    --gy: 39.6vw;
+  }
+
+  .giant-pinning .top-title .h2 {
+    font-size: 10vw;
+    letter-spacing: -0.3vw;
+  }
+
+  .down-to-horizontal {
+    --gy: 86.4vw;
+  }
+
+  .diagdown-to-horizontal {
+    --gx: 387vw;
+    --gy: 171vw;
+  }
+
+  .diagup-to-horizontal {
+    --gx: 667.8vw;
+    --gy: 86.4vw;
+  }
+
+  .diag-down-arrow,
+  .diag-up-arrow {
+    width: 46.8vw;
+    height: 31.2vw;
+  }
+
+  .diag-down-arrow {
+    --gx: 331.2vw;
+    --gy: 138.6vw;
+  }
+
+  .diag-up-arrow {
+    --gx: 608.4vw;
+    --gy: 144vw;
+  }
+
+  .giant-pinning .giant-note {
+    --hand-w: 23vw;
   }
 }
 

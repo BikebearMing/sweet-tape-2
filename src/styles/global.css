@@ -831,6 +831,17 @@ h6 {
   /* 416px */
 }
 
+/* ---- Tokens — the tablet ----
+   768 to 1279, where the desktop's vw values run but 1vw is only 7.7 to 12.8px.
+   Nothing is re-composed here: the same figures, floored, per the reading-floor
+   rule .contact-input states. The floors are chosen to release before 1280, so
+   a desktop window never feels them. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  :root {
+    --top-inset: max(10px, 1.2vw);
+  }
+}
+
 /* THE PHONE'S MASTHEAD, and it is the one place on this site where a figure
    does NOT scale with the sheet. Both pieces are about 1.4% of the 1440 width,
    which on a 390 screen is 35px of logo and 5px of type — a mark too small to
@@ -1835,6 +1846,19 @@ html[data-loading] {
   /* Above the painting it overhangs — which paints from tree order anyway, but
      not above the gift (1) by accident. */
   z-index: 2;
+}
+
+/* --------------------------------------------------------------------------
+   Hero — the tablet
+   --------------------------------------------------------------------------
+   The corner mark only. The drawing survives 768 as it is; the mark is the one
+   piece of hero type that lands under 11px there. Floored, not re-set — the vw
+   term takes back over past ~1015px and releases the floor well before 1280. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .hero-section .corner-mark {
+    font-size: max(11px, 1.389vw);
+    line-height: max(10px, 1.25vw);
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -3168,7 +3192,24 @@ html[data-loading] {
    (dot, gutter, cap height) and scaling one part of it makes it a different
    thing wearing the same name.
 
-   UNSCOPED, AND IT USED TO BE THE SLIDER'S. Written against
+   THE TABLET, before the phone: the same unscoped set, floored. 1.111vw is
+   8.5px at 768 — a label nobody reads. The em padding-left rides the font up
+   with it; the perforation stays where the desktop drew it. */
+@media (min-width: 768px) and (max-width: 1279px) {
+
+  .tag .h6,
+  .subhead,
+  .rolling-tag,
+  .story-chip,
+  .article-chip {
+    padding: max(6px, 0.678vw);
+    padding-left: 1.6em;
+    font-size: max(11px, 1.111vw);
+    line-height: max(11px, 1.111vw);
+  }
+}
+
+/* UNSCOPED, AND IT USED TO BE THE SLIDER'S. Written against
    .tape-slider-parent it left the four chips outside the slider — the news
    title card's, the lead story's HIGHLIGHT, the story page's kind — at 4px of
    type in a 4px line box, which is a smudge rather than a label. What a chip IS
@@ -3548,6 +3589,23 @@ html[data-loading] {
   outline: 3px solid #fff;
   outline-offset: calc(var(--ring-w) + 4px);
   border-radius: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Tape slider — the tablet
+   --------------------------------------------------------------------------
+   Floors on the slider's small print, per the reading-floor rule. The measure
+   grows with the .h5's floor by the same factor, so the column keeps its
+   twelve-word line rather than gaining words as the type shrinks around it. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .subtext .h5 {
+    font-size: max(11px, 1.12vw);
+    max-width: max(132px, 13.403vw);
+  }
+
+  .roll-parent .roll-it {
+    font-size: max(10px, 1.11vw);
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -11038,6 +11096,14 @@ p.powers-name {
   top: calc(var(--masthead) + 2vw);
 }
 
+/* The tablet: the pill is the page's one way out, so its em gets the reading
+   floor. Every length in the pill is an em of this and follows it up. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .not-found .about-cta-button {
+    font-size: max(13px, 1.6vw);
+  }
+}
+
 @media (max-width: 767px) {
   .not-found .about-cta-button {
     font-size: 4vw;
@@ -12198,6 +12264,30 @@ li::marker {
 }
 
 /* --------------------------------------------------------------------------
+   News — the index, the tablet
+   --------------------------------------------------------------------------
+   Floors on the wall's small print, per the reading-floor rule. --date-month
+   is floored here once and reaches every .story-date on the site — the lead
+   story's, these cards' and the story page's are the same object. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .story-date {
+    --date-month: max(11px, 1.111vw);
+  }
+
+  .index-tab-count {
+    font-size: max(11px, 1.111vw);
+  }
+
+  .index-kind {
+    font-size: max(11px, 1.111vw);
+  }
+
+  .index-title {
+    font-size: max(13px, 1.667vw);
+  }
+}
+
+/* --------------------------------------------------------------------------
    News — the index, the phone
    --------------------------------------------------------------------------
    THE TABS COME OFF THE SIDE AND GO OVER THE TOP. The wall is a 376px rule of
@@ -13155,6 +13245,18 @@ li::marker {
    justify-content and not text-align. */
 .related-title .line {
   justify-content: flex-start;
+}
+
+/* --------------------------------------------------------------------------
+   News — the story, the tablet
+   --------------------------------------------------------------------------
+   The share buttons are TARGETS, so their floor is the thumb's 44px rather
+   than the eye's 11 — the same call the phone's menu-sound block makes. The
+   row's width is derived from the token, so it widens with them on its own. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .article-aside {
+    --share-btn: max(44px, 4.306vw);
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -17872,6 +17974,26 @@ img#front {
 }
 
 /* --------------------------------------------------------------------------
+   About — the tablet
+   --------------------------------------------------------------------------
+   Floors on the page's small print, per the reading-floor rule: the belt's
+   index and aside, and the pill's kicker. The compositions themselves hold. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .conveyor-index {
+    font-size: max(10px, 0.694vw);
+    padding-top: max(7px, 0.486vw);
+  }
+
+  .conveyor-note {
+    font-size: max(12px, 0.972vw);
+  }
+
+  .about-cta-kicker {
+    font-size: max(13px, 1.667vw);
+  }
+}
+
+/* --------------------------------------------------------------------------
    About — the phone
    --------------------------------------------------------------------------
    ALL SIX SECTIONS ARE HERE NOW, and the one that changed is the first: this
@@ -19246,6 +19368,19 @@ img#front {
 }
 
 /* --------------------------------------------------------------------------
+   Footer — the tablet
+   --------------------------------------------------------------------------
+   The legal line, floored: 0.9vw is 6.9px at 768, which is not small print,
+   it is no print. The pill's padding rides up with it. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .footer-legal {
+    font-size: max(11px, 0.9vw);
+    padding: max(4px, 0.347vw);
+    bottom: max(12px, 1.6vw);
+  }
+}
+
+/* --------------------------------------------------------------------------
    Footer — the phone
    --------------------------------------------------------------------------
    FOUR LINKS DO NOT FIT ON ONE LINE. The nav is space-between across the full
@@ -20358,6 +20493,23 @@ img#front {
   --note-stroke: 0.02em; /* the copy's extra weight — see .hand-ink */
 }
 
+/* The tablet: the whole proportion floored together, scaled by the same 11/14
+   the type takes — a note is a drawing (rules, indent, copy) and flooring one
+   part of it makes it a different drawing wearing the same name. Every figure
+   releases to its vw term by ~1130px, well before the desktop tier. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  :root {
+    --note-fs: max(11px, 0.9722vw);
+    --note-lh: max(11.8px, 1.0417vw);
+    --note-indent-x: max(13.6px, 1.2vw);
+    --note-indent-y: max(10.2px, 0.9vw);
+    --note-bow: max(5.5px, 0.486vw);
+    --note-lead-x: max(18.9px, 1.667vw);
+    --note-lead-y: max(14.9px, 1.319vw);
+    --note-tail: max(14.1px, 1.25vw);
+  }
+}
+
 @media (max-width: 767px) {
   :root {
     --note-fs: 3.59vw; /* 14px at 390 */
@@ -20448,6 +20600,24 @@ img#front {
 .hand-note .hand-line,
 .pick-cue-ink .hand-line {
   display: block;
+}
+
+/* --------------------------------------------------------------------------
+   Menu — the tablet
+   --------------------------------------------------------------------------
+   The sound switch is a TARGET on a screen that is all thumbs, so it takes
+   the 44px floor the phone block argues for — and the tab sheet's line takes
+   the reading floor. Everything else in the menu already clears both. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .menu-sound {
+    width: max(44px, 3.2vw);
+    height: max(44px, 3.2vw);
+    font-size: max(13px, 1.05vw);
+  }
+
+  .menu-tab-sheet {
+    font-size: max(11px, 1.389vw);
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -20745,6 +20915,18 @@ img#front {
 @media (prefers-reduced-motion: reduce) {
   .top-band .char {
     transform: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Top band — the tablet
+   --------------------------------------------------------------------------
+   The claim, floored to the reading line the hero's corner mark takes — the
+   two are the same small type in opposite corners. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .top-note {
+    font-size: max(11px, 1.389vw);
+    line-height: max(10px, 1.25vw);
   }
 }
 

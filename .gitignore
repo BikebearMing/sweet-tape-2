@@ -25,3 +25,6 @@ public/lab/
 
 # Tablet-pass before/after filmstrips — reviewed on disk, too heavy for history
 tablet-screenshots/
+
+# Database dumps — content plus the admin's password hash; never history
+backups/

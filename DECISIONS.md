@@ -24,6 +24,15 @@ considered. ⚠️ = review this one first.
   The lime breather that follows the arc is NOT part of this: measured at
   53% of a screen on the iPad vs 64% on desktop — the seam is already
   proportionally tighter there than the design's own desktop pacing.
+- **The product reel fills a sideways tablet with its photographs** (owner's
+  call, same day): the section's own one-knob mechanism — the phone's
+  `--reel-scale` move — driven by aspect instead of a constant, via
+  `tan(atan2())` (the stylesheet's only way to divide two lengths), capped
+  at the run's documented 1.4 limit. Photographs stand 86–88% of the screen
+  with ~45–53px of sheet either side; desktop (1000×665 shot at 1440×900)
+  and portrait re-measured byte-identical. Portrait tablets still show the
+  run as a 35%-of-screen band — the same drowning pattern, NOT changed
+  because the owner asked for landscape; flag it if portrait grates.
 - **Tablet tier is `(min-width: 744px) and (max-width: 1279px)`**, written as
   a "— the tablet" block per section, mirroring the existing "— the phone"
   convention. Portrait-specific recomposition adds `and (orientation:

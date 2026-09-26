@@ -9869,6 +9869,25 @@ p.powers-name {
      section's bottom padding, which is what it always claimed to be. */
   padding-bottom: var(--reel-tail);
   background: var(--reel-bg);
+
+  /* THE TABLET HELD SIDEWAYS FILLS THE FRAME WITH THE PHOTOGRAPHS — the
+     owner's call (2026-09-26): a screen of picture with a sliver of sheet
+     above and below, the way the section already reads on a laptop, where
+     46.167vw of photograph happens to stand three quarters of a 16:10
+     window tall. A 4:3 screen is taller against its width, so at scale 1
+     the same row is a band across the middle with a third of the frame
+     bare — the phone's old problem at a new aspect, answered the same way:
+     the ONE SCALE above, moved.
+
+     The scale that lands the photograph at the screen less 8vw — 4vw of
+     sheet each side — is a ratio of two lengths, which a stylesheet cannot
+     write as division. tan(atan2(a, b)) is a/b, and both arguments may be
+     lengths; that pair is the whole trick. Capped at the run's own 1.4 —
+     the file's note above: past about 1.45 the photographs outgrow the
+     window and the run stops having whole pictures in it. */
+  @media (min-width: 744px) and (max-width: 1279px) and (orientation: landscape) {
+    --reel-scale: min(1.4, tan(atan2(calc(var(--screen) - 8vw), 46.167vw)));
+  }
   color: var(--reel-ink);
 
   /* The canvas runs three windows past the right edge and every bit of it that

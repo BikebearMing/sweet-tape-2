@@ -172,6 +172,11 @@ export default async function FrontendLayout({
         />
       </head>
       <body>
+        {/* First thing in the body on purpose: the first Tab on any page is
+            the way past the furniture. See .skip-link in global.css. */}
+        <a className="skip-link" href="#main">
+          Skip to content
+        </a>
         {/* Listens for the admin's save message when the site is being previewed
             in an iframe, and does nothing at all otherwise. Position in the tree
             does not matter — it renders no markup. */}
@@ -208,7 +213,9 @@ export default async function FrontendLayout({
             everything a page says lives in here. A plain block around block
             children — body sets nothing but type, so the wrapper changes no
             geometry. */}
-        <main>{children}</main>
+        <main id="main" tabIndex={-1}>
+          {children}
+        </main>
       </body>
     </html>
   );

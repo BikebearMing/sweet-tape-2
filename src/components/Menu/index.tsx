@@ -155,6 +155,23 @@ export default function Menu({ items }: { items: MenuItem[] }) {
      has to work on the second navigation as well as the first. */
   useEffect(() => onHold(() => setOpen(false)), []);
 
+  /* ESCAPE CLOSES IT, the way every overlay on the web closes, and focus goes
+     back to the tab that opened it so the keyboard is standing where it was.
+     Bound only while open — no listener sits on the document for the 99% of
+     the visit the menu is shut. */
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      rootRef.current
+        ?.querySelector<HTMLButtonElement>(".menu-tab")
+        ?.focus();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
+
   /* The panel is one row taller off the home page than on it. Retaken after
      the row's display has changed, which is what an effect on the path is. */
   useEffect(() => {

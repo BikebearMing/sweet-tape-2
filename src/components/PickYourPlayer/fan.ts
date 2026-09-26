@@ -441,7 +441,7 @@ export function initPickFan(
      appears — and the SECOND tap on the lifted roll is the click that goes.
      Phones stay plain links: under 768 the row is 3+3 and tap-to-preview
      would put a toll booth on a grid that is already all preview. */
-  const tappable = !hoverable && window.matchMedia("(min-width: 768px)").matches;
+  const tappable = !hoverable && window.matchMedia("(min-width: 744px)").matches;
 
   /* Bound at the instant the first roll starts falling, and not a frame before.
      That window is the one place killTweensOf in pickUp would do damage rather

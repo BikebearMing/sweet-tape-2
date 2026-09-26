@@ -30,7 +30,7 @@
    end.
 
    THE PHONE, and where its rules live. There is ONE width breakpoint on this
-   site — @media (max-width: 767px) — and every section carries its phone rules
+   site — @media (max-width: 743px) — and every section carries its phone rules
    in a block at the END of its own section, headed "<section> — the phone". Not
    one mobile section at the bottom of the file: a mobile rule is a restatement
    of the composition three inches above it, and the two have to be read
@@ -836,7 +836,7 @@ h6 {
    Nothing is re-composed here: the same figures, floored, per the reading-floor
    rule .contact-input states. The floors are chosen to release before 1280, so
    a desktop window never feels them. */
-@media (min-width: 768px) and (max-width: 1279px) {
+@media (min-width: 744px) and (max-width: 1279px) {
   :root {
     --top-inset: max(10px, 1.2vw);
   }
@@ -851,7 +851,7 @@ h6 {
    restated).
 
    Everything measured against --masthead follows this on its own. */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   :root {
     --top-inset: 3vw;
     --top-mark-w: 18vw;
@@ -1199,7 +1199,7 @@ html[data-loading] {
    --stick-arc and --giant-arc. Every one of those reads --curve-depth now, the
    artwork's own proportion of the width, so the curve is the same curve at 390
    as at 1440 and deepening it here would be drawing something else. */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .site-preloader {
     --pre-mark: 46vw;
   }
@@ -1854,7 +1854,7 @@ html[data-loading] {
    The corner mark only. The drawing survives 768 as it is; the mark is the one
    piece of hero type that lands under 11px there. Floored, not re-set — the vw
    term takes back over past ~1015px and releases the floor well before 1280. */
-@media (min-width: 768px) and (max-width: 1279px) {
+@media (min-width: 744px) and (max-width: 1279px) {
   .hero-section .corner-mark {
     font-size: max(11px, 1.389vw);
     line-height: max(10px, 1.25vw);
@@ -1886,7 +1886,7 @@ html[data-loading] {
    loud in the frame. The kicker, the corner mark and the cardboard's copy are
    all raised the same way and for the same reason.
    -------------------------------------------------------------------------- */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
 
   /* THREE AND A HALF SCREENS of section against the desktop's one and a bit,
      and the height is not a taste call. The board's props are stacked down a
@@ -3228,7 +3228,7 @@ html[data-loading] {
    THE TABLET, before the phone: the same unscoped set, floored. 1.111vw is
    8.5px at 768 — a label nobody reads. The em padding-left rides the font up
    with it; the perforation stays where the desktop drew it. */
-@media (min-width: 768px) and (max-width: 1279px) {
+@media (min-width: 744px) and (max-width: 1279px) {
 
   .tag .h6,
   .subhead,
@@ -3248,7 +3248,7 @@ html[data-loading] {
    type in a 4px line box, which is a smudge rather than a label. What a chip IS
    is global; only where a particular one sits is its own section's business,
    which is the split .tape-slider-parent .subhead argues above. */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
 
   .tag .h6,
   .subhead,
@@ -3415,9 +3415,9 @@ html[data-loading] {
      (.bg-overlay, inset: 0) stretch over the full box on their own, which is
      the point: the stage's colour, and its wipes, run all the way up behind
      the band. */
-  /* THE SCREEN TERM IS CAPPED AT 110vw, and the cap is what a portrait tablet
+  /* THE SCREEN TERM IS CAPPED AT 95vw, and the cap is what a portrait tablet
      feels instead of a media query: a landscape or desktop window is nowhere
-     near 110vw tall, so min() hands them exactly the --screen they had. On a
+     near 95vw tall, so min() hands them exactly the --screen they had. On a
      768x1024 screen --screen is 133vw, of which the last 40 were bare orange
      under a drawing that hangs from the top in vw and never grows — a screen
      of stage for a composition that ends two thirds of the way down it. 95
@@ -3638,7 +3638,7 @@ html[data-loading] {
    Floors on the slider's small print, per the reading-floor rule. The measure
    grows with the .h5's floor by the same factor, so the column keeps its
    twelve-word line rather than gaining words as the type shrinks around it. */
-@media (min-width: 768px) and (max-width: 1279px) {
+@media (min-width: 744px) and (max-width: 1279px) {
   .subtext .h5 {
     font-size: max(11px, 1.12vw);
     max-width: max(132px, 13.403vw);
@@ -3652,7 +3652,7 @@ html[data-loading] {
 /* --------------------------------------------------------------------------
    Step buttons — the phone's, and OFF at every other width.
    --------------------------------------------------------------------------
-   THE ORBIT IS THE SELECTOR and this pair is not a second one: above 767px the
+   THE ORBIT IS THE SELECTOR and this pair is not a second one: above 743px the
    circle of rolls is on stage, every tape is one click away, and a prev/next
    under it would be a worse route to the same six things. The phone hides the
    orbit (see the block below for why), and a stepper is what is left when there
@@ -3723,7 +3723,7 @@ html[data-loading] {
    WHAT DID NOT CHANGE is every mechanic: the same selection, the same colour
    sweep, the same flip, the same word dip. Nothing below is a behaviour.
    -------------------------------------------------------------------------- */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
 
   /* Room under the drawing for the copy and the orbit, which on the desktop sit
      beside it rather than below it. --screen and not a vw height, so a short
@@ -4073,7 +4073,7 @@ html[data-loading] {
   }
 }
 
-@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+@media (max-width: 743px) and (prefers-reduced-motion: reduce) {
 
   .tape-nav button {
     transition: none;
@@ -5078,7 +5078,7 @@ html[data-loading] {
 
    PORTRAIT ONLY. A landscape tablet is the desktop's aspect and takes the
    desktop staircase as it is. pin.ts measures whatever is laid out, as ever. */
-@media (min-width: 768px) and (max-width: 1279px) and (orientation: portrait) {
+@media (min-width: 744px) and (max-width: 1279px) and (orientation: portrait) {
   .giant-pinning {
     --gp-scale: 1.8;
     --giant-size: 68.75vw;
@@ -5170,7 +5170,7 @@ html[data-loading] {
    every camera stop from them, so it reads this arrangement exactly as it reads
    the desktop's. There is no mobile branch in that file and there must not be.
    -------------------------------------------------------------------------- */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .giant-pinning {
     --giant-size: 91.67vw;
     /* 38.194 x 2.4 */
@@ -5824,7 +5824,7 @@ html[data-loading] {
    knows how tall the photograph is, so a change to the shot's aspect moves the
    tape with it.
    -------------------------------------------------------------------------- */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .make-it-stick {
     /* Off the edges, and less of it: 8.935vw is 35px on a phone, which is fine
        for a margin and wasteful as a third of the room the card has to set
@@ -6680,7 +6680,7 @@ html[data-loading] {
    is square and runs past the section's foot, where .pick-player's clip ends it
    and the footer's bite rises into it. The desktop's lower curve is behind that
    same bite anyway; what is lost here is a curve nobody was looking at. */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .pick-player {
     --pick-pad-x: 5vw;
     /* The air over --masthead, restated: 0.74vw of it is under three pixels
@@ -7092,7 +7092,7 @@ html[data-loading] {
    tucked a few vw behind the roll's foot, so the two still touch — and the
    sheet is made taller to hold it clear of its own curved foot. The roll ends
    at 33.9 + 63.6 = 97.5vw; the word is about 26vw tall. */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .product-intro {
     --pi-word-scale: 1.55;
     --pi-word-top: 92vw;
@@ -7776,7 +7776,7 @@ html[data-loading] {
    two columns — and there is no gutter here, because there are no columns. Left
    in, it points from the top of the story at nothing, an inch below the roll it
    means. A mark that has lost what it was pointing at is not a mark. */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   /* No underline under the story's last word on a phone — it rendered as a
      heavy bar there. */
   .product-inner-info .info-underline {
@@ -8321,7 +8321,7 @@ html[data-loading] {
    The cards keep their lean: they are labels put down by hand, and a column of
    square ones is a list. Every card is one size here, so --sib-drop (how far
    the two beside the raised one hang below it) is nothing. */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .siblings-section {
     --sib-w: 72vw;
     --sib-w-side: 72vw;
@@ -9549,7 +9549,7 @@ p.powers-name {
    the name scales with it. SUPER + card + POWERS still clear the width:
    two ~13vw words, 40.8vw of card, and the gaps land under 100. Everything
    printed on the card follows --pow-open-h on its own, copy included. */
-@media (min-width: 768px) and (max-width: 1279px) and (orientation: portrait) {
+@media (min-width: 744px) and (max-width: 1279px) and (orientation: portrait) {
   .super-powers {
     --pow-open-h: min(calc(var(--screen-lg) * 0.5), 40vw);
     --pow-name-size: 9.3vw;
@@ -9600,7 +9600,7 @@ p.powers-name {
    heights: it is what scales a settled card's FACE, so 60/86 is the same
    statement 30/50 is. The desktop block is blunt about the three having to
    agree; this is the second place they do. */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .super-powers {
     /* THE WIDTH, NOT THE HEIGHT, and no cap — the two words are above and below
        now, so the whole sheet less its gutters is the card's. 86 x 1.02 is
@@ -10267,7 +10267,7 @@ p.powers-name {
    cues each piece as it is scrolled to instead. What is NOT shared is the last
    two rules of the old block, which flush the reveals: those are the
    reduced-motion setting's and stay in a block of their own below. */
-@media (prefers-reduced-motion: reduce), (max-width: 767px) {
+@media (prefers-reduced-motion: reduce), (max-width: 743px) {
   .product-reel .wrapper {
     height: auto;
   }
@@ -10353,7 +10353,7 @@ p.powers-name {
    THE RUN IS A COLUMN HERE — see the stack above, which this block only sizes.
    --reel-scale still multiplies the corner, the label and the rest; the
    photographs take the sheet's width and the claim is set to be read. */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .product-reel {
     --reel-scale: 1.4;
     --reel-claim-size: 11.5vw;
@@ -10697,7 +10697,7 @@ p.powers-name {
    it, because the sheet it is filling is a quarter as wide and the panel's own
    padding is a hairline at that scale. The roll rises into the name and sinks
    behind the footer by shares of ITSELF, so both follow the one figure. */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .next-up {
     --nextup-size: 26vw;
     padding-inline: 3vw;
@@ -11067,7 +11067,7 @@ p.powers-name {
    of type, which is 0.072em; at 23vw the same curve is 1.7vw. This is the same
    correction the footer's sign-off makes in its own phone block, and the one
    thing that has to move every time a warped headline is re-sized. */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .whats-rolling {
     --rolling-pad-top: calc(var(--masthead) + 9vw);
     --rolling-pad-x: 5vw;
@@ -11254,13 +11254,13 @@ p.powers-name {
 
 /* The tablet: the pill is the page's one way out, so its em gets the reading
    floor. Every length in the pill is an em of this and follows it up. */
-@media (min-width: 768px) and (max-width: 1279px) {
+@media (min-width: 744px) and (max-width: 1279px) {
   .not-found .about-cta-button {
     font-size: max(13px, 1.6vw);
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .not-found .about-cta-button {
     font-size: 4vw;
     margin-top: 9vw;
@@ -11740,7 +11740,7 @@ p.powers-name {
    the chip and the foot come to. 78vw is that sum with a line in hand — and the
    h2 has already moved on its own (see the Tokens phone block), so if the rules
    ever overrun the card, that is the figure that moved. */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .top-story {
     --stick-pad-x: 5vw;
     /* The same clearance sum as the desktop's, at this page's own figure: the
@@ -12425,7 +12425,7 @@ li::marker {
    Floors on the wall's small print, per the reading-floor rule. --date-month
    is floored here once and reaches every .story-date on the site — the lead
    story's, these cards' and the story page's are the same object. */
-@media (min-width: 768px) and (max-width: 1279px) {
+@media (min-width: 744px) and (max-width: 1279px) {
   .story-date {
     --date-month: max(11px, 1.111vw);
   }
@@ -12463,7 +12463,7 @@ li::marker {
    desktop rule's own note says the grid "should eventually" drop and explains
    why auto-fill was not the way to make it — this is that drop, said where the
    rest of the phone's composition is said. */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .news-index {
     --index-pad-x: 5vw;
     --index-pad-y: 10vw;
@@ -13409,7 +13409,7 @@ li::marker {
    The share buttons are TARGETS, so their floor is the thumb's 44px rather
    than the eye's 11 — the same call the phone's menu-sound block makes. The
    row's width is derived from the token, so it widens with them on its own. */
-@media (min-width: 768px) and (max-width: 1279px) {
+@media (min-width: 744px) and (max-width: 1279px) {
   .article-aside {
     --share-btn: max(44px, 4.306vw);
   }
@@ -13443,7 +13443,7 @@ li::marker {
    THE BUTTONS ARE SIZED FOR A THUMB. 62px at 1440 is 4.306vw, which here would
    be 17px: four targets a finger cannot separate. 13vw is 51px, and the row of
    four plus its three gaps still measures inside the sheet's own padding. */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .news-article {
     --article-pad-x: 5vw;
     --article-pad-top: calc(var(--masthead) + 9vw);
@@ -13552,7 +13552,7 @@ li::marker {
    block argues; what is not shared is only that this rail has three cards
    rather than nine, so the second row carries one. That is the wall's own
    behaviour at any count and reads as a rail that ran on rather than as a hole. */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .related-news {
     --related-rule: auto;
     --related-gutter: 7vw;
@@ -14325,7 +14325,7 @@ li::marker {
    the other half of that pair is written. --contact-overlap follows it: 18vw
    keeps the paper 4.7vw past the bite's deepest point, the same clearance the
    desktop's 12-over-9 gives. */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .contact-section {
     /* The air over --masthead, which has moved on its own — see the Tokens
        phone block. 4.35vw of it is 17px here, which is not a gap; this is the
@@ -17395,7 +17395,7 @@ img#front {
    the computed left, so the CMS record and the row's pitch stay untouched — and
    desktop-only, because the phone composes its own arrangement (including its
    own margin-top on the second row, which these must not leak into). */
-@media (min-width: 768px) {
+@media (min-width: 744px) {
   .wanted-box[data-box="choose"] {
     margin-top: -2.083vw; /* -30px */
   }
@@ -18155,7 +18155,7 @@ img#front {
    --------------------------------------------------------------------------
    Floors on the page's small print, per the reading-floor rule: the belt's
    index and aside, and the pill's kicker. The compositions themselves hold. */
-@media (min-width: 768px) and (max-width: 1279px) {
+@media (min-width: 744px) and (max-width: 1279px) {
   .conveyor-index {
     font-size: max(10px, 0.694vw);
     padding-top: max(7px, 0.486vw);
@@ -18188,7 +18188,7 @@ img#front {
    out span, and the words enter and leave the same way from a lower, larger
    band. 145% puts the letters at half again their width's size, the same
    share of a portrait frame the desktop band takes of its own. */
-@media (min-width: 768px) and (max-width: 1279px) and (orientation: portrait) {
+@media (min-width: 744px) and (max-width: 1279px) and (orientation: portrait) {
   .conveyor-train {
     --pill-h: 17vw;
   }
@@ -18269,7 +18269,7 @@ img#front {
    smaller share of the row than 40px is of 195px. So the level is restated on
    the belt itself. A custom property inherits, so three declarations on the
    section reach every pill's copy without a single selector for it. */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   /* THE SHEET, OPENED OUT TO A WINDOW. max() and not a bare --screen: the
      drawing below is 190vw of composition and a 375 x 667 phone is 178vw, so on
      the shortest screens this site is drawn for the section runs a little past
@@ -19586,7 +19586,7 @@ img#front {
    --------------------------------------------------------------------------
    The legal line, floored: 0.9vw is 6.9px at 768, which is not small print,
    it is no print. The pill's padding rides up with it. */
-@media (min-width: 768px) and (max-width: 1279px) {
+@media (min-width: 744px) and (max-width: 1279px) {
   .footer-legal {
     font-size: max(11px, 0.9vw);
     padding: max(4px, 0.347vw);
@@ -19613,7 +19613,7 @@ img#front {
    simulation gets there on its own: nothing in Footer/balls.ts is told about
    any of this, it reads the box.
    -------------------------------------------------------------------------- */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .site-footer {
     /* Tall and narrow — see above. Deep enough for three rows of discs at the
        scale below, plus the sign-off they lie over. */
@@ -20060,7 +20060,7 @@ img#front {
    the row's drawing and the panel loses nothing. Wide screens only: the phone
    block keeps its own call (no pointer, no preview, taller rows instead),
    which this must not reach under it. */
-@media (hover: none) and (min-width: 768px) {
+@media (hover: none) and (min-width: 744px) {
   .menu-link .menu-thumb {
     width: var(--menu-thumb);
     margin-right: 0.85vw;
@@ -20702,7 +20702,7 @@ img#front {
 
    ONE SIZE ON EVERY PAGE, whatever the note's --hand-w: 14px type on a 15px
    line, 0 tracking, set ~17px right and ~13px down from where the rules cross — in
-   vw off the 1440 design, and restated off a 390 phone below 768px. Only the
+   vw off the 1440 design, and restated off a 390 phone below 744px. Only the
    corner moves with --hand-w (x 45, y 66.5 of the 320-unit artwork, plus half
    a stroke); the type and the indent do not. The click-me cue shares the size
    (.pick-cue-ink).
@@ -20727,7 +20727,7 @@ img#front {
    the type takes — a note is a drawing (rules, indent, copy) and flooring one
    part of it makes it a different drawing wearing the same name. Every figure
    releases to its vw term by ~1130px, well before the desktop tier. */
-@media (min-width: 768px) and (max-width: 1279px) {
+@media (min-width: 744px) and (max-width: 1279px) {
   :root {
     --note-fs: max(11px, 0.9722vw);
     --note-lh: max(11.8px, 1.0417vw);
@@ -20740,7 +20740,7 @@ img#front {
   }
 }
 
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   :root {
     --note-fs: 3.59vw; /* 14px at 390 */
     --note-lh: 3.846vw; /* 15px */
@@ -20838,7 +20838,7 @@ img#front {
    The sound switch is a TARGET on a screen that is all thumbs, so it takes
    the 44px floor the phone block argues for — and the tab sheet's line takes
    the reading floor. Everything else in the menu already clears both. */
-@media (min-width: 768px) and (max-width: 1279px) {
+@media (min-width: 744px) and (max-width: 1279px) {
   .menu-sound {
     width: max(44px, 3.2vw);
     height: max(44px, 3.2vw);
@@ -20873,7 +20873,7 @@ img#front {
    height and re-measures on a real viewport change, so a taller panel is simply
    a longer pull — there is nothing in that file to tell.
    -------------------------------------------------------------------------- */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .site-menu {
     /* Most of the width, not all of it: the panel comes down out of the corner
        and the strip of page left beside it is what says so. Full bleed would
@@ -21153,7 +21153,7 @@ img#front {
    --------------------------------------------------------------------------
    The claim, floored to the reading line the hero's corner mark takes — the
    two are the same small type in opposite corners. */
-@media (min-width: 768px) and (max-width: 1279px) {
+@media (min-width: 744px) and (max-width: 1279px) {
   .top-note {
     font-size: max(11px, 1.389vw);
     line-height: max(10px, 1.25vw);
@@ -21173,7 +21173,7 @@ img#front {
    left edge less its own inset to work in — two lines of 22 characters at the
    size below is 33vw, which clears it. Widen the badge much past 18vw and check
    the longer of the two lines again. */
-@media (max-width: 767px) {
+@media (max-width: 743px) {
   .top-note {
     left: 3vw;
     padding-left: 2.4vw;

@@ -130,7 +130,7 @@ export function initNote(root: HTMLElement, face?: NoteFace, calm = 1): () => vo
      session. The wind above is the note's life on touch; it reads the
      scroll, which a thumb genuinely drives. The phone keeps the listener it
      has always had — the tablet pass changes nothing under 768. */
-  if (window.matchMedia("(hover: hover), (max-width: 767px)").matches) {
+  if (window.matchMedia("(hover: hover), (max-width: 743px)").matches) {
     window.addEventListener(
       "pointermove",
       (e) => {

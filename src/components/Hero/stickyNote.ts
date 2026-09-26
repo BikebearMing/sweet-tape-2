@@ -51,7 +51,7 @@ const FOV = 35;
    runs four contexts. Phones keep 3 — the blur this cap exists for is theirs. */
 const DPR_CAP =
   typeof window !== "undefined" &&
-  window.matchMedia("(hover: none) and (min-width: 768px)").matches
+  window.matchMedia("(hover: none) and (min-width: 744px)").matches
     ? 2
     : 3;
 

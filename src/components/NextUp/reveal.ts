@@ -226,7 +226,7 @@ export function initNextUpReveal(root: HTMLElement): () => void {
      their stillness, as everywhere on this site. */
   const hoverable = window.matchMedia("(hover: hover)").matches;
   const pressable =
-    !hoverable && window.matchMedia("(min-width: 768px)").matches;
+    !hoverable && window.matchMedia("(min-width: 744px)").matches;
   const grow =
     panel && roll && (hoverable || pressable)
       ? (scale: number) =>

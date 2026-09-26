@@ -157,7 +157,7 @@ export function createRollIdle(mount: HTMLElement, tape: HeroTape): RollIdle {
      file was built around. The phone keeps the listener it has always had —
      the tablet pass changes nothing under 768. */
   const ac = new AbortController();
-  if (window.matchMedia("(hover: hover), (max-width: 767px)").matches) {
+  if (window.matchMedia("(hover: hover), (max-width: 743px)").matches) {
     window.addEventListener("pointermove", onMove, { signal: ac.signal, passive: true });
   }
   const stopVp = onViewportChange(measure);

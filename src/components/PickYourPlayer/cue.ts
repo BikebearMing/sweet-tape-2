@@ -99,7 +99,7 @@ export function initPickCue(root: HTMLElement): PickCue {
      under 768 fan.ts binds neither path, so `show` could never be called and
      building six timelines for it would be waste. The media list mirrors
      fan.ts's pair of conditions; keep them in step. */
-  if (!window.matchMedia("(hover: hover), (min-width: 768px)").matches) {
+  if (!window.matchMedia("(hover: hover), (min-width: 744px)").matches) {
     return { show: () => {}, stop: () => {} };
   }
 

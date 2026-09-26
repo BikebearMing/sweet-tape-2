@@ -96,7 +96,7 @@ export function initTapeSlider(root: HTMLElement): () => void {
   const chips: HTMLElement[] = [];
 
   /* THE PHONE'S STEP BUTTONS. Optional, like everything else queried here —
-     the pair is markup the stylesheet hides above 767px, and a section without
+     the pair is markup the stylesheet hides above 743px, and a section without
      it is still a working section. */
   const nav = q<HTMLElement>(".tape-nav");
   const navBtns = nav

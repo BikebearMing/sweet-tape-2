@@ -39,7 +39,7 @@ export function initPoke(root: HTMLElement): () => void {
      (under 768) keep their stillness: the headline there is most of the
      screen and a poke on the way into every scroll would be noise. */
   const hoverable = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-  const tappable = !hoverable && window.matchMedia("(min-width: 768px)").matches;
+  const tappable = !hoverable && window.matchMedia("(min-width: 744px)").matches;
   if (
     !el ||
     (!hoverable && !tappable) ||

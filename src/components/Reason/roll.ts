@@ -188,7 +188,7 @@ export function mountRoll(box: HTMLElement, card: HTMLElement | null): () => voi
          where the start of a scroll gesture tilted the roll toward the
          thumb and left it there. The phone keeps the listener it has always
          had — the tablet pass changes nothing under 768. */
-      if (window.matchMedia("(hover: hover), (max-width: 767px)").matches) {
+      if (window.matchMedia("(hover: hover), (max-width: 743px)").matches) {
         window.addEventListener(
           "pointermove",
           (e) => {

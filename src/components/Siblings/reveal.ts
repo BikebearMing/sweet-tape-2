@@ -227,9 +227,9 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
      The lean is written with the move because GSAP writes the WHOLE transform
      the moment it touches one, and the stylesheet's rotate() would be lost —
      the same reason every tween below carries it.
-     ponytail: decided once at mount; a window dragged across 767px keeps the
+     ponytail: decided once at mount; a window dragged across 743px keeps the
      mode it loaded in until the next navigation. */
-  if (window.matchMedia("(max-width: 767px)").matches) {
+  if (window.matchMedia("(max-width: 743px)").matches) {
     gsap.registerPlugin(ScrollTrigger);
     const arrivals = cards.map((card) => {
       const tilt =

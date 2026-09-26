@@ -137,9 +137,9 @@ export function initReelPin(root: HTMLElement): () => void {
      because a row three windows long read through a 390px window was a band a
      third the height of the screen. Each piece is cued as it is scrolled to.
      Pieces the stack hides (the kraft) have no box and are skipped.
-     ponytail: decided once at mount; a window dragged across 767px keeps the
+     ponytail: decided once at mount; a window dragged across 743px keeps the
      mode it loaded in until the next navigation. */
-  if (window.matchMedia("(max-width: 767px)").matches) {
+  if (window.matchMedia("(max-width: 743px)").matches) {
     const cued = gsap.utils
       .toArray<HTMLElement>("[data-reel-cue]", root)
       .filter((el) => el.offsetParent !== null)

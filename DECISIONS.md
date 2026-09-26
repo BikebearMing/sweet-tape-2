@@ -5,7 +5,19 @@ considered. ⚠️ = review this one first.
 
 ## Breakpoint architecture
 
-- **Tablet tier is `(min-width: 768px) and (max-width: 1279px)`**, written as
+- **The tier's floor moved 768 → 744 on 2026-09-26** after the owner's iPad
+  mini (744px portrait) showed the phone rules stretched double-wide — the
+  brief's 768 floor missed the smallest real tablet by 24px. The phone tier
+  moved to ≤743 in the same stroke (46 media queries, 10 JS gates, one token
+  swap) so no width answers to two tiers. No real phone is 744–767px wide,
+  so shipped phone rendering is untouched where phones actually live.
+- **Landscape "empty space" under the slider was measured, not fixed**: at
+  1231×747 the settled stage carries 50px of bare tail vs desktop 1440×900's
+  57px — proportionally identical. The big orange frame the owner caught was
+  the section mid-unpin, a transient that exists on desktop too. Tightening
+  it only under 1280px would fork the design's pacing across a 1px window
+  boundary; left matching desktop.
+- **Tablet tier is `(min-width: 744px) and (max-width: 1279px)`**, written as
   a "— the tablet" block per section, mirroring the existing "— the phone"
   convention. Portrait-specific recomposition adds `and (orientation:
   portrait)`. Alternative considered: a global rem-based root scale — rejected
@@ -52,8 +64,9 @@ DRAWING, never the mechanics; every pin measures its own layout on refresh.
   binds capture-phase on the row and prevents the link only when the tapped
   roll is down. Alternative (tap always navigates) rejected — the recolour +
   cue moment is the section's whole reason to exist.
-- ⚠️ **The pick cue still reads "click me!" on tablets.** Server-rendered
-  artwork; re-wording per input needs a markup fork. Colloquially fine.
+- **The pick cue still reads "click me!" on tablets.** Server-rendered
+  artwork; re-wording per input needs a markup fork. Colloquially fine —
+  reviewed 2026-09-26, owner's call: leave it.
 - **Hero poke on tap**: same bulge machinery, sprung back on a 350ms settle.
 - **NextUp grow on press**, released by pointerup/cancel.
 - **About CTA disc swap and EXPLORE ripple on `:active`** under
@@ -77,10 +90,11 @@ DRAWING, never the mechanics; every pin measures its own layout on refresh.
 
 - **stickyNote DPR cap 3 → 2 on `(hover: none) and (min-width: 768px)`.**
   Desktop keeps 3 (raised for label legibility); phones keep 3 — the gate is
-  width-and-input so mobile rendering is bit-identical. ⚠️ Could not measure
+  width-and-input so mobile rendering is bit-identical. Could not measure
   real-device frame rates headlessly; if an older iPad still drops frames on
   the home page (4 WebGL contexts), the next lever is capping the hero tape
-  canvas at DPR 1.5 on coarse pointers.
+  canvas at DPR 1.5 on coarse pointers. Owner is testing on device
+  (2026-09-26).
 
 ## Smooth scroll
 
@@ -95,8 +109,9 @@ DRAWING, never the mechanics; every pin measures its own layout on refresh.
 
 ## Content flags for the morning
 
-- ⚠️ **The product page's reel note literally says "placeholder note"** (CMS
+- **The product page's reel note literally says "placeholder note"** (CMS
   copy, visible on /products/opp — readable now that notes have floors).
+  Owner is writing the real copy in the CMS (2026-09-26).
 - The article's first screen shows the cream sheet with the copy revealing on
   first scroll — that is the design's own pacing (desktop frames the sheet
   edge at the fold; a portrait screen sees more of it). Not changed.

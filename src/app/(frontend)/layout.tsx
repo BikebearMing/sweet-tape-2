@@ -203,7 +203,12 @@ export default async function FrontendLayout({
             id, so a copy per instance would be duplicate ids for a filter they
             all already share. Out of flow and paints nothing. */}
         <PeelDefs />
-        {children}
+        {/* The page itself, and the landmark a reader's shortcut key jumps to.
+            Everything above is furniture (the cover, the menu, the masthead);
+            everything a page says lives in here. A plain block around block
+            children — body sets nothing but type, so the wrapper changes no
+            geometry. */}
+        <main>{children}</main>
       </body>
     </html>
   );

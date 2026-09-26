@@ -91,7 +91,7 @@ export default function TopBand() {
        be the containing block the two pieces are placed against, so neither has
        to know what the page under it is doing. It catches no clicks; the badge
        takes its own back (see .top-band in global.css). */
-    <div className="top-band" ref={ref}>
+    <div className="top-band" role="banner" ref={ref}>
       {/* WITHOUT JAVASCRIPT THE CLAIM NEVER ARRIVES. Its letters are parked
           under their masks by global.css and released by TopBand/reveal.ts, so
           a page where that never runs is a page with an empty corner and a line

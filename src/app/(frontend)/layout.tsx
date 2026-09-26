@@ -83,6 +83,31 @@ export const viewport: Viewport = {
   themeColor: "#034102",
 };
 
+/* Who the site belongs to and what the site is, said once in the head where a
+   crawler reads it. No sameAs yet: the footer's social discs still point at the
+   networks' front doors (src/data/footerBalls.ts) — add the real profile URLs
+   there and here together. */
+const JSON_LD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#org`,
+      name: "SweetTape",
+      url: SITE_URL,
+      logo: `${SITE_URL}/apple-icon.png`,
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      name: "SweetTape",
+      url: SITE_URL,
+      publisher: { "@id": `${SITE_URL}/#org` },
+      inLanguage: "en",
+    },
+  ],
+};
+
 /* The site's root layout. The admin has its own, in the (payload) group — the
    two never share a shell, which is why neither route group inherits the
    other's CSS. */
@@ -141,6 +166,10 @@ export default async function FrontendLayout({
             third-party stylesheet, hence the literal tag. */}
         <link rel="preconnect" href="https://use.typekit.net" crossOrigin="" />
         <link rel="stylesheet" href="https://use.typekit.net/wyl5nhy.css" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+        />
       </head>
       <body>
         {/* Listens for the admin's save message when the site is being previewed

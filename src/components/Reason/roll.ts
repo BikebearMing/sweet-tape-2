@@ -183,18 +183,23 @@ export function mountRoll(box: HTMLElement, card: HTMLElement | null): () => voi
       });
       window.addEventListener("scroll", measure, { signal: ac.signal, passive: true });
 
-      window.addEventListener(
-        "pointermove",
-        (e) => {
-          if (!onScreen) return;
-          const reach = Math.min(screenW(), screenH()) * 0.5 * TILT_REACH;
-          viewer?.point(
-            LEAN.x + (e.clientX - cx) / reach,
-            LEAN.y + (e.clientY - cy) / reach,
-          );
-        },
-        { signal: ac.signal, passive: true },
-      );
+      /* Hover only, which its siblings (ProductIntro, TapeSlider) already
+         ask — this was the one lean bound on touch, where the start of a
+         scroll gesture tilted the roll toward the thumb and left it there. */
+      if (window.matchMedia("(hover: hover)").matches) {
+        window.addEventListener(
+          "pointermove",
+          (e) => {
+            if (!onScreen) return;
+            const reach = Math.min(screenW(), screenH()) * 0.5 * TILT_REACH;
+            viewer?.point(
+              LEAN.x + (e.clientX - cx) / reach,
+              LEAN.y + (e.clientY - cy) / reach,
+            );
+          },
+          { signal: ac.signal, passive: true },
+        );
+      }
       // Pointer off the window or the tab blurred mid-lean: back to the pose.
       window.addEventListener(
         "blur",

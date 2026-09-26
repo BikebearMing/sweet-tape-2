@@ -45,8 +45,15 @@ export type { NoteFace };
 
 const FOV = 35;
 /* 3, not the site's usual 2: one sheet in a small box is cheap, and on a 3x phone
-   a 2x frame is upscaled by the browser, which is what blurred the writing. */
-const DPR_CAP = 3;
+   a 2x frame is upscaled by the browser, which is what blurred the writing.
+   On a WIDE touch screen the cap is the site's usual 2: tablets are 2x panels,
+   so 3 bought nothing there but a 2.25x bigger buffer on the page that already
+   runs four contexts. Phones keep 3 — the blur this cap exists for is theirs. */
+const DPR_CAP =
+  typeof window !== "undefined" &&
+  window.matchMedia("(hover: none) and (min-width: 768px)").matches
+    ? 2
+    : 3;
 
 /** Served straight from /public. Drop the Figma export of the note's face here
     and it replaces the placeholder on the next load; until the file exists the

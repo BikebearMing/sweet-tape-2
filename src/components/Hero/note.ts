@@ -124,14 +124,20 @@ export function initNote(root: HTMLElement, face?: NoteFace, calm = 1): () => vo
   ro.observe(mount);
 
   const ac = new AbortController();
-  window.addEventListener(
-    "pointermove",
-    (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-    },
-    { signal: ac.signal, passive: true }
-  );
+  /* Hover only: a touch would write its tap point into mouseX/mouseY and the
+     ruffle would keep worrying at that spot — re-anchored against the scroll
+     every frame — for the rest of the session. The wind above is the note's
+     life on touch; it reads the scroll, which a thumb genuinely drives. */
+  if (window.matchMedia("(hover: hover)").matches) {
+    window.addEventListener(
+      "pointermove",
+      (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+      },
+      { signal: ac.signal, passive: true }
+    );
+  }
 
   place();
   if (!reduced) gsap.ticker.add(frame);

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Nothing_You_Could_Do } from "next/font/google";
 import { preload } from "react-dom";
@@ -75,6 +75,12 @@ export const metadata: Metadata = {
     images: ["/assets/og.jpg"],
   },
   twitter: { card: "summary_large_image" },
+};
+
+/* The colour the browser's own chrome takes around the page — the hero's dark
+   green, which is what sits behind everything on load. */
+export const viewport: Viewport = {
+  themeColor: "#034102",
 };
 
 /* The site's root layout. The admin has its own, in the (payload) group — the

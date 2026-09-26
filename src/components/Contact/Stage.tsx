@@ -60,29 +60,72 @@ export default function Stage({
        where the hero's is a prop in the corner of the eye. */
     const stopNote = initNote(root, contactFace({ email, phone }), 0.5);
 
-    /* THE FORM HAS NOWHERE TO GO YET, and this is the one line standing between
-     * that and a page reload.
+    /* THE SEND. The fields go to the Messages collection over Payload's own
+     * REST route — no bespoke endpoint, no mail service; the admin is the
+     * inbox (see src/collections/Messages.ts, which argues it).
      *
-     * A <form> with no action submits to its own URL on Enter or on SEND, which
-     * would throw away everything typed and look like a crash. Swallowing the
-     * event is what "the UI is built, the wiring is not" honestly looks like —
-     * the markup is a real form, the labels bind, autofill works, the keyboard
-     * works, and the only thing absent is the call.
+     * THE BUTTON IS THE WHOLE REPORT. It is the thing that was pressed and
+     * where the eye already is, so every state is written on it — checking,
+     * sending, sent, failed — as text, because text needs no stylesheet and
+     * wraps honestly inside the lime block at any length. aria-live on the
+     * button (index.tsx) is what reads the same words to a screen reader.
      *
-     * WHEN THERE IS A BACKEND, IT GOES HERE: read the fields off
-     * `new FormData(form)` and POST them, then report the result on the button.
-     * Nothing else in this section needs to change — the fields already carry
-     * the names a payload would want (see FIELDS in index.tsx).
+     * SENT IS A FULL STOP: the button stays disabled so one message cannot be
+     * filed twice by an impatient double-press. Failure re-arms it, and points
+     * at the email address on the note beside the form — the reader's way out
+     * of a broken network is standing right there.
+     *
+     * The two checks mirror the collection's own required fields. Client-side
+     * only as a courtesy (the server enforces them regardless): a reader who
+     * pressed SEND on an empty form is told what is missing rather than shown
+     * a failure they did not earn.
+     *
+     * The state strings are code and not CMS copy, unlike every heading on
+     * this page: they are the machine reporting on itself mid-act, not the
+     * page's voice. If the owner ever wants to edit them, they move into the
+     * Contact global beside sendLabel.
      *
      * A listener rather than an onSubmit prop, because the form is in the
      * server-rendered children and this component never sees it as an element.
      * Scoped to this section's own form, so it cannot catch anyone else's. */
     const form = root.querySelector<HTMLFormElement>(".contact-form");
-    const swallow = (e: SubmitEvent) => e.preventDefault();
-    form?.addEventListener("submit", swallow);
+    const button = form?.querySelector<HTMLButtonElement>(".contact-send");
+    let busy = false;
+    const say = (text: string) => {
+      if (button) button.textContent = text;
+    };
+    const send = (e: SubmitEvent) => {
+      e.preventDefault();
+      if (!form || !button || busy) return;
+      const data = Object.fromEntries(new FormData(form)) as Record<
+        string,
+        string
+      >;
+      if (!data.email?.trim()) return say("ADD AN EMAIL FIRST");
+      if (!data.message?.trim()) return say("WRITE A MESSAGE FIRST");
+      busy = true;
+      button.disabled = true;
+      say("SENDING…");
+      fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error(String(res.status));
+          form.reset();
+          say("SENT — WE’LL BE IN TOUCH");
+        })
+        .catch(() => {
+          busy = false;
+          button.disabled = false;
+          say("COULDN’T SEND — EMAIL US INSTEAD");
+        });
+    };
+    form?.addEventListener("submit", send);
 
     return () => {
-      form?.removeEventListener("submit", swallow);
+      form?.removeEventListener("submit", send);
       stopReveal();
       stopNote();
     };

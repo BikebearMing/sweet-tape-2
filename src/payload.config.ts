@@ -9,6 +9,7 @@ import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
 import { Tapes } from "./collections/Tapes";
 import { News } from "./collections/News";
+import { Messages } from "./collections/Messages";
 import { About } from "./globals/About";
 import { Contact } from "./globals/Contact";
 import { Homepage } from "./globals/Homepage";
@@ -86,7 +87,7 @@ export default buildConfig({
     },
   },
 
-  collections: [Users, Media, Tapes, News],
+  collections: [Users, Media, Tapes, News, Messages],
 
   globals: [Homepage, About, Menu, Contact],
 

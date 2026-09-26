@@ -210,7 +210,7 @@ export default async function Contact() {
               a button under them, which is the design's arrangement and reads as
               the thing the whole sheet is pointed at. A real <button> inside the
               form, so Enter in any field submits it. */}
-          <button className="contact-send" type="submit">
+          <button className="contact-send" type="submit" aria-live="polite">
             {sendLabel}
           </button>
         </form>

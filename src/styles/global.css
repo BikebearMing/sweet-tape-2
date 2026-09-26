@@ -9538,6 +9538,38 @@ p.powers-name {
 }
 
 /* --------------------------------------------------------------------------
+   Super powers — the tablet, portrait
+   --------------------------------------------------------------------------
+   THE DESKTOP ARRANGEMENT AT A PORTRAIT SIZE. The card is struck from
+   min(half the screen, 26.667vw), and on a portrait tablet the vw term binds:
+   a 205px card in a 1024px pin, with SUPER and POWERS at 68px beside it —
+   the scene the camera holds for three screens of scroll was a stamp in the
+   middle of the frame. The vw cap is raised so the card takes the share of
+   the height it takes at 1440 (the screen term still guards landscape), and
+   the name scales with it. SUPER + card + POWERS still clear the width:
+   two ~13vw words, 40.8vw of card, and the gaps land under 100. Everything
+   printed on the card follows --pow-open-h on its own, copy included. */
+@media (min-width: 768px) and (max-width: 1279px) and (orientation: portrait) {
+  .super-powers {
+    --pow-open-h: min(calc(var(--screen-lg) * 0.5), 40vw);
+    --pow-name-size: 9.3vw;
+  }
+
+  /* THE SUM HAS TO CLEAR 100vw OR THE GRID TAKES IT OUT OF THE CARD. The
+     stage's middle track is auto and its flanks are 1fr with the names' own
+     min-content as their floor — run the row over the width and the auto
+     track is what gets crushed, which reads as the stack clipped to a sliver.
+     MEASURED, not estimated: SUPER lays out at 2.26 times its font size and
+     POWERS at 3.0, so the row is 5.26 x 9.3vw of name + 40.8vw of card + two
+     2vw gaps + 5vw of padding = 98.7vw, with the last vw as slack for the
+     letters' own tracking. Touch the card, the name or this gap and re-run
+     that sum. */
+  .powers-stage {
+    gap: 2vw;
+  }
+}
+
+/* --------------------------------------------------------------------------
    Super powers — the phone
    --------------------------------------------------------------------------
    THE NAME COMES OFF THE SIDES AND GOES ABOVE AND BELOW, which is the only

@@ -581,7 +581,10 @@ export default async function GiantPinning() {
                   it is where "colour the verb differently" goes when the design
                   asks for it, and losing it to the split would be losing the
                   only join in the phrase. */}
-              <h1 className="giant" aria-label={`${phrase.lead} ${phrase.word}`}>
+              {/* An h2 and not an h1: the hero's STICK BY YOU is the page's one h1,
+                  and these three statements are its sections. Nothing selects on
+                  the tag — every rule and script here works the .giant class. */}
+              <h2 className="giant" aria-label={`${phrase.lead} ${phrase.word}`}>
                 {/* The row's number, drawn in a roll — 1, 2, 3 — standing
                     just before the T (see .giant-index). */}
                 <img
@@ -652,7 +655,7 @@ export default async function GiantPinning() {
                 </span>
 
                 <span>{letters(phrase.word)}</span>
-              </h1>
+              </h2>
               {/* The loose photographs wear the panel's roll and the slot's own
                   lift — one arrangement, taped down in one sitting. */}
               <Props items={panel.props} tape={roll} lift={panel.slot.lift} />

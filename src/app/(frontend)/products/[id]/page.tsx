@@ -8,6 +8,7 @@ import ProductIntro from "@/components/ProductIntro";
 import ProductReel from "@/components/ProductReel";
 import Siblings from "@/components/Siblings";
 import SuperPowers from "@/components/SuperPowers";
+import { SITE_URL } from "@/data/site";
 import { getTapeOf } from "@/data/tapes";
 
 /* A TAPE — /products/[id], the family's inner page.
@@ -79,6 +80,31 @@ export default async function TapePage({
      rendered with notFound() is a 404. */
   if (!tape) notFound();
 
+  /* The tape as a crawler reads it — name, line and picture, nothing invented:
+     no offers or ratings, because the site sells nothing and reviews nothing.
+     The brand points at the Organization the layout's JSON-LD declares. */
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Product",
+        name: tape.label,
+        description: tape.copy,
+        ...(tape.faces?.[0]?.src && { image: [`${SITE_URL}${tape.faces[0]!.src}`] }),
+        url: `${SITE_URL}/products/${tape.id}`,
+        brand: { "@id": `${SITE_URL}/#org` },
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+          { "@type": "ListItem", position: 2, name: "Our Family", item: `${SITE_URL}/products` },
+          { "@type": "ListItem", position: 3, name: tape.label },
+        ],
+      },
+    ],
+  };
+
   /* AND NOW IT HAS A FOOTER. It did not for a long time, and that was a
      decision rather than an omission: the footer is the thing that ENDS a page,
      so dropping it in while the sections under the opening screen were still
@@ -98,6 +124,10 @@ export default async function TapePage({
      of them having to know what came before. */
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* THE SCROLLBAR, IN THIS TAPE'S COLOURS. The bar is on screen for the
           whole of every route — the gutter is reserved in global.css — so on a
           page that is otherwise one product's colour from edge to edge, a bar

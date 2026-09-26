@@ -436,6 +436,12 @@ export function initPickFan(
 
   const ac = new AbortController();
   const hoverable = window.matchMedia("(hover: hover)").matches;
+  /* The tablet's way in. No hover means no sweep, so there the FIRST tap on a
+     roll is the hover — it lifts, the page turns that tape's colour, the cue
+     appears — and the SECOND tap on the lifted roll is the click that goes.
+     Phones stay plain links: under 768 the row is 3+3 and tap-to-preview
+     would put a toll booth on a grid that is already all preview. */
+  const tappable = !hoverable && window.matchMedia("(min-width: 768px)").matches;
 
   /* Bound at the instant the first roll starts falling, and not a frame before.
      That window is the one place killTweensOf in pickUp would do damage rather
@@ -455,6 +461,26 @@ export function initPickFan(
   const unsubscribe = whenRevealed(() => {
     start = gsap.delayedCall(PICK_DROP.DELAY, () => {
       drop.play();
+      if (tappable) {
+        /* Capture-phase click on the row, so a pick can stop the link under
+           it. A tap on a roll that is DOWN picks it up — preventDefault, no
+           navigation. A tap on the roll that is UP falls through to its own
+           <a>. `landed` is handled where it always was, in pickUp. */
+        row.addEventListener(
+          "click",
+          (e) => {
+            const card = (e.target as HTMLElement).closest?.(".pick-roll");
+            const i = card ? rolls.findIndex((r) => r.card === card) : -1;
+            if (i < 0 || picked === i + 1) return;
+            e.preventDefault();
+            if (picked !== 0) putDown(picked - 1);
+            picked = i + 1;
+            pickUp(i);
+          },
+          { signal: ac.signal, capture: true },
+        );
+        return;
+      }
       if (!hoverable) return;
       /* The pointer's own condition, unchanged: on a touch screen a tap
          synthesises a mousemove and never sends the mouseleave that would put

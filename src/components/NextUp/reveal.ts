@@ -218,9 +218,17 @@ export function initNextUpReveal(root: HTMLElement): () => void {
 
   /* overwrite: "auto", so a pointer crossing the panel twice in a second kills
      the grow it interrupts rather than leaving two tweens fighting over one
-     scale. (Not quickTo — that cannot retarget the compound `scale`.) */
+     scale. (Not quickTo — that cannot retarget the compound `scale`.)
+
+     TWO WAYS TO GROW IT: the pointer resting on the panel, or — on a wide
+     touch screen, where nothing can rest — the press itself, released by the
+     lift or the cancel that a scroll turns it into. Phones under 768 keep
+     their stillness, as everywhere on this site. */
+  const hoverable = window.matchMedia("(hover: hover)").matches;
+  const pressable =
+    !hoverable && window.matchMedia("(min-width: 768px)").matches;
   const grow =
-    panel && roll && window.matchMedia("(hover: hover)").matches
+    panel && roll && (hoverable || pressable)
       ? (scale: number) =>
           gsap.to(roll, {
             scale,
@@ -233,6 +241,12 @@ export function initNextUpReveal(root: HTMLElement): () => void {
   const leave = () => grow?.(1);
   if (grow) {
     tl.eventCallback("onComplete", () => {
+      if (pressable) {
+        panel!.addEventListener("pointerdown", enter);
+        panel!.addEventListener("pointerup", leave);
+        panel!.addEventListener("pointercancel", leave);
+        return;
+      }
       panel!.addEventListener("pointerenter", enter);
       panel!.addEventListener("pointerleave", leave);
       /* A pointer already resting on the panel as it lands. */
@@ -253,6 +267,9 @@ export function initNextUpReveal(root: HTMLElement): () => void {
     if (grow) {
       panel!.removeEventListener("pointerenter", enter);
       panel!.removeEventListener("pointerleave", leave);
+      panel!.removeEventListener("pointerdown", enter);
+      panel!.removeEventListener("pointerup", leave);
+      panel!.removeEventListener("pointercancel", leave);
       gsap.killTweensOf(roll!);
     }
     /* A teardown mid-arrival must leave the section readable — the name

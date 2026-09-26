@@ -93,12 +93,13 @@ export type PickCue = {
  * @param root the <section class="pick-player">
  */
 export function initPickCue(root: HTMLElement): PickCue {
-  /* NOTHING IS BUILT WHERE THERE IS NO POINTER. fan.ts asks the same question
-     before it binds its listeners — on a touch screen a tap synthesises a
-     mousemove and never sends the mouseleave — so `show` could never be called
-     here anyway. Asking it too is what stops the phone building six timelines
-     that nothing can ever reveal. */
-  if (!window.matchMedia("(hover: hover)").matches) {
+  /* NOTHING IS BUILT WHERE NOTHING CAN CALL IT. fan.ts reveals a cue on hover
+     where there is one, and on the first TAP of a roll where there is not
+     (768 up) — so the cues are built for both. What is left out is the phone:
+     under 768 fan.ts binds neither path, so `show` could never be called and
+     building six timelines for it would be waste. The media list mirrors
+     fan.ts's pair of conditions; keep them in step. */
+  if (!window.matchMedia("(hover: hover), (min-width: 768px)").matches) {
     return { show: () => {}, stop: () => {} };
   }
 

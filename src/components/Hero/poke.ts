@@ -33,9 +33,16 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v
 
 export function initPoke(root: HTMLElement): () => void {
   const el = root.querySelector<HTMLElement>(".title .h1");
+  /* Two ways in: the cursor's, and the finger's. A tablet has no hover to
+     sweep the line with, so there a TAP is the poke — same bulge, same spring
+     back, driven from one pointerdown instead of a stream of moves. Phones
+     (under 768) keep their stillness: the headline there is most of the
+     screen and a poke on the way into every scroll would be noise. */
+  const hoverable = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const tappable = !hoverable && window.matchMedia("(min-width: 768px)").matches;
   if (
     !el ||
-    !window.matchMedia("(hover: hover) and (pointer: fine)").matches ||
+    (!hoverable && !tappable) ||
     window.matchMedia("(prefers-reduced-motion: reduce)").matches
   )
     return () => {};
@@ -106,15 +113,32 @@ export function initPoke(root: HTMLElement): () => void {
     });
   };
 
-  el.addEventListener("pointermove", onMove);
-  el.addEventListener("pointerleave", onLeave);
+  /* The tap: poke where the finger lands, then spring back on the same
+     middle-out settle the cursor's leave uses. No preventDefault — a poke on
+     the way into a scroll costs nothing and stops nothing. */
+  let settle: ReturnType<typeof setTimeout> | undefined;
+  const onTap = (e: PointerEvent) => {
+    at = { x: e.clientX, y: e.clientY };
+    poke();
+    clearTimeout(settle);
+    settle = setTimeout(onLeave, 350);
+  };
+
+  if (hoverable) {
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerleave", onLeave);
+  } else {
+    el.addEventListener("pointerdown", onTap);
+  }
 
   if (process.env.NODE_ENV !== "production") Object.assign(window, { poke: { POKE } });
 
   return () => {
     if (frame) cancelAnimationFrame(frame);
+    clearTimeout(settle);
     el.removeEventListener("pointermove", onMove);
     el.removeEventListener("pointerleave", onLeave);
+    el.removeEventListener("pointerdown", onTap);
     delete el.dataset.poke;
   };
 }

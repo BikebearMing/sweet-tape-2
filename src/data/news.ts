@@ -40,6 +40,9 @@ export type Story = {
   day: string;
   /** The rest of the date, set small under the day. */
   month: string;
+  /** The same day machine-readable (YYYY-MM-DD), for the article's structured
+      data — day and month above are display strings and unparseable. */
+  date: string;
   image: string;
   /** Empty where the picture is decoration beside a title that already says it
       — see the cards. The featured shot carries a real one. */
@@ -111,6 +114,7 @@ function toStory(doc: NewsDoc): Story {
     title: doc.title,
     day: String(d.getUTCDate()).padStart(2, "0"),
     month: `${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`,
+    date: d.toISOString().slice(0, 10),
     /* Payload's own file route, not /media/<name>. In production the upload
        volume is mounted at /app/media — outside public/ on purpose, so that a
        redeploy cannot wipe it — which means Next never sees these as static

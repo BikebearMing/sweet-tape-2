@@ -5,6 +5,7 @@ import Article from "@/components/Article";
 import Footer from "@/components/Footer";
 import RelatedNews from "@/components/RelatedNews";
 import { getStoryOf } from "@/data/news";
+import { SITE_URL } from "@/data/site";
 
 /* A STORY — /news/[id], the news page's inner page.
  *
@@ -60,7 +61,15 @@ export async function generateMetadata({
        cut at a word, with the ellipsis only where something was actually taken
        off. */
     description: summarise(story.body[0] ?? ""),
-    openGraph: story.image ? { images: [story.image] } : undefined,
+    /* A page-level openGraph REPLACES the layout's whole object rather than
+       merging into it, so the fields the layout carries for every other page
+       are restated here alongside the story's own picture. */
+    openGraph: {
+      type: "article",
+      siteName: "SweetTape",
+      url: "./",
+      ...(story.image ? { images: [story.image] } : {}),
+    },
   };
 }
 
@@ -84,8 +93,39 @@ export default async function StoryPage({
      404, which is the right answer for a stale link or a guess. */
   if (!story) notFound();
 
+  /* The story as a crawler reads it. The publisher points at the Organization
+     the layout's own JSON-LD declares, by @id, so the two stay one entity. */
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "NewsArticle",
+        headline: story.title,
+        description: summarise(story.body[0] ?? ""),
+        ...(story.image && { image: [`${SITE_URL}${story.image}`] }),
+        datePublished: story.date,
+        mainEntityOfPage: `${SITE_URL}/news/${story.id}`,
+        publisher: { "@id": `${SITE_URL}/#org` },
+        author: { "@id": `${SITE_URL}/#org` },
+        inLanguage: "en",
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: `${SITE_URL}/` },
+          { "@type": "ListItem", position: 2, name: "What\u2019s Rolling", item: `${SITE_URL}/news` },
+          { "@type": "ListItem", position: 3, name: story.title },
+        ],
+      },
+    ],
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Article story={story} />
       <RelatedNews story={story} />
       <Footer />

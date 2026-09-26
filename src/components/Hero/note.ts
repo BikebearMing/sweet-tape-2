@@ -124,11 +124,13 @@ export function initNote(root: HTMLElement, face?: NoteFace, calm = 1): () => vo
   ro.observe(mount);
 
   const ac = new AbortController();
-  /* Hover only: a touch would write its tap point into mouseX/mouseY and the
-     ruffle would keep worrying at that spot — re-anchored against the scroll
-     every frame — for the rest of the session. The wind above is the note's
-     life on touch; it reads the scroll, which a thumb genuinely drives. */
-  if (window.matchMedia("(hover: hover)").matches) {
+  /* Hover only on wide screens: a touch would write its tap point into
+     mouseX/mouseY and the ruffle would keep worrying at that spot —
+     re-anchored against the scroll every frame — for the rest of the
+     session. The wind above is the note's life on touch; it reads the
+     scroll, which a thumb genuinely drives. The phone keeps the listener it
+     has always had — the tablet pass changes nothing under 768. */
+  if (window.matchMedia("(hover: hover), (max-width: 767px)").matches) {
     window.addEventListener(
       "pointermove",
       (e) => {

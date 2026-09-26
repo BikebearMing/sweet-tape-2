@@ -149,14 +149,15 @@ export function createRollIdle(mount: HTMLElement, tape: HeroTape): RollIdle {
      element to put over the section, and nothing anywhere that can eat a click
      or swallow a touch scroll.
 
-     HOVER ONLY, like the leans on the slider and the product intro. A touch
-     screen fires pointermove on the way into a scroll and never moves the
-     pointer again, so the roll would turn to face the last tap and hold that
-     stare for good. Without the listener `seen` stays false and the float
-     carries the pose alone, which is the rest state this file was built
-     around. */
+     HOVER ONLY ON WIDE SCREENS, like the leans on the slider and the product
+     intro. A touch screen fires pointermove on the way into a scroll and
+     never moves the pointer again, so the roll would turn to face the last
+     tap and hold that stare for good. Without the listener `seen` stays
+     false and the float carries the pose alone, which is the rest state this
+     file was built around. The phone keeps the listener it has always had —
+     the tablet pass changes nothing under 768. */
   const ac = new AbortController();
-  if (window.matchMedia("(hover: hover)").matches) {
+  if (window.matchMedia("(hover: hover), (max-width: 767px)").matches) {
     window.addEventListener("pointermove", onMove, { signal: ac.signal, passive: true });
   }
   const stopVp = onViewportChange(measure);

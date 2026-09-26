@@ -183,10 +183,12 @@ export function mountRoll(box: HTMLElement, card: HTMLElement | null): () => voi
       });
       window.addEventListener("scroll", measure, { signal: ac.signal, passive: true });
 
-      /* Hover only, which its siblings (ProductIntro, TapeSlider) already
-         ask — this was the one lean bound on touch, where the start of a
-         scroll gesture tilted the roll toward the thumb and left it there. */
-      if (window.matchMedia("(hover: hover)").matches) {
+      /* Hover only on wide screens, which its siblings (ProductIntro,
+         TapeSlider) already ask — this was the one lean bound on touch,
+         where the start of a scroll gesture tilted the roll toward the
+         thumb and left it there. The phone keeps the listener it has always
+         had — the tablet pass changes nothing under 768. */
+      if (window.matchMedia("(hover: hover), (max-width: 767px)").matches) {
         window.addEventListener(
           "pointermove",
           (e) => {

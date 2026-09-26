@@ -7,6 +7,7 @@ import { initNote } from "./note";
 import { initParallax } from "./parallax";
 import { initCopyReveal, initCornerMark, initReveal } from "./reveal";
 import { initHeroMark } from "./mark";
+import { initPoke } from "./poke";
 import { initHandNote } from "@/components/HandNote/hand";
 import { initPeel } from "@/components/Peel/peel";
 
@@ -40,6 +41,7 @@ export default function Stage({ children }: { children: ReactNode }) {
     const stopCorner = initCornerMark(root);
     const stopCopy = initCopyReveal(root);
     const stopMark = initHeroMark(root);
+    const stopPoke = initPoke(root);
     const stopRoll = initRollEntrance(root);
     const stopNote = initNote(root);
     const stopParallax = initParallax(root);
@@ -54,6 +56,7 @@ export default function Stage({ children }: { children: ReactNode }) {
       stopCorner();
       stopCopy();
       stopMark();
+      stopPoke();
       stopRoll();
       stopNote();
       stopParallax();

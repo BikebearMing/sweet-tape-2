@@ -266,7 +266,9 @@ const PANELS: Panel[] = [
     lead: "TO",
     word: "CREATE",
     slot: {
-      src: "/assets/slider/masking/shot-1.webp",
+      /* HD export (Rectangle 161124550 (1)), the full square at 900 — the card
+         crops to a square box. */
+      src: "/assets/create-masking-first.webp",
       lift: 0.34,
       delay: 0.4,
       tilt: 3.19,
@@ -275,7 +277,8 @@ const PANELS: Panel[] = [
       e: "sine.inOut",
     },
     props: [
-      { src: "/assets/slider/double/shot-1.webp", kind: "shot", x: 98, y: -15, w: 15, r: -8, z: 2, p: -0.03, e: "none" },
+      /* HD export (Rectangle 161124550), trimmed to the old 204:210 shape. */
+      { src: "/assets/create-double-last.webp", kind: "shot", x: 98, y: -15, w: 15, r: -8, z: 2, p: -0.03, e: "none" },
       { src: "/assets/slider/double/card.webp", kind: "tag", x: 69, y: -24, w: TAG_W, r: -6, z: 1, p: 0.03, e: "sine.inOut" },
       { src: "/assets/slider/masking/card.webp", kind: "tag", x: 53, y: 50, w: TAG_W, r: 5, z: 1, p: 0.03, e: "power1.inOut" },
       { src: "/assets/slider/opp-quiet/card.webp", kind: "tag", x: 94, y: 46, w: TAG_W, r: -14, z: 1, p: -0.02, e: "power2.inOut" },
@@ -291,7 +294,10 @@ const PANELS: Panel[] = [
     word: "FIX",
     tape: "black",
     slot: {
-      src: "/assets/slider/cloth/shot-1.webp",
+      /* The HD export (cloth-tapex4, 1441px square) cut to 900 — about twice
+         what the card draws at on a 1920 screen. The slider still uses the
+         204px slider/cloth/shot-1.webp. */
+      src: "/assets/cloth-tapex4.webp",
       lift: 0.28,
       delay: 1.1,
       tilt: 9.6,
@@ -301,7 +307,9 @@ const PANELS: Panel[] = [
       e: "none",
     },
     props: [
-      { src: "/assets/slider/cloth/shot-2.webp", kind: "shot", x: 32, y: 22, w: 21, r: -5, z: 1, p: -0.025, e: "power1.inOut" },
+      /* HD export (cloth-tapex4-bottomleft), trimmed to the old 204:210 shape —
+         a shot's height is the picture's, and the strip is placed against it. */
+      { src: "/assets/cloth-tapex4-bottomleft.webp", kind: "shot", x: 32, y: 22, w: 21, r: -5, z: 1, p: -0.025, e: "power1.inOut" },
       { src: "/assets/slider/cloth/card.webp", kind: "tag", x: -5, y: 47, w: TAG_W, r: 12, z: 1, p: 0.04, e: "sine.inOut" },
     ],
     /* Above and to the left of BOTH pictures — the slot standing in the phrase's
@@ -320,7 +328,9 @@ const PANELS: Panel[] = [
     lead: "TO",
     word: "PROTECT",
     slot: {
-      src: "/assets/slider/opp/shot-1.webp",
+      /* HD export (protect-opp-tape-x4), the full square at 900 — the card
+         crops to a square box. */
+      src: "/assets/protect-opp-tape-x4-square.webp",
       lift: 0.38,
       delay: 0.75,
       tilt: 4.8,
@@ -343,7 +353,8 @@ const PANELS: Panel[] = [
          depth cue disagreeing. At z 3 this wants a NEGATIVE p. It is left
          positive at 0.045 because that is the arrangement that was chosen; the
          one number to flip if it ever reads as sliding rather than as depth. */
-      { src: "/assets/slider/opp/shot-2.webp", kind: "shot", x: 98, y: 12, w: 17, r: 5, z: 3, p: 0.045, e: "none" },
+      /* HD export (opp-tape-last), trimmed to the old 204:210 shape. */
+      { src: "/assets/opp-tape-last.webp", kind: "shot", x: 98, y: 12, w: 17, r: 5, z: 3, p: 0.045, e: "none" },
       { src: "/assets/slider/opp/card.svg", kind: "tag", x: 61, y: -66, w: TAG_W, r: 6, z: 1, p: -0.02, e: "power2.inOut" },
       { src: "/assets/slider/opp/card.svg", kind: "tag", x: 43, y: 49, w: TAG_W, r: 9, z: 1, p: 0.032, e: "power1.inOut" },
     ],
@@ -571,6 +582,15 @@ export default async function GiantPinning() {
                   asks for it, and losing it to the split would be losing the
                   only join in the phrase. */}
               <h1 className="giant" aria-label={`${phrase.lead} ${phrase.word}`}>
+                {/* The row's number, drawn in a roll — 1, 2, 3 — standing
+                    just before the T (see .giant-index). */}
+                <img
+                  className="giant-index"
+                  src={`/assets/index-${i + 1}.svg`}
+                  alt=""
+                  aria-hidden="true"
+                  draggable={false}
+                />
                 {letters(phrase.lead)}
 
                 {/* THE GAP, and the thing standing in it. No word space either

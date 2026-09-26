@@ -255,6 +255,12 @@ export function initGiantReveal(root: HTMLElement, rows: HTMLElement[]): Reveals
     return chars;
   });
 
+  /* The rows' numbers (.giant-index) arrive with their T rather than standing
+     beside an empty row: hidden here, faded up in write() when the first letter
+     of their phrase rises. */
+  const indices = gsap.utils.toArray<HTMLElement>(".giant-index", root);
+  if (indices.length) gsap.set(indices, { autoAlpha: 0 });
+
   /* Every tape starts with its strip up. The stylesheet's rest pose is FLAT
      (--peel: 1) so that a page with no JS, or one running reduced motion, shows
      a photograph properly taped down rather than one held by a curled corner —
@@ -283,6 +289,14 @@ export function initGiantReveal(root: HTMLElement, rows: HTMLElement[]): Reveals
     const fresh = chars.filter((c) => !written.has(c));
     if (!fresh.length) return;
     fresh.forEach((c) => written.add(c));
+    for (const c of fresh) {
+      const h = c.closest(".giant");
+      if (h?.querySelector(".char") !== c) continue;
+      const icon = h.querySelector(".giant-index");
+      if (icon) {
+        tweens.push(gsap.to(icon, { autoAlpha: 1, duration: REVEAL.DURATION, ease: "power1.out" }));
+      }
+    }
     tweens.push(
       gsap.to(shuffle(fresh), {
         yPercent: 0,
@@ -597,6 +611,7 @@ export function initGiantReveal(root: HTMLElement, rows: HTMLElement[]): Reveals
          part-way through the press must not leave a photograph hanging off a
          half-laid strip. */
       tapes.flat().forEach((t) => t.style.removeProperty("--peel"));
+      if (indices.length) gsap.set(indices, { clearProps: "opacity,visibility" });
     },
   };
 }

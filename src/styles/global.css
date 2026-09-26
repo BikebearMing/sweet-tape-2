@@ -4500,6 +4500,25 @@ html[data-loading] {
   align-items: center;
 }
 
+/* The row's number (index-1/2/3.svg: a roll with 1, 2, 3 in it), just left of
+   the T, its top on the cap line — as the mock has it. In em of the giant type,
+   so it scales with --giant-size: 0.667em is the face's cap height and 0.078em
+   is where the cap line falls in this 0.82 line box, so the icon is 0.133 of a
+   cap tall (the drawing's own 47px at 1440), 0.09 of one clear of the letter.
+
+   IN FLOW, a flex item of the heading, not hung outside it: the camera parks a
+   phrase by its box's left edge (--giant-inset), so an icon outside the box was
+   parked off-screen on TO CREATE. As part of the row it is the phrase's start. */
+.giant-row .giant-index {
+  flex: none;
+  align-self: flex-start;
+  margin: 0.078em 0.061em 0 0;
+  width: auto;
+  height: 0.089em;
+  max-width: none;
+  pointer-events: none;
+}
+
 /* THE GAP BETWEEN TO AND THE NOUN — a box, not a length.
  *
  * It is a flex item in the headline, so the letters make room for it exactly as
@@ -6416,6 +6435,7 @@ html[data-loading] {
   font-size: var(--note-fs);
   line-height: var(--note-lh);
   letter-spacing: 0;
+  -webkit-text-stroke: var(--note-stroke) currentColor;
   white-space: nowrap;
   color: var(--cue-ink);
   transform: rotate(354deg);
@@ -12019,22 +12039,24 @@ li::marker {
   text-align: center;
 }
 
-/* THE TITLE, IN THE LEAD STORY'S FACE — condensed capitals, like every other
-   headline on the page. It was the body face in sentence case, and beside the
-   HIGHLIGHT card the same headline read as two different fonts; asked to be one.
-   Uppercase by text-transform, so the copy in the CMS keeps its own case. The
-   size and tracking are the lead story's own tokens (--h2-size / --h2-track), so
-   the two stay one size at every breakpoint; 0.875 is its leading. */
+/* THE TITLE, AND IT IS THE BODY FACE — the one title on this site that is not set
+   in the condensed display voice, and not by accident. The lead story above is a
+   poster; this is a sentence at 19px that somebody reads. Set the headline face
+   at this size and it stops being a voice and starts being a caption squeezed
+   narrow.
+
+   Sentence case for the same reason, and it is the copy's own case rather than a
+   text-transform — src/data/news.ts writes it as it paints, which is the site's
+   convention everywhere. */
 .index-title {
   position: relative;
   z-index: 1;
   margin: 1.042vw 0 0;
-  font-family: var(--font-heading);
-  font-size: var(--h2-size);
+  font-family: var(--font-body);
+  font-size: 1.667vw;
   font-weight: 800;
-  line-height: 0.875;
-  letter-spacing: var(--h2-track);
-  text-transform: uppercase;
+  line-height: 1;
+  letter-spacing: -0.017vw;
 }
 
 /* Each word its own inline box, so the line breaks BETWEEN words exactly where
@@ -12270,6 +12292,8 @@ li::marker {
 
   .index-title {
     margin-top: 3vw;
+    font-size: 3.9vw;
+    letter-spacing: -0.05vw;
   }
 
   .index-arrow {
@@ -18881,6 +18905,15 @@ img#front {
 .footer-link-label {
   display: flex;
   align-items: flex-end;
+  /* The hover lift — the word only, the dot stays put. `translate`, not
+     `transform`, so it never meets the reveal's tweens, which are on the
+     letters inside. Same overshoot curve as the site's other marks. */
+  transition: translate 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.footer-link:hover .footer-link-label,
+.footer-link:focus-visible .footer-link-label {
+  translate: 0 -0.4vw;
 }
 
 /* A full stop, set as a disc rather than typed as one: a period would sit on
@@ -20322,6 +20355,7 @@ img#front {
   --note-lead-y: 1.319vw; /* 19px — the down rule, up past the crossing */
   --note-tail: 1.25vw; /* 18px — both rules, on past the copy */
   --note-rule: max(1.2px, 0.087vw); /* 1.25px */
+  --note-stroke: 0.02em; /* the copy's extra weight — see .hand-ink */
 }
 
 @media (max-width: 767px) {
@@ -20346,6 +20380,9 @@ img#front {
   font-size: var(--note-fs);
   line-height: var(--note-lh);
   letter-spacing: 0;
+  /* One weight up. The face only ships in 400 and synthetic bold smears it, so
+     a hairline stroke in the ink thickens every letter evenly instead. */
+  -webkit-text-stroke: var(--note-stroke) currentColor;
   text-transform: lowercase;
   white-space: nowrap;
   color: var(--hand-ink);

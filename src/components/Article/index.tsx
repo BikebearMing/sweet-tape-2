@@ -190,9 +190,17 @@ export default function Article({ story }: { story: Story }) {
           </div>
 
           {/* The column beside the copy: four ways to pass the story on, and the
-              way back to the wall it came off. A complementary landmark, because
-              that is what it is — related to the article, not part of it. */}
-          <aside className="article-aside">
+              way back to the wall it came off. Exposed as a NAMED REGION rather
+              than the tag's own complementary role: since <main> wraps every
+              page, a complementary landmark in here would be nested inside main,
+              which readers surface as a structure mistake (axe:
+              landmark-complementary-is-top-level). The tag stays an <aside> —
+              nothing selects on it; .article-aside carries every rule. */}
+          <aside
+            className="article-aside"
+            role="region"
+            aria-label="Share this story"
+          >
             <Share title={story.title} path={hrefOf(story)} />
 
             {/* BACK TO ALL — and it goes to the index rather than to

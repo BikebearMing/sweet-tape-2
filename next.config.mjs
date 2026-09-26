@@ -41,6 +41,20 @@ const nextConfig = {
    * cache-bust that is guaranteed to work, which is exactly why /_next/static
    * hashes its filenames.
    */
+  /* THE LITERAL /404. Every build ships a legacy pages/404.html and the
+     server answers the exact URL /404 with it — before the app's catch-all
+     and its not-found boundary ever run. Every real dead link already gets
+     the PAGE NOT FOUND card; this rewrite sends the one reserved path
+     through the same door (status stays 404; see [...slug]/page.tsx).
+     beforeFiles, so it wins against the filesystem match. */
+  async rewrites() {
+    return {
+      beforeFiles: [{ source: "/404", destination: "/this-page-does-not-exist" }],
+      afterFiles: [],
+      fallback: [],
+    };
+  },
+
   async headers() {
     return [
       {

@@ -18171,6 +18171,35 @@ img#front {
 }
 
 /* --------------------------------------------------------------------------
+   About — the tablet, portrait
+   --------------------------------------------------------------------------
+   The two pinned stages, given more of the frame. Both are vw drawings
+   centred in a --screen-lg stage, so a portrait screen shows them at half
+   their desktop presence with the rest as bare green:
+
+   THE BELT: one token — every pill shares --pill-h and the word fits inside
+   it are measured against the same figure, so the rows carry their type up
+   with them. The widths stay the design's; belt.ts re-measures whatever is
+   laid out.
+
+   THE SENTENCE: the band is the viewBox's own proportion of the WIDTH
+   (1600/560 of 100vw is 35vw of letters in a 133vw-tall frame), so it is
+   widened past the sheet and recentred — the crawl still measures the laid
+   out span, and the words enter and leave the same way from a lower, larger
+   band. 145% puts the letters at half again their width's size, the same
+   share of a portrait frame the desktop band takes of its own. */
+@media (min-width: 768px) and (max-width: 1279px) and (orientation: portrait) {
+  .conveyor-train {
+    --pill-h: 17vw;
+  }
+
+  .wanted-band {
+    width: 145%;
+    left: -22.5%;
+  }
+}
+
+/* --------------------------------------------------------------------------
    About — the phone
    --------------------------------------------------------------------------
    ALL SIX SECTIONS ARE HERE NOW, and the one that changed is the first: this

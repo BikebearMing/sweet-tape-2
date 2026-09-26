@@ -100,9 +100,10 @@ two-sitting provenance is the only mark this left on the branch.
 - **Phones (≤743px)**: tablet rules can't reach below 744; 390×844
   before/after filmstrips match; the three lean gates keep the phone's
   shipped listener by explicit exemption.
-- **Landscape tablets**: measured, not guessed — the slider's "empty" tail
-  is 45–50px settled, vs desktop's 57px at 1440×900; the wide frame the
-  owner caught was the section mid-unpin, identical pacing to desktop.
+- **Landscape tablets**: the slider stage is capped at 82vw in the tier —
+  a 4:3 screen otherwise carries 93vw of stage (vs a laptop's 80) under a
+  drawing that ends near 75vw, which is the bare field the owner kept
+  catching. Desktop 1440×900 re-measured unchanged after the cap (1159px).
 - Clean `next build` (Turbopack) and `tsc --noEmit` at the branch tip.
 
 ## What's left

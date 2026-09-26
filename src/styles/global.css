@@ -3649,6 +3649,23 @@ html[data-loading] {
   }
 }
 
+/* A tablet held sideways is SQUARER than any desktop — 4:3 against a
+   laptop's 16:10 — and the stage formula above (a screen of height plus the
+   18vw tail) quietly keys off that: on a 1440x900 desktop it comes to 80vw
+   of stage, on a 1024x768 iPad it comes to 93vw, and the drawing hangs from
+   the top in vw either way, ending around 75. Those last ~18vw are the bare
+   orange field the owner kept catching. 82vw holds the drawing plus the
+   desktop's own ~5vw of settle-room (measured 2026-09-26: content to 765px
+   of a capped 840 at 1024x768) and the min() never binds on a frame already
+   shaped like a desktop — but a 1280x1024 monitor IS squarer than 4:3, so
+   the cap stays fenced inside the tier instead of riding the base rule the
+   way the portrait cap can. */
+@media (min-width: 744px) and (max-width: 1279px) and (orientation: landscape) {
+  .tape-slider-parent {
+    height: min(calc(var(--screen) + 12vw + var(--stage-air)), 82vw);
+  }
+}
+
 /* --------------------------------------------------------------------------
    Step buttons — the phone's, and OFF at every other width.
    --------------------------------------------------------------------------

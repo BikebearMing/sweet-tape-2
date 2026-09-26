@@ -11,12 +11,19 @@ considered. ⚠️ = review this one first.
   moved to ≤743 in the same stroke (46 media queries, 10 JS gates, one token
   swap) so no width answers to two tiers. No real phone is 744–767px wide,
   so shipped phone rendering is untouched where phones actually live.
-- **Landscape "empty space" under the slider was measured, not fixed**: at
-  1231×747 the settled stage carries 50px of bare tail vs desktop 1440×900's
-  57px — proportionally identical. The big orange frame the owner caught was
-  the section mid-unpin, a transient that exists on desktop too. Tightening
-  it only under 1280px would fork the design's pacing across a 1px window
-  boundary; left matching desktop.
+- **Landscape slider stage capped at 82vw — a verdict revised the same
+  day.** First measurement (1231×747, a window dragged desktop-shaped) found
+  the tail matching desktop and closed the issue; the owner's 4:3 preset
+  reopened it, correctly. The stage formula — a screen of height plus the
+  18vw tail — keys off aspect: 80vw of stage on a 16:10 laptop, 93vw on a
+  4:3 iPad, under a drawing that ends near 75vw either way. The cap holds
+  the drawing plus desktop's own settle-room, binds only on tablet-squareish
+  frames, and lives inside the tier's media query rather than the base rule
+  because a 1280×1024 desktop monitor is also squarer than 4:3 and must not
+  feel it. Desktop 1440×900 re-measured unchanged (1159px) after the change.
+  The lime breather that follows the arc is NOT part of this: measured at
+  53% of a screen on the iPad vs 64% on desktop — the seam is already
+  proportionally tighter there than the design's own desktop pacing.
 - **Tablet tier is `(min-width: 744px) and (max-width: 1279px)`**, written as
   a "— the tablet" block per section, mirroring the existing "— the phone"
   convention. Portrait-specific recomposition adds `and (orientation:

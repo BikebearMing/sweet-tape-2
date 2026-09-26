@@ -2925,7 +2925,24 @@ html[data-loading] {
   transition: rotate 0.5s ease-out;
 }
 
-.tape-slider-parent .explore-button:hover::before,
+/* Gated on input, not width: hover where there is one, the press itself where
+   there is not — a tap's synthetic hover never sends the leave that would set
+   the perforation straight again. :focus-visible stays outside the gates; a
+   keyboard is a keyboard on either kind of screen. */
+@media (hover: hover) {
+  .tape-slider-parent .explore-button:hover::before {
+    rotate: 24deg;
+    transition: rotate 0.8s linear;
+  }
+}
+
+@media (hover: none) {
+  .tape-slider-parent .explore-button:active::before {
+    rotate: 24deg;
+    transition: rotate 0.8s linear;
+  }
+}
+
 .tape-slider-parent .explore-button:focus-visible::before {
   rotate: 24deg;
   transition: rotate 0.8s linear;
@@ -2985,7 +3002,22 @@ html[data-loading] {
 /* Quick off the mark and easing out, so the rings burst from the centre and
    the last ones drift off the edge. 147% is the radius plus the four bands:
    the trailing ring is off the disc at the end. */
-.tape-slider-parent .explore-button:hover::after,
+@media (hover: hover) {
+  .tape-slider-parent .explore-button:hover::after {
+    --ripple: 147%;
+    transition: --ripple 1.3s cubic-bezier(0.3, 0.45, 0.3, 1);
+  }
+}
+
+/* The press pays out the ripple on touch. The page transition holds the sheet
+   long enough for the burst to read before the route goes. */
+@media (hover: none) {
+  .tape-slider-parent .explore-button:active::after {
+    --ripple: 147%;
+    transition: --ripple 1.3s cubic-bezier(0.3, 0.45, 0.3, 1);
+  }
+}
+
 .tape-slider-parent .explore-button:focus-visible::after {
   --ripple: 147%;
   transition: --ripple 1.3s cubic-bezier(0.3, 0.45, 0.3, 1);
@@ -2994,6 +3026,7 @@ html[data-loading] {
 @media (prefers-reduced-motion: reduce) {
   .tape-slider-parent .explore-button::before,
   .tape-slider-parent .explore-button:hover::after,
+  .tape-slider-parent .explore-button:active::after,
   .tape-slider-parent .explore-button:focus-visible::after {
     transition: none;
   }
@@ -17934,16 +17967,37 @@ img#front {
   transition: transform 0.5s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-.about-cta-button:hover .about-cta-disc {
-  transform: translateX(var(--cta-swap));
+/* THE SWAP IS GATED ON THE INPUT, NOT THE WIDTH. On a mouse it is the hover it
+   always was. On touch there is no leave event, so a tap would park the pill
+   mid-swap for good — instead the press itself plays it, which reads as the
+   button answering the thumb, and release (or the navigation) puts it back.
+   A 1366px iPad takes the second branch; the width never decides this. */
+@media (hover: hover) {
+  .about-cta-button:hover .about-cta-disc {
+    transform: translateX(var(--cta-swap));
+  }
+
+  .about-cta-button:hover .about-cta-next {
+    transform: translateX(0);
+  }
+
+  .about-cta-button:hover .about-cta-label {
+    transform: translateX(var(--cta-shift));
+  }
 }
 
-.about-cta-button:hover .about-cta-next {
-  transform: translateX(0);
-}
+@media (hover: none) {
+  .about-cta-button:active .about-cta-disc {
+    transform: translateX(var(--cta-swap));
+  }
 
-.about-cta-button:hover .about-cta-label {
-  transform: translateX(var(--cta-shift));
+  .about-cta-button:active .about-cta-next {
+    transform: translateX(0);
+  }
+
+  .about-cta-button:active .about-cta-label {
+    transform: translateX(var(--cta-shift));
+  }
 }
 
 /* THE WHOLE SECTION, STILL. Thirty-eight letters flying in from nowhere, a
@@ -19038,6 +19092,14 @@ img#front {
   translate: 0 -0.4vw;
 }
 
+/* The press lifts it on touch — the tap's own synthetic hover has no leave,
+   so left to :hover the label would stay up after the finger had gone. */
+@media (hover: none) {
+  .footer-link:active .footer-link-label {
+    translate: 0 -0.4vw;
+  }
+}
+
 /* A full stop, set as a disc rather than typed as one: a period would sit on
    the baseline inside the line box and its size would be the font's business.
    This is a mark under the word and it is the menu's arrow disc a long way
@@ -19839,6 +19901,22 @@ img#front {
   /* Shorter than the slot's own open, deliberately — the beats overlap now.
      See --menu-thumb-wait for what that buys and where the floor is. */
   transition-delay: var(--menu-thumb-wait);
+}
+
+/* ON TOUCH THE SLOT NEVER CLOSES. A press reveal dies with the tap that
+   navigates, so the previews would be a rumour — open, they read as part of
+   the row's drawing and the panel loses nothing. Wide screens only: the phone
+   block keeps its own call (no pointer, no preview, taller rows instead),
+   which this must not reach under it. */
+@media (hover: none) and (min-width: 768px) {
+  .menu-link .menu-thumb {
+    width: var(--menu-thumb);
+    margin-right: 0.85vw;
+  }
+
+  .menu-link .menu-thumb img {
+    transform: scale(1);
+  }
 }
 
 /* 60px / 60px / -1.8px at the 1440 design width, carried to vw the way the

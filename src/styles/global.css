@@ -218,6 +218,13 @@ body {
   font-family: var(--font-body);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  /* THE SHEET UNDER EVERY SECTION, and it is the site's dark green rather than
+     the browser's white. Any strip of body a section leaves bare — the large
+     viewport opening past a pinned screen when iOS retracts its bars, the
+     overscroll bounce past either end of the page — used to paint white
+     against the belt's and the footer's green. Same paper-compensated green
+     as --about-bg and --footer-paper, and the themeColor in layout.tsx. */
+  background: #034102;
 }
 
 h1,
@@ -1960,10 +1967,12 @@ html[data-loading] {
     /* TIGHTER THAN THE DESKTOP'S 0.73, read off the phone mock (2026-09-24):
        BY YOU's outer letters rise into the room the arc leaves under STICK's
        ends, so the lines nest rather than stack. It was 0.9 to fill the lime,
-       and the user asked for it tightened to the mock. At this figure the
-       baseline sits a hair below the line box, so .clip below gets a sliver of
-       bottom room — or every letter's foot is shaved flat by its own mask. */
-    line-height: 0.65;
+       and the user asked for it tightened to the mock — then eased back out a
+       touch (2026-09-27, "too tight"): 0.65 had BY's cap brushing STICK's
+       foot. At this figure the baseline sits a hair below the line box, so
+       .clip below gets a sliver of bottom room — or every letter's foot is
+       shaved flat by its own mask. */
+    line-height: 0.72;
   }
 
   .hero-section .h1 .clip {
@@ -18454,10 +18463,31 @@ img#front {
      rather than how two boxes in a row do. */
   /* THE PHONE'S MIDDLE HAS ROOM FOR TWO, not four — the logo card and the
      loose strip are the desktop's. display: none and not opacity: a picture
-     the phone never shows should not be fetched by it either. */
+     the phone never shows should not be fetched by it either.
+
+     THE CLEAR STRIP GOES WITH THEM, for a different reason: it is placed on
+     the SHEET in the photograph's desktop coordinates (top 42.5vw), and the
+     phone re-anchors the shophouse to the floor — left alone it sat orphaned
+     against GENERATION's top-right corner (user, 2026-09-27). Re-placing it
+     would mean deriving the photograph's height from a CMS upload's aspect;
+     hiding it is what the logo card already does. */
   .about-logo,
-  .about-strip {
+  .about-strip,
+  .about-tape[data-tape="shop"] {
     display: none;
+  }
+
+  /* THE STRIPS ON THE CUTTING, GROWN TO ITS OWN PROPORTION. Their length is an
+     inline --peel-w in vw of the VIEWPORT (AboutOpen's strip()), so the 11vw
+     that is 59% of an 18.5vw desktop cutting is 32% of this 34vw one — the
+     same strip on a bigger picture read as sellotape on a poster. scale
+     rather than a width: the size is inline and out of a media query's reach,
+     and the standalone property composes under the rules' own rotate while
+     the margin-centring keeps the growth in place. 1.8 is 34/18.5, the
+     cutting's own factor. */
+  .about-tape[data-tape="side"],
+  .about-tape[data-tape="foot"] {
+    scale: 1.8;
   }
 
   .about-clipping {
@@ -20953,11 +20983,14 @@ img#front {
        label and the disc below grew by the same factor so a row is the same
        drawing, larger. */
     --menu-row-h: 18.5vw;
-    /* The hover preview is a pointer affordance and there is no pointer here,
-       so it never opens — but the row's height is measured against it in the
-       desktop rule and it stays proportional rather than being switched off. */
-    --menu-thumb: 10vw;
-    --menu-thumb-radius: 3vw;
+    /* The hover preview is a pointer affordance and there is no pointer here —
+       but iOS sets :hover on a tap, so the slot does open, and at 10vw it was
+       a postage stamp in an 18.5vw row (user, 2026-09-27). The row's height is
+       measured against this in the desktop rule either way, so it stays
+       proportional rather than being switched off. Radius rides the same
+       10 : 3 ratio. */
+    --menu-thumb: 13vw;
+    --menu-thumb-radius: 3.9vw;
   }
 
   .menu-panel {

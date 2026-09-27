@@ -11163,6 +11163,21 @@ p.powers-name {
     --arc-drop: 1.7vw;
     /* 0.072em, as at 1440 — see above */
   }
+
+  /* THE NOTE DOES NOT FIT AT 390 AS PLACED. 17vw wide at left 75.5vw is the
+     desktop's tuck under ROLLING's G, and the WRITING is not vw there — it is
+     --note-fs, 14px on a phone — so the lines run from 82vw to about 112vw and
+     the sheet's edge cuts them (user, 2026-09-27: "note cutoff at the right
+     side"). The 404 wears this same note and makes this same correction in its
+     own phone block, at these figures: widened to a phone's share of the width
+     and anchored from the right, far enough in that the writing's overhang
+     stays on the sheet. */
+  .whats-rolling .rolling-note {
+    --hand-w: 30vw;
+    left: auto;
+    right: 11vw;
+    bottom: 0;
+  }
 }
 
 /* ==========================================================================

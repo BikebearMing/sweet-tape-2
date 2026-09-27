@@ -48,7 +48,7 @@
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-import { resetScroll } from "@/components/SmoothScroll";
+import { ENTRANCE_GRACE, resetScroll } from "@/components/SmoothScroll";
 import { hold, release, startSweep } from "./gate";
 import { lastOf, PRELOADER, scheduleSheets, sheetsOf } from "./reveal";
 
@@ -227,6 +227,10 @@ export function createTransition(
   }
   let giveUp: gsap.core.Tween | null = null;
   let settle: gsap.core.Tween | null = null;
+  /* The lag-smoothing hand-back, pending from a lift — killable, because a new
+     transition starting inside the grace would otherwise have this fire mid-
+     cover and take the choreography's protection off under it. */
+  let lagSettle: gsap.core.Tween | null = null;
 
   function to(href: string): void {
     if (phase !== "idle") return;
@@ -242,7 +246,10 @@ export function createTransition(
 
     /* Before anything moves and long before the router is told: the gate is
        what the incoming page's entrances queue on, and it has to be shut by the
-       time they mount. */
+       time they mount. A hand-back still pending from the LAST lift dies here,
+       or it would fire mid-cover and strip the protection it is queued behind. */
+    lagSettle?.kill();
+    lagSettle = null;
     hold();
     gsap.ticker.lagSmoothing(TRANSITION.LAG, 33);
 
@@ -403,9 +410,24 @@ export function createTransition(
     tl.call(
       () => {
         release();
-        /* And back to SmoothScroll's setting, at the moment scrolling becomes
-           possible again — which is the only moment at which it matters. */
-        gsap.ticker.lagSmoothing(0);
+        /* And back to SmoothScroll's setting — but NOT in the same breath.
+           This used to be a bare lagSmoothing(0) beside the release, and that
+           was the "title snaps in standing" bug arriving by navigation after
+           it had been fixed for the cold load (2026-09-27, the iPad report):
+           release() is what starts the incoming page's entrances, and on a
+           first-session navigation the worst stall of that page's life — the
+           product reel's first three.js compile, a story's images decoding —
+           lands inside their window. With smoothing already off, one stall
+           advances the title tween by its full length and only the stagger's
+           tail is seen to move. So the hand-back waits the same grace the
+           cold load's does — SmoothScroll's note at ENTRANCE_GRACE is the
+           long version — and the scroll gives up nothing meanwhile unless a
+           frame actually stalls, which is exactly the frame it should give
+           something up on. */
+        lagSettle = gsap.delayedCall(ENTRANCE_GRACE, () => {
+          lagSettle = null;
+          gsap.ticker.lagSmoothing(0);
+        });
       },
       undefined,
       last.at + last.duration * PRELOADER.HANDOFF,
@@ -439,6 +461,8 @@ export function createTransition(
       ac.abort();
       giveUp?.kill();
       settle?.kill();
+      lagSettle?.kill();
+      lagSettle = null;
       tl?.kill();
       tl = null;
       /* A teardown mid-transition must not leave the site behind a curtain that

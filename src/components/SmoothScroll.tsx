@@ -24,6 +24,17 @@ import { initViewport } from "@/components/viewport";
    of reasons the preloader's gate is on the document. */
 let scroller: Lenis | null = null;
 
+/* HOW LONG THE ENTRANCES ARE PROTECTED past a release, in seconds — the beat
+   between the cover handing a page over and lag smoothing coming off. The long
+   note below (see "AND NOT AT THE HANDOFF EITHER") is the reasoning; what
+   matters here is that there are TWO releases on this site — the preloader's
+   cold load and the transition's route change — and both play the same
+   entrances into the same worst frames, so both wait the same grace. The
+   transition shipped without it for a round (lagSmoothing(0) in the same call
+   as release()) and that was the "title snaps in standing" bug arriving by
+   navigation after it had been fixed for the cold load. */
+export const ENTRANCE_GRACE = 2;
+
 /* Back to the top, now, with nothing animated about it.
  *
  * WHY IT CANNOT BE window.scrollTo. Lenis does set a real scroll position, but
@@ -136,7 +147,9 @@ export default function SmoothScroll() {
        stalls, which is exactly the frame it should give something up on. */
     let settle: gsap.core.Tween | null = null;
     const stopGate = whenRevealed(() => {
-      settle = gsap.delayedCall(2, () => gsap.ticker.lagSmoothing(0));
+      settle = gsap.delayedCall(ENTRANCE_GRACE, () =>
+        gsap.ticker.lagSmoothing(0),
+      );
 
       /* AND EVERY PIN IS RE-MEASURED, which is a bug fix and not housekeeping.
        *

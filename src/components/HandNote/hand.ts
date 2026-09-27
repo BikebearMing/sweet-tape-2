@@ -135,10 +135,16 @@ function initOne(note: HTMLElement): () => void {
   const lines = typeset(mount);
 
   /* The corner, drawn out from where the lines cross: across first, then down,
-     sharing RULE by length so the pen moves at one speed. */
+     sharing RULE by length so the pen moves at one speed.
+
+     MEASURED WITH A RECT AND NOT clientWidth, because these are <svg>
+     elements and WebKit has a long history of reporting client sizes of 0 on
+     them where Chromium reports the layout box. A zero here is quiet poison:
+     both durations come out 0 and the two rules POP instead of drawing.
+     getBoundingClientRect answers from layout in every engine. */
   const tl = gsap.timeline({ paused: true });
-  const a = across.clientWidth;
-  const d = down.clientHeight;
+  const a = across.getBoundingClientRect().width;
+  const d = down.getBoundingClientRect().height;
   const rule = DRAW.RULE * pace;
   tl.fromTo(across, { scaleX: 0 }, { scaleX: 1, duration: (rule * a) / (a + d || 1), ease: "none" }, 0);
   tl.fromTo(down, { scaleY: 0 }, { scaleY: 1, duration: (rule * d) / (a + d || 1), ease: "none" });

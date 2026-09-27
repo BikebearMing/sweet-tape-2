@@ -348,7 +348,26 @@ export function initPreloader(root: HTMLElement): () => void {
      not there would be four seconds of a blank lime screen, which is the worst
      version of this component there is. */
   const bare = !mark;
-  const sweepAt = bare ? PRELOADER.SWEEP_BARE : PRELOADER.SWEEP;
+
+  /* THE READER HAS ALREADY WAITED, and this clock does not start until
+     hydration — on a cold load that is the document, the stylesheet, the
+     chunks and the hydration pass, all spent watching a bare lime sheet
+     before the first beat plays (measured at 4.5s on a throttled machine,
+     2026-09-27). The overture's hold is the one part built to be spent (see
+     PRELOADER.SWEEP: "a second and three quarters of it simply being read"),
+     so the wait the page has already cost is paid out of the hold rather
+     than stacked in front of it.
+
+     performance.now() counts from navigation start, so it is the whole of
+     what the reader has watched. The first 1.2s is free — a warm load
+     hydrates inside it and nothing changes. The floor keeps the pop whole
+     and lands it with a beat to be read: the mark is down and still by
+     about 2.6 (IN_AT plus the pop and settle), and 2.9 leaves it a moment
+     on the sheet before the paper moves. */
+  const waited = Math.max(performance.now() / 1000 - 1.2, 0);
+  const sweepAt = bare
+    ? PRELOADER.SWEEP_BARE
+    : Math.max(PRELOADER.SWEEP - waited, 2.9);
 
   /* THE COVER IS CHOREOGRAPHY ON A CLOCK, and its clock runs through the worst
      frames of the page's life: hydration, three's first compile, the GLB
@@ -357,15 +376,20 @@ export function initPreloader(root: HTMLElement): () => void {
      200ms, and the beats it lands on simply do not happen. The mark's unfold is
      240ms, half a second in, and one stall can take four fifths of it.
 
-     GSAP's own default would not help: its threshold is 500ms, and these stalls
-     are half that. So the threshold comes down to just over two frames for the
-     length of the hold, and any frame worse than that is counted as 33ms. The
-     cover then runs a little longer in wall-clock on a slow machine and keeps
-     its shape, which for a fixed piece of choreography is the right way round.
+     (250, 120) AND NOT THE (120, 33) THIS SHIPPED WITH. The old pair
+     protected the choreography so well it stretched it: on a machine whose
+     frames run long for the WHOLE hold — a cold start on a throttled CPU,
+     measured 2026-09-27 — every frame over 120ms was counted as 33, and the
+     4.37s overture took 12.7s of wall clock. That is the "preloader takes
+     too long" report, and it is this setting, not the network. At 250 the
+     merely-struggling frames (75-200ms) pass at real time, so the cover
+     keeps to its schedule and only a genuine stall — three's first compile,
+     a GC — is clamped, at 120ms rather than at two frames, so the beat it
+     lands on is dented rather than skipped.
 
      SmoothScroll puts it back to 0 at the handoff, which is where it belongs:
      nothing scrolls before then. */
-  gsap.ticker.lagSmoothing(120, 33);
+  gsap.ticker.lagSmoothing(250, 120);
 
   const tl = gsap.timeline();
 

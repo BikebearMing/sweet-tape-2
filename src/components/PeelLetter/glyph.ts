@@ -238,12 +238,20 @@ export function rasteriseImage(
     c.width = Math.round(box.w * scale);
     c.height = Math.round(box.h * scale);
     const ctx = c.getContext("2d")!;
-    ctx.scale(scale, scale);
-    ctx.drawImage(img, 0, 0, box.w, box.h);
+    /* THE DESTINATION IS NAMED IN DEVICE PIXELS AND THE TRANSFORM STAYS AT
+       IDENTITY, and that is the whole trick. An SVG handed to drawImage is
+       rasterised at the destination RECT's size — the canvas transform is
+       ignored for that decision — so scale()+drawImage(box.w, box.h) had the
+       browser rasterise the badge at its ~183px layout size and bitmap-blow
+       it up by DPR x OVERSAMPLE onto the texture. That was the soft badge
+       (user, 2026-09-28). Asking for the full device-pixel rect makes the
+       browser rasterise the vector at texture size. The letters never had
+       the problem: fillText rasterises under the transform. */
+    ctx.drawImage(img, 0, 0, c.width, c.height);
     if (fill) {
       ctx.globalCompositeOperation = "source-in";
       ctx.fillStyle = fill;
-      ctx.fillRect(0, 0, box.w, box.h);
+      ctx.fillRect(0, 0, c.width, c.height);
     }
     return c;
   };

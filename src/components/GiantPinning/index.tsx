@@ -257,7 +257,11 @@ type Panel = {
    * themselves: the percentages are of each row's own width, and the three rows
    * are different widths.
    */
-  note?: { x: number; y: number };
+  /* The handwriting beside the pictures — lines are the drawing's own breaks,
+     never a wrap, the same contract every note on the site holds. Per panel,
+     because three copies of one sentence beside three different verbs read as
+     wallpaper (they were the hero board's own line for a round). */
+  note?: { x: number; y: number; lines: string[] };
 };
 
 const PANELS: Panel[] = [
@@ -286,7 +290,11 @@ const PANELS: Panel[] = [
     /* Centred under the slot and just clear of it: the card spans 22.5%..37.4%
        of the row and ends at 73.8% of its height, and the note is 7.9% of the
        row wide. */
-    note: { x: 26, y: 78 },
+    note: {
+      x: 26,
+      y: 78,
+      lines: ["every masterpiece", "starts held", "in place."],
+    },
   },
   {
     className: "diagdown-to-horizontal",
@@ -321,7 +329,11 @@ const PANELS: Panel[] = [
        two lines lie across the T and the O in the same dark green, which is not
        a note overlapping type, it is a note that has disappeared. Its box ends
        about 240px above a cap line at 260 at the current size. */
-    note: { x: 19, y: -24 },
+    note: {
+      x: 19,
+      y: -24,
+      lines: ["the quick fix", "that outlasts", "the thing it fixed."],
+    },
   },
   {
     className: "diagup-to-horizontal",
@@ -355,7 +367,7 @@ const PANELS: Panel[] = [
          one number to flip if it ever reads as sliding rather than as depth. */
       /* HD export (opp-tape-last), trimmed to the old 204:210 shape. */
       { src: "/assets/opp-tape-last.webp", kind: "shot", x: 98, y: 12, w: 17, r: 5, z: 3, p: 0.045, e: "none" },
-      { src: "/assets/slider/opp/card.svg", kind: "tag", x: 61, y: -66, w: TAG_W, r: 6, z: 1, p: -0.02, e: "power2.inOut" },
+      { src: "/assets/slider/opp/card.svg", kind: "tag", x: 61, y: -32, w: TAG_W, r: 6, z: 1, p: -0.02, e: "power2.inOut" },
       { src: "/assets/slider/opp/card.svg", kind: "tag", x: 43, y: 49, w: TAG_W, r: 9, z: 1, p: 0.032, e: "power1.inOut" },
     ],
     /* Under the slot, the same reading TO CREATE's note takes — and NOT the
@@ -378,7 +390,11 @@ const PANELS: Panel[] = [
 
        Clear of the tag at x 43 — that one starts 11% of the row to the right of
        where this ends. */
-    note: { x: 25, y: 75 },
+    note: {
+      x: 25,
+      y: 75,
+      lines: ["from our hands", "to theirs,", "arriving whole."],
+    },
   },
 ];
 
@@ -676,13 +692,15 @@ export default async function GiantPinning() {
                   size on the page, not a fraction of whichever phrase it
                   happens to be near.
 
-                  decorative, because these exact words are already on the page:
-                  the hero's copy is the one in the accessibility tree, and these
-                  repeats must not say it again. */}
+                  decorative still, though the words are each panel's own now
+                  rather than the hero board's sentence three times over: they
+                  are asides scribbled in the margin of pictures the headline
+                  already names, not a claim the page makes anywhere else. */}
               {panel.note && (
                 <HandNote
                   className="giant-note"
                   decorative
+                  lines={panel.note.lines}
                   style={
                     {
                       "--px": `${panel.note.x}%`,

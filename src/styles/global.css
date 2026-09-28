@@ -17185,7 +17185,9 @@ img#front {
 /* THE TWO PHOTOGRAPHS. The masking roll sits high on the right, clear of the
    sentence; the tissue roll sits low and central and DOES lie across the foot of
    it, which is why the whole layer is filed after .reimagine-copy in the markup.
-   204 x 210, so --ph is a shade taller than --pw. */
+   The boxes keep the slider shots' 204 x 210 proportion (--ph a shade taller
+   than --pw) though the files are HD exports now — see SHOTS in props.tsx;
+   object-fit: cover absorbs the exports' slightly taller crop. */
 .rei-shot-a {
   --px: 80.7;
   --py: 33.7;

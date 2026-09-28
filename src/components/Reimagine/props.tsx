@@ -115,15 +115,20 @@ const STRIPS: Array<{ key: string; roll: Roll }> = [
   { key: "rei-mask-b", roll: MASKING },
 ];
 
+/* HD EXPORTS OF THEIR OWN, NOT THE SLIDER'S 204px SHOTS. These boxes draw at
+ * 26vw — 500px of a 1920 screen — and the slider's showcase files are a
+ * contract at 204 x 210, so borrowing them here was a 2.5x blow-up (user,
+ * 2026-09-28: "more hd"). Cut to 1000, about twice the draw, the same bargain
+ * cloth-tapex4 strikes for the pinning card. The slider keeps its own copies. */
 const SHOTS = [
   {
     key: "rei-shot-a",
-    src: "/assets/slider/masking/shot-1.webp",
-    alt: "A roll of SweetTape masking tape held against a wall of artwork",
+    src: "/assets/masking-x4-reimagine.webp",
+    alt: "A roll of SweetTape masking tape on a watercolour painting in progress",
   },
   {
     key: "rei-shot-b",
-    src: "/assets/slider/double/shot-1.webp",
+    src: "/assets/double-x4-reimagine.webp",
     alt: "A roll of SweetTape double-sided tissue tape on a checkerboard cutout",
   },
 ];

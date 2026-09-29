@@ -18710,6 +18710,9 @@ img#front {
      The 16px of air is the pill's own figure; the crate below overlaps the
      button's foot exactly as it overlapped the pill's. */
   margin: 1.111vw auto 0;
+  /* 15% more disc than the slider's; the word and the badge keep their own
+     sizes (they are not struck off --explore-size), so only the white grows. */
+  --explore-size: calc(11.5vw * 1.15);
   /* The sticker's lean, and !important for the slider's reason: reveal.ts
      pops this with GSAP, which folds the computed `rotate` into its matrix on
      first touch and writes `rotate: none` inline — the sticker went up flat. */
@@ -19672,9 +19675,9 @@ img#front {
     font-size: 4.6vw; /* 18px */
   }
 
-  /* The sticker at the slider's own phone size (23vw, from the shared phone
-     rules) — only the air above it is this section's. */
+  /* The slider's phone disc (23vw) plus the same 15% as the desktop's. */
   .about-cta .explore-button {
+    --explore-size: calc(23vw * 1.15);
     margin-top: 4.103vw;
   }
 }

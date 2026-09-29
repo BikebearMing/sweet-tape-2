@@ -22,6 +22,7 @@ import LivePreview from "@/components/LivePreview";
 import Menu from "@/components/Menu";
 import { PeelDefs } from "@/components/Peel";
 import Preloader from "@/components/Preloader";
+import { footerBalls } from "@/data/footerBalls";
 import { getMenu } from "@/data/menu";
 import { SITE_URL } from "@/data/site";
 import { getPalette } from "@/data/tapes";
@@ -84,9 +85,8 @@ export const viewport: Viewport = {
 };
 
 /* Who the site belongs to and what the site is, said once in the head where a
-   crawler reads it. No sameAs yet: the footer's social discs still point at the
-   networks' front doors (src/data/footerBalls.ts) — add the real profile URLs
-   there and here together. */
+   crawler reads it. sameAs is the footer's social discs (src/data/footerBalls.ts),
+   read off the same roster so the two can't drift. */
 const JSON_LD = {
   "@context": "https://schema.org",
   "@graph": [
@@ -96,6 +96,7 @@ const JSON_LD = {
       name: "SweetTape",
       url: SITE_URL,
       logo: `${SITE_URL}/apple-icon.png`,
+      sameAs: footerBalls.flatMap((b) => (b.kind === "social" ? [b.href] : [])),
     },
     {
       "@type": "WebSite",

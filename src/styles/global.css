@@ -2723,6 +2723,13 @@ html[data-loading] {
      four stage colours. */
   & .showcase>img {
     display: block;
+    /* THE CARD'S BOX, STATED. It used to be the file's own pixels, so every
+       upload had to be exported at exactly 204 x 210 — anything bigger rendered
+       giant, which is why the files were cropped down and then went blurry
+       wherever else they were used. Now any size fills the same card. */
+    width: 204px;
+    height: 210px;
+    object-fit: cover;
     border-radius: 3.472vw;
     box-shadow: 0.7vw 1vw 0 var(--drop-ink);
   }

@@ -328,6 +328,10 @@ export type TapeViewer = {
   /** Where the pointer is, as -1..1 either side of the roll's centre. The
    *  lean is eased toward it internally, so this may be called raw. */
   point(nx: number, ny: number): void;
+  /** The lean that sits CENTRED in frame: point()'s sideways step is measured
+   *  from here rather than from square, so a stage that rests leaned is not
+   *  also resting off-centre. 0 unless a caller says otherwise. */
+  home(nx: number): void;
   dispose(): void;
   /** THE LAB'S HANDLE — /lab/tape-3d turns the scene's numbers while it runs.
    *  Nothing on the site calls this; every page mounts, shows and spins. */
@@ -505,6 +509,7 @@ export function createTapeViewer(
 
   const to = { x: 0, y: 0 }; // where the pointer is
   const at = { x: 0, y: 0 }; // where the ease has got to
+  let home = 0; // see TapeViewer.home
 
   /* Exponential chase, frame-rate independent: the same fraction of the
      remaining distance is covered per second whatever the frame time. Returns
@@ -522,7 +527,7 @@ export function createTapeViewer(
     stage.rotation.x = -y * MAX_PITCH;
     // Opposite the rotation: a camera that steps right sees more of the right
     // side AND finds the subject further left in frame.
-    stage.position.x = -x * SHIFT_X;
+    stage.position.x = -(x - home) * SHIFT_X;
     stage.position.y = y * SHIFT_Y;
     return true;
   }
@@ -853,6 +858,12 @@ export function createTapeViewer(
           to.x = Math.max(-1, Math.min(1, nx));
           to.y = Math.max(-1, Math.min(1, ny));
           // No dirty flag — the loop's ease raises it as soon as it moves.
+        },
+
+        home(nx: number) {
+          home = nx;
+          stage.position.x = -(at.x - home) * SHIFT_X;
+          dirty = true;
         },
 
         dispose: teardown,

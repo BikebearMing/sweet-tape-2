@@ -16,6 +16,7 @@ import {
   buildMenuOpen,
   initTabEntrance,
   MENU_DROP,
+  MENU_SIDEWAYS,
   type MenuTimelines,
 } from "./reveal";
 
@@ -105,9 +106,28 @@ export default function Menu({ items }: { items: MenuItem[] }) {
     const root = rootRef.current;
     if (!root) return;
 
-    const built = buildMenuOpen(root);
-    tlRef.current = built;
-    if (!built) return;
+    /* Built per axis: the phone pulls sideways (MENU_SIDEWAYS), so crossing
+       that width — a phone turned to landscape — throws the pair away and
+       builds the other one, landing it wherever the panel already stands. */
+    const kill = () => {
+      closeRef.current?.kill();
+      closeRef.current = null;
+      tlRef.current?.drop.kill();
+      tlRef.current?.contents.kill();
+      tlRef.current = null;
+    };
+    const build = () => {
+      kill();
+      const built = buildMenuOpen(root);
+      tlRef.current = built;
+      if (built && root.dataset.open === "true") {
+        built.drop.progress(1);
+        built.contents.progress(1);
+      }
+    };
+    build();
+    const mq = window.matchMedia(MENU_SIDEWAYS);
+    mq.addEventListener("change", build);
 
     /* The drop's end value is a MEASURED height, taken when the tween first
        renders — and every length in this menu is in vw, so a resized window
@@ -116,8 +136,10 @@ export default function Menu({ items }: { items: MenuItem[] }) {
        progress takes them again at the new size and puts the panel where it
        should be, open or shut or halfway. */
     const remeasure = () => {
-      built.drop.invalidate();
-      built.drop.progress(built.drop.progress(), true);
+      const drop = tlRef.current?.drop;
+      if (!drop) return;
+      drop.invalidate();
+      drop.progress(drop.progress(), true);
     };
 
     /* Not a raw resize. This throws the panel's recorded geometry away and
@@ -130,12 +152,9 @@ export default function Menu({ items }: { items: MenuItem[] }) {
 
     return () => {
       stopVp();
+      mq.removeEventListener("change", build);
       remeasureRef.current = null;
-      tlRef.current = null;
-      closeRef.current?.kill();
-      closeRef.current = null;
-      built.drop.kill();
-      built.contents.kill();
+      kill();
     };
   }, []);
 

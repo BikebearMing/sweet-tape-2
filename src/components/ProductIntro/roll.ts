@@ -533,6 +533,7 @@ export function initProductRoll(root: HTMLElement): () => void {
          cursor, or under reduced motion, nothing ever does: this is the only
          angle those visitors are shown, which is why it is set here and not
          left to the first move. */
+      v.home(LEAN.x); // the lean turns the roll; it does not walk it off-centre
       v.point(LEAN.x, LEAN.y);
       // Caught up to wherever the reader has already scrolled to — the chunk may
       // well land after a page has been read past.

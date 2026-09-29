@@ -2078,9 +2078,16 @@ html[data-loading] {
      be, which is exactly the mistake to make here. The rest pose is the one
      the design draws, and 42vw is what puts the roll at 36vw on it: a shade
      wider than the to-do list note below, with its top edge on the curve. */
+  /* A FULLER ROLL, NOT A BIGGER ONE. The box is 1.38x the 42vw that set the
+     strip's width, and --roll-girth tells Hero/heroTape.ts so: it shrinks the
+     strip and the roll's axial width back by 1.38, so only the DIAMETER grows.
+     More tape wound on, same tape — the strip stays flush with its roll and
+     lands on the cardboard exactly as wide as before. top keeps the centre at
+     140vw (111.02 + 57.96/2), which is what engine.ts measures from. */
   .hero-section .hero-tape {
-    --roll-box: 42vw;
-    top: 119vw;
+    --roll-box: 57.96vw;
+    --roll-girth: 1.38;
+    top: 111.02vw;
     left: 50%;
     bottom: -8vw;
   }
@@ -2336,6 +2343,23 @@ html[data-loading] {
   fill: none;
   opacity: 0.2;
   pointer-events: none;
+}
+
+/* The phone: the whole band at 2x (user, 2026-09-29). The svg is scaled, not
+   the stroke — the seam rule above is scale-free, so tape, type and lean stay
+   the pair they were. Same bleed and seat at twice the figures: 80 units is now
+   10vw, and path-x 0 still lands on the section's left edge. Half a wave shows
+   across the screen instead of one. The slider's --band-clear follows it. */
+@media (max-width: 743px) {
+  .wave-band {
+    height: 33.75vw;
+    margin-top: -33.75vw;
+  }
+
+  .wave-band svg {
+    left: -10vw;
+    width: calc(200% + 20vw);
+  }
 }
 
 /* ==========================================================================
@@ -3377,7 +3401,8 @@ html[data-loading] {
    these boxes' transforms belong to their own rules or to GSAP, and the two
    properties compose. */
 .tape-slide {
-  translate: 0 8vw;
+  /* --band-clear: 8vw here, deeper on the phone where the band is doubled. */
+  translate: 0 var(--band-clear, 8vw);
 }
 
 /* THE CHIP AND THE ORBIT TAKE THE CLEARANCE AND THE DRAWING'S LIFT TOGETHER,
@@ -3397,7 +3422,7 @@ html[data-loading] {
    trick that repaint depends on. */
 .tape-slider-parent .subhead,
 .roll-parent {
-  translate: 0 calc(8vw + var(--slide-lift));
+  translate: 0 calc(var(--band-clear, 8vw) + var(--slide-lift));
 }
 
 /* --------------------------------------------------------------------------
@@ -3827,7 +3852,12 @@ html[data-loading] {
        plus a margin under them. It is the LAST number to change if anything in
        the column moves — it is measured off the column, not chosen. */
     height: 212vw;
-    min-height: var(--screen);
+    /* NO SCREEN FLOOR HERE any more (user, 2026-09-29: tighten into WHY WE
+       EXIST). A short phone is under 212vw of screen anyway; a tall one was
+       getting up to ~30vw of bare orange under the copy. */
+    /* The band is doubled on the phone (see Wave band) and dips twice as deep
+       into this stage, so the drawing clears it by more than the desktop 8vw. */
+    --band-clear: 18vw;
   }
 
   /* The box the drawing hangs from follows the stage rather than the window,
@@ -3989,7 +4019,9 @@ html[data-loading] {
    * as the fixed 41.36px becomes a different fraction of the sheet. */
   .tape-slider-parent .middle .showcase {
     scale: calc(123.571 / 204);
-    top: calc(94vw - 21.36px);
+    /* 105vw, pushed clear of CREATIVE's feet (user, 2026-09-29) — the word is
+       read now, not laid on. */
+    top: calc(105vw - 21.36px);
     left: 50%;
     right: auto;
     margin-left: -102px;
@@ -4044,7 +4076,7 @@ html[data-loading] {
      block in two thirds of a phone is two very narrow columns. */
   .tape-slider-parent .left {
     left: 6vw;
-    top: 144vw;
+    top: 155vw;
     transform: none;
     width: 88vw;
   }
@@ -4106,17 +4138,26 @@ html[data-loading] {
      the drawing is not inherited — and restated here, because the buttons sit
      under copy that IS shifted by it and the two have to travel together. */
   .tape-nav {
+    /* EITHER SIDE OF THE ROLL now, not at the foot (user, 2026-09-29): 4vw in
+       from each edge, which leaves 4vw to the roll's 54vw slot. Level with its
+       lower half rather than its centre — EXPLORE owns the right side above. */
     display: flex;
-    justify-content: center;
-    gap: 6vw;
+    justify-content: space-between;
+    padding: 0 4vw;
 
     position: absolute;
     left: 0;
     right: 0;
-    top: 178vw;
-    translate: 0 8vw;
+    top: 68vw;
+    translate: 0 var(--band-clear, 8vw);
     z-index: 11;
     /* over the colour layers and the drawing alike */
+    /* The row spans the roll between the two; only the buttons take taps. */
+    pointer-events: none;
+  }
+
+  .tape-nav button {
+    pointer-events: auto;
   }
 
   .tape-nav button {
@@ -5276,10 +5317,22 @@ html[data-loading] {
    -------------------------------------------------------------------------- */
 @media (max-width: 743px) {
   .giant-pinning {
+    /* Higher than the desktop's 0.4: a phone screen is ~220vw tall, so 0.4 left
+       ~70vw of lime between the arc and the heading (user, 2026-09-29). */
+    --giant-open-at: 0.22;
     --giant-size: 91.67vw;
     /* 38.194 x 2.4 */
     --giant-open-gx: 2.4vw;
-    --giant-tail: 43vw;
+    /* NO TAIL, AND THEN SOME (user, 2026-09-29: "way tighter" into MAKE IT
+       STICK). The frame is ~2.2 screens of vw tall here, so the last phrase,
+       centred in it, already has half a frame of lime under it — the tail's
+       whole job, done. The next section is pulled up into that half: back by
+       half the frame, down by 58vw, which leaves ~30vw from the phrase's foot
+       to the card on any phone height (the phrase is ~75vw tall). It rises
+       into the frame over the pin's last stretch, over it — see z-index on
+       .make-it-stick in the phone block. */
+    --giant-tail: 0vw;
+    margin-bottom: calc(58vw - var(--screen-lg) / 2);
     /* NO --giant-arc HERE ANY MORE. It was 14vw, hand-deepened for the phone
        while the desktop ran at 9 — the same hand-tuning every arc on this site
        used to carry. The bite is --curve-depth now, a proportion of the width,
@@ -5943,6 +5996,10 @@ html[data-loading] {
    -------------------------------------------------------------------------- */
 @media (max-width: 743px) {
   .make-it-stick {
+    /* Over the pinning section (11), whose frame it now rises into — see
+       --giant-tail in its phone block. Level with the footer (12), which comes
+       later and so still paints over this where its arc rises in. */
+    z-index: 12;
     /* Off the edges, and less of it: 8.935vw is 35px on a phone, which is fine
        for a margin and wasteful as a third of the room the card has to set
        three lines of display type in. */
@@ -6804,14 +6861,16 @@ html[data-loading] {
        here. See the Tokens phone block for the badge itself. */
     --pick-pad-top: calc(var(--masthead) + 7vw);
 
-    /* Three across, lapped by the design's proportion of the diameter. The row
-       comes to 3 x 30 - 2 x 3.6 = 82.8vw, inside the 90vw the padding leaves. */
-    --pick-roll: 30vw;
-    --pick-lap: 3.6vw;
+    /* TWO across, bigger rolls (user, 2026-09-29) — it was three at 30vw.
+       Lapped by the design's 12% of the diameter: 2 x 44 - 5.3 = 82.7vw, inside
+       the 90vw the padding leaves; three can never fit, so it wraps 2 / 2 / 2.
+       The lines lap too, by less — see .pick-roll:nth-child(n + 3). */
+    --pick-roll: 44vw;
+    --pick-lap: 5.3vw;
 
-    /* Two thirds of a roll, as on the desktop — the crest crosses the BACK
-       row's lower third and the front row stands wholly on the green. */
-    --pick-rise-crest: 20vw;
+    /* Two thirds of a roll, as on the desktop — the crest crosses the TOP
+       row's lower third and the rows under it stand on the green. */
+    --pick-rise-crest: 29vw;
 
     padding-bottom: calc(8vw + var(--pick-arc));
   }
@@ -6827,34 +6886,46 @@ html[data-loading] {
      so both follow. */
   .pick-stage {
     height: auto;
-    margin-bottom: 12vw;
+    margin-bottom: 4vw;
   }
 
   /* FULL WIDTH AND CENTRED, rather than the row's own measure. max-content is
      what puts one line of six on the desktop; here the break is the point, and
-     letting the box be the sheet is what decides it — four rolls come to 108vw
-     and cannot fit, three come to 82.8vw and do, with no figure written down
-     for either. Stating the three-roll width instead lands within a rounding
-     error of the items' own total and wraps to two and two and two. */
+     letting the box be the sheet is what decides it — three rolls come to
+     121.4vw and cannot fit, two come to 82.7vw and do, with no figure written
+     down for either. */
   .pick-fan {
     flex-wrap: wrap;
     width: 100%;
     justify-content: center;
   }
 
-  /* The second line starts flush and laps UP over the first. */
-  .pick-roll:nth-child(4) {
+  /* Every line after the first starts flush and laps UP by the full lap.
+     STACKED THE OTHER WAY HERE, earlier rolls on top: each roll's label sits
+     on its bottom rim, so a later line lapping over the earlier one covered it
+     (NORMAL, LOW NOISE). This way the lap lands on the lower roll's hang-hole,
+     which carries nothing. Within a line the right roll is still over the
+     left, as the desktop's row stacks: rows descend, columns ascend. */
+  .pick-roll:nth-child(1) { z-index: 7; }
+  .pick-roll:nth-child(2) { z-index: 8; }
+  .pick-roll:nth-child(3) { z-index: 5; }
+  .pick-roll:nth-child(4) { z-index: 6; }
+  .pick-roll:nth-child(5) { z-index: 3; }
+  .pick-roll:nth-child(6) { z-index: 4; }
+
+  .pick-roll:nth-child(2n + 3) {
     margin-left: 0;
   }
 
-  .pick-roll:nth-child(n + 4) {
+  .pick-roll:nth-child(n + 3) {
     margin-top: calc(var(--pick-lap) * -1);
   }
 
   /* See above. rx is half the box, ry is the crest's depth. */
   .pick-rise {
     aspect-ratio: auto;
-    height: 130vw;
+    /* Three lines of rolls now: tall enough to run past the section's foot. */
+    height: 200vw;
     border-radius: 50% 50% 0 0 / 24vw 24vw 0 0;
   }
 
@@ -7236,6 +7307,11 @@ html[data-loading] {
   .product-intro {
     --pi-word-scale: 1.55;
     --pi-word-top: 92vw;
+    /* THE at 0.75 of the phone's 2.2, with the SAME SHARE of it behind the
+       roll (40% — the roll's top edge is at 34vw): 24.6vw tall, so it starts
+       at 34 - 0.6 x 24.6 = 19.2vw. Holding its feet instead buried half of it. */
+    --pi-the-w: 43.4vw;
+    --pi-the-top: 19.2vw;
   }
 
   /* The taller sheet, said at :root and not on the section, because the origin
@@ -7960,11 +8036,18 @@ html[data-loading] {
 
     /* Under the roll's feet: it ends at 46 + 63.6 = 109.6vw. */
     --info-note-top: 116vw;
+  }
 
-    /* 2.15em of the story's type, which is what 163px is against 76px. It sits
-       ON the line, so it is a share of the copy rather than a share of the
-       page. */
-    --info-tape-w: 20.5vw;
+  /* THE STRIP IN THE SENTENCE, AT THE PHONE'S SCALE. Peel sizes the strip in
+     the desktop's vw (stripBox), so the slot used to open 20.5vw of line around
+     11.3vw of tape. Both now grow by --product-scale off the one length —
+     including a {{tape width=…}} from the copy, which lands inline on the slot. */
+  .product-inner-info .info-tape-slot {
+    width: calc(var(--info-tape-w) * var(--product-scale));
+  }
+
+  .product-inner-info .info-story-tape {
+    scale: var(--product-scale);
   }
 
   .product-inner-info .wrapper {
@@ -10017,6 +10100,16 @@ p.powers-name {
     min-height: 0;
     width: 100%;
   }
+
+  /* THE PADS TAKE NO ROOM HERE. At either end of the run a pad is the empty
+     neighbour, and on a phone a shut slot is 63vw — a card-sized hole between
+     the name and the first card, and after the last one before THE RUN. Gone,
+     the first and last cards sit that much nearer the name and the next
+     section; the middle of the run has real neighbours and does not change. */
+  .powers-slot:not(.powers-card) {
+    height: 0;
+    margin-top: 0;
+  }
 }
 
 /* ==========================================================================
@@ -11475,11 +11568,10 @@ p.powers-name {
      own phone block, at these figures: widened to a phone's share of the width
      and anchored from the right, far enough in that the writing's overhang
      stays on the sheet. */
+  /* AND THEN OFF (user, 2026-09-29): even placed from the right it lay over
+     ROLLING's G and the arc. The 404's copy keeps its own. */
   .whats-rolling .rolling-note {
-    --hand-w: 30vw;
-    left: auto;
-    right: 11vw;
-    bottom: 0;
+    display: none;
   }
 }
 
@@ -13004,16 +13096,19 @@ li::marker {
     border-radius: 6vw;
   }
 
+  /* Both up for the one-across card (user, 2026-09-29): the kind 3.6 → 4.3vw,
+     the title 3.9 → 5vw. */
   .news-index .index-kind {
     --index-mark: 0.9vw;
     --index-pitch: 1.8vw;
     padding-bottom: 3vw;
-    font-size: 3.6vw;
+    font-size: 4.3vw;
   }
 
   .news-index .index-title {
     max-width: 90%;
     margin-top: 5vw;
+    font-size: 5vw;
   }
 
   .news-index .index-arrow {
@@ -13031,8 +13126,9 @@ li::marker {
     --date-day: 17vw;
   }
 
+  /* 58% x 1.2 (user, 2026-09-29). */
   .news-index .index-shot {
-    width: 58%;
+    width: 69.6%;
   }
 
   .news-index .index-shot-img {
@@ -13347,7 +13443,10 @@ li::marker {
    arrangement scales as one when the frame is resized: the index's cards tape
    their pictures the same way. */
 .article-shot-tape {
-  width: 19.588vw;
+  /* 19.588vw of the desktop's 47.063vw picture, as a share of it — it was the
+     vw, which left the phone's 74vw picture with a quarter-size strip floating
+     over its top edge instead of across it (user, 2026-09-29). */
+  width: 41.62%;
   position: absolute;
   top: -9%;
   left: 31%;
@@ -13902,12 +14001,15 @@ li::marker {
     right: auto;
     width: fit-content;
     /* the tape is placed in per cent of this box */
-    margin: 12vw auto 0;
+    /* Off the right edge, as the desktop's runs off its corner — centred it
+       floated (user, 2026-09-29). The section's overflow cuts it. */
+    margin: 12vw -6vw 0 auto;
   }
 
+  /* 95vw, the user's own figure (2026-09-29). The tape is a share of it. */
   .article-shot-img {
-    width: 74vw;
-    height: 74vw;
+    width: 95vw;
+    height: 95vw;
   }
 
   .article-sheet {
@@ -15837,8 +15939,11 @@ img#front {
 /* THE FOUR LENGTHS, off the design at 1440. The small one is a circle rather
    than a short pill — same width as the height, and a full round — which is the
    punctuation in a row of long shapes. The other three share one radius, and it
-   is 13.889vw: exactly half the height, so the ends are semicircles and the
-   pill is a stadium at every width rather than three different roundings. */
+   is --pill-h, which the browser clamps to half the height, so the ends are
+   semicircles and the pill is a stadium at every width. It was a flat
+   13.889vw, which is only a stadium while the pill is under 27.8vw tall — the
+   phone's 45vw pill came out a rounded rectangle, and the stadium baked into
+   the pill photographs showed as green curves inside it (user, 2026-09-29). */
 .conveyor-train.is-sm {
   width: 13.567vw;
   border-radius: 100%;
@@ -15846,17 +15951,17 @@ img#front {
 
 .conveyor-train.is-med {
   width: 35.278vw;
-  border-radius: 13.889vw;
+  border-radius: var(--pill-h);
 }
 
 .conveyor-train.is-xl {
   width: 51.528vw;
-  border-radius: 13.889vw;
+  border-radius: var(--pill-h);
 }
 
 .conveyor-train.is-xxl {
   width: 69.028vw;
-  border-radius: 13.889vw;
+  border-radius: var(--pill-h);
 }
 
 /* A PILL WITH WORDS IN IT. Centred both ways, and padded off both ends by more
@@ -20273,9 +20378,11 @@ img#front {
   }
 
   /* See --ball-scale on .footer-ball. 18.7 x 1.55 is 29vw, about 113px — a disc
-     you can read the label on and hit without aiming. */
+     you can read the label on and hit without aiming. 20% up from that since
+     (user, 2026-09-29): 1.86, 35vw. Gravity and the bodies follow on their own
+     (balls.ts reads this). */
   .footer-ball {
-    --ball-scale: 1.55;
+    --ball-scale: 1.86;
     /* The social mark at 0.42 of its disc — a speck at 0.235 on a disc this
        size. The desktop keeps 0.235. */
     --ball-mark: 0.42;
@@ -21507,8 +21614,9 @@ img#front {
   .site-menu {
     /* Most of the width, not all of it: the panel comes down out of the corner
        and the strip of page left beside it is what says so. Full bleed would
-       read as a screen rather than as a sheet being pulled out. */
-    --menu-w: 78vw;
+       read as a screen rather than as a sheet being pulled out. 70vw is the
+       mock's (2026-09-29), with the turned tab standing off its left. */
+    --menu-w: 70vw;
     --menu-pad-l: 4vw;
     --menu-pad-r: 5vw;
     /* TALLER ROWS AND BIGGER LABELS, asked for: 14vw rows under 8.6vw labels
@@ -21524,13 +21632,35 @@ img#front {
        10 : 3 ratio. */
     --menu-thumb: 13vw;
     --menu-thumb-radius: 3.9vw;
+
+    /* SIDEWAYS (user, 2026-09-29): the panel comes out of the right edge and
+       the tab hangs off its LEFT, turned a quarter — Menu/reveal.ts drives the
+       width instead of the height at this size (MENU_SIDEWAYS). Row-reverse
+       puts the panel on the right and the tab beside it; shrink-wrapped, so
+       the tab rides the panel's growing edge exactly as it rides the bottom
+       edge on the desktop. Off the top by the mock's 3vw. */
+    top: 3vw;
+    right: 0;
+    width: auto;
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: flex-start;
   }
 
   .menu-panel {
     border-radius: 0 0 0 3vw;
   }
 
+  /* Closed on this axis: no width, natural height. */
+  .site-menu[data-open="false"] .menu-panel {
+    width: 0;
+    height: auto;
+  }
+
+  /* A fixed measure, so the panel clips it rather than reflowing it while the
+     width runs. */
   .menu-sheet {
+    width: var(--menu-w);
     padding: 5vw var(--menu-pad-r) 3vw var(--menu-pad-l);
   }
 
@@ -21553,8 +21683,29 @@ img#front {
      against a 35vw masthead in the opposite corner and a headline that spans
      the width, a quarter-sheet tab is a detail rather than the way in. This is
      that tab a third bigger, same shape. */
+  /* THE SAME TAB TURNED A QUARTER CLOCKWISE: flat edge and tear line against
+     the panel, teeth pointing left, PULL ME reading downward. The button is
+     the turned box (body + teeth wide, the sheet's length tall); the sheet
+     inside is laid out as ever and rotated into it from its top-left corner.
+     On the sheet, because the button's transform is the entrance's. */
   .menu-tab {
-    width: 34vw;
+    flex: none;
+    /* 1px over the panel's edge, so a rounding seam never shows the page. */
+    margin: 0 -1px 0 0;
+    width: calc(var(--tab-len-body) + var(--tab-len-tooth));
+    height: var(--tab-len);
+    --tab-len: 28vw;
+    --tab-len-body: 12.4vw;
+    --tab-len-tooth: 4.4vw;
+  }
+
+  .menu-tab.is-arriving::before {
+    left: 100%;
+    right: auto;
+    top: 0;
+    bottom: 0;
+    width: 150%;
+    height: auto;
   }
 
   .menu-sound {
@@ -21567,12 +21718,27 @@ img#front {
   }
 
   .menu-tab-sheet {
-    --tab-body: 16.22vw;
-    --tooth-h: 5.1vw;
-    --perf-y: 5.75vw;
-    --perf-x: 2.09vw;
+    --tab-body: var(--tab-len-body);
+    --tooth-h: var(--tab-len-tooth);
+    --perf-y: 3.7vw;
+    --perf-x: 1.7vw;
     font-size: 5.1vw;
     letter-spacing: -0.157vw;
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: var(--tab-len);
+    transform-origin: 0 0;
+    transform: rotate(90deg) translateY(-100%);
+  }
+}
+
+/* The tab's preloader park, on this axis: off the right edge rather than the
+   top. MENU_TAB.HIDDEN, mirrored — see the Preloader section. */
+@media (max-width: 743px) and (prefers-reduced-motion: no-preference) {
+  html[data-loading] .menu-tab {
+    transform: translateX(115%);
   }
 }
 

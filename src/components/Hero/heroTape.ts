@@ -1987,10 +1987,16 @@ export function createHeroTape(
        NEAR rim (camZ - R) while the strip hangs at the far side (camZ + R);
        WIDTH is a multiplier on that match. Depends only on the camera, so it is
        set here rather than per frame. */
+    /* --roll-girth (mobile): the box is that much bigger, so undo it on the
+       strip and on the roll's axle — only the diameter keeps the growth. */
+    const girth =
+      parseFloat(getComputedStyle(mount).getPropertyValue("--roll-girth")) || 1;
+    spinner.scale.y = 1 / girth; // the model's Y is its axle
     strip.scale.x =
-      STRIP.ROLL_W *
-      ((CONFIG.camZ + STRIP.RADIUS) / (CONFIG.camZ - STRIP.RADIUS)) *
-      STRIP.WIDTH;
+      (STRIP.ROLL_W *
+        ((CONFIG.camZ + STRIP.RADIUS) / (CONFIG.camZ - STRIP.RADIUS)) *
+        STRIP.WIDTH) /
+      girth;
     endCap.scale.x = strip.scale.x; // the tears are as wide as what they end
     topCap.scale.x = strip.scale.x;
 

@@ -29,6 +29,13 @@ import gsap from "gsap";
 import { whenRevealed } from "@/components/Preloader/gate";
 import { REVEAL } from "../Hero/reveal";
 
+/* THE PHONE PULLS SIDEWAYS (user, 2026-09-29): the panel comes out of the
+   right edge and the tab, turned a quarter, hangs off its left. Same paper,
+   same curve — only the axis changes, and the stylesheet's phone block is the
+   other half of it. Read at build time; Menu rebuilds when this flips. */
+export const MENU_SIDEWAYS = "(max-width: 743px)";
+export const isSideways = () => window.matchMedia(MENU_SIDEWAYS).matches;
+
 export const MENU_DROP = {
   /* Short, because the gesture is a snap rather than a slide — this is the
      ceiling-light pull-cord, which is over before you have let go of it. Most
@@ -133,14 +140,20 @@ export function initTabEntrance(root: HTMLElement): () => void {
    * After the reduced-motion return above, deliberately — that park is inside a
    * no-preference media query, so a reader who asked for less motion never had
    * the tab lifted and must not be handed one hanging off the top edge. */
-  gsap.set(tab, { y: 0, yPercent: MENU_TAB.HIDDEN });
+  /* Sideways, the tab comes in off the right edge instead — the same figure,
+     mirrored onto x. */
+  const park = isSideways()
+    ? { x: 0, xPercent: -MENU_TAB.HIDDEN }
+    : { y: 0, yPercent: MENU_TAB.HIDDEN };
+  gsap.set(tab, park);
 
   let tween: gsap.core.Tween | null = null;
   const unsubscribe = whenRevealed(() => {
     tween = gsap.fromTo(
       tab,
-      { y: 0, yPercent: MENU_TAB.HIDDEN },
+      park,
       {
+        xPercent: 0,
         yPercent: 0,
         duration: MENU_TAB.DURATION,
         delay: MENU_TAB.DELAY,
@@ -217,6 +230,10 @@ export function buildMenuOpen(root: HTMLElement): MenuTimelines | null {
   const rows = Array.from(root.querySelectorAll<HTMLElement>(".menu-item"));
   if (!panel || !sheet || !rows.length) return null;
 
+  /* A clean slate: a rebuild on the other axis must not inherit the last
+     one's inline height or width. */
+  gsap.set([panel, sheet], { clearProps: "width,height,transform" });
+
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches)
     return null;
 
@@ -231,32 +248,49 @@ export function buildMenuOpen(root: HTMLElement): MenuTimelines | null {
      closed rule is only a fallback. */
   const drop = gsap.timeline({ paused: true });
 
-  drop.fromTo(
-    panel,
-    { height: 0 },
-    { height: "auto", duration: MENU_DROP.DURATION, ease: MENU_DROP.EASE },
-    0,
-  );
+  if (isSideways()) {
+    /* Width, not height, and nothing on the sheet: it is left-anchored in a
+       right-anchored panel, so it already rides the panel's leading edge.
+       Measured off the sheet (a fixed --menu-w) rather than "auto", which a
+       shrink-wrapped flex item would measure at whatever it currently is. */
+    drop.fromTo(
+      panel,
+      { width: 0 },
+      {
+        width: () => sheet.offsetWidth,
+        duration: MENU_DROP.DURATION,
+        ease: MENU_DROP.EASE,
+      },
+      0,
+    );
+  } else {
+    drop.fromTo(
+      panel,
+      { height: 0 },
+      { height: "auto", duration: MENU_DROP.DURATION, ease: MENU_DROP.EASE },
+      0,
+    );
 
-  /* The sheet hangs from the panel's leading edge instead of standing still
-     under it. Without this the menu is a window opening over a fixed page —
-     the panel's bottom edge wipes across stationary rows, and closing wipes
-     back. With it the paper itself travels: the rows come DOWN as the panel
-     drops and go UP as it shuts, the way anything pulled from a roller does.
+    /* The sheet hangs from the panel's leading edge instead of standing still
+       under it. Without this the menu is a window opening over a fixed page —
+       the panel's bottom edge wipes across stationary rows, and closing wipes
+       back. With it the paper itself travels: the rows come DOWN as the panel
+       drops and go UP as it shuts, the way anything pulled from a roller does.
 
-     -100% is exact rather than approximate. The sheet is the panel's only
-     child and carries all of its padding, so the sheet's height IS the panel's
-     natural height — which makes -100% of the sheet exactly the distance the
-     panel's edge travels. Same duration and same ease as the height above, so
-     the sheet's bottom sits on that edge at every frame including the
-     overshoot, where the whole block dips past its resting place and settles
-     back. Change one of the two and this stops being true. */
-  drop.fromTo(
-    sheet,
-    { yPercent: -100 },
-    { yPercent: 0, duration: MENU_DROP.DURATION, ease: MENU_DROP.EASE },
-    0,
-  );
+       -100% is exact rather than approximate. The sheet is the panel's only
+       child and carries all of its padding, so the sheet's height IS the panel's
+       natural height — which makes -100% of the sheet exactly the distance the
+       panel's edge travels. Same duration and same ease as the height above, so
+       the sheet's bottom sits on that edge at every frame including the
+       overshoot, where the whole block dips past its resting place and settles
+       back. Change one of the two and this stops being true. */
+    drop.fromTo(
+      sheet,
+      { yPercent: -100 },
+      { yPercent: 0, duration: MENU_DROP.DURATION, ease: MENU_DROP.EASE },
+      0,
+    );
+  }
 
   rows.forEach((row, i) => {
     const at = MENU_REVEAL.LEAD + i * MENU_REVEAL.ROW;

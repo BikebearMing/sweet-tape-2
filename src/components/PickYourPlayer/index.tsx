@@ -2,7 +2,7 @@
 import type { CSSProperties } from "react";
 
 import { letters } from "@/components/letters";
-import { cssVars, getTapes, type Tape } from "@/data/tapes";
+import { cardOf, cssVars, getTapes, type Tape } from "@/data/tapes";
 import ClickMe, { type CueSide } from "./ClickMe";
 import Stage from "./Stage";
 
@@ -262,7 +262,7 @@ export default async function PickYourPlayer() {
               >
                 <img
                   className="pick-roll-face"
-                  src={tape.card}
+                  src={cardOf(tape)}
                   alt=""
                   draggable={false}
                 />

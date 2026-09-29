@@ -31,6 +31,7 @@ import type { Tape, TapeColours, Power, MarkFile } from "./tape-types";
 export type { Tape, TapeColours, Power, SectionColours } from "./tape-types";
 export {
   heroOf,
+  cardOf,
   siblingFacesOf,
   cssVars,
   /* The per-section overrides, one helper per section. Each returns only the

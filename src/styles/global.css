@@ -18710,9 +18710,10 @@ img#front {
      The 16px of air is the pill's own figure; the crate below overlaps the
      button's foot exactly as it overlapped the pill's. */
   margin: 1.111vw auto 0;
-  /* The sticker's lean. Plain, not !important: nothing tweens rotate here —
-     the slider's escape is for its own entrance bounce. */
-  rotate: 8deg;
+  /* The sticker's lean, and !important for the slider's reason: reveal.ts
+     pops this with GSAP, which folds the computed `rotate` into its matrix on
+     first touch and writes `rotate: none` inline — the sticker went up flat. */
+  rotate: 8deg !important;
 
   /* Parked at nothing until reveal.ts sets data-reveal — the pill's own
      hand-off and the pill's own figure (CTA_REVEAL.PILL_FROM agrees). */
@@ -21617,8 +21618,10 @@ img#front {
        read as a screen rather than as a sheet being pulled out. 70vw is the
        mock's (2026-09-29), with the turned tab standing off its left. */
     --menu-w: 70vw;
-    --menu-pad-l: 4vw;
-    --menu-pad-r: 5vw;
+    /* 3 + 4, not 4 + 5: the row has to hold OUR FAMILY, its 13vw preview and
+       the 7.1vw arrow inside 70vw. It ran 34px under the disc at 390. */
+    --menu-pad-l: 3vw;
+    --menu-pad-r: 4vw;
     /* TALLER ROWS AND BIGGER LABELS, asked for: 14vw rows under 8.6vw labels
        cleared the touch floor and stopped there. 18.5vw is 72px at 390, and the
        label and the disc below grew by the same factor so a row is the same
@@ -21664,13 +21667,16 @@ img#front {
     padding: 5vw var(--menu-pad-r) 3vw var(--menu-pad-l);
   }
 
+  /* 9.2vw, down from 11.4 when the panel went from 78 to 70vw — the longest
+     label with its preview open has to end clear of the arrow. The desktop
+     rule is that the box gives; here the box is the mock's. */
   .menu-label {
-    font-size: 11.4vw;
-    letter-spacing: -0.4vw;
+    font-size: 9.2vw;
+    letter-spacing: -0.32vw;
   }
 
   .menu-arrow {
-    top: 4.5vw;
+    top: 2.2vw; /* level with the 9.2vw capitals */
     width: 7.1vw;
     height: 7.1vw;
   }

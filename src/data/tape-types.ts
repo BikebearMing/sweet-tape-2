@@ -259,6 +259,17 @@ export function heroOf(tape: Tape): string {
   return tape.hero ?? tape.card;
 }
 
+/* THE LABEL AS OUR FAMILY AND NEXT UP SHOW IT — a flat re-export where one has
+   been made. The CMS card SVGs carry a Figma drop-shadow filter, and a filtered
+   SVG in an <img> is rasterised at its own ~413px and then stretched: blurry on
+   any 2x screen. The -next exports have no filter. Add a tape here when its file
+   lands in public/assets. */
+const FLAT_CARD: Record<string, string> = { opp: "/assets/opp-tape-next.svg" };
+
+export function cardOf(tape: Tape): string {
+  return FLAT_CARD[tape.id] ?? tape.card;
+}
+
 /* WHICH ROLL THE INNER PAGE LOADS. The tape's own export if it has been split
    off for that stage, the home page's otherwise — see the `modelInner` field
    above for why splitting is a decision per tape rather than a rule. The one

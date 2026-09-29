@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 
 import { letters } from "@/components/letters";
-import { cssVars, getNextTape, reelVars, type Tape } from "@/data/tapes";
+import { cardOf, cssVars, getNextTape, reelVars, type Tape } from "@/data/tapes";
 import Stage from "./Stage";
 
 /* NEXT UP — the last thing on a product page, and the way out of it.
@@ -103,7 +103,7 @@ export default async function NextUp({ tape }: { tape: Tape }) {
         {/* The next tape's printed label, at the artwork's own size. Its name is
             in the anchor's label rather than in alt, for the reason above: an
             alt here would be the third thing read out inside one link. */}
-        <img className="bottom-roll" src={next.card} alt="" />
+        <img className="bottom-roll" src={cardOf(next)} alt="" />
       </Link>
     </Stage>
   );

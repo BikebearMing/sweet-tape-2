@@ -4,12 +4,12 @@ import Arrow from "@/components/Arrow";
 
 /* EXPLORE — the sticker on the corner of THE, and the way off this stage.
  *
- * The section is four tapes with nothing to click but the orbit, which only
- * changes what is being LOOKED at. This is the one control here that leaves,
- * and it goes to the products index rather than to the tape on screen: the
- * rolls are the home page's own record and need not each have a product page
- * behind them (see the note at the top of index.tsx), so a per-tape link would
- * be a link that is sometimes nowhere.
+ * IT GOES TO THE TAPE ON SCREEN (final-round feedback, 2026-09-29 — it used to
+ * go to the products index). The roll's key doubles as the product's slug by
+ * the CMS's own instruction (see the `key` field in src/globals/Homepage.ts),
+ * so the slug here is the first roll's and the engine rewrites the href on
+ * every swap (goTo in engine.ts). A key with no product behind it is an editor
+ * error the 404 page absorbs.
  *
  * A LINK AND NOT A BUTTON, against the mockup's markup: it navigates. A button
  * would need JS to do what an anchor does for free, and would lose the middle
@@ -27,9 +27,9 @@ import Arrow from "@/components/Arrow";
  * already has a .wrapper — two of them — and .tape-slider-parent .wrapper is
  * width:100%;height:100%, which a bare copy of the name would inherit.
  */
-export default function Explore() {
+export default function Explore({ id }: { id: string }) {
   return (
-    <Link href="/products" className="explore-button">
+    <Link href={`/products/${id}`} className="explore-button">
       <span className="explore-clip">
         <span className="button-text">EXPLORE</span>
       </span>

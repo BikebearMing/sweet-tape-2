@@ -168,8 +168,18 @@ export default function Menu({ items }: { items: MenuItem[] }) {
         ?.querySelector<HTMLButtonElement>(".menu-tab")
         ?.focus();
     };
+    /* A CLICK ANYWHERE CLOSES IT too — except on the tab (which toggles
+       itself), the sound button, and a row's link (the way-out close above). */
+    const onClick = (e: MouseEvent) => {
+      if ((e.target as Element).closest?.(".menu-tab, .menu-sound, .menu-link")) return;
+      setOpen(false);
+    };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    document.addEventListener("click", onClick);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("click", onClick);
+    };
   }, [open]);
 
   /* The panel is one row taller off the home page than on it. Retaken after

@@ -4,6 +4,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 
 import { initPeel } from "@/components/Peel/peel";
 import { initBodyReveal } from "@/components/bodyReveal";
+import { initPoke } from "@/components/Hero/poke";
 import { initStickParallax } from "./parallax";
 import { initStickReveal } from "./reveal";
 
@@ -15,8 +16,9 @@ import { initStickReveal } from "./reveal";
  * else — which is the bug the pinning section's Stage documents at length. Three
  * sections render tape now; three roots call this, each with its own teardown.
  *
- * The other three are the section's arrival: the headline's letters, the
- * sub-line's lines and the photograph's inner drift. All four are independent —
+ * The others are the section's arrival — the headline's letters, the
+ * sub-line's lines, the photograph's inner drift — and the headline's pointer
+ * poke once it has arrived. All of them are independent —
  * they share nothing but the element they are scoped to, and any one can fail
  * to start without touching the others. The footer's Stage is built the same
  * way and for the same reason.
@@ -40,12 +42,18 @@ export default function Stage({ children }: { children: ReactNode }) {
     const stopReveal = initStickReveal(root);
     const stopBody = initBodyReveal(root);
     const stopParallax = initStickParallax(root);
+    /* The hero headline's pointer poke, on this headline too (final round,
+       2026-09-29) — imported rather than copied, the way reveal.ts already
+       borrows the hero's REVEAL. It waits out the scroll-triggered entrance on
+       its own (see the parked guard in poke.ts). */
+    const stopPoke = initPoke(root, ".stick-headline");
 
     return () => {
       stopPeel();
       stopReveal();
       stopBody();
       stopParallax();
+      stopPoke();
     };
   }, []);
 

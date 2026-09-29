@@ -1113,6 +1113,11 @@ export function initTapeSlider(root: HTMLElement): () => void {
        the keyboard all land here. Silent until the reader turns sound on. */
     playOnce(SOUNDS.SLIDE_CHANGE);
 
+    /* The sticker follows the selection: each roll's key is its product's slug
+       (see Explore.tsx), and data-index is where RollPicker put it. Here at the
+       top rather than in the timeline, so the reduced-motion path gets it too. */
+    explore?.setAttribute("href", `/products/${rolls[index].dataset.index}`);
+
     // Land on the nearest equivalent angle, so the ring takes the short way
     // round instead of unwinding 270deg.
     const target = ACTIVE_ANGLE - index * STEP;

@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 
 import { letters } from "@/components/letters";
-import { cssVars, getNextTape, type Tape } from "@/data/tapes";
+import { cssVars, getNextTape, reelVars, type Tape } from "@/data/tapes";
 import Stage from "./Stage";
 
 /* NEXT UP — the last thing on a product page, and the way out of it.
@@ -55,7 +55,19 @@ export default async function NextUp({ tape }: { tape: Tape }) {
   const next = await getNextTape(tape);
 
   return (
-    <Stage style={cssVars(next.colours) as CSSProperties}>
+    /* TWO PALETTES ON ONE SECTION, and they are different tapes'. The panel is
+       the NEXT tape's — cssVars(next), the door argument above. The ground its
+       rounded corners are cut against is THIS page's: the stylesheet reads
+       --reel-bg for it (the sheet the section above ends on), and reelVars is
+       how every page's reel gets that value — without it the fallback lime
+       stood, which was invisible until /products/cloth put a lime panel on it
+       and the frame stopped reading. Disjoint variable names, so order between
+       the two spreads does not matter. */
+    <Stage
+      style={
+        { ...reelVars(tape.sections), ...cssVars(next.colours) } as CSSProperties
+      }
+    >
       {/* WITHOUT JAVASCRIPT NOTHING IN HERE ARRIVES. The letters are parked
           under their masks by global.css and the chip is held at nothing by the
           same attribute, both released by the section's own script — so a page where reveal.ts never runs is an empty yellow band

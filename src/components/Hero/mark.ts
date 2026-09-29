@@ -69,12 +69,21 @@ export function initHeroMark(root: HTMLElement): () => void {
      Nothing else may write `transform` on this element — the stylesheet centres
      it with margins precisely so that this tween can own the property outright.
      See the note on .hero-mark in global.css for what happens when the centring
-     is put somewhere GSAP folds in. */
+     is put somewhere GSAP folds in.
+
+     ON THE PHONE IT POPS INSTEAD OF DROPPING. The badge there is 37vw against
+     the desktop's 12.7 — a fall of 1.7 of its own height is a 39vw lunge by the
+     biggest object on the screen, and it read as a jump to its slot rather than
+     a landing (user, 2026-09-28). Growing in place is the preloader sticker's
+     own gesture, same ease, no travel to go rigid. Decided once at mount, the
+     codebase's usual bargain — a window dragged across 743px keeps the entrance
+     it mounted with. */
+  const phone = window.matchMedia("(max-width: 743px)").matches;
   const tween = gsap.fromTo(
     el,
-    { yPercent: MARK.HIDDEN },
+    phone ? { scale: 0 } : { yPercent: MARK.HIDDEN },
     {
-      yPercent: 0,
+      ...(phone ? { scale: 1 } : { yPercent: 0 }),
       duration: MARK.DURATION,
       ease: MARK.EASE,
       paused: true,

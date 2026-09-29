@@ -3,6 +3,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 
 import { initHandNote } from "@/components/HandNote/hand";
+import { initPoke } from "@/components/Hero/poke";
 import { initPeel } from "@/components/Peel/peel";
 import { initGiantPinning } from "./pin";
 
@@ -42,11 +43,20 @@ export default function Stage({ children }: { children: ReactNode }) {
        teardown — and each builds its own Vara instance, so neither can be left
        holding the other's letterforms. */
     const stopHand = initHandNote(root);
+    /* The phrases take the hero's pointer poke too (final round, 2026-09-29),
+       the same borrow MakeItStick and the footer make — one call per row,
+       because initPoke drives one headline and this section has three. Letters
+       join the poke as they arrive; a phrase mid-write pokes the half that is
+       standing (the per-letter wake in poke.ts). */
+    const stopPokes = Array.from(
+      root.querySelectorAll<HTMLElement>(".giant-row"),
+    ).map((row) => initPoke(row, ".giant"));
 
     return () => {
       stopPin();
       stopPeel();
       stopHand();
+      stopPokes.forEach((stop) => stop());
     };
   }, []);
 

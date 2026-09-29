@@ -3,6 +3,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 
 import { initBodyReveal } from "@/components/bodyReveal";
+import { initHandNote } from "@/components/HandNote/hand";
 
 import { initCtaParallax } from "./parallax";
 import { initCtaReveal } from "./reveal";
@@ -38,11 +39,17 @@ export default function Stage({ children }: { children: ReactNode }) {
     const stopReveal = initCtaReveal(root);
     const stopBody = initBodyReveal(root);
     const stopParallax = initCtaParallax(root);
+    /* The hand note beside the sticker. No preloader gate, unlike the opening
+       screen's: this section is the foot of the page, so its observer cannot
+       fire under the cover — hand.ts releases the pen when the note scrolls
+       into view. */
+    const stopNote = initHandNote(root);
 
     return () => {
       stopReveal();
       stopBody();
       stopParallax();
+      stopNote();
     };
   }, []);
 

@@ -505,3 +505,42 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
     }
   };
 }
+
+/* THE COLOUR PILL'S TAP — the phone's half of an interaction the desktop gets
+ * for free. The pill and the shrinking face are CSS states (.sib-colours in
+ * global.css): where a hover exists, :hover is the state and this function has
+ * no work; where it does not, a tap on a card sets data-open and the same
+ * rules land on that. One open at a time, and a second tap on the open card
+ * closes it — a toggle, not a latch.
+ *
+ * A separate init rather than a branch of the reveal above, because the reveal
+ * LEAVES on a phone (see its 743px return) and the tap is exactly the width it
+ * leaves at. Decided once at mount, the file's usual bargain. */
+export function initSiblingsColours(root: HTMLElement): () => void {
+  if (window.matchMedia("(hover: hover)").matches) return () => {};
+  const cards = Array.from(
+    root.querySelectorAll<HTMLElement>(".siblings-card[data-colours]"),
+  );
+  if (!cards.length) return () => {};
+
+  const ac = new AbortController();
+  root.addEventListener(
+    "click",
+    (e) => {
+      const card = (e.target as HTMLElement).closest<HTMLElement>(
+        ".siblings-card[data-colours]",
+      );
+      for (const c of cards) {
+        if (c === card) {
+          if (c.dataset.open === undefined) c.dataset.open = "";
+          else delete c.dataset.open;
+        } else {
+          delete c.dataset.open;
+        }
+      }
+    },
+    { signal: ac.signal },
+  );
+
+  return () => ac.abort();
+}

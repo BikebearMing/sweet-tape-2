@@ -98,7 +98,15 @@ export const NEXTUP_REVEAL = {
      because GSAP owns the label's transform and pins the CSS `scale` property
      at none — see the note by .next-up .bottom-roll. Attached only once the
      arrival has landed, so the two never drive one transform at once. */
-  HOVER_SCALE: 1.08,
+  HOVER_SCALE: 1.15,
+  /* Degrees ON TOP of the label's resting lean — the roll tips further into
+     it as it grows, so the hover reads as the label being pressed on rather
+     than inflated. On top and not absolute: GSAP folds the stylesheet's
+     -6.484deg `rotate` into the transform it owns and reports it as
+     `rotation`, so the rest angle is MEASURED at bind time below rather than
+     retyped here — an absolute target would quietly rotate the label back
+     through upright, and a leave to 0 would take the lean off for good. */
+  HOVER_TILT: -5,
   HOVER_DURATION: 0.45,
   HOVER_EASE: "power3.out",
 };
@@ -229,18 +237,24 @@ export function initNextUpReveal(root: HTMLElement): () => void {
     !hoverable && window.matchMedia("(min-width: 744px)").matches;
   const grow =
     panel && roll && (hoverable || pressable)
-      ? (scale: number) =>
+      ? (scale: number, rotation: number) =>
           gsap.to(roll, {
             scale,
+            rotation,
             duration: NEXTUP_REVEAL.HOVER_DURATION,
             ease: NEXTUP_REVEAL.HOVER_EASE,
             overwrite: "auto",
           })
       : null;
-  const enter = () => grow?.(NEXTUP_REVEAL.HOVER_SCALE);
-  const leave = () => grow?.(1);
+  /* The lean the label settles at, read back from GSAP once the arrival has
+     landed — see HOVER_TILT. Zero until then, and nothing hovers until then. */
+  let rest = 0;
+  const enter = () =>
+    grow?.(NEXTUP_REVEAL.HOVER_SCALE, rest + NEXTUP_REVEAL.HOVER_TILT);
+  const leave = () => grow?.(1, rest);
   if (grow) {
     tl.eventCallback("onComplete", () => {
+      rest = Number(gsap.getProperty(roll!, "rotation")) || 0;
       if (pressable) {
         panel!.addEventListener("pointerdown", enter);
         panel!.addEventListener("pointerup", leave);

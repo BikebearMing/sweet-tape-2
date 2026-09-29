@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type ReactNode, type CSSProperties } from "react";
 
-import { initSiblingsReveal } from "./reveal";
+import { initSiblingsColours, initSiblingsReveal } from "./reveal";
 
 /* The only client component in the section.
  *
@@ -34,7 +34,12 @@ export default function Stage({
   useEffect(() => {
     const root = ref.current;
     if (!root) return;
-    return initSiblingsReveal(root);
+    const stopReveal = initSiblingsReveal(root);
+    const stopColours = initSiblingsColours(root);
+    return () => {
+      stopReveal();
+      stopColours();
+    };
   }, []);
 
   /* THE STAGE IS THE WINDOW'S HEIGHT AND CLIPS THE DEAL — see .siblings-stage.

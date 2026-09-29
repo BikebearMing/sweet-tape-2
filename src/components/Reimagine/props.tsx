@@ -133,26 +133,36 @@ const SHOTS = [
   },
 ];
 
-/* THE PEN MARKS — the heart and the squiggle drawn on the sheet, and they are
- * not here yet.
+/* THE PEN MARKS — the heart, the rule under the last line, and the squiggle,
+ * drawn on the sheet in the statement's own green.
  *
- * AN EMPTY LIST AND NOT A COMMENTED-OUT BLOCK, deliberately. The markup below
- * maps over this, the stylesheet already carries .rei-mark-a and .rei-mark-b,
- * and ./unfold.ts already animates anything wearing .reimagine-prop — so adding
- * one is a single line here and nothing else anywhere. A block of commented-out
- * JSX is a line that has to be un-commented AND checked against three files that
- * have moved under it in the meantime.
+ * The list was open and empty for a round waiting on the artwork, which is why
+ * adding the marks was three lines here and one rule in global.css: the markup
+ * below maps over this, and ./unfold.ts animates anything wearing
+ * .reimagine-prop.
  *
- * THEY ARE GIFS, which is why they are plain <img> and not a Peel: they are ink
- * going onto paper, and the drawing of them is inside the file. What this layer
- * gives them is when they appear and where — the same rise-and-settle the
- * photographs get, because a mark that is drawn ON the sheet arriving the way a
- * mark that is stuck TO it arrives is close enough at this size, and the
- * alternative is a second mechanism for two props.
+ * PLAIN <img> AND NOT A Peel: they are ink going onto paper, and the drawing of
+ * them is inside the file. What this layer gives them is when they appear and
+ * where — the same rise-and-settle the photographs get, because a mark that is
+ * drawn ON the sheet arriving the way a mark that is stuck TO it arrives is
+ * close enough at this size, and the alternative is a second mechanism for
+ * three props.
  *
- * Their boxes are already measured in global.css off the design. Fill in `src`
- * and they land where they are drawn. */
-const MARKS: Array<{ key: string; src: string }> = [];
+ * TWO WEBPS AND ONE SVG, though all three arrived as SVGs. The heart and the
+ * squiggle were Figma exports with the crayon texture as a base64 raster
+ * INSIDE the svg — 290KB of wrapper around a bitmap — so they are flattened to
+ * the webp they really were, trimmed to the ink so the box in global.css is
+ * the mark and not a mostly-empty export canvas. The underline is real vector
+ * and stays one.
+ *
+ * LIST ORDER IS ARRIVAL ORDER, as with the strips: heart at the top, the rule
+ * under the last line, then the squiggle at the foot — a hand working down the
+ * page. */
+const MARKS: Array<{ key: string; src: string }> = [
+  { key: "rei-mark-a", src: "/assets/doodle-heart.webp" },
+  { key: "rei-mark-c", src: "/assets/full-of-heart-underline.svg" },
+  { key: "rei-mark-b", src: "/assets/doodle-leftof-bottom-image.webp" },
+];
 
 export default function Props() {
   return (

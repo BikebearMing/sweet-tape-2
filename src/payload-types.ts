@@ -791,7 +791,7 @@ export interface Homepage {
      */
     rolls: {
       /**
-       * Stable id for this roll. Not shown to a reader — it identifies the slide to the engine and picks which tape the photographs are held down with (see strips.ts). Match the product's slug where there is one, so the right strip is chosen; anything unrecognised gets the masking strip.
+       * Stable id for this roll. Not shown to a reader — it identifies the slide to the engine, picks which tape the photographs are held down with (see strips.ts), and is where the EXPLORE sticker sends the reader (/products/<key>). Match the product's slug; anything unrecognised gets the masking strip and a link to a page that does not exist.
        */
       key: string;
       /**

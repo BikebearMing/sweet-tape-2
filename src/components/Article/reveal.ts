@@ -39,13 +39,16 @@ export const ARTICLE_REVEAL = {
      a story title an editor wrote — sixty or eighty characters over four lines,
      where WHAT'S ROLLING is thirteen. At the title card's pace a headline that
      long is still assembling itself three seconds in, which is a reader waiting
-     to be allowed to read. */
-  STAGGER: 0.018,
+     to be allowed to read. Halved again 2026-09-29 (user: "title need to
+     animate faster") — eighty letters now land in ~1.3s rather than ~2s. */
+  STAGGER: 0.009,
 
   /* THE DECK'S OWN PACE, and it is quicker again for the same reason turned
      round: it is a short line set at a third the size, low on the screen, and it
-     is the second thing to arrive rather than the thing being waited for. */
-  DECK_STAGGER: 0.025,
+     is the second thing to arrive rather than the thing being waited for.
+     Cut from 0.025 on 2026-09-29 (user: "bold text need to animate faster
+     still") — decks run to 120+ letters, which was over three seconds. */
+  DECK_STAGGER: 0.006,
 
   /* The beat between the headline landing and the deck starting. The same
      length as the pen's wait before the note (NOTE.GAP, imported below) — not

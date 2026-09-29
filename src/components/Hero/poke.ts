@@ -6,16 +6,29 @@
  * server (components/letters), and the arc and the /lab/headings nudges live on
  * .clip, so moving .char touches neither.
  *
+ * IT IS THE SITE'S HEADLINE HOVER NOW — the hero's, LET'S MAKE IT STICK's, the
+ * footer's sign-off and each of WHY WE EXIST's three phrases (final round,
+ * 2026-09-29) — which is what the selector argument is. Same numbers on all of
+ * them on purpose: POKE is in em of whichever headline, so a smaller setting
+ * gets the proportionally smaller poke for free.
+ *
  * THE NUMBERS ARE NOT THE ORIGINAL'S. They were sized for ordinary headings;
  * this one is 20vw, where 1em is ~290px at 1440 and the original's 1.9em reach
  * swept a whole line at once. POKE is in em of the headline, tune it live.
  *
- * Idle until the entrance has finished: a letter still rising is skipped by
- * the isTweening check rather than fought over.
+ * A LETTER JOINS THE POKE THE MOMENT IT IS HOME, one at a time, not when the
+ * whole headline is. The first three headlines arrive in one gesture and never
+ * feel the difference; the giant phrases are the reason — each is a window and
+ * a half wide and writes itself across the camera's own sweep, so "wait for
+ * all of it" would keep the poke dead for exactly the dwell at a stop where
+ * someone tries it. A letter still rising, or still parked under its mask, is
+ * simply not in the poke yet.
  *
- * The masks come off (data-poke → overflow: visible in global.css) while the
- * cursor is on it, since a hop is taller than the mask's headroom. Nothing is
- * behind them by then — the entrance is done.
+ * The masks come off PER LETTER for the same reason (inline overflow on the
+ * clip, while the cursor is on the headline) — a hop is taller than the mask's
+ * headroom, but lifting every mask in the headline would uncover parked
+ * letters standing 130% below their line. Nothing is behind a lifted mask:
+ * only a letter that has finished arriving gets its clip opened.
  */
 import gsap from "gsap";
 
@@ -31,8 +44,8 @@ export const POKE = {
 const smooth = (k: number) => k * k * (3 - 2 * k);
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
-export function initPoke(root: HTMLElement): () => void {
-  const el = root.querySelector<HTMLElement>(".title .h1");
+export function initPoke(root: HTMLElement, selector = ".title .h1"): () => void {
+  const el = root.querySelector<HTMLElement>(selector);
   /* Two ways in: the cursor's, and the finger's. A tablet has no hover to
      sweep the line with, so there a TAP is the poke — same bulge, same spring
      back, driven from one pointerdown instead of a stream of moves. Phones
@@ -48,10 +61,26 @@ export function initPoke(root: HTMLElement): () => void {
     return () => {};
 
   const chars = Array.from(el.querySelectorAll<HTMLElement>(".char"));
+  const spotOf = new Map(chars.map((c, i) => [c, i]));
   let spots: { x: number; y: number }[] = [];
   let em = 16;
   let at: { x: number; y: number } | null = null;
   let frame = 0;
+
+  /* The letters currently IN the poke — home, and with their clip opened. A
+     set rather than a re-check because a letter being poked is tweening again
+     by the very next frame, and asking "are you still?" would evict it. */
+  const lifted = new Set<HTMLElement>();
+  const wake = () => {
+    for (const c of chars) {
+      if (lifted.has(c)) continue;
+      if (gsap.isTweening(c) || (gsap.getProperty(c, "yPercent") as number) !== 0)
+        continue;
+      lifted.add(c);
+      c.parentElement!.style.overflow = "visible";
+    }
+    return lifted.size;
+  };
 
   /* Measured off .clip, which the poke never moves, so it is right even while
      letters are still springing back. Relative to the heading so a scroll under
@@ -69,8 +98,13 @@ export function initPoke(root: HTMLElement): () => void {
   const poke = () => {
     frame = 0;
     if (!at) return;
+    /* Nobody home yet — the stick headline waits under its masks for a scroll
+       trigger (a paused fromTo holds yPercent at 130, and nothing is tweening
+       while it waits), and a giant phrase's far end is still parked while its
+       near end is being hovered. wake() takes in whoever has arrived; a poke
+       with an empty roll is a hover over letters that have not entered. */
+    if (!wake()) return;
     if (!el.hasAttribute("data-poke")) {
-      if (chars.some((c) => gsap.isTweening(c))) return; // still arriving
       measure();
       el.dataset.poke = "";
     }
@@ -80,11 +114,18 @@ export function initPoke(root: HTMLElement): () => void {
     const reach = em * POKE.REACH;
     const pull = (i: number) =>
       smooth(clamp(1 - Math.hypot(px - spots[i].x, py - spots[i].y) / reach, 0, 1));
-    gsap.to(chars, {
-      y: (i: number) => -POKE.HOP * em * pull(i),
-      rotate: (i: number) =>
-        -POKE.TILT * pull(i) * clamp((px - spots[i].x) / (reach * 0.5), -1, 1),
-      scale: (i: number) => 1 + POKE.PUFF * pull(i),
+    /* Only the lifted — a parked letter given a lean would keep it through its
+       own entrance and arrive crooked. The index functions take the TARGET,
+       not GSAP's index: the filtered array's positions no longer line up with
+       spots, which was measured over everyone. */
+    const live = chars.filter((c) => lifted.has(c));
+    gsap.to(live, {
+      y: (_: number, t: HTMLElement) => -POKE.HOP * em * pull(spotOf.get(t)!),
+      rotate: (_: number, t: HTMLElement) => {
+        const i = spotOf.get(t)!;
+        return -POKE.TILT * pull(i) * clamp((px - spots[i].x) / (reach * 0.5), -1, 1);
+      },
+      scale: (_: number, t: HTMLElement) => 1 + POKE.PUFF * pull(spotOf.get(t)!),
       transformOrigin: "50% 100%",
       duration: POKE.FOLLOW,
       ease: "power3.out",
@@ -100,7 +141,7 @@ export function initPoke(root: HTMLElement): () => void {
   const onLeave = () => {
     at = null;
     if (!el.hasAttribute("data-poke")) return;
-    gsap.to(chars, {
+    gsap.to(chars.filter((c) => lifted.has(c)), {
       y: 0,
       rotate: 0,
       scale: 1,
@@ -109,7 +150,11 @@ export function initPoke(root: HTMLElement): () => void {
       stagger: { each: 0.014, from: "center" },
       overwrite: "auto",
       // Masks back on only once every letter is home.
-      onComplete: () => delete el.dataset.poke,
+      onComplete: () => {
+        delete el.dataset.poke;
+        lifted.forEach((c) => (c.parentElement!.style.overflow = ""));
+        lifted.clear();
+      },
     });
   };
 
@@ -140,5 +185,7 @@ export function initPoke(root: HTMLElement): () => void {
     el.removeEventListener("pointerleave", onLeave);
     el.removeEventListener("pointerdown", onTap);
     delete el.dataset.poke;
+    lifted.forEach((c) => (c.parentElement!.style.overflow = ""));
+    lifted.clear();
   };
 }

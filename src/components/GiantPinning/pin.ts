@@ -245,6 +245,17 @@ export function initGiantPinning(root: HTMLElement): () => void {
     return Number.isFinite(declared) ? declared : GIANT.EDGE_INSET;
   };
 
+  /* Where the heading's centre parks in the opening frame, as a fraction of
+     the window's height — 0.5 is dead centre, which is what this was until the
+     final round asked for less air between the slider and this section
+     (2026-09-29). Unitless in CSS for the reason --giant-inset is. */
+  const openAtFraction = () => {
+    const declared = parseFloat(
+      getComputedStyle(root).getPropertyValue("--giant-open-at"),
+    );
+    return Number.isFinite(declared) ? declared : 0.5;
+  };
+
   /* The camera path, and which stops are the end of a phrase.
    *
    * offsetLeft/offsetTop rather than getBoundingClientRect: the rect is where
@@ -311,7 +322,7 @@ export function initGiantPinning(root: HTMLElement): () => void {
     if (intro) {
       stops.unshift({
         x: stops[0].x,
-        y: vh / 2 - (intro.offsetTop + intro.offsetHeight / 2),
+        y: vh * openAtFraction() - (intro.offsetTop + intro.offsetHeight / 2),
       });
       /* Marked as ending a phrase so the move OFF it is eased like a camera move
          rather than read like a line of text. */
@@ -429,8 +440,24 @@ export function initGiantPinning(root: HTMLElement): () => void {
      approximately correct: every stop is in px, every px of it came from a vw or
      a viewport dimension, and all of them are wrong the moment the window
      changes. The DURATIONS below do not need the same treatment — they are
-     ratios between legs, and a resize scales every leg by the same factor. */
-  const at = (i: number, axis: "x" | "y") => () => readPath().stops[i][axis];
+     ratios between legs, and a resize scales every leg by the same factor.
+
+     CLAMPED, because a re-read is allowed to come back a different SHAPE. The
+     stop count is not a constant of the section: a row flips between framed
+     (one stop) and swept (two) on `reach`, and round() inserts corners only
+     where the turn is sharp enough — both read off geometry that moves while
+     fonts and images are still landing. The timeline's children were built for
+     the count at init, so a refresh that measures fewer stops sent these
+     closures off the end of the array, and the throw mid-refreshAll took the
+     whole hand-off down with it (dev at phone width, 2026-09-28). Aiming a
+     surplus tween at the last stop is a beat of held camera; the next refresh
+     re-reads everything anyway.
+     ponytail: clamp, not rebuild — a persistent count change would want the
+     timeline rebuilt on refresh. */
+  const at = (i: number, axis: "x" | "y") => () => {
+    const stops = readPath().stops;
+    return stops[Math.min(i, stops.length - 1)][axis];
+  };
 
   /* Parked on the first stop before anything scrolls, so the section is already
      framed on TO CREATE when it comes into view rather than showing the canvas's

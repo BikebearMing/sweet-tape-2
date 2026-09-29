@@ -3,7 +3,7 @@ import { FaChevronLeft } from "react-icons/fa6";
 
 import { bodyCopy } from "@/components/body";
 import HandNote from "@/components/HandNote";
-import { words } from "@/components/letters";
+import { letters, words } from "@/components/letters";
 import { hrefOf, labelOf, readOf, type Story } from "@/data/news";
 import Share from "./Share";
 import Stage from "./Stage";
@@ -209,14 +209,17 @@ export default function Article({ story }: { story: Story }) {
                 a control labelled with a destination has to lead there. A plain
                 <a href>, so the site's page transition takes it like every other
                 link (Preloader/transition.ts). */}
-            <a className="article-back" href="/news">
+            <a className="article-back" href="/news" aria-label="Back to all">
               {/* A bare chevron and not components/Arrow turned round: that mark
                   is a link LEAVING — it points off the page and swings to point
                   at what it belongs to — and this one is a direction, which is a
                   different thing to draw. From react-icons like the share row's
                   and the footer's marks, at 1em in currentColor. */}
               <FaChevronLeft aria-hidden="true" />
-              BACK TO ALL
+              {/* Split so the hover rolls it the way the footer's links roll. */}
+              <span className="article-back-label" aria-hidden="true">
+                {letters("BACK TO ALL")}
+              </span>
             </a>
           </aside>
         </div>

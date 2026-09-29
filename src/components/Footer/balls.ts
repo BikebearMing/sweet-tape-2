@@ -373,6 +373,19 @@ function run(
   let world: World | null = null;
   let lastHit = -Infinity; // performance.now() of the last knock — see BALLS.HIT.GAP
 
+  /* THE STYLESHEET'S OWN SCALE ON THE BALLS, and gravity has to wear it too.
+     GRAVITY is quoted in vw/s² so the fall is the same on any window — but the
+     phone grows every disc by --ball-scale (1.55 at the time of writing), and
+     a fall that is constant in vw is 1/1.55 of itself measured in the balls'
+     own diameters, which read as moon gravity (user, 2026-09-28). Everything
+     else already follows the scale for free — radius and mass are measured off
+     the laid-out elements — so this one number is the only place the physics
+     still believed the desktop's sizes. Read off the element rather than
+     typed here, for pin.ts's --giant-inset reason: the stylesheet owns the
+     figure, and agreement by coincidence does not survive tuning. Re-read on
+     every build, which is what a rotation triggers. */
+  let ballScale = 1;
+
   /* The cursor, in the bed's own coordinates, plus the distance it covered on
      the last frame — the push below is a function of both where it is and how
      fast it is going, so a cursor resting inside a ball does not slowly bore
@@ -416,8 +429,11 @@ function run(
        with dt in ms — the same 1e6 factor the cursor's force goes through, and
        the same reason: scaling it by one vw is what makes the fall identical at
        every window size rather than slower on a wide screen. */
+    ballScale =
+      parseFloat(getComputedStyle(els[0]).getPropertyValue("--ball-scale")) || 1;
+
     engine.gravity.y = 1;
-    engine.gravity.scale = (BALLS.GRAVITY * vw(1)) / 1_000_000;
+    engine.gravity.scale = (BALLS.GRAVITY * ballScale * vw(1)) / 1_000_000;
 
     /* collisionStart fires before the solver has touched the pair, so these
        velocities are still the ones the bodies arrived with. A wall's is 0. */
@@ -797,8 +813,11 @@ function run(
      ball at the limit keeps its heading and only loses pace; clamping x and y
      separately would quietly bend everything toward the diagonals. */
   function capSpeed(w: World) {
-    /* vw per second into px per step, the units Matter's velocities are in. */
-    const max = vw(BALLS.MAX_SPEED) / 60;
+    /* vw per second into px per step, the units Matter's velocities are in.
+       Scaled with gravity: the stronger phone fall arrives faster, and a
+       backstop that stayed at the desktop figure would quietly flatten the
+       one move the extra weight exists for. */
+    const max = (vw(BALLS.MAX_SPEED) * ballScale) / 60;
     for (const { body } of w.balls) {
       const v = body.velocity;
       const s = Math.hypot(v.x, v.y);

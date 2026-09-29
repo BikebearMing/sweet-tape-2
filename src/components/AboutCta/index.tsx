@@ -2,6 +2,8 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 
+import Arrow from "@/components/Arrow";
+import HandNote from "@/components/HandNote";
 import { bodyCopy } from "@/components/body";
 import { letters } from "@/components/letters";
 
@@ -15,8 +17,9 @@ import Stage from "./Stage";
  * answer was for, and the four words we wanted to be while we did it. The story
  * ends and the reader is left on a green sheet with nowhere to go, which is what
  * this is for. One belief said small, one claim said as loudly as this site says
- * anything, a pill under it pointing at the tapes — and the tapes themselves,
- * standing in a crate of fruit at the foot of the screen.
+ * anything, the slider's EXPLORE sticker under it pointing at the tapes (a
+ * white pill until the final round) — and the tapes themselves, standing in a
+ * crate of fruit at the foot of the screen.
  *
  * THREE LAYERS, DRAWN BACK TO FRONT: a green curtain across the whole sheet, the
  * copy printed on it, and the crate hung off the bottom edge in front of both.
@@ -59,30 +62,9 @@ import Stage from "./Stage";
    six, which is the next thing a reader who has read this far would want, and
    it is what the crate under the pill is a picture of. */
 
-/* THE CHEVRON, and it is drawn twice on purpose — see the pill below, which is
-   two discs rather than one. A function rather than a copied block of markup,
-   so the two are the same drawing and cannot drift apart.
-
-   Drawn rather than shipped, so it inherits the disc's ink for free — the same
-   call components/Arrow makes about the north-east arrow it draws for the menu
-   and the news cards. That one is not this one: this points ALONG the reader's
-   way forward, not out of the page. */
-function Chevron() {
-  return (
-    <svg viewBox="0 0 12 12" fill="none" focusable="false">
-      <path
-        d="M4.2 1.6 8.6 6l-4.4 4.4"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="square"
-      />
-    </svg>
-  );
-}
-
 export default async function AboutCta() {
   const {
-    cta: { kicker, headline, label, href },
+    cta: { kicker, headline, href },
   } = await getAbout();
 
   return (
@@ -99,7 +81,7 @@ export default async function AboutCta() {
       <noscript>
         <style>
           {`.about-cta .char, .about-cta .body-rise { transform: none }
-            .about-cta-button { opacity: 1; transform: none }`}
+            .about-cta .explore-button { opacity: 1; transform: none }`}
         </style>
       </noscript>
 
@@ -174,52 +156,46 @@ export default async function AboutCta() {
           ))}
         </h2>
 
-        {/* THE PILL. A real anchor, and the whole pill is it: the label and the
-            disc are one target the size of the thing that looks clickable,
-            rather than two words with a decoration beside them.
+        {/* THE STICKER — the slider's circle EXPLORE button, asked here by the
+            final round (2026-09-29) in place of the white pill (the pill's
+            markup is in git, and its CSS still serves the 404 page). Same
+            structure as TapeSlider/Explore.tsx: the clip holds the label, the
+            badge hangs outside it so the disc is never cut by the mask. Not a
+            copy of that component, because this one's href and label are the
+            record's own — the shared part is the CSS, scoped to both stages.
 
-            NOT SPLIT TO LETTERS, and that is the one place this section departs
-            from the voice above it. The pill arrives as an OBJECT — it pops into
-            place whole, the way WE WANTED TO BE.'s cards do — and a label whose
-            letters were also flying in would be a button assembling itself in
-            mid-air. One gesture per thing.
-
-            TWO DISCS, AND THE SECOND ONE IS THE HOVER. What the drawing shows
-            is one lime circle at the right-hand end. Under the pointer that one
-            leaves through the right end of the pill, another arrives from beyond
-            the left, and it stops THERE rather than carrying on to where the
-            first one was — the label is pushed across to make room for it. What
-            settles is the pill read backwards: the same four measurements in the
-            opposite order, so it is exactly as wide as it was.
-
-            IT IS ONE CIRCLE GOING ROUND in the reader's head and two elements in
-            the DOM, because a single element cannot be on both sides of a
-            journey it has not made yet. Which one is which is a class rather
-            than an order: .about-cta-next is the arriving one, and it is out of
-            the layout entirely so that the resting one still gives the pill its
-            right-hand end. Both journeys are the same distance, and it is the
-            stylesheet that derives it — see --cta-swap.
-
-            BOTH ARE aria-hidden. They repeat the label's meaning and nothing
-            else — a reader who has just heard UNROLL THE STORY does not also
-            need "link, arrow", let alone twice. */}
-        <Link className="about-cta-button" href={href}>
-          <span className="about-cta-label">{label}</span>
-
-          {/* The one on the drawing — a flex item, so it is what gives the pill
-              its width and its right-hand end. It is the one that LEAVES. */}
-          <span className="about-cta-disc" aria-hidden="true">
-            <Chevron />
+            Still a real anchor, still arriving as an OBJECT: reveal.ts pops it
+            whole the way it popped the pill. */}
+        <Link className="explore-button" href={href}>
+          <span className="explore-clip">
+            {/* EXPLORE, typed like the slider's and not the record's label
+                (final round: "just change the text to EXPLORE") — the sticker
+                reads the same wherever it is stuck. The label field still
+                writes the 404's pill. */}
+            <span className="button-text">EXPLORE</span>
           </span>
-
-          {/* The one that arrives. Absolutely positioned and out of the layout
-              entirely, so the pill is the same size whether it is moving or
-              not. */}
-          <span className="about-cta-disc about-cta-next" aria-hidden="true">
-            <Chevron />
+          <span className="arrow">
+            <Arrow />
           </span>
         </Link>
       </div>
+
+      {/* THE NOTE, at the side of the sticker — the final round's mock puts the
+          hand in the empty left of the curtain, level with the door out. New
+          words in the same hand (the breaks are the drawing's own, see
+          HandNote/index.tsx), written in the page's lime like the belt's.
+          Placement and the phone's display:none are .cta-note in global.css,
+          with the other instances. After the copy in tree order so it paints
+          over the curtain, and before the crate, which it is nowhere near. */}
+      <HandNote
+        className="cta-note"
+        lines={[
+          "we've believed that",
+          "even the simplest",
+          "products deserve",
+          "thoughtful design.",
+        ]}
+      />
 
       {/* THE CRATE, IN FRONT OF EVERYTHING — including the pill, whose lower
           edge the tapes now overlap. It used to live inside the sheet, which is

@@ -294,7 +294,7 @@ export default async function AboutOpen() {
         <div className="wrapper">
           <img id="front" src="/assets/box-front.png" alt="" />
           <img id="behind" src="/assets/box-behind.png" alt="" />
-          <img id="hand" src="/assets/hand.png" alt="" />
+          <img id="hand" src="/assets/hand-4x-export.webp" alt="" />
         </div>
       </div>
     </Stage>

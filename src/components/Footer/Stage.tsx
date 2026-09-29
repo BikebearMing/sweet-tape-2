@@ -4,6 +4,7 @@ import { useEffect, useRef, type ReactNode } from "react";
 
 import { initFooterBalls } from "./balls";
 import { initFooterReveal } from "./reveal";
+import { initPoke } from "@/components/Hero/poke";
 
 /* The only client component in the footer.
  *
@@ -37,10 +38,15 @@ export default function Stage({ children }: { children: ReactNode }) {
        start clamps to the very last scroll pixel and the words stayed under
        their masks. It is plain text now — see the note on it in index.tsx. */
     const stopBalls = initFooterBalls(root);
+    /* The headline's pointer poke — the hero's, on the sign-off too (final
+       round, 2026-09-29), the same borrow MakeItStick makes. It waits out the
+       scroll-triggered reveal on its own (the parked guard in poke.ts). */
+    const stopPoke = initPoke(root, ".footer-headline");
 
     return () => {
       stopReveal();
       stopBalls();
+      stopPoke();
     };
   }, []);
 

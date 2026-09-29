@@ -119,7 +119,7 @@ export default function Stage({
         .catch(() => {
           busy = false;
           button.disabled = false;
-          say("COULDN’T SEND — EMAIL US INSTEAD");
+          say("COULDN’T SEND —\nEMAIL US\nINSTEAD");
         });
     };
     form?.addEventListener("submit", send);

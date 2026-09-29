@@ -95,8 +95,28 @@ const HEADING = "THE SIBLINGS";
 const RAISED = 1;
 const TILT = [-4.414, 0, 3.578];
 
+/* THE COLOUR OPTIONS, for the two tapes that sell in more than one — a dark
+ * pill across the foot of every card, shown on hover (tap, on the phone), with
+ * the range's swatches in it. The mock draws the same pair on every variant of
+ * the tape, so the list is per TAPE and not per face.
+ *
+ * IN CODE AND NOT THE CMS, the STORY_ROLL call (TapeSlider/strips.ts): these
+ * are facts about the range's artwork read off the design, not copy anyone
+ * edits. Keyed by tape id; a tape not in this table has no colours to show and
+ * the section renders exactly as it always did — no pill, no note, no
+ * listener.
+ *
+ * The OPP pair is sampled off the mock (2026-09-28): the muted green is the
+ * clear film, the amber is the brown. THE CLOTH PAIR IS A STAND-IN — the mock
+ * only draws OPP's, and cloth's real swatches want the user's own values. */
+const SIB_COLOURS: Record<string, string[]> = {
+  opp: ["#4f774e", "#ce8900"],
+  cloth: ["#1d1d1b", "#8a8d86"],
+};
+
 export default function Siblings({ tape }: { tape: Tape }) {
   const faces = siblingFacesOf(tape);
+  const colours = SIB_COLOURS[tape.id];
 
   /* WHICH PLACE EACH LABEL STANDS IN. Filled from the left, so two labels are
      the leaning place and the raised one. A lone label is the raised place on
@@ -154,6 +174,7 @@ export default function Siblings({ tape }: { tape: Tape }) {
           <div
             className="siblings-card"
             key={i}
+            data-colours={colours ? "" : undefined}
             style={
               {
                 "--sib-raised": slotOf(i) === RAISED ? 1 : 0,
@@ -162,6 +183,21 @@ export default function Siblings({ tape }: { tape: Tape }) {
             }
           >
             <img className="siblings-face" src={face.src} alt={face.alt} />
+
+            {/* The colour pill. In the markup whether or not it is showing —
+                the hover (or the phone's tap, see reveal.ts) only lifts it,
+                so there is nothing to mount and the artwork above shrinks to
+                meet it on the same transition. Sized entirely in per cent of
+                the card, like the face's inset, so both card sizes and the
+                phone's 72vw wear it in proportion. */}
+            {colours && (
+              <span className="sib-colours">
+                <span className="sib-colours-chip">COLOURS</span>
+                {colours.map((c) => (
+                  <i className="sib-dot" style={{ background: c }} key={c} aria-hidden="true" />
+                ))}
+              </span>
+            )}
           </div>
         ))}
         </div>
@@ -178,6 +214,39 @@ export default function Siblings({ tape }: { tape: Tape }) {
             {letters(HEADING)}
           </span>
         </h2>
+
+        {/* The aside in the margin — "hover to explore the colours." with an
+            arrow swept down toward the cards, top right of the row, as the
+            mock draws it. Only when there are colours to explore. The verb is
+            two spans and the stylesheet shows the honest one per pointer:
+            "hover" where there is a hover, "tap" on the phone. */}
+        {colours && (
+          <p className="sib-hint">
+            <svg className="sib-hint-arrow" viewBox="0 0 120 72" aria-hidden="true">
+              <path
+                /* The head sits on the sweep's own end tangent. The curve arrives
+                 at the tip travelling 45° down-left, and the first cut of this
+                 head was drawn for a flat leftward arrival — so one leg lay
+                 along the shaft and the other stuck out past the tip, reading
+                 as a kink rather than a point (final round: "why is the arrow
+                 head like that"). These two legs trail the tip at ±30° off the
+                 tangent. */
+              d="M116 10 C 76 16, 40 26, 10 56 M23 53 10 56 13 43"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <span className="sib-hint-text">
+              <span className="sib-hint-hover">hover</span>
+              <span className="sib-hint-tap">tap</span> to explore
+              <br />
+              the colours.
+            </span>
+          </p>
+        )}
       </div>
     </Stage>
   );

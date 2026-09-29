@@ -3,9 +3,11 @@
  * Two things happen and they are one gesture: the ruled corner
  * (components/HandNote/index.tsx, two thin lines round the copy) draws out,
  * the pen lifts, and the copy beside it is typed a character at a time in
- * Nothing You Could Do. One paused GSAP timeline per note, released once when
- * the note is scrolled into view and left standing — copy that untypes itself
- * when the reader looks back up is a party trick.
+ * Nothing You Could Do. One paused GSAP timeline per note, released when the
+ * note is scrolled into view — and RE-ARMED when it leaves (final round,
+ * 2026-09-29): scroll away and back and the note types itself again. It rewinds
+ * off screen, never in front of the reader, so it is always seen either typing
+ * or standing, not untyping.
  *
  * The copy is real text in the markup, so without JS (or with reduced motion)
  * the note simply stands. This file only splits each line into character spans
@@ -162,11 +164,18 @@ function initOne(note: HTMLElement): () => void {
     if (stopped) return;
     io = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting) return;
-        if (delay > 0) held = gsap.delayedCall(delay, () => tl.play());
-        else tl.play();
-        io?.disconnect(); // once typed, it stays typed
-        io = null;
+        if (entry.isIntersecting) {
+          if (delay > 0) held = gsap.delayedCall(delay, () => tl.play());
+          else tl.play();
+        } else {
+          /* Out of view: rewind, so the next arrival types it again. Seeking a
+             timeline to 0 reverts its own set()s too, which is what re-hides
+             the characters. A pending delayed start dies with it — a note that
+             left during its own delay has not been seen yet. */
+          held?.kill();
+          held = null;
+          tl.pause(0);
+        }
       },
       { rootMargin: `0px 0px ${-(1 - START_AT) * 100}% 0px` },
     );

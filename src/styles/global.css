@@ -227,6 +227,14 @@ body {
   background: #034102;
 }
 
+/* Selected text in the brand's pairing rather than the browser's blue (final
+   round, 2026-09-29). The site prints dark-green-on-lime and lime-on-green
+   everywhere, so the same inversion is readable over both grounds. */
+::selection {
+  background: #034102;
+  color: #b6fe00;
+}
+
 h1,
 h2,
 h3,
@@ -867,6 +875,13 @@ h6 {
   /* 441px */
   --product-roll-h: calc(28.889vw * var(--product-scale));
   /* 416px */
+
+  /* THE OPENING SCREEN'S HEIGHT — 780.69px at the design width. At :root and
+     not on the section, because the origin section reads it too: its grain
+     starts mid-tile by exactly this much, so the crumple runs on across the
+     section seam instead of restarting there. See .product-inner-info::before,
+     and --giant-sheet for the argument. */
+  --pi-h: calc(54.215vw * var(--product-scale));
 }
 
 /* ---- Tokens — the tablet ----
@@ -1684,12 +1699,6 @@ html[data-loading] {
 
 .hero-section[data-reveal="live"] .char {
   transform: none;
-}
-
-/* Masks off while the headline is being poked (Hero/poke.ts) — a hop is taller
-   than the mask's headroom. Only set once the entrance is done. */
-.hero-section .h1[data-poke] .clip {
-  overflow: visible;
 }
 
 /* The cardboard copy's words — see words() in Hero/index.tsx. Inline flex
@@ -2906,7 +2915,7 @@ html[data-loading] {
    (--word is #fcd805 on the first roll) which is nothing to letter a white
    badge in. Swap the three colours below for var(--word-colour) and friends if
    that decision is ever reversed. */
-.tape-slider-parent .explore-button {
+:is(.tape-slider-parent, .about-cta) .explore-button {
   --explore-size: 11.5vw;
   /* 151px at the design width. Measured off the word rather than chosen: the
      type below is the drawn 35px and sets EXPLORE 108px wide, and the mockup
@@ -2914,21 +2923,6 @@ html[data-loading] {
   --explore-face: #fff;
   --explore-ink: #013900;
   --explore-disc: #b6fe00;
-  /* How far the sticker laps ONTO the letter from the corner, negative being
-     inward and up. The whole of the tuning. */
-  --explore-lap-x: 0.4vw;
-  --explore-lap-y: -4.6vw;
-
-  position: absolute;
-  z-index: 14;
-  left: calc(50% + 26.32vw / 2 + var(--explore-lap-x));
-  top: calc(9.1vw + 14.5vw + var(--explore-lap-y));
-  /* The `translate` property, not `transform`: the entrance is GSAP's and it
-     owns transform on this element. They are separate properties and compose,
-     so the centring survives the bounce. */
-  translate: -50% -50%;
-  /* !important because the entrance writes `rotate` on this element too. */
-  rotate: 8deg !important;
 
   display: grid;
   place-items: center;
@@ -2949,9 +2943,33 @@ html[data-loading] {
      of its own, so it gives its clicks back rather than eating this one. */
 }
 
+/* WHERE IT STANDS ON THE SLIDER — placement alone, and slider-alone. The rule
+   above and everything under it (perforation, ripple, type, badge) is the
+   STICKER, and since the final round the about CTA wears it too — that is what
+   the :is() scopes are. What could not travel is this: the E's corner is a
+   place only this stage has. The CTA's own placement is with the .about-cta
+   rules. */
+.tape-slider-parent .explore-button {
+  /* How far the sticker laps ONTO the letter from the corner, negative being
+     inward and up. The whole of the tuning. */
+  --explore-lap-x: 0.4vw;
+  --explore-lap-y: -4.6vw;
+
+  position: absolute;
+  z-index: 14;
+  left: calc(50% + 26.32vw / 2 + var(--explore-lap-x));
+  top: calc(9.1vw + 14.5vw + var(--explore-lap-y));
+  /* The `translate` property, not `transform`: the entrance is GSAP's and it
+     owns transform on this element. They are separate properties and compose,
+     so the centring survives the bounce. */
+  translate: -50% -50%;
+  /* !important because the entrance writes `rotate` on this element too. */
+  rotate: 8deg !important;
+}
+
 /* The perforation itself. A pseudo-element and not a border: a border would be
    the outer edge of the disc, and this ring is inset from it. */
-.tape-slider-parent .explore-button::before {
+:is(.tape-slider-parent, .about-cta) .explore-button::before {
   content: "";
   position: absolute;
   inset: 0.5vw;
@@ -2970,30 +2988,33 @@ html[data-loading] {
    the perforation straight again. :focus-visible stays outside the gates; a
    keyboard is a keyboard on either kind of screen. */
 @media (hover: hover) {
-  .tape-slider-parent .explore-button:hover::before {
+  :is(.tape-slider-parent, .about-cta) .explore-button:hover::before {
     rotate: 24deg;
     transition: rotate 0.8s linear;
   }
 }
 
 @media (hover: none) {
-  .tape-slider-parent .explore-button:active::before {
+  :is(.tape-slider-parent, .about-cta) .explore-button:active::before {
     rotate: 24deg;
     transition: rotate 0.8s linear;
   }
 }
 
-.tape-slider-parent .explore-button:focus-visible::before {
+:is(.tape-slider-parent, .about-cta) .explore-button:focus-visible::before {
   rotate: 24deg;
   transition: rotate 0.8s linear;
 }
 
-/* THE HOVER: the preloader's rainbow, but out from the centre rather than down
-   the page — ripples. One front, --ripple, travels out from the middle at a
-   constant speed, and four rings of colour trail it at a fixed spacing, with
-   white behind the last. Everything past the front is transparent, so the
-   sticker's own white face shows there; everything behind the rings is white
-   too, so when the front has left the disc the sticker is simply white again.
+/* THE HOVER: a ripple out from the centre. One front, --ripple, travels out
+   from the middle at a constant speed, and a ring of colour trails it at a
+   fixed spacing, with white behind it. It was the preloader's rainbow — four
+   rings — until the final round dropped it to just the lime (2026-09-29); the
+   four bands still stand, all in one colour, so the wake can be re-split
+   without re-deriving the sums. Everything past the front is transparent, so
+   the sticker's own white face shows there; everything behind the ring is
+   white too, so when the front has left the disc the sticker is simply white
+   again.
 
    A REGISTERED PROPERTY, because that is what makes the gradient's stops
    transitionable at all: one number moves and every ring moves with it, at the
@@ -3011,7 +3032,7 @@ html[data-loading] {
   initial-value: 0%;
 }
 
-.tape-slider-parent .explore-button::after {
+:is(.tape-slider-parent, .about-cta) .explore-button::after {
   /* THE FOUR BANDS, outermost first — the leading ring is the widest and
      each behind it a little narrower, so the ripple reads as a wake rather
      than as stripes. Their sum is how far past the edge the front travels. */
@@ -3029,10 +3050,10 @@ html[data-loading] {
   background: radial-gradient(
     circle closest-side,
     #fff calc(var(--ripple) - var(--b1) - var(--b2) - var(--b3) - var(--b4)),
-    #50cbff calc(var(--ripple) - var(--b1) - var(--b2) - var(--b3) - var(--b4)) calc(var(--ripple) - var(--b1) - var(--b2) - var(--b3)),
+    #b6fe00 calc(var(--ripple) - var(--b1) - var(--b2) - var(--b3) - var(--b4)) calc(var(--ripple) - var(--b1) - var(--b2) - var(--b3)),
     #b6fe00 calc(var(--ripple) - var(--b1) - var(--b2) - var(--b3)) calc(var(--ripple) - var(--b1) - var(--b2)),
-    #f7d000 calc(var(--ripple) - var(--b1) - var(--b2)) calc(var(--ripple) - var(--b1)),
-    #ff7b5f calc(var(--ripple) - var(--b1)) var(--ripple),
+    #b6fe00 calc(var(--ripple) - var(--b1) - var(--b2)) calc(var(--ripple) - var(--b1)),
+    #b6fe00 calc(var(--ripple) - var(--b1)) var(--ripple),
     transparent var(--ripple)
   );
   transition: none;
@@ -3043,7 +3064,7 @@ html[data-loading] {
    the last ones drift off the edge. 147% is the radius plus the four bands:
    the trailing ring is off the disc at the end. */
 @media (hover: hover) {
-  .tape-slider-parent .explore-button:hover::after {
+  :is(.tape-slider-parent, .about-cta) .explore-button:hover::after {
     --ripple: 147%;
     transition: --ripple 1.3s cubic-bezier(0.3, 0.45, 0.3, 1);
   }
@@ -3052,29 +3073,29 @@ html[data-loading] {
 /* The press pays out the ripple on touch. The page transition holds the sheet
    long enough for the burst to read before the route goes. */
 @media (hover: none) {
-  .tape-slider-parent .explore-button:active::after {
+  :is(.tape-slider-parent, .about-cta) .explore-button:active::after {
     --ripple: 147%;
     transition: --ripple 1.3s cubic-bezier(0.3, 0.45, 0.3, 1);
   }
 }
 
-.tape-slider-parent .explore-button:focus-visible::after {
+:is(.tape-slider-parent, .about-cta) .explore-button:focus-visible::after {
   --ripple: 147%;
   transition: --ripple 1.3s cubic-bezier(0.3, 0.45, 0.3, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tape-slider-parent .explore-button::before,
-  .tape-slider-parent .explore-button:hover::after,
-  .tape-slider-parent .explore-button:active::after,
-  .tape-slider-parent .explore-button:focus-visible::after {
+  :is(.tape-slider-parent, .about-cta) .explore-button::before,
+  :is(.tape-slider-parent, .about-cta) .explore-button:hover::after,
+  :is(.tape-slider-parent, .about-cta) .explore-button:active::after,
+  :is(.tape-slider-parent, .about-cta) .explore-button:focus-visible::after {
     transition: none;
   }
 }
 
 /* The clip the word rises out of on the way in — the word alone, see the note
    in Explore.tsx on why the badge is not in here with it. */
-.tape-slider-parent .explore-clip {
+:is(.tape-slider-parent, .about-cta) .explore-clip {
   overflow: hidden;
   /* Over the hover's rainbow, which is an absolute box under the word. */
   position: relative;
@@ -3085,7 +3106,7 @@ html[data-loading] {
    vw rather than px, because this stage is drawn in vw and nothing else on it
    holds one size while the window changes — 2.43vw IS 35px at the 1440 the
    design was drawn on. */
-.tape-slider-parent .button-text {
+:is(.tape-slider-parent, .about-cta) .button-text {
   display: block;
   font-family: var(--font-heading);
   font-weight: 800;
@@ -3099,7 +3120,7 @@ html[data-loading] {
    which is where the mockup puts it. Absolute against the disc rather than a
    flex sibling of the word: it is printed on top of the type, not set beside
    it, and a flow position could only ever push the word aside. */
-.tape-slider-parent .explore-button .arrow {
+:is(.tape-slider-parent, .about-cta) .explore-button .arrow {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -3122,7 +3143,7 @@ html[data-loading] {
 /* On the svg and not on the disc: the disc is what the entrance scales, and
    whichever of the two was written second would win. Same overshoot curve the
    news cards turn their arrow on. */
-.tape-slider-parent .explore-button .arrow svg {
+:is(.tape-slider-parent, .about-cta) .explore-button .arrow svg {
   width: 9px;
   height: 9px;
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -3130,13 +3151,13 @@ html[data-loading] {
 
 /* THE WHOLE STICKER IS THE TARGET, not the badge — an arrow that only turns
    when the pointer is on the arrow is a thing nobody finds. */
-.tape-slider-parent .explore-button:hover .arrow svg,
-.tape-slider-parent .explore-button:focus-visible .arrow svg {
+:is(.tape-slider-parent, .about-cta) .explore-button:hover .arrow svg,
+:is(.tape-slider-parent, .about-cta) .explore-button:focus-visible .arrow svg {
   transform: rotate(45deg);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tape-slider-parent .explore-button .arrow svg {
+  :is(.tape-slider-parent, .about-cta) .explore-button .arrow svg {
     transition: none;
   }
 }
@@ -3195,7 +3216,8 @@ html[data-loading] {
 .subhead,
 .rolling-tag,
 .story-chip,
-.article-chip {
+.article-chip,
+.sib-colours-chip {
   background: var(--tag-bg);
   color: var(--tag-ink);
   white-space: nowrap;
@@ -3243,7 +3265,8 @@ html[data-loading] {
 .subhead::before,
 .rolling-tag::before,
 .story-chip::before,
-.article-chip::before {
+.article-chip::before,
+.sib-colours-chip::before {
   content: "";
   position: absolute;
   left: 0.62vw;
@@ -3274,7 +3297,8 @@ html[data-loading] {
   .subhead,
   .rolling-tag,
   .story-chip,
-  .article-chip {
+  .article-chip,
+  .sib-colours-chip {
     padding: max(6px, 0.678vw);
     padding-left: 1.6em;
     font-size: max(11px, 1.111vw);
@@ -3294,7 +3318,8 @@ html[data-loading] {
   .subhead,
   .rolling-tag,
   .story-chip,
-  .article-chip {
+  .article-chip,
+  .sib-colours-chip {
     border-radius: 1.2vw;
     padding: 1.9vw;
     padding-left: 1.6em;
@@ -3307,7 +3332,8 @@ html[data-loading] {
   .subhead::before,
   .rolling-tag::before,
   .story-chip::before,
-  .article-chip::before {
+  .article-chip::before,
+  .sib-colours-chip::before {
     left: 1.8vw;
     width: 0.6vw;
     height: 3vw;
@@ -3445,8 +3471,10 @@ html[data-loading] {
    *
    * At 6vw that is 86px of extra stage at the design width, on top of the ~22vw
    * that already falls below CREATIVE. Set it to 0 to get the section back
-   * exactly as it was. */
-  --stage-air: 6vw;
+   * exactly as it was — which the final round did (2026-09-29, "reduce the gap
+   * between the tape slider and the section under"): the air is gone, and the
+   * other half of that note is --giant-open-at on .giant-pinning. */
+  --stage-air: 0vw;
 
   /* A viewport of stage, room for the wave band's tape — which dips up to ~16vw
      of tilted valley into this section's top (Wave band, above) — and the air
@@ -3829,40 +3857,43 @@ html[data-loading] {
      here and its E is 19.4vw of that, which is 34.6vw tall. Everything else is
      the desktop rule, scaled — a badge sized in desktop vw would be a 130px
      circle on a 390px screen. */
+  :is(.tape-slider-parent, .about-cta) .explore-button {
+    --explore-size: 23vw;
+    box-shadow:
+      inset 0 0 0 0.3vw var(--explore-face),
+      0 0.7vw 2vw rgb(0 0 0 / 0.14);
+  }
+
   .tape-slider-parent .explore-button {
     /* OVER THE ROLL HERE, not under it. .key-visual is z-index 15 and its 3D
        canvas is wider than its box; on the desktop the sticker stands clear of
        both, but on a phone the two share the middle of the sheet and the way
        into the products was half hidden behind the roll. */
     z-index: 16;
-    --explore-size: 23vw;
     /* 4vw, tuned by hand: out past the word's right edge, clear of the roll's
        rim. It was -5vw, which tucked it in over FULL LENGTH. */
     --explore-lap-x: 4vw;
     --explore-lap-y: -5vw;
     left: calc(50% + 62vw / 2 + var(--explore-lap-x));
     top: calc(25vw + 34.6vw + var(--explore-lap-y));
-    box-shadow:
-      inset 0 0 0 0.3vw var(--explore-face),
-      0 0.7vw 2vw rgb(0 0 0 / 0.14);
   }
 
-  .tape-slider-parent .explore-button::before {
+  :is(.tape-slider-parent, .about-cta) .explore-button::before {
     inset: 1.1vw;
     border-width: 0.5vw;
   }
 
-  .tape-slider-parent .button-text {
+  :is(.tape-slider-parent, .about-cta) .button-text {
     font-size: 5.4vw;
   }
 
-  .tape-slider-parent .explore-button .arrow {
+  :is(.tape-slider-parent, .about-cta) .explore-button .arrow {
     width: 6vw;
     height: 6vw;
     translate: -50% 0.8vw;
   }
 
-  .tape-slider-parent .explore-button .arrow svg {
+  :is(.tape-slider-parent, .about-cta) .explore-button .arrow svg {
     width: 2.2vw;
     height: 2.2vw;
   }
@@ -4063,9 +4094,13 @@ html[data-loading] {
   }
 
   /* THE STEP BUTTONS, across the foot of the column where the mock puts them.
-     Two discs and nothing else: the arrow inside is one glyph mirrored (see
-     NavArrow in TapeSlider/index.tsx), and the palette arrives as --nav-face /
-     --nav-ink, repainted per tape by the engine as the colour sheet commits.
+     Each is the user's own drawing now (NAV_ART in TapeSlider/index.tsx): a
+     cream disc with a chevron of two tape strips, one file per direction. The
+     button box carries only the site's resting shadow and the press — the
+     disc, the arrow and their colours are all in the artwork, which is why
+     nothing here reads --nav-face / --nav-ink any more (the engine still
+     writes them; harmless, and the hook is there if the discs ever go back to
+     wearing the tape's palette).
 
      OUTSIDE .tape-slide in the markup, so the 8vw the wave band's tape costs
      the drawing is not inherited — and restated here, because the buttons sit
@@ -4091,8 +4126,7 @@ html[data-loading] {
     border: 0;
     padding: 0;
     border-radius: 100%;
-    background: var(--nav-face);
-    color: var(--nav-ink);
+    background: none;
     cursor: pointer;
 
     display: grid;
@@ -4100,21 +4134,18 @@ html[data-loading] {
 
     /* The site's shadow, at the showcase cards' offset — these are objects
        resting just off the stage like everything else on it, not flat marks
-       printed on the colour. See --drop-ink in :root. */
+       printed on the colour. See --drop-ink in :root. The artwork's disc
+       fills its canvas, so the round button box IS the disc's outline and
+       the shadow falls where the drawing sits. */
     box-shadow: 0.7vw 1vw 0 var(--drop-ink);
     transition: translate 0.12s ease-out, box-shadow 0.12s ease-out;
   }
 
-  .tape-nav button svg {
-    width: 7vw;
-    height: 7vw;
-  }
-
-  /* ONE GLYPH, TURNED. The forward button is the back one mirrored, so the two
-     arrows are the same drawing and cannot drift apart in weight or length.
-     `scale` on the svg, which owns no other transform. */
-  .tape-nav button[data-step="1"] svg {
-    scale: -1 1;
+  .tape-nav button img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 100%;
   }
 
   /* Pressed down onto the stage — the disc travels to meet its own shadow,
@@ -4196,6 +4227,12 @@ html[data-loading] {
      here and the camera changes with it. */
   --giant-open-gx: 1vw;
   --giant-inset: 0.045;
+  /* Where the heading's centre parks in the opening frame, as a fraction of the
+     window's height — pin.ts reads it the way it reads --giant-inset. It was
+     centred (0.5) until the final round asked for less air between the slider
+     and this section; higher in the frame means the heading arrives sooner
+     after the arc. */
+  --giant-open-at: 0.4;
 
   /* THE TAIL — bare paper below the pinned frame, and the reason the section is
      taller than the window it holds still.
@@ -4750,7 +4787,11 @@ html[data-loading] {
   height: auto;
   object-fit: cover;
 
-  border-radius: 0.09em;
+  /* Rounder since the final round (2026-09-29, "image frame more rounder") —
+     0.14em of the giant type on a 0.5947em card is 23.5% of its width, the
+     app-icon squircle the mock draws. The loose shots carry the same fraction;
+     see the radius on .giant-prop--shot for how the units agree. */
+  border-radius: 0.14em;
 
   /* A thing lying on the paper, the same as every other photograph on the site
      — see --drop-ink in :root for why it is hard rather than blurred, and
@@ -4949,7 +4990,13 @@ html[data-loading] {
  * 1 / 0.5947 = 1.6815. If --giant-slot ever changes, this changes with it; they
  * are two halves of one ratio. */
 .giant-prop--shot {
-  border-radius: 3.1vw;
+  /* In em, and the em is this wrapper's own width x 1.6815 (the font-size
+     below) — so 0.14em is 23.5% of whichever picture wears it, the same
+     fraction .giant-card's 0.14em is of the slot. The old 3.1vw gave the 21vw
+     shot a visibly shallower corner than the 15vw one; the final round asked
+     for rounder ON ALL THE BIG ONES, and one figure that means "this much of
+     yourself" is what makes all of them the same shape. */
+  border-radius: 0.14em;
   /* The same --gp-scale as the box, so the strip stays a fraction of its
      photograph at every size. */
   font-size: calc(var(--pw) * var(--gp-scale, 1) * 1.6815);
@@ -5502,6 +5549,19 @@ html[data-loading] {
   width: 100%;
   padding: var(--stick-pad-y) var(--stick-pad-x) calc(var(--stick-pad-y) + var(--stick-arc));
   background: var(--stick-bg);
+}
+
+/* THE SEAM WITH THE PINNING SECTION'S TAIL, and the pixel that closes it. Two
+   flat lime boxes butt here, but the smooth scroll carries the page on a
+   fractional translate, so the two backgrounds rasterise separately and their
+   shared edge can round apart by a device pixel — a hairline of the body's
+   dark green, ruled straight across the width. Verified by turning both grain
+   layers off: the line stayed, so it was never the paper. One pixel of
+   overlap is the same escape .giant-pinning's own background takes with its
+   "+1px", and the tail paints over the slack wherever the edges do agree.
+   Scoped off .top-story, whose top edge meets a different neighbour. */
+.make-it-stick {
+  margin-top: -1px;
 }
 
 /* The paper grain, the same layer the hero, the band, the stage and the footer
@@ -6866,11 +6926,14 @@ html[data-loading] {
   --pi-roll-top: calc(15.4vw * var(--product-scale));
   --pi-word-top: calc(29.6vw * var(--product-scale));
 
-  /* THE, at this page's size. The slider sets it at 26.32vw; here it is a shade
-     larger, because there is nothing else on the screen for it to be in
-     proportion WITH — no chips, no photographs, no orbit — and a mark drawn for
-     a busy stage reads small on an empty one. */
-  --pi-the-w: calc(29.5vw * var(--product-scale));
+  /* THE, at this page's size — which is the slider's size again. This page
+     first drew it at 29.5vw on the argument that a mark made for a busy stage
+     reads small on an empty one; the client called the result too big, so it
+     is back on the family's one figure rather than on a third number. The
+     letters carry generated aspect-ratios, so the whole mark scales off this
+     width alone — its feet stay behind the roll's top edge with room to
+     spare. */
+  --pi-the-w: calc(26.32vw * var(--product-scale));
 
   /* THE TAPE'S WORD, at this page's size — and it turns out to be the size it
      already is everywhere else, which is worth stating rather than leaving as
@@ -6910,11 +6973,12 @@ html[data-loading] {
   position: relative;
   width: 100%;
 
-  /* 780.69px at the design width, and it is measured to the DEEPEST POINT of
-     the arc — which is this box's bottom edge, since the curve is cut out of
-     the sheet inside rather than hung below it. So the next section starts
-     where the lime finishes rather than where it begins to turn. */
-  height: calc(54.215vw * var(--product-scale));
+  /* Measured to the DEEPEST POINT of the arc — which is this box's bottom
+     edge, since the curve is cut out of the sheet inside rather than hung
+     below it. So the next section starts where the lime finishes rather than
+     where it begins to turn. The figure lives at :root (--pi-h) because the
+     origin section's grain is phased by it. */
+  height: var(--pi-h);
 
   /* THE COLOUR IN THE TWO BOTTOM CORNERS, EITHER SIDE OF THE ARC, and that is
      the entire reason it is here — nothing else on this section is painted with
@@ -6956,6 +7020,25 @@ html[data-loading] {
    * which is why that section is isolated rather than this figure being raised
    * again. See `isolation` on .product-inner-info. */
   z-index: 1;
+}
+
+/* THE PAPER IN THE TWO CORNERS. The sheet above gets its grain from the foot,
+   which is masked to the curve — so the corners either side of it were the one
+   patch of this page printed on nothing: a flat band between two crumples,
+   invisible on the green it was tuned on and plainly visible the moment a tape
+   set a lighter ground. Same box as the foot, so the same tile at the same
+   phase — the curve reads as a colour change on one sheet of paper, not as two
+   papers meeting. The sheet and everything on it paint over this; only the
+   corners show it. */
+.product-intro::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/paper-overlay.webp");
+  background-size: 100% auto;
+  background-repeat: repeat-y;
+  opacity: 0.2;
+  pointer-events: none;
 }
 
 /* The sheet — the box everything on the page is placed inside. The tape's colour
@@ -7153,7 +7236,13 @@ html[data-loading] {
   .product-intro {
     --pi-word-scale: 1.55;
     --pi-word-top: 92vw;
-    height: 140vw;
+  }
+
+  /* The taller sheet, said at :root and not on the section, because the origin
+     section's grain is phased by this figure and a phone value it could not
+     see would reopen the seam the phase exists to close. */
+  :root {
+    --pi-h: 140vw;
   }
 }
 
@@ -7291,6 +7380,13 @@ html[data-loading] {
   background-image: url("/assets/paper-overlay.webp");
   background-size: 100% auto;
   background-repeat: repeat-y;
+  /* MID-TILE, BY EXACTLY THE OPENING SCREEN'S HEIGHT, so this grain continues
+     the corners' above it across the section seam. A tile restarting at its own
+     top row here is a crumple that stops and a different crumple that starts,
+     straight across the width — the hard line --giant-sheet exists to prevent,
+     solved by phase here because these are two sections, not two halves of
+     one. */
+  background-position: 0 calc(-1 * var(--pi-h));
   opacity: 0.2;
   pointer-events: none;
 }
@@ -8261,6 +8357,167 @@ html[data-loading] {
 }
 
 /* --------------------------------------------------------------------------
+   The colour options — OPP and cloth only. See SIB_COLOURS in index.tsx.
+   --------------------------------------------------------------------------
+   A dark pill across the foot of the card with the range's swatches in it,
+   and the printed label shrinks toward the card's top to make room — one
+   gesture on one transition, shown on :hover where a hover exists and on
+   data-open (reveal.ts's tap toggle) where it does not.
+
+   EVERYTHING IS A SHARE OF THE CARD, like --sib-face-inset above: the design
+   rules 29px of inset, a 107px pill, 25px dots with 20 between them and 44.5
+   from the chip, all on a 430px card — so both card sizes and the phone's
+   72vw wear the pill in proportion with nothing restated. The percentages
+   inside the pill are of ITS box (430 less two insets = 372). */
+.siblings-card[data-colours] .siblings-face {
+  /* Toward the card's top, so the shrink opens the foot and the circle keeps
+     its own top inset — which is how the mock draws the two states. */
+  transform-origin: 50% 0;
+  transition: scale 0.3s ease;
+}
+
+.sib-colours {
+  position: absolute;
+  left: 6.7%;
+  right: 6.7%;
+  bottom: 6.5%;
+  height: 24.9%;
+  /* The design's 200px, said as twice the card's own 100px corner so the two
+     stay one measurement — it clamps to the stadium either way, but the token
+     is the mock's number and it scales with the phone's card for free. */
+  border-radius: calc(var(--sib-radius) * 2);
+  /* The section's own dark ground, so a tape that re-grounds the section
+     (siblingsVars) keeps the pill in its palette. */
+  background: var(--sib-bg);
+
+  display: flex;
+  align-items: center;
+  padding-left: 7%;
+
+  /* Waiting under its own entrance: lifted by the states below. */
+  opacity: 0;
+  translate: 0 18%;
+  transition: opacity 0.28s ease, translate 0.28s ease;
+  pointer-events: none;
+}
+
+/* The chip is the site's — see "Perforation marks" and the shared chip rule.
+   All this sets is the palette, as every wearer does. */
+.sib-colours-chip {
+  --tag-bg: var(--sib-card-bg);
+  --tag-ink: var(--sib-bg);
+  color: var(--tag-ink);
+  flex: none;
+  margin-right: 12%;
+}
+
+.sib-dot {
+  flex: none;
+  width: 6.7%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
+
+.sib-dot + .sib-dot {
+  margin-left: 5.4%;
+}
+
+/* The two states — the same picture, arrived at by whichever hand the device
+   has. 0.74 clears the label's arc text off the pill; the mock's measured
+   ratio (0.82) left the variant name tucked behind it on the real artwork. */
+@media (hover: hover) {
+  .siblings-card[data-colours]:hover .siblings-face {
+    scale: 0.74;
+  }
+
+  .siblings-card[data-colours]:hover .sib-colours {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+.siblings-card[data-open] .siblings-face {
+  scale: 0.74;
+}
+
+.siblings-card[data-open] .sib-colours {
+  opacity: 1;
+  translate: 0 0;
+}
+
+/* The aside in the margin — the hand pointing the whole thing out. Placed
+   against the row like the name is, so it stands off the cards themselves:
+   above the right-hand card, text right of its own arrow, the arrow swept
+   down toward the labels. */
+.sib-hint {
+  position: absolute;
+  /* In the dark band the right-hand card's drop leaves along the row's top —
+     which is where the mock scribbles it: text beside the raised card's
+     shoulder, arrow diving down-left to touch its top-right corner. Well
+     clear of the menu tab in the page's own corner. */
+  top: 1.4vw;
+  right: 20vw;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.9vw;
+  color: var(--sib-title-ink);
+  font-family: var(--font-note);
+  font-size: 1.25vw;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.sib-hint-arrow {
+  width: 5.8vw;
+  flex: none;
+  /* The tail leaves level with the text's first line and the head lands
+     3vw or so lower, on the raised card's corner — the mock's own dive. */
+  margin-top: 0.9vw;
+}
+
+/* THE PAIR'S COPY of the aside. With three cards the raised one is the MIDDLE,
+   so the row's top-right corner is empty air and the cue lives in it. With two,
+   RAISED = 1 makes the RIGHT card the tall one and that same corner is the
+   card's own shoulder — the arrow dove straight onto the label (final round:
+   "double sibling need to move"). The band a pair leaves empty is over the
+   LEFT card, the dropped one, so the cue crosses the row and keeps its whole
+   drawing: same arrow, same dive, now touching the left card's top corner.
+   Desktop only — under 744px the aside is in flow with the column (see the
+   phone block below), where none of this geometry exists, and this rule would
+   outweigh it. */
+@media (min-width: 744px) {
+  .siblings-row[data-pair] .sib-hint {
+    right: auto;
+    left: 7vw;
+    top: 11vw;
+    /* Mirrored whole: text first, arrow after, and the arrow's artwork
+       flipped — so the same sweep dives down-RIGHT out of the sentence onto
+       the left card's shoulder instead of out into the margin. */
+    flex-direction: row-reverse;
+  }
+
+  .siblings-row[data-pair] .sib-hint-arrow {
+    transform: scaleX(-1);
+  }
+}
+
+/* The verb is the device's: "hover" only where a hover exists, "tap"
+   everywhere else — the same split the states above make. */
+.sib-hint-tap {
+  display: none;
+}
+
+@media (hover: none) {
+  .sib-hint-hover {
+    display: none;
+  }
+
+  .sib-hint-tap {
+    display: inline;
+  }
+}
+
+/* --------------------------------------------------------------------------
    The name
    -------------------------------------------------------------------------- */
 
@@ -8362,6 +8619,13 @@ html[data-loading] {
     opacity: 1;
     visibility: visible;
   }
+
+  /* The pill still shows and the label still makes room — it is information,
+     not decoration — but both cut to their end state instead of travelling. */
+  .siblings-card[data-colours] .siblings-face,
+  .sib-colours {
+    transition: none;
+  }
 }
 
 /* --------------------------------------------------------------------------
@@ -8425,6 +8689,27 @@ html[data-loading] {
   .siblings-section .siblings-card {
     opacity: 1;
     visibility: visible;
+  }
+
+  /* The aside rides the column instead of the desktop's margin: in flow after
+     the name (the markup order the column already reads in), tucked to the
+     right over the first card with the arrow swept down at it. The negative
+     margins spend most of the column's 10vw gap on either side of it — it is
+     a scribble in a margin, not a row of the list. */
+  .sib-hint {
+    position: static;
+    /* With the name, ahead of the fan — the title's own trick, and the source
+       order settles which of the two -1s comes first. */
+    order: -1;
+    align-self: flex-end;
+    margin: -3vw 7vw -6vw 0;
+    font-size: 4.2vw;
+    gap: 2.2vw;
+  }
+
+  .sib-hint-arrow {
+    width: 15vw;
+    margin-top: 4.8vw;
   }
 }
 
@@ -8596,7 +8881,9 @@ html[data-loading] {
    * The inset is the margin the mock leaves around the whole face. INFERRED. */
   --pow-pad: calc(var(--pow-open-h) * 0.085);
   --pow-title-size: calc(var(--pow-open-h) * 0.19);
-  --pow-mark-h: calc(var(--pow-open-h) * 0.22);
+  /* 0.22 was the first pass; the client's mock draws the mark at 0.28 of the
+     card — a 30% raise, and the figure below is exactly that. */
+  --pow-mark-h: calc(var(--pow-open-h) * 0.286);
   /* How long the mark takes to fade when its card stops being the open one.
      Shorter than the card's own move, so the box is gone before the card it was
      on has finished shrinking — a mark still fading on a card halfway to shut
@@ -8999,16 +9286,14 @@ p.powers-name {
   display: block;
   height: var(--pow-mark-h);
   width: auto;
-  /* PULLED UP UNDER THE CLAIM, and this is the one measurement on the card that
-     is not struck off --pow-open-h. It is negative — the box tucks back under
-     the second line of the claim rather than clearing it — and it came off the
-     drawing rather than off the arithmetic, so it is left in the units it was
-     measured in. It has room to be this tight because the mark's own frame
-     carries a good deal of air above the box; see the viewBox in Mark.tsx. */
-  margin-top: -1.176vw;
-  /* Over the claim rather than under it, which is what the tuck above needs: the
-     box crosses the bottom of the second line on its way down and has to pass in
-     front of it. */
+  /* CENTRED IN THE CARD's open middle — the client's revision over the old
+     tuck up under the claim. Auto margins on the one flexible child put the
+     mark halfway between the claim above and the sentence below, and they are
+     also what pins the sentence to the floor now: all of the column's free
+     space goes here, so the copy's own margin can be plain zero. */
+  margin-block: auto;
+  /* Over the claim rather than under it: the mark's drop starts above its own
+     frame and crosses the claim's second line on the way down. */
   z-index: 3;
   /* The export's own setting, and it is load-bearing. The mark starts its drop
      nearly a hundred user units above the frame, which is outside the viewBox —
@@ -9056,16 +9341,19 @@ p.powers-name {
   fill: var(--pow-card-ink);
 }
 
-/* THE SENTENCE, on the floor of the card. margin-top: auto rather than a gap
-   under the mark — the mock hangs it off the bottom edge, so what is fixed is
-   its distance from the floor and not its distance from the drawing above it. */
+/* THE SENTENCE, on the floor of the card — held there by the MARK's auto
+   margins now rather than its own (see .powers-mark), so the margin here is
+   nothing at all. Bold on the site's Inter, set tight, and on a measure that
+   breaks the longer sentences onto two balanced lines — 24ch holds the short
+   claims on one line, which is where the mock keeps them. */
 .powers-card-copy {
-  margin: auto 0 0;
+  margin: 0;
+  max-width: 24ch;
   color: var(--pow-card-ink);
   font-family: var(--font-body);
   font-size: var(--pow-copy-size);
-  font-weight: 600;
-  line-height: 1.45;
+  font-weight: 700;
+  line-height: 1.2;
   text-align: center;
   text-wrap: balance;
 }
@@ -10483,7 +10771,10 @@ p.powers-name {
    BUILT TO THE STENCIL in giant-section.html, and its figures are the design's:
    6.25vw of radius, 1.181vw of padding, 0.833vw between the chip and the name.
    They are here rather than in the stencil's inline <style> because that is
-   where the rest of this site's geometry is.
+   where the rest of this site's geometry is. The radius and the inline inset
+   have since been revised by the client to fixed px — 90px and 16px, at their
+   rules below — so the panel reads as a framed card on every window, not only
+   at the width the vw figures were exact on.
 
    TWO THINGS IN THE STENCIL COULD NOT BE TAKEN AS WRITTEN.
 
@@ -10557,7 +10848,12 @@ p.powers-name {
   /* 400px */
 
 
-  padding-inline: 0.833vw;
+  /* THE FRAME'S INSET — client revision over the stencil's 0.833vw, and in px
+     for the same reason the radius below is: the vw figure was a 12px hairline
+     at the design width and less on every window under it, so the ground never
+     read down the panel's sides and the corners looked like notches instead of
+     a framed card. */
+  padding-inline: 16px;
 
   color: var(--nextup-ink);
 
@@ -10610,7 +10906,11 @@ p.powers-name {
   align-items: center;
   color: inherit;
   text-decoration: none;
-  border-radius: 6.25vw;
+  /* The client's figure, stated in px. The stencil's 6.25vw is this same 90px
+     at the 1440 design width — the revision is that it HOLDS there instead of
+     scaling down with the window, so the frame is as round on a laptop as in
+     the comp. The phone block below keeps its own vw figure. */
+  border-radius: 90px;
 }
 
 .next-up .top {
@@ -10824,7 +11124,10 @@ p.powers-name {
   --rolling-pad-top: calc(var(--masthead) + 2.48vw);
   /* 9.236vw */
   --rolling-pad-x: 4vw;
-  --rolling-pad-bottom: 5vw;
+  /* was 5vw — user, 2026-09-29: "reduce the spacing at the bottom i want to
+     see the next section just abit". The note is bottom-anchored and rides up
+     with it, still beside ROLLING. */
+  --rolling-pad-bottom: 1vw;
 
   /* How far the sheet's bottom edge bulges over the section under it, and it is
      the site's one depth now rather than this section's own.
@@ -11468,6 +11771,11 @@ p.powers-name {
      figure but declared on .whats-rolling — a custom property inherits, and a
      sibling section is not a descendant. */
   --stick-pad-y: calc(var(--curve-depth) + 3.5vw);
+
+  /* NOTHING UNDER THE ROW. --stick-pad-y is sized to clear the curve ABOVE;
+     below is the index on the same green, whose own padding-top is the gap
+     (user, 2026-09-29: "reduce gap"). */
+  padding-bottom: 0;
 }
 
 /* Landscape, where the key visual's frame is square — the two figures it is cut
@@ -11596,7 +11904,11 @@ p.powers-name {
      mistake rather than as a notepad waiting for a longer headline. A rule is a
      physical mark and 6px apart is 6px apart at any window. */
   --story-dot: 6px;
-  --story-dot-r: 0.65px;
+  /* DASHES, NOT DOTS (user comp, 2026-09-29): 3px x 1px in the chip's beige,
+     measured off the comp's pixel grid. */
+  --story-dash: 3px;
+  --story-dash-h: 1px;
+  --story-dash-ink: #ded7b5;
 
   /* HOW MANY RULES, and it is a count of lines rather than the number of lines
      the headline happens to run to. The copy is six lines' worth of ruled paper
@@ -11606,10 +11918,12 @@ p.powers-name {
   --story-rules: 6;
 
   /* The air between a line of type and the rule under it. In em, so it is a
-     proportion of the headline and stays right if the level is re-set. Sitting
-     the dots hard on the line box bottom put them close enough to the capitals
-     to read as an underline rather than as paper showing through. */
-  --story-rule-gap: 0.2em;
+     proportion of the headline and stays right if the level is re-set.
+     0.02em puts each rule ~0.09em under its baseline, in the middle of the
+     0.175em that the 0.875 leading leaves before the next line's capitals.
+     At 0.2em it sat 0.275em down — across the tops of the NEXT line, so the
+     copy read as floating between rules (user, 2026-09-29). */
+  --story-rule-gap: 0.02em;
 
   /* Its own stacking context, so the ruling's z-index: -1 below means "behind
      this heading's letters" and not "behind the card". Without it the negative
@@ -11661,10 +11975,14 @@ p.powers-name {
   left: 0;
   right: 0;
   height: calc(var(--story-rules) * var(--story-line));
-  background-image: radial-gradient(circle at 50% 100%,
-      rgba(13, 71, 12, 0.26) var(--story-dot-r),
-      transparent var(--story-dot-r));
-  background-size: var(--story-dot) var(--story-line);
+  /* Dashes across, then masked down to the bottom --story-dash-h of each
+     --story-line cell — one gradient can't cut both ways. */
+  background-image: linear-gradient(to right,
+      var(--story-dash-ink) var(--story-dash),
+      transparent 0);
+  background-size: var(--story-dot) 100%;
+  -webkit-mask: linear-gradient(transparent calc(100% - var(--story-dash-h)), #000 0) 0 0 / 100% var(--story-line);
+  mask: linear-gradient(transparent calc(100% - var(--story-dash-h)), #000 0) 0 0 / 100% var(--story-line);
   pointer-events: none;
   z-index: -1;
 }
@@ -12367,7 +12685,8 @@ li::marker {
   margin: 1.042vw 0 0;
   font-family: var(--font-body);
   font-size: 1.667vw;
-  font-weight: 800;
+  /* A notch under 800 (user, 2026-09-29: "thinner abit"). */
+  font-weight: 700;
   line-height: 1;
   letter-spacing: -0.017vw;
 }
@@ -13323,9 +13642,31 @@ li::marker {
   /* 16px at 1440 — floored, see .contact-input */
   font-weight: 800;
   letter-spacing: 0.02em;
-  transition:
-    background 0.3s ease,
-    color 0.3s ease;
+}
+
+/* THE FOOTER LINKS' HOVER, borrowed whole (user, 2026-09-29): the word lifts
+   and its letters roll through their masks — no fill change. The letters sit
+   inside .news-article, whose .char rule parks every letter for the headline
+   reveal; this one is not part of that, so it stands from the start. */
+.article-back-label {
+  display: flex;
+  align-items: flex-end;
+  transition: translate 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.news-article .article-back-label .char {
+  transform: none;
+}
+
+.article-back:hover .article-back-label,
+.article-back:focus-visible .article-back-label {
+  translate: 0 -0.4vw;
+}
+
+@media (hover: hover) {
+  .article-back:hover .article-back-label .char {
+    animation: footer-link-roll 0.45s calc(var(--i) * 0.035s);
+  }
 }
 
 /* The chevron, at the design's 23px. flex: none because a flex item's default
@@ -13342,11 +13683,6 @@ li::marker {
      third of its own width, which is a nudge and not a slide: the box is what
      moves under the pointer, and this is the mark leaning into it. */
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.article-back:hover,
-.article-back:focus-visible {
-  background: var(--article-rule);
 }
 
 .article-back:hover svg,
@@ -13371,7 +13707,7 @@ li::marker {
   }
 
   .article-share-link,
-  .article-back,
+  .article-back-label,
   .article-back svg {
     transition: none;
   }
@@ -13717,7 +14053,11 @@ li::marker {
   /* DESIGN FIGURE — 160px, the section's top edge to the chip. It clears the
      masthead's badge and the menu's tab, which is the same pair every other
      page's top padding is measured against. */
-  --contact-pad-top: calc(var(--masthead) + 4.35vw);
+  /* WAS + 4.35vw. The final round moved the headline up by 10% of its own
+     height — the two arced rows stand about 22vw tall, so 2.2vw came off the
+     air here, which lifts the chip and the title together and keeps their own
+     gap. The phone tier below takes the same cut at its own size. */
+  --contact-pad-top: calc(var(--masthead) + 2.15vw);
   /* 11.111vw */
 
   /* DESIGN FIGURE — 46px, the headline's last line to the sheet's top edge. */
@@ -13915,8 +14255,10 @@ li::marker {
   font-size: var(--contact-title-size);
   font-weight: 800;
   /* Under 1, like every display line on this site — and the reason .clip below
-     needs headroom. */
-  line-height: 0.87;
+     needs headroom. 0.87 × 0.95: the final round asked for the gap between the
+     two rows down by exactly 5%, and the row pitch IS the line height here, so
+     the figure takes the whole cut. */
+  line-height: 0.8265;
   letter-spacing: -0.24vw;
 }
 
@@ -14239,6 +14581,10 @@ li::marker {
    moved. The width is still declared, because nothing else decides that. */
 .contact-send {
   flex: none;
+  /* The failure line is three lines (\n in Stage.tsx) — user, 2026-09-29:
+     "reduce line spacing then break three lines". */
+  white-space: pre-line;
+  line-height: 0.95;
   width: var(--contact-send-w);
   border: 0;
   border-radius: 2.778vw;
@@ -14420,8 +14766,10 @@ li::marker {
   .contact-section {
     /* The air over --masthead, which has moved on its own — see the Tokens
        phone block. 4.35vw of it is 17px here, which is not a gap; this is the
-       same decision the badge itself made about not scaling with the sheet. */
-    --contact-pad-top: calc(var(--masthead) + 12vw);
+       same decision the badge itself made about not scaling with the sheet.
+       WAS + 12vw — the desktop's 10%-of-the-headline lift, at this tier's own
+       type size (17vw over two rows is ~29vw of headline, so 2.9vw off). */
+    --contact-pad-top: calc(var(--masthead) + 9.1vw);
     --contact-gap: 8vw;
 
     /* Full bleed less 5vw of lime either side, which is what leaves the arc's
@@ -14501,6 +14849,8 @@ li::marker {
     height: 14vw;
     border-radius: 7vw;
     font-size: 5.6vw;
+    /* One line here: the button is one line tall and full width. */
+    white-space: normal;
   }
 
   .contact-input:focus-visible,
@@ -14636,7 +14986,11 @@ li::marker {
      hero splits itself the same way and for the same reason — see .arc-foot in
      global.css, and .hero-section .top. */
   background: var(--about-bg);
-  --arc-paint: #C6FD00;
+  /* THE HERO'S LIME, EXACTLY. This was #C6FD00 — close enough to pass alone
+     and ten points warmer than every other lime sheet on the site, which is
+     what the final round's "is the about bg different?" was seeing. The
+     opening screens of the two routes are the same paper now. */
+  --arc-paint: #b6fe00;
 
   padding-top: 9.097vw;
 
@@ -16201,6 +16555,14 @@ img#front {
   display: block;
   --body-head: 0.22em;
   --body-foot: 0;
+  /* AND THE HEADROOM HANDED BACK. As inline-blocks in a paragraph the head
+     padding hides inside the line box; stacked as blocks it was ADDING itself
+     to every line — the stamp read at a 0.95em advance where the drawing says
+     0.72 (final round, 2026-09-29: "closer line spacing"). The negative
+     margin is the padding's other half, the same pair every letter clip on
+     the site carries; the masks still overlap the line above, but a mask is
+     transparent and its parked line waits below its own floor either way. */
+  margin-top: calc(-1 * var(--body-head));
 }
 
 /* THE ROLL, SET INTO THE BOTTOM OF THE SENTENCE. The negative margin is the
@@ -17206,24 +17568,30 @@ img#front {
   --pr: -4.3deg;
 }
 
-/* THE HEART AND THE SQUIGGLE — boxes measured, files not yet drawn. MARKS in
-   props.tsx is the empty list that fills these; add a src there and the rule is
-   already here waiting for it. The heart sits above the photograph on the right,
-   the squiggle low and left under the last line of the statement. */
+/* THE THREE PEN MARKS — the heart over the right photograph's shoulder, the
+   rule under AND FULL OF HEART., and the squiggle low and left of the tissue
+   shot. Positions read off the final-round mock against the sheet's box; the
+   aspects are the files' own trimmed-to-the-ink boxes (see MARKS in props.tsx),
+   and there is no --pr because the tilt is drawn into the ink. */
 .rei-mark-a {
-  --px: 71.5;
-  --py: 12.5;
-  --pw: 5.5;
-  --ph: calc(var(--pw) * 0.9);
-  --pr: 6deg;
+  --px: 68.5;
+  --py: 10.8;
+  --pw: 3.5;
+  --ph: calc(var(--pw) * 1.0516);
 }
 
 .rei-mark-b {
-  --px: 22.5;
-  --py: 47.5;
-  --pw: 6.5;
-  --ph: calc(var(--pw) * 0.75);
-  --pr: -5deg;
+  --px: 36.3;
+  --py: 46.2;
+  --pw: 5;
+  --ph: calc(var(--pw) * 0.5991);
+}
+
+.rei-mark-c {
+  --px: 34.2;
+  --py: 36.7;
+  --pw: 31.4;
+  --ph: calc(var(--pw) * 0.0615);
 }
 
 /* THE LETTERS ARE NOT PARKED. They used to wait under their masks at 130% for
@@ -17589,7 +17957,7 @@ img#front {
 .about-cta {
   /* The sheet's depth, as the drawing gives it. What the section is actually
      cut to is this plus --cta-clear below. */
-  --cta-h: 117.292vw; /* 1689px — 1649 + the 40 the crate moved down, so its crop at the foot holds */
+  --cta-h: 119.583vw; /* 1722px — 1689 + the 33 the crate moved again for the sticker, so its crop at the foot holds */
 
   /* HOW MUCH FARTHER DOWN THE SHEET EVERYTHING ON IT STANDS, AND WHY THERE IS A
    * TOKEN FOR IT AT ALL.
@@ -17630,10 +17998,16 @@ img#front {
      about the file rather than about the drawing.
 
      WAS 118 (tape top at 667, 55 over the pill's foot at 722) — the tape rose
-     over half the pill and swallowed the label. Now 158: tape top at 707, a
-     15px kiss on the foot, and --cta-h grew by the same 40 so the crate keeps
-     its crop. */
-  --cta-front-top: 10.972vw; /* 158px */
+     over half the pill and swallowed the label. Then 158: tape top at 707, a
+     15px kiss on the pill's foot, and --cta-h grew by the same 40 so the crate
+     keeps its crop.
+
+     NOW 191, for the same kiss on a taller door: the final round swapped the
+     pill for the slider's sticker, whose foot is at 755 rather than 722 — the
+     11.5vw disc is 33 taller than the 133 pill. Tape top 740, and --cta-h
+     carries the same 33. Buried without this: the crate rose over the disc's
+     lower half and the arrow badge with it. */
+  --cta-front-top: 13.264vw; /* 191px */
 
   /* THE ARC ALONG THE BOTTOM. How far the sheet's two corners rise above its
      own middle — the dark green in the corners of the drawing is the section
@@ -18216,6 +18590,36 @@ img#front {
   }
 }
 
+/* THE DOOR IS THE SLIDER'S STICKER NOW (final round, 2026-09-29 — "change the
+   button to the tape slider circle explore button"). Same object: the look,
+   the perforation, the lime ripple and the badge all come from the slider's
+   rules through their :is(.tape-slider-parent, .about-cta) scopes, so the two
+   cannot drift apart. What is here is only where it stands, how it arrives,
+   and what a three-word label needs that EXPLORE does not.
+
+   THE PILL RULES ABOVE STAY: .about-cta-button is also the 404 page's way home
+   (.not-found borrows the whole pill), so nothing here may delete it. */
+.about-cta .explore-button {
+  /* In flow under the claim, centred by its own margins — a grid box is
+     block-level, so auto margins reach it where the copy's text-align cannot.
+     The 16px of air is the pill's own figure; the crate below overlaps the
+     button's foot exactly as it overlapped the pill's. */
+  margin: 1.111vw auto 0;
+  /* The sticker's lean. Plain, not !important: nothing tweens rotate here —
+     the slider's escape is for its own entrance bounce. */
+  rotate: 8deg;
+
+  /* Parked at nothing until reveal.ts sets data-reveal — the pill's own
+     hand-off and the pill's own figure (CTA_REVEAL.PILL_FROM agrees). */
+  opacity: 0;
+  transform: scale(0.86);
+}
+
+.about-cta[data-reveal="live"] .explore-button {
+  opacity: 1;
+  transform: none;
+}
+
 /* THE WHOLE SECTION, STILL. Thirty-eight letters flying in from nowhere, a
    button springing out of the page and a photograph sliding behind the type are
    exactly what this setting is asking about — and each of the three files says
@@ -18232,7 +18636,8 @@ img#front {
     transform: none;
   }
 
-  .about-cta-button {
+  .about-cta-button,
+  .about-cta .explore-button {
     opacity: 1;
     transform: none;
   }
@@ -18897,8 +19302,14 @@ img#front {
   .rei-shot-a { --px: 70; --py: 140; --pw: 52; --pr: 4deg; z-index: auto; }
   .rei-shot-b { --px: 34; --py: 162; --pw: 62; --pr: -3deg; }
 
-  .rei-mark-a { --px: 84; --py: 118; --pw: 15; --pr: 6deg; }
-  .rei-mark-b { --px: 26; --py: 124; --pw: 17; --pr: -5deg; }
+  /* The heart moves ONTO the open paper beside MORE: kept at the desktop's
+     station it landed on the masking photograph, because down here the
+     photographs sit where the desktop keeps clear sheet. */
+  .rei-mark-a { --px: 75; --py: 72; --pw: 10; }
+  /* The rule keeps its place under the statement's last line — FULL OF HEART.
+     down here — and spans it the way the desktop's spans AND FULL OF HEART. */
+  .rei-mark-c { --px: 50; --py: 109.5; --pw: 71; }
+  .rei-mark-b { --px: 26; --py: 126; --pw: 12; }
 
   /* cover AND NOT contain: the sheet is 1378 x 950 and the box above is 2:3,
      so `contain` would letterbox the landscape paper into the top of a tall
@@ -19126,8 +19537,10 @@ img#front {
      deepened because it was read against a screen a quarter the width.
      --curve-depth is a proportion of that width, so it already is. */
   .about-cta {
-    --cta-h: 131vw; /* 511px */
-    --cta-front-top: 38.7vw; /* 151px */
+    /* Both carry the 5.5vw the sticker's foot sits below the old pill's here
+       (23vw disc against a 17.5vw pill), for the desktop rule's reason. */
+    --cta-h: 136.5vw; /* 532px */
+    --cta-front-top: 44.2vw; /* 172px */
   }
 
   .about-cta-copy {
@@ -19151,6 +19564,12 @@ img#front {
   .about-cta-button {
     margin-top: 4.103vw; /* 16px */
     font-size: 4.6vw; /* 18px */
+  }
+
+  /* The sticker at the slider's own phone size (23vw, from the shared phone
+     rules) — only the air above it is this section's. */
+  .about-cta .explore-button {
+    margin-top: 4.103vw;
   }
 }
 
@@ -19366,6 +19785,47 @@ img#front {
   }
 }
 
+/* THE ROLL — the site's letter voice, answered on hover (final round,
+   2026-09-29): each letter leaves up through its own mask and comes back in
+   from below, left to right, the same rise the reveal makes and the same 130%
+   the parks use. Pure CSS off the --i every clip already carries, so there is
+   nothing to wire: the delay is the stagger.
+
+   AN ANIMATION AND NOT A TRANSITION, because the letters carry GSAP's inline
+   transform once the reveal has run and an animation is the one thing in the
+   cascade that outranks it — the exact trap the label's lift avoids with
+   `translate` above. It holds nothing (no fill): the letter ends where the
+   inline value left it, which is home. Hover off mid-roll and the letters snap
+   back — the wave is 0.45s and gone before that reads.
+
+   Gated on hover the way the lift's press branch argues: a tap's synthetic
+   hover would run the wave into a navigation nobody stays to see. */
+@keyframes footer-link-roll {
+  0% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.85, 0.4);
+  }
+
+  50% {
+    transform: translateY(-130%);
+  }
+
+  50.01% {
+    transform: translateY(130%);
+    animation-timing-function: cubic-bezier(0.15, 0.6, 0.45, 1);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@media (hover: hover) {
+  .footer-link:hover .footer-link-label .char {
+    animation: footer-link-roll 0.45s calc(var(--i) * 0.035s);
+  }
+}
+
 /* A full stop, set as a disc rather than typed as one: a period would sit on
    the baseline inside the line box and its size would be the font's business.
    This is a mark under the word and it is the menu's arrow disc a long way
@@ -19537,6 +19997,15 @@ img#front {
   /* Over the headline, under the legal line (2) — the balls lie on top of the
      sign-off, and the small print stays legible under all of them. */
   z-index: 1;
+  /* A full-bleed sheet over the whole bed, and the sign-off's poke needs the
+     pointer to land on the letters under it — the physics never needed this
+     box to be hit at all: balls.ts pushes off WINDOW listeners and does its
+     own bounds check. The discs are put back below; they are anchors. */
+  pointer-events: none;
+}
+
+.footer-ball--disc {
+  pointer-events: auto;
 }
 
 .footer-ball {
@@ -19692,6 +20161,9 @@ img#front {
 @media (prefers-reduced-motion: reduce) {
   .site-footer .char {
     transform: none;
+    /* The hover roll included — a wave of letters is exactly what the setting
+       is asking about, and the label's lift already answers the hover. */
+    animation: none;
   }
 }
 
@@ -20812,6 +21284,47 @@ img#front {
     left: 1.764vw;
 }
 
+/* THE WAY OUT'S COPY: in the empty left of the curtain, level with the sticker
+ * — the final round's mock, which draws the note beside the door rather than
+ * in a corner. Same size as the opening screen's and the pinning section's
+ * (12.8vw is the note's one design width on this route), same lime pen as the
+ * belt's, on this section's green curtain.
+ *
+ * IT IS WITH THE OTHER INSTANCES AND NOT WITH ITS SECTION, for the reason
+ * .about-note's comment sets out at length: .hand-note above sets --hand-w and
+ * --hand-ink at this same specificity, so an instance five thousand lines
+ * earlier keeps only what the base does not name.
+ *
+ * WHERE IT SITS is the mock's own pair, converted: the mock puts the INK at
+ * 131 across and level with the door's disc, and this rule places the BOX
+ * around it — box = ink minus the corner's offset (x 45, y 66.5 of the
+ * 320-unit artwork plus the indent, the same subtraction .conveyor-hand walks
+ * through). Both in vw off the sheet, so the note rides the composition as the
+ * section scales — including the tablet, where the whole sheet is the same
+ * drawing narrower and the note keeps its place beside the sticker with no
+ * second pair of figures. The type inside floors at 744–1279 with every other
+ * note's (see --note-fs above), which only makes the writing a shade larger in
+ * its corner.
+ *
+ * No z-index: after the copy in tree order, so it paints over the curtain and
+ * under the crate box — which is at the foot of the sheet, nowhere near it. */
+.cta-note {
+  --hand-w: 12.8vw;
+  --hand-ink: var(--about-ink);
+
+  left: 6vw;
+  top: 46.1vw;
+}
+
+/* THE PHONE DOES NOT GET THE NOTE (final round: "hide on mobile"). Under 744
+   the sheet is a single centred column with no empty side for a hand to write
+   in — the note would sit on the claim. */
+@media (max-width: 743px) {
+  .cta-note {
+    display: none;
+  }
+}
+
 /* The typed copy, in Nothing You Could Do (--font-note, app layout).
 
    ONE SIZE ON EVERY PAGE, whatever the note's --hand-w: 14px type on a 15px
@@ -20881,6 +21394,9 @@ img#front {
   -webkit-text-stroke: var(--note-stroke) currentColor;
   text-transform: lowercase;
   white-space: nowrap;
+  /* Every line starts on the margin. Stated, because a host section that
+     centres its own type (.whats-rolling does) would otherwise stagger them. */
+  text-align: left;
   color: var(--hand-ink);
   transform: rotate(353deg);
   transform-origin: 0 0;

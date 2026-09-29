@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 
+import { initPoke } from "@/components/Hero/poke";
+
 import { initNextUpReveal } from "./reveal";
 
 /* NEXT UP's client boundary — a ref and one driver.
@@ -30,7 +32,16 @@ export default function Stage({
   useEffect(() => {
     const root = ref.current;
     if (!root) return;
-    return initNextUpReveal(root);
+    const stopReveal = initNextUpReveal(root);
+    /* The site's headline hover, on the name — the same call the footer's
+       sign-off and LET'S MAKE IT STICK make, with this section's selector.
+       It gates itself (hover/tap, reduced motion) and wakes letters only
+       once the reveal has set them home, so the two never share a letter. */
+    const stopPoke = initPoke(root, ".h1-v2");
+    return () => {
+      stopPoke();
+      stopReveal();
+    };
   }, []);
 
   return (

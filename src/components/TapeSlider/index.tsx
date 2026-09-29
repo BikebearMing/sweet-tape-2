@@ -20,30 +20,19 @@ import { TopTitle, BottomTitle, wordmarkText } from "./WordMarks";
  * the photographs themselves turn over a beat apart (SHOW_LAG in engine.ts). */
 const LIFT = [0.66, 0.54];
 
-/* THE PHONE'S STEP ARROW, drawn once and mirrored in CSS for the forward
- * button — one glyph, so the two can never drift apart in weight or length.
+/* THE PHONE'S STEP ARROWS, and they are ARTWORK now rather than a stroked
+ * glyph: the user's export is the whole button — cream disc, chevron built of
+ * two bits of tape, shadow baked on the strips (2026-09-28). Two files, one
+ * per direction, so nothing is mirrored in CSS and the discs are no longer
+ * tinted by the tape's palette — the drawing carries its own colour.
  *
- * Not components/Arrow: that mark is a link LEAVING, it points off the page at
- * 45deg and swings to face what it belongs to. This is a DIRECTION on a
- * control, which is a different thing to draw — the same call Article's back
- * link makes when it reaches for a bare chevron instead.
- *
- * Round caps and joins, because it is printed at 7vw on a soft disc and a
- * square cap at that size reads as a chipped edge. currentColor, so the disc's
- * rule is the only place the tape's palette is named. */
-function NavArrow() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
-      <path
-        d="M20.5 12H4.5M11.5 4.5 4 12l7.5 7.5"
-        stroke="currentColor"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
+ * webp cut from the 6.2MB SVG exports at 256px — ~1.4x the 15vw disc's device
+ * pixels on a DPR-3 phone — the same bargain every HD export here strikes.
+ * The SVGs stay in assets as the source of the next cut. */
+const NAV_ART = {
+  "-1": "/assets/mobile-slider-prev.webp",
+  "1": "/assets/mobile-slider-next.webp",
+} as const;
 
 /* The section, server-rendered in the first roll's state.
  *
@@ -175,7 +164,7 @@ export default async function TapeSlider() {
               })}
 
               <TopTitle />
-              <Explore />
+              <Explore id={first.id} />
 
               <div className="key-visual">
                 <img src={first.card} alt="" />
@@ -203,10 +192,10 @@ export default async function TapeSlider() {
             sits under. */}
         <div className="tape-nav">
           <button type="button" data-step="-1" aria-label="Previous tape">
-            <NavArrow />
+            <img src={NAV_ART["-1"]} alt="" width={256} height={256} loading="lazy" />
           </button>
           <button type="button" data-step="1" aria-label="Next tape">
-            <NavArrow />
+            <img src={NAV_ART["1"]} alt="" width={256} height={256} loading="lazy" />
           </button>
         </div>
       </div>

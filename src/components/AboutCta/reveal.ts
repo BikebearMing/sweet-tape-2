@@ -86,7 +86,9 @@ export function initCtaReveal(root: HTMLElement): () => void {
   const chars = Array.from(
     root.querySelectorAll<HTMLElement>(".about-cta-title .char"),
   );
-  const pill = root.querySelector<HTMLElement>(".about-cta-button");
+  /* The door — the slider's sticker since the final round, the pill before it.
+     Same pop either way; "pill" in the comments here reads as "the button". */
+  const pill = root.querySelector<HTMLElement>(".explore-button");
   if (!chars.length && !pill) return () => {};
 
   /* Hand the section over from the stylesheet.

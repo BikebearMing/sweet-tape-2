@@ -58,10 +58,9 @@ import Stage from "./Stage";
  * settle, because one is a thing being stuck on and the other is a thing being
  * put down.
  *
- * THE HEART AND THE SQUIGGLE ARE STILL TO COME, and the slot for them is open
- * rather than missing: MARKS in ./props.tsx is an empty list the markup already
- * maps over, with both boxes already measured in global.css. A rule under the
- * last line is the one thing in the design that has nothing standing for it.
+ * THE PEN MARKS ARE IN — the heart, the rule under AND FULL OF HEART., and the
+ * squiggle, which arrived as artwork in the final round and dropped into the
+ * slot MARKS in ./props.tsx had held open for them.
  *
  * Server-rendered like every other section. Stage is the hair-thin client
  * wrapper that owns the ref; nothing below this line is a client component.

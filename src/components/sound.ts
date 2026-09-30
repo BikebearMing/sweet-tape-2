@@ -20,7 +20,9 @@ export const SOUNDS = {
   TAPE_CUT: "/assets/sounds/tape-cut.mp3",
   SLIDE_CHANGE: "/assets/sounds/slide-change.mp3", // the slider landing on a new roll
   TAPE_PRESS: "/assets/sounds/tape-press.wav", // a hero letter pressed back down
-  BALL_HIT: "/assets/sounds/ball-ding.mp3", // a footer ball landing or knocking another
+  // The standard pop (user, 2026-09-30) — the ding read wrong for a knock.
+  // ball-ding.mp3 stays on disk if it wants another home.
+  BALL_HIT: "/assets/sounds/box-pop.mp3", // a footer ball landing or knocking another
   MENU_PULL: "/assets/sounds/menu-pull.mp3", // the PULL ME tab dropping the panel
   MENU_HOVER: "/assets/sounds/menu-hover.mp3", // a menu row coming under the pointer
   SOUND_TOGGLE: "/assets/sounds/sound-toggle.mp3", // the sound button switching on

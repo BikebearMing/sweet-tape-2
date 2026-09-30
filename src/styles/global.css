@@ -17999,9 +17999,9 @@ img#front {
   }
 
   .wanted-box[data-box="clearer"] {
-    /* 5px, then right another 20 (user, 2026-09-30) — mostly on screen now,
-       with just a sliver still off the crop. */
-    margin-left: 1.736vw; /* 25px */
+    /* The user's own devtools figure (2026-09-30): fully clear of the crop.
+       Was 5px, then 25; this is ~54px at 1440. */
+    margin-left: 3.736vw;
   }
 
   .wanted-box[data-box="human"] {

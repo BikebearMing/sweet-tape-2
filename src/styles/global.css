@@ -17998,7 +17998,12 @@ img#front {
     margin-top: 2.083vw; /* 30px */
   }
 
-  .wanted-box[data-box="clearer"],
+  .wanted-box[data-box="clearer"] {
+    /* 5px, then right another 20 (user, 2026-09-30) — mostly on screen now,
+       with just a sliver still off the crop. */
+    margin-left: 1.736vw; /* 25px */
+  }
+
   .wanted-box[data-box="human"] {
     margin-left: 0.347vw; /* 5px */
   }

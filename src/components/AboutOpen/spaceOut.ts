@@ -67,6 +67,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { whenRevealed } from "@/components/Preloader/gate";
+import { playOnce, SOUNDS } from "@/components/sound";
 import { onViewportChange, screenH } from "@/components/viewport";
 
 export const SPACE_OUT = {
@@ -333,6 +334,17 @@ export function initSpaceOut(root: HTMLElement): () => void {
       SPACE_OUT.PEAK,
     );
 
+    /* The hand's note, as the box first opens. A call on a scrubbed timeline
+       fires on every crossing, both ways — the direction guard keeps the sound
+       to the way OUT, so scrolling back up re-boxes the hand in silence. */
+    tl.call(
+      () => {
+        if (st.direction > 0) playOnce(SOUNDS.HAND_OUT);
+      },
+      [],
+      0.05,
+    );
+
     const st = ScrollTrigger.create({
       /* The section is the honest trigger and `top top` is scroll zero: this is
          the first thing on the route, so the move begins the moment the reader
@@ -423,6 +435,7 @@ export function initSpaceOut(root: HTMLElement): () => void {
       { y: () => vw(SPACE_OUT.HAND.SETTLE), duration: FALL, ease: "power1.inOut" },
       DELAY + RISE,
     );
+    tl.call(() => playOnce(SOUNDS.HAND_OUT), [], DELAY);
 
     const unsubscribe = whenRevealed(() => tl.play(0));
 

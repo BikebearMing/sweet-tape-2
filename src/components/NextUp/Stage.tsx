@@ -3,6 +3,7 @@
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 
 import { initPoke } from "@/components/Hero/poke";
+import { playOnce, SOUNDS } from "@/components/sound";
 
 import { initNextUpReveal } from "./reveal";
 
@@ -38,7 +39,13 @@ export default function Stage({
        It gates itself (hover/tap, reduced motion) and wakes letters only
        once the reveal has set them home, so the two never share a letter. */
     const stopPoke = initPoke(root, ".h1-v2");
+    /* The panel IS the link (see ../index.tsx), so its note hangs off the one
+       anchor — once per entry, mouseenter does not bubble or repeat inside. */
+    const link = root.querySelector<HTMLElement>("a");
+    const hover = () => playOnce(SOUNDS.NEXT_HOVER);
+    link?.addEventListener("mouseenter", hover);
     return () => {
+      link?.removeEventListener("mouseenter", hover);
       stopPoke();
       stopReveal();
     };

@@ -4168,8 +4168,9 @@ html[data-loading] {
   }
 
   .tape-nav button {
-    width: 15vw;
-    height: 15vw;
+    /* 15vw down 15% (user, 2026-09-30). */
+    width: 12.75vw;
+    height: 12.75vw;
     flex: 0 0 auto;
     border: 0;
     padding: 0;
@@ -10066,14 +10067,14 @@ p.powers-name {
      than the box that clips it, so it has to be given a height rather than
      asked for one. */
   .powers-stage {
+    /* NO PIN ON THE PHONE ANY MORE (user, 2026-09-30): the reveal opens every
+       card outright — see the phone branch in SuperPowers/reveal.ts — so the
+       stage grows to the run instead of holding a window over it, and the row
+       is auto rather than the minmax(0, 1fr) the clipped version needed. */
+    height: auto;
     display: grid;
     grid-template-columns: auto auto;
-    /* minmax(0, …) and not a bare 1fr: an fr row floors at its content by
-       default, and this row's content is a run of cards taller than the screen
-       on purpose. Left at auto the row would grow to the run and push the whole
-       composition off the frame. The stack's own min-height: 0 says the same
-       thing from the other side; a grid item floors at its content too. */
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
     justify-content: center;
     column-gap: 3vw;
     /* CLEAR OF THE MENU'S TAB, which is the one thing on this site that is
@@ -10106,6 +10107,22 @@ p.powers-name {
     height: auto;
     min-height: 0;
     width: 100%;
+    /* The base rule clips the run to a window; there is no window here. */
+    overflow: visible;
+  }
+
+  /* THE MARKS STAND ON THEIR CARDS — every card is open and written from the
+     first frame here, so there is no turn for a drop to answer. The same two
+     rules the reduced-motion block carries, for the same reason. */
+  .powers-mark,
+  .powers-mark *,
+  .powers-slot[data-mark] .powers-mark-jump {
+    animation: none !important;
+  }
+
+  .powers-mark-jump,
+  .powers-mark-plate {
+    opacity: 1;
   }
 
   /* THE PADS TAKE NO ROOM HERE. At either end of the run a pad is the empty
@@ -14886,7 +14903,8 @@ li::marker {
     --contact-sheet-w: 90vw;
     --contact-sheet-pad-x: 7vw;
     --contact-sheet-pad-top: 9vw;
-    --contact-head-gap: 6vw;
+    /* 6vw + 2 (user, 2026-09-30: "the form drop down abit" — phone only). */
+    --contact-head-gap: 8vw;
 
     --contact-field-h: 12vw;
     --contact-row-gap: 3.2vw;
@@ -14972,9 +14990,12 @@ li::marker {
      slot is bigger than the note by NOTE.SPAN — aim the CENTRE, and the tape
      across it follows on its own now that it is placed in per cent. */
   .contact-note {
-    top: 58vw;
-    left: 58vw;
-    width: 46vw;
+    /* 46vw up 15%, then up again to 62 (user, 2026-09-30, phone only — "still
+       abit too small"). The corner is walked back with each growth so the note
+       grows about its own centre, held just inside the right edge. */
+    top: 50.5vw;
+    left: 47.8vw;
+    width: 62vw;
   }
 }
 
@@ -20389,11 +20410,11 @@ img#front {
   }
 
   /* See --ball-scale on .footer-ball. 18.7 x 1.55 is 29vw, about 113px — a disc
-     you can read the label on and hit without aiming. 20% up from that since
-     (user, 2026-09-29): 1.86, 35vw. Gravity and the bodies follow on their own
-     (balls.ts reads this). */
+     you can read the label on and hit without aiming. 20% up from that
+     (user, 2026-09-29), then 15% back down (user, 2026-09-30): 1.58, 29.5vw.
+     Gravity and the bodies follow on their own (balls.ts reads this). */
   .footer-ball {
-    --ball-scale: 1.86;
+    --ball-scale: 1.58;
     /* The social mark at 0.42 of its disc — a speck at 0.235 on a disc this
        size. The desktop keeps 0.235. */
     --ball-mark: 0.42;
@@ -21088,29 +21109,80 @@ img#front {
   pointer-events: none;
 }
 
-/* The sound switch — a small disc of the menu's paper in the viewport's
-   bottom-right corner. Still a sibling of the pull tab inside .site-menu (a
-   button cannot hold a button), but fixed to the viewport rather than to the
-   menu box: .site-menu has no transform, so this pins to the screen corner and
-   stays put when the panel opens. Inset matches .site-menu's right (1.4vw). */
+/* The sound switch — a toggle in the viewport's bottom-right corner (user's
+   mock, 2026-09-30): a pill with a disc of taped paper for a knob and the
+   volume mark standing in the other half. OFF is white paper with the mark
+   barely there and the knob on the left; ON is the site's lime with the mark
+   in the site's green and the knob slid right. Still a sibling of the pull
+   tab inside .site-menu (a button cannot hold a button), but fixed to the
+   viewport rather than to the menu box: .site-menu has no transform, so this
+   pins to the screen corner and stays put when the panel opens.
+
+   EVERY INTERNAL FIGURE IS A PERCENTAGE OF THE PILL, so the tablet and phone
+   blocks below only restate the pill's size and the ratio carries: the knob
+   is 86% of the height with a 7%-of-height inset (the mock's own margins),
+   its centre rests at 23% / 77% of the width, and the mark mirrors it. That
+   arithmetic only holds at this aspect — change the 2.2 ratio and the two
+   percentages have to be re-struck. */
 .menu-sound {
   position: fixed;
   right: 1.4vw;
   bottom: 1.4vw;
-  width: 3.2vw;
+  width: 7vw;
+  /* 2.2 x the height — the mock's own pill */
   height: 3.2vw;
-  display: grid;
-  place-items: center;
   pointer-events: auto;
-  color: var(--menu-ink);
-  background: var(--menu-paper);
-  border-radius: 100%;
-  font-size: 1.05vw;
+  color: #e3e8e0;
+  /* the OFF mark: just barely on the paper */
+  background: #fff;
+  /* The thin dark line around the pill (user, 2026-09-30). A device-honest
+     hairline would vanish at the phone's density; 1.5px reads at every size
+     without becoming a drawing of its own. */
+  border: 1.5px solid #013900;
+  border-radius: 100vw;
+  font-size: 1.35vw;
   /* The arrival. The pull tab's is a tween because it overshoots and needs its
      paper run-on; this one has no overshoot to cover, so the stylesheet's park
      (see the Preloader section) lifting is the whole entrance. Timed to land
      with the tab: MENU_TAB.DELAY and DURATION in Menu/reveal.ts. */
-  transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.7s;
+  transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.7s,
+    background-color 0.25s ease;
+}
+
+.menu-sound[aria-pressed="true"] {
+  color: #013900;
+  background: #b6fe00;
+}
+
+/* The mark, centred in whichever half the knob is not. No slide of its own:
+   it is a different glyph in each state (muted / high), so travelling would
+   be one drawing arriving where another left — it simply stands where the
+   state puts it. */
+.menu-sound svg {
+  position: absolute;
+  top: 50%;
+  left: 77%;
+  translate: -50% -50%;
+}
+
+.menu-sound[aria-pressed="true"] svg {
+  left: 23%;
+}
+
+/* The knob. left is the transition — one absolutely positioned element,
+   once per press, which is not worth a transform's ceremony. */
+.menu-sound-ball {
+  position: absolute;
+  top: 50%;
+  left: 23%;
+  height: 86%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  transition: left 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.menu-sound[aria-pressed="true"] .menu-sound-ball {
+  left: 77%;
 }
 
 .menu-link:focus-visible,
@@ -21588,9 +21660,12 @@ img#front {
    the reading floor. Everything else in the menu already clears both. */
 @media (min-width: 744px) and (max-width: 1279px) {
   .menu-sound {
-    width: max(44px, 3.2vw);
+    /* The pill at the tablet's touch floor: 44px of height keeps the knob a
+       thumb-sized target, and the width is the same 2.2 ratio the base rule's
+       percentages are struck against. */
+    width: max(96.8px, 7vw);
     height: max(44px, 3.2vw);
-    font-size: max(13px, 1.05vw);
+    font-size: max(17px, 1.35vw);
   }
 
   .menu-tab-sheet {
@@ -21727,10 +21802,11 @@ img#front {
   .menu-sound {
     right: 4vw;
     bottom: 4vw;
-    /* 45px at 390: the touch floor, and no bigger. */
-    width: 11.5vw;
+    /* 45px of height at 390: the touch floor, and no bigger — the pill's
+       width is the same 2.2 ratio the base rule's percentages need. */
+    width: 25.3vw;
     height: 11.5vw;
-    font-size: 3.8vw;
+    font-size: 4.8vw;
   }
 
   .menu-tab-sheet {

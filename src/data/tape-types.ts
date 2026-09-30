@@ -286,8 +286,22 @@ export function cardOf(tape: Tape): string {
  * is real and two are the wrong picture. */
 const FALLBACK_FACES = 3;
 
+/* HAND RE-EXPORTS OVER THE CMS FACES — FLAT_CARD's call, made per face. The
+   CMS copies are ~330px against a card drawn far bigger, so they read soft at
+   the deal's size; these are the user's own full-size exports (2026-09-30),
+   keyed by the media record's alt exactly as the page prints it. A face not
+   named here keeps its CMS picture, and removing a row hands the face back
+   to whatever the CMS holds. */
+const FACE_ART: Record<string, string> = {
+  "Cloth Tape Normal": "/assets/sibling-cloth-normal.webp",
+  "Cloth Tape Strong.Black": "/assets/sibling-cloth-strong.webp",
+  "masking tape strong": "/assets/sibling-masking-strong.webp",
+  "stationary tape cello": "/assets/sibling-stationery-cello.svg",
+};
+
 export function siblingFacesOf(tape: Tape): { src: string; alt: string }[] {
-  if (tape.faces?.length) return tape.faces;
+  if (tape.faces?.length)
+    return tape.faces.map((f) => ({ ...f, src: FACE_ART[f.alt] ?? f.src }));
   return Array.from({ length: FALLBACK_FACES }, () => ({
     src: tape.card,
     alt: tape.label,

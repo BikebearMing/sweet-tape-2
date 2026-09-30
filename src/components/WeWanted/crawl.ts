@@ -39,6 +39,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { REVEAL } from "@/components/Hero/reveal";
+import { playOnce, SOUNDS } from "@/components/sound";
 import { screenH } from "@/components/viewport";
 
 /** The sentence's own advance width, in the font that actually loaded.
@@ -272,7 +273,10 @@ function initFlat(root: HTMLElement, boxes: HTMLElement[]): () => void {
         trigger: box,
         start: START,
         once: true,
-        onEnter: () => pops[i].play(),
+        onEnter: () => {
+          pops[i].play();
+          playOnce(SOUNDS.BOX_POP);
+        },
       }),
     ),
   ];
@@ -419,6 +423,19 @@ export function initWeWanted(root: HTMLElement): () => void {
       },
       FIRST,
     );
+
+    /* One note per box, where its pop begins. Calls on a scrubbed timeline
+       fire on every crossing, so the guard keeps them to the way in — the
+       boxes shrink back in silence on the way up. */
+    boxes.forEach((_, i) => {
+      tl!.call(
+        () => {
+          if ((st?.direction ?? 1) > 0) playOnce(SOUNDS.BOX_POP);
+        },
+        [],
+        FIRST + step * i,
+      );
+    });
 
     st = ScrollTrigger.create({
       /* The pinned box is the honest trigger: `start` is about where THIS

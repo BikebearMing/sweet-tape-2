@@ -20,7 +20,7 @@ import {
   type MenuTimelines,
 } from "./reveal";
 
-import { onSoundChange, setSoundOn } from "@/components/sound";
+import { onSoundChange, playOnce, setSoundOn, SOUNDS } from "@/components/sound";
 import { onViewportChange } from "@/components/viewport";
 
 /* THE ROWS COME IN AS A PROP and are not a constant here any more.
@@ -90,6 +90,11 @@ export default function Menu({ items }: { items: MenuItem[] }) {
      it from there, outside React. Off on every visit: see the note there. */
   const [sound, setSound] = useState(false);
   useEffect(() => onSoundChange(setSound), []);
+  /* Where the pointer stood when the tab was pulled. The panel drops UNDER a
+     parked pointer, so a row's mouseenter fires without the mouse moving — and
+     its note lands on top of the pull's. A hover only counts once the pointer
+     has actually left that spot. */
+  const pulledAt = useRef<{ x: number; y: number } | null>(null);
   /* The drop's measured height, retaken when the HOME row comes or goes —
      see remeasure below, which the mount effect hands out through this. */
   const remeasureRef = useRef<(() => void) | null>(null);
@@ -256,6 +261,12 @@ export default function Menu({ items }: { items: MenuItem[] }) {
       return;
     }
 
+    /* THE CLOSE'S NOTE (user, 2026-09-30) — the pull's own sound, reused: the
+       panel going back up is the same gesture run backwards, and the zip has
+       no dedicated close. Here rather than on any one control, so Escape, a
+       click anywhere and a row's way-out close all sound the same. */
+    playOnce(SOUNDS.MENU_PULL);
+
     closeRef.current = built.drop.tweenTo(0, {
       duration: MENU_DROP.CLOSE_DURATION,
       ease: MENU_DROP.CLOSE_EASE,
@@ -297,6 +308,13 @@ export default function Menu({ items }: { items: MenuItem[] }) {
                   href={href}
                   aria-label={label}
                   tabIndex={open ? undefined : -1}
+                  onMouseEnter={(e) => {
+                    if (!open) return;
+                    const p = pulledAt.current;
+                    if (p && Math.hypot(e.clientX - p.x, e.clientY - p.y) < 12) return;
+                    pulledAt.current = null;
+                    playOnce(SOUNDS.MENU_HOVER);
+                  }}
                 >
                   {/* The hover preview. The slot is what opens — it animates
                     from zero width and clips — while the image inside holds a
@@ -327,7 +345,13 @@ export default function Menu({ items }: { items: MenuItem[] }) {
         type="button"
         aria-expanded={open}
         aria-controls="site-menu-panel"
-        onClick={() => setOpen((o) => !o)}
+        onClick={(e) => {
+          if (!open) {
+            playOnce(SOUNDS.MENU_PULL);
+            pulledAt.current = { x: e.clientX, y: e.clientY };
+          }
+          setOpen((o) => !o);
+        }}
       >
         <span className="menu-tab-sheet">PULL ME</span>
       </button>
@@ -341,9 +365,24 @@ export default function Menu({ items }: { items: MenuItem[] }) {
         type="button"
         aria-label="Sound"
         aria-pressed={sound}
-        onClick={() => setSoundOn(!sound)}
+        onClick={() => {
+          setSoundOn(!sound);
+          /* Only the way ON gets a note — after the switch, so the context is
+             awake. Off suspends the context, and a chirp there would hang
+             half-played until the next on. */
+          if (!sound) playOnce(SOUNDS.SOUND_TOGGLE);
+        }}
       >
         {sound ? <FaVolumeHigh aria-hidden="true" /> : <FaVolumeXmark aria-hidden="true" />}
+        {/* The knob — a disc of taped paper that slides to the ON side. The
+            icon above swaps rather than travels; the ball is the one thing
+            that moves. Positions in the stylesheet, off aria-pressed. */}
+        <img
+          className="menu-sound-ball"
+          src="/assets/tape-sound-ball.webp"
+          alt=""
+          aria-hidden="true"
+        />
       </button>
     </nav>
   );

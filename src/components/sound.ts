@@ -20,8 +20,25 @@ export const SOUNDS = {
   TAPE_CUT: "/assets/sounds/tape-cut.mp3",
   SLIDE_CHANGE: "/assets/sounds/slide-change.mp3", // the slider landing on a new roll
   TAPE_PRESS: "/assets/sounds/tape-press.wav", // a hero letter pressed back down
-  BALL_HIT: "/assets/sounds/ball-thock.wav", // a footer ball landing or knocking another
+  BALL_HIT: "/assets/sounds/ball-ding.mp3", // a footer ball landing or knocking another
+  MENU_PULL: "/assets/sounds/menu-pull.mp3", // the PULL ME tab dropping the panel
+  MENU_HOVER: "/assets/sounds/menu-hover.mp3", // a menu row coming under the pointer
+  SOUND_TOGGLE: "/assets/sounds/sound-toggle.mp3", // the sound button switching on
+  CLICK: "/assets/sounds/cursor-click.mp3", // any click, site-wide — see Cursor/index
+  HAND_OUT: "/assets/sounds/hand-out.mp3", // /about's hand pushing out of the carton
+  LOGO_ZOOM: "/assets/sounds/logo-zoom.mp3", // the belt's mark taking the screen
+  BOX_POP: "/assets/sounds/box-pop.mp3", // a WE WANTED TO BE box popping up
+  NEXT_HOVER: "/assets/sounds/next-hover.mp3", // the NEXT UP panel under the pointer
+  PICK_HOVER: "/assets/sounds/pick-hover.mp3", // a /products roll lifting to the pointer
+  // The whole site's backing track — Starostin, "Funny Cartoon Music"
+  // (Pixabay 523685), 113s, re-encoded to 128k AAC from the 256k mp3.
+  BGM: "/assets/sounds/bgm.m4a",
 };
+
+/* WELL UNDER THE EFFECTS — a backing, not a foreground. The one-shots play at
+   1 through the same master, so this is also their ratio. 0.18 first, and the
+   user asked for lower still (2026-09-30). */
+const BGM_VOLUME = 0.1;
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
@@ -55,9 +72,35 @@ function wake() {
 
 export const isSoundOn = () => on;
 
+/* THE BACKING TRACK, STARTED ONCE AND NEVER STOPPED — the off switch is the
+   context suspending, which halts it mid-note and resumes it from the same
+   beat, so toggling sound does not restart the tune. Started from setSoundOn
+   rather than from any component: it belongs to the visit, not to a page.
+   Nothing is fetched until the first switch-on, like every sound here. */
+let bgm: AudioBufferSourceNode | null = null;
+
+function startBgm() {
+  if (bgm) return;
+  void load(SOUNDS.BGM).then((buffer) => {
+    if (!buffer || bgm || !ctx || !master) return;
+    bgm = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    bgm.buffer = buffer;
+    bgm.loop = true;
+    gain.gain.value = BGM_VOLUME;
+    bgm.connect(gain).connect(master);
+    // Into a suspended context this only queues — sound switched off again
+    // before the fetch landed stays silent until the next switch-on.
+    bgm.start();
+  });
+}
+
 export function setSoundOn(next: boolean) {
   on = next;
-  if (on) wake();
+  if (on) {
+    wake();
+    startBgm();
+  }
   // Suspended rather than muted: a silent context still costs a render thread.
   else void ctx?.suspend();
   listeners.forEach((fn) => fn(on));

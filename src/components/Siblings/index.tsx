@@ -114,9 +114,17 @@ const SIB_COLOURS: Record<string, string[]> = {
   cloth: ["#1d1d1b", "#8a8d86"],
 };
 
+/* NO SIBLINGS SECTION AT ALL on these tapes (user, 2026-09-30) — the
+   low-noise OPP and the double-sided tissue. Keyed by tape id like
+   SIB_COLOURS above, and here rather than in the page so the knowledge of
+   which tapes carry the section lives where the section is. */
+const HIDDEN = new Set(["opp-quiet", "double"]);
+
 export default function Siblings({ tape }: { tape: Tape }) {
   const faces = siblingFacesOf(tape);
   const colours = SIB_COLOURS[tape.id];
+
+  if (HIDDEN.has(tape.id)) return null;
 
   /* WHICH PLACE EACH LABEL STANDS IN. Filled from the left, so two labels are
      the leaning place and the raised one. A lone label is the raised place on

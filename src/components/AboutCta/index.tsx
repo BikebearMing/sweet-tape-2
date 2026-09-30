@@ -211,7 +211,7 @@ export default async function AboutCta() {
       <div className="about-cta-sheet about-cta-frontbox arc-cut" aria-hidden="true">
         <img
           className="about-cta-front"
-          src="/assets/front-cta.webp"
+          src="/assets/front-cta-2.webp"
           alt=""
           loading="lazy"
           decoding="async"

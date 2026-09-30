@@ -353,6 +353,28 @@ export function initSuperPowersReveal(root: HTMLElement): () => void {
   const blocks = Array.from(root.querySelectorAll<HTMLElement>(".body-copy"));
   for (const block of blocks) block.dataset.reveal = "live";
 
+  /* THE PHONE: NO PIN AND NO RUN (user, 2026-09-30) — every card standing,
+     written and green, in a plain column the reader scrolls past like any
+     other section. The three custom properties are simply set to their open
+     values on every card, the pads stay collapsed, and the stylesheet's phone
+     block lets the stage grow to the run instead of clipping it. The marks
+     stand on their cards with no drop to wait for — the same statement the
+     reduced-motion block makes, restated for this width in global.css.
+     ponytail: decided once at mount; a window dragged across 743px keeps the
+     mode it loaded in until the next navigation — Siblings' own bargain. */
+  if (window.matchMedia("(max-width: 743px)").matches) {
+    for (const block of blocks) block.dataset.arrived = "";
+    slots.forEach((slot) => {
+      const card = slot.classList.contains("powers-card") ? 1 : 0;
+      gsap.set(slot, {
+        "--pow-shown": card,
+        "--pow-open": card,
+        "--pow-fill": card,
+      });
+    });
+    return () => {};
+  }
+
   /* Per SLOT and not per card, so an index is an index everywhere in this file.
      A pad's entries are empty arrays and every loop below simply does nothing
      with them. */

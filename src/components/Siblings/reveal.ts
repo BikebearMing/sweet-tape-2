@@ -61,6 +61,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 import { REVEAL } from "../Hero/reveal";
+import { playOnce, SOUNDS } from "@/components/sound";
 
 /* The phone's one move — see the phone branch in initSiblingsReveal. RISE is a
    share of the card's own height and SCALE is where it starts; the trigger is
@@ -249,6 +250,7 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
           rotation: tilt,
           duration: PHONE_ARRIVE.DURATION,
           ease: PHONE_ARRIVE.EASE,
+          onStart: () => playOnce(SOUNDS.BOX_POP),
           scrollTrigger: {
             trigger: card,
             start: PHONE_ARRIVE.START,
@@ -393,6 +395,10 @@ export function initSiblingsReveal(root: HTMLElement): () => void {
        there, at its full weight and at the lean the stylesheet gave it; what
        moves is where along its spoke it is. */
     gsap.set(card, { autoAlpha: 1, rotation: tiltOf(card) });
+    /* The deal's note — the WE WANTED pop, since the zip names no siblings
+       sound and this is the same gesture: a card springing up into place.
+       Once per card, on the deal's own clock. */
+    playOnce(SOUNDS.BOX_POP);
     const from = entrance(card);
     gsap.fromTo(
       card,

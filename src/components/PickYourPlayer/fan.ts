@@ -69,6 +69,7 @@
 import gsap from "gsap";
 
 import { whenRevealed } from "@/components/Preloader/gate";
+import { playOnce, SOUNDS } from "@/components/sound";
 
 export const PICK_FAN = {
   /* THE SCATTER, each as a full spread — a roll lands somewhere in ±half of
@@ -283,6 +284,10 @@ export function initPickFan(
        markup put it on, and the tilt is a box this file invented to move. */
     onPick(rolls[i].card);
 
+    /* Once per lift, not per move — onMove only calls this when the roll under
+       the pointer changes, and the tablet's first tap comes through here too. */
+    playOnce(SOUNDS.PICK_HOVER);
+
     gsap.to(rolls[i].tilt, {
       /* Square on, and up. The scatter is undone rather than added to — this is
          the one roll in the row that is being looked at straight — and the rise
@@ -408,6 +413,10 @@ export function initPickFan(
 
   rolls.forEach(({ tilt }, i) => {
     const at = i * PICK_DROP.STAGGER;
+    /* One pop per roll, on the beat its scale-up starts (user, 2026-09-30:
+       "pop pop pop pop"). The WE WANTED boxes' note, since it is the same
+       gesture. Played once off the preloader, so no direction guard. */
+    drop.call(() => playOnce(SOUNDS.BOX_POP), [], at);
     drop
       .to(
         tilt,

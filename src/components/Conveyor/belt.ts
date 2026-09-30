@@ -1,6 +1,7 @@
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
+import { playOnce, SOUNDS } from "@/components/sound";
 import { onViewportChange } from "@/components/viewport";
 
 /* THE BELT'S MOVEMENT — three rows dragged past the window as the section goes
@@ -531,6 +532,17 @@ export function initConveyor(root: HTMLElement): () => void {
         onUpdate: writeMark,
       })
       .to({}, { duration: 1 - RUN.TRAVEL - RUN.DRAW - RUN.OPEN });
+
+    /* The zoom's note, at the dip — the gesture starts with the draw-back, not
+       the growth. Guarded to the way down: a call on a scrubbed timeline fires
+       on every crossing, and the way back up shrinks the mark in silence. */
+    run.call(
+      () => {
+        if ((run.scrollTrigger?.direction ?? 1) > 0) playOnce(SOUNDS.LOGO_ZOOM);
+      },
+      [],
+      RUN.TRAVEL,
+    );
   }
 
   /* THE CRAWL'S CLOCK, AND THE TWO THINGS THAT STOP IT.

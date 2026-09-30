@@ -42,7 +42,7 @@ import Stage from "./Stage";
    The heading's break is set by design and not by wrapping, which is why it is
    three rows and not one string. The photograph is not editable: it is the
    closing key visual and the strip of tape across it is measured to it. */
-const SHOT = "/assets/make-it-stick.jpg";
+const SHOT = "/assets/make-it-stick-2.webp";
 const SHOT_ALT =
   "Six rolls of SweetTape held in someone’s arms — stationery, OPP, cloth, masking and double-sided tissue tape.";
 

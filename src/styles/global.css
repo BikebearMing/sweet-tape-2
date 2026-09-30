@@ -21128,9 +21128,9 @@ img#front {
   position: fixed;
   right: 1.4vw;
   bottom: 1.4vw;
-  width: 7vw;
-  /* 2.2 x the height — the mock's own pill */
-  height: 3.2vw;
+  /* 7 x 3.2 down 15% (user, 2026-09-30), same 2.2 ratio. */
+  width: 5.95vw;
+  height: 2.72vw;
   pointer-events: auto;
   color: #e3e8e0;
   /* the OFF mark: just barely on the paper */
@@ -21140,7 +21140,7 @@ img#front {
      without becoming a drawing of its own. */
   border: 1.5px solid #013900;
   border-radius: 100vw;
-  font-size: 1.35vw;
+  font-size: 1.15vw;
   /* The arrival. The pull tab's is a tween because it overshoots and needs its
      paper run-on; this one has no overshoot to cover, so the stylesheet's park
      (see the Preloader section) lifting is the whole entrance. Timed to land
@@ -21660,12 +21660,13 @@ img#front {
    the reading floor. Everything else in the menu already clears both. */
 @media (min-width: 744px) and (max-width: 1279px) {
   .menu-sound {
-    /* The pill at the tablet's touch floor: 44px of height keeps the knob a
-       thumb-sized target, and the width is the same 2.2 ratio the base rule's
-       percentages are struck against. */
-    width: max(96.8px, 7vw);
-    height: max(44px, 3.2vw);
-    font-size: max(17px, 1.35vw);
+    /* The pill down 15% with the rest of the button (user, 2026-09-30) —
+       which takes the floor under the 44px touch guideline; the user chose
+       the size. Same 2.2 ratio the base rule's percentages are struck
+       against. */
+    width: max(82.3px, 5.95vw);
+    height: max(37.4px, 2.72vw);
+    font-size: max(14.5px, 1.15vw);
   }
 
   .menu-tab-sheet {
@@ -21802,11 +21803,13 @@ img#front {
   .menu-sound {
     right: 4vw;
     bottom: 4vw;
-    /* 45px of height at 390: the touch floor, and no bigger — the pill's
-       width is the same 2.2 ratio the base rule's percentages need. */
-    width: 25.3vw;
-    height: 11.5vw;
-    font-size: 4.8vw;
+    /* Down 15% with the rest of the button (user, 2026-09-30): 38px of
+       height at 390, under the 45px touch floor by the user's own call —
+       the pill's width is the same 2.2 ratio the base rule's percentages
+       need. */
+    width: 21.5vw;
+    height: 9.78vw;
+    font-size: 4.1vw;
   }
 
   .menu-tab-sheet {

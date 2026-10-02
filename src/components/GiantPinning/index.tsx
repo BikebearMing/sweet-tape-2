@@ -367,8 +367,8 @@ const PANELS: Panel[] = [
          one number to flip if it ever reads as sliding rather than as depth. */
       /* HD export (opp-tape-last), trimmed to the old 204:210 shape. */
       { src: "/assets/opp-tape-last.webp", kind: "shot", x: 98, y: 12, w: 17, r: 5, z: 3, p: 0.045, e: "none" },
-      { src: "/assets/slider/opp/card.svg", kind: "tag", x: 61, y: -32, w: TAG_W, r: 6, z: 1, p: -0.02, e: "power2.inOut" },
-      { src: "/assets/slider/opp/card.svg", kind: "tag", x: 43, y: 49, w: TAG_W, r: 9, z: 1, p: 0.032, e: "power1.inOut" },
+      { src: "/assets/sibling-opp-normal.webp", kind: "tag", x: 61, y: -32, w: TAG_W, r: 6, z: 1, p: -0.02, e: "power2.inOut" },
+      { src: "/assets/sibling-opp-normal.webp", kind: "tag", x: 43, y: 49, w: TAG_W, r: 9, z: 1, p: 0.032, e: "power1.inOut" },
     ],
     /* Under the slot, the same reading TO CREATE's note takes — and NOT the
        same numbers, because --px/--py are percentages of the ROW and this row

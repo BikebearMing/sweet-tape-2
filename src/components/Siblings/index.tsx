@@ -107,11 +107,11 @@ const TILT = [-4.414, 0, 3.578];
  * listener.
  *
  * The OPP pair is sampled off the mock (2026-09-28): the muted green is the
- * clear film, the amber is the brown. THE CLOTH PAIR IS A STAND-IN — the mock
- * only draws OPP's, and cloth's real swatches want the user's own values. */
+ * clear film, the amber is the brown. The cloth pair is the user's own values
+ * (2026-10-02): black and the red. */
 const SIB_COLOURS: Record<string, string[]> = {
   opp: ["#4f774e", "#ce8900"],
-  cloth: ["#1d1d1b", "#8a8d86"],
+  cloth: ["#000000", "#FF1616"],
 };
 
 /* NO SIBLINGS SECTION AT ALL on these tapes (user, 2026-09-30) — the

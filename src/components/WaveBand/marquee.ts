@@ -50,10 +50,10 @@ const SLOT = " ".repeat(6);
     type: a little taller than the caps, and still clear of the tape's edges
     where the wave runs steepest. */
 export const BADGE_SIZE = 150;
-/** The roll, face-on. The vector copy rather than slider/opp/roll.webp, which
-    is a 108px button graphic — at band size that is an upscale, and this sits
-    under a grain overlay where softness shows. */
-export const BADGE_SRC = "/assets/slider/opp/card.svg";
+/** The roll, face-on. The 1204px NORMAL face (2026-10-02) rather than
+    slider/opp/roll.webp, which is a 108px button graphic — at band size that
+    is an upscale, and this sits under a grain overlay where softness shows. */
+export const BADGE_SRC = "/assets/sibling-opp-normal.webp";
 const GAP = "   ";
 
 /** One repeat of the marquee and the two counts the engine measures it by.

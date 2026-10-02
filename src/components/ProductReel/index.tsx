@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 import HandNote from "@/components/HandNote";
 import Peel from "@/components/Peel";
 import { letters } from "@/components/letters";
-import { reelVars } from "@/data/tapes";
+import { cardOf, reelVars } from "@/data/tapes";
 import { stripOf } from "@/components/TapeSlider/strips";
 import type { Tape } from "@/data/tapes";
 import Stage from "./Stage";
@@ -143,7 +143,7 @@ export default function ProductReel({ tape }: { tape: Tape }) {
               — rather than a second export of it. */}
           <img
             className="reel-badge"
-            src={tape.card}
+            src={cardOf(tape)}
             alt={tape.label}
             data-reel-cue
           />

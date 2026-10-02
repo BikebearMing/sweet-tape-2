@@ -264,9 +264,14 @@ export function heroOf(tape: Tape): string {
    SVG in an <img> is rasterised at its own ~413px and then stretched: blurry on
    any 2x screen. The -next exports have no filter. Add a tape here when its file
    lands in public/assets. */
-const FLAT_CARD: Record<string, string> = { opp: "/assets/opp-tape-next.svg" };
+/* The opp card is the new NORMAL face (2026-10-02) — the old -next.svg still
+   said NORMAL BROWN, outlined, so it was replaced rather than edited. Same
+   file the siblings row shows, so it is one download across both sections. */
+const FLAT_CARD: Record<string, string> = { opp: "/assets/sibling-opp-normal.webp" };
 
-export function cardOf(tape: Tape): string {
+/* Pick rather than Tape: the home page's slider rolls are Slides, not Tapes,
+   and they want the same override — see toSlide in src/data/homepage.ts. */
+export function cardOf(tape: Pick<Tape, "id" | "card">): string {
   return FLAT_CARD[tape.id] ?? tape.card;
 }
 
@@ -293,6 +298,9 @@ const FALLBACK_FACES = 3;
    named here keeps its CMS picture, and removing a row hands the face back
    to whatever the CMS holds. */
 const FACE_ART: Record<string, string> = {
+  "opp tape normal": "/assets/sibling-opp-normal.webp",
+  "opp tape strong": "/assets/sibling-opp-strong.webp",
+  "opp tape extra strong": "/assets/sibling-opp-xtra-strong.webp",
   "Cloth Tape Normal": "/assets/sibling-cloth-normal.webp",
   "Cloth Tape Strong.Black": "/assets/sibling-cloth-strong.webp",
   "masking tape strong": "/assets/sibling-masking-strong.webp",

@@ -3,6 +3,7 @@ import { getPayload } from "payload";
 import config from "@/payload.config";
 
 import { urlOf } from "./media-url";
+import { cardOf } from "./tape-types";
 import type { Homepage, Slide, TapeColours } from "./homepage-types";
 
 /* Sweet Tape — what the home page is showing.
@@ -86,7 +87,9 @@ function toSlide(
     id: row.key,
     label: row.label,
     thumb: urlOf(row.thumb),
-    card: urlOf(row.card),
+    /* Through the same hand re-export FLAT_CARD applies to OUR FAMILY and NEXT
+       UP (tape-types.ts) — the CMS opp card still says NORMAL BROWN. */
+    card: cardOf({ id: row.key, card: urlOf(row.card) }),
     showcase: images(row.showcase) as [string, string],
     model: row.model,
     word: row.wordmark,
